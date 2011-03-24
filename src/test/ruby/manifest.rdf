@@ -1,0 +1,13 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:ore="http://www.openarchives.org/ore/terms/"
+    xmlns:dcterms="http://purl.org/dc/terms/"
+    xmlns:oxds="http://vocab.ox.ac.uk/dataset/schema#" > 
+  <rdf:Description rdf:about="http://localhost:8081/ro-srs/workspaces/user/ROs/ro1/ver1/">
+    <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#date">Fri Mar 18 15:01:45 CET 2011</dcterms:modified>
+    <oxds:currentVersion>ver1</oxds:currentVersion>
+    <ore:aggregates rdf:resource="http://localhost:8081/ro-srs/workspaces/user/ROs/ro1/ver1//file1.txt"/>
+    <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/Aggregation"/>
+    <dcterms:description>custom field</dcterms:description>
+  </rdf:Description>
+</rdf:RDF>
