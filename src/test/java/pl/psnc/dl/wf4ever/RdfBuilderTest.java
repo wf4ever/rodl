@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.xml.transform.TransformerException;
+
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -29,6 +31,7 @@ public class RdfBuilderTest
 
 	@Test
 	public void checkObjectUri()
+		throws TransformerException
 	{
 		String collection = RdfBuilder.serializeResource(RdfBuilder
 				.createCollection(objectUri, Collections.<String> emptyList()));
@@ -42,6 +45,7 @@ public class RdfBuilderTest
 
 	@Test
 	public void checkAggregatedObjectsUri()
+		throws TransformerException
 	{
 		List<String> uris = new ArrayList<String>();
 		for (int i = 1; i < 10; i++) {
@@ -70,6 +74,7 @@ public class RdfBuilderTest
 
 	@Test
 	public void checEmptyObject()
+		throws TransformerException
 	{
 		List<String> uris = new ArrayList<String>();
 
@@ -95,6 +100,7 @@ public class RdfBuilderTest
 
 	@Test(expected = BadURIException.class)
 	public void checkAggregatedObjectsWithMalformedUri()
+		throws TransformerException
 	{
 		List<String> uris = new ArrayList<String>();
 		for (int i = 1; i < 10; i++) {
@@ -109,6 +115,7 @@ public class RdfBuilderTest
 
 	@Test(expected = BadURIException.class)
 	public void checkObjectWithMalformedUri()
+		throws TransformerException
 	{
 		RdfBuilder
 				.serializeResource(RdfBuilder.createCollection(

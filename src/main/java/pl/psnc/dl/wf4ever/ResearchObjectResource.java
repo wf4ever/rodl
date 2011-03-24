@@ -14,6 +14,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.xml.transform.TransformerException;
 
 import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
 import pl.psnc.dlibra.metadata.PublicationInfo;
@@ -42,7 +43,7 @@ public class ResearchObjectResource
 	@Produces("application/rdf+xml")
 	public Response getListOfVersions(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId)
-		throws RemoteException, DLibraException
+		throws RemoteException, DLibraException, TransformerException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);

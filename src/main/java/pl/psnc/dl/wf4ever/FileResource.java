@@ -14,6 +14,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
 
@@ -48,7 +49,7 @@ public class FileResource
 			@PathParam("RO_VERSION_ID") String versionId,
 			@PathParam("FILE_PATH") String filePath,
 			@QueryParam("content") String isContentRequested)
-		throws IOException, DLibraException
+		throws IOException, DLibraException, TransformerException
 	{
 
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
@@ -92,7 +93,7 @@ public class FileResource
 			@PathParam("FILE_PATH") String filePath,
 			@HeaderParam(Constants.CONTENT_TYPE_HEADER_NAME) String type,
 			InputStream inputStream)
-		throws IOException, DLibraException
+		throws IOException, DLibraException, TransformerException
 	{
 
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
@@ -117,7 +118,7 @@ public class FileResource
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId,
 			@PathParam("FILE_PATH") String filePath)
-		throws DLibraException, IOException
+		throws DLibraException, IOException, TransformerException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);

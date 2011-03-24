@@ -17,6 +17,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
+import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
 
@@ -50,7 +51,7 @@ public class VersionResource
 	public Response getVersionFileList(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId)
-		throws RemoteException, DLibraException
+		throws RemoteException, DLibraException, TransformerException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
@@ -97,7 +98,7 @@ public class VersionResource
 	public Response createVersion(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId, String baseVersionUri)
-		throws DLibraException, IOException
+		throws DLibraException, IOException, TransformerException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
@@ -141,7 +142,7 @@ public class VersionResource
 	public void deleteVersion(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId)
-		throws DLibraException, IOException
+		throws DLibraException, IOException, TransformerException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);

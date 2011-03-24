@@ -16,6 +16,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.transform.TransformerException;
+
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
@@ -411,7 +413,7 @@ public class DLibraDataSource
 	public void createPublication(String groupPublicationName,
 			String publicationName, String basePublicationName,
 			String manifestUri)
-		throws DLibraException, IOException
+		throws DLibraException, IOException, TransformerException
 	{
 		PublicationId groupId = getGroupId(groupPublicationName);
 		try {
@@ -484,7 +486,7 @@ public class DLibraDataSource
 
 	public void deletePublication(String groupPublicationName,
 			String publicationName, String versionUri)
-		throws DLibraException, IOException
+		throws DLibraException, IOException, TransformerException
 	{
 		PublicationId publicationId = getPublicationId(
 			getGroupId(groupPublicationName), publicationName);
@@ -528,7 +530,7 @@ public class DLibraDataSource
 
 	public void updateManifest(String versionUri, String groupPublicationName,
 			String publicationName, String manifest)
-		throws DLibraException, IOException
+		throws DLibraException, IOException, TransformerException
 	{
 
 		regenerateManifest(groupPublicationName, publicationName, versionUri,
@@ -538,6 +540,7 @@ public class DLibraDataSource
 
 
 	private String createManifest(String uri)
+		throws TransformerException
 	{
 		Resource resource = RdfBuilder.createResource(uri);
 
@@ -556,7 +559,7 @@ public class DLibraDataSource
 
 	private void regenerateManifest(String groupPublicationName,
 			String publicationName, String versionUri, String baseManifest)
-		throws DLibraException, IOException
+		throws DLibraException, IOException, TransformerException
 	{
 
 		List<String> list = listFilesInPublication(groupPublicationName,
@@ -657,7 +660,7 @@ public class DLibraDataSource
 
 	public String getFileMetadata(String groupPublicationName,
 			String publicationName, String filePath, String fullPath)
-		throws RemoteException, DLibraException
+		throws RemoteException, DLibraException, TransformerException
 	{
 		PublicationId publicationId = getPublicationId(
 			getGroupId(groupPublicationName), publicationName);
@@ -710,7 +713,7 @@ public class DLibraDataSource
 	public void createOrUpdateFile(String versionUri,
 			String groupPublicationName, String publicationName,
 			String filePath, InputStream inputStream, String mimeType)
-		throws IOException, DLibraException
+		throws IOException, DLibraException, TransformerException
 	{
 		createOrUpdateFile(versionUri, groupPublicationName, publicationName,
 			filePath, inputStream, mimeType, true);
@@ -721,7 +724,7 @@ public class DLibraDataSource
 			String groupPublicationName, String publicationName,
 			String filePath, InputStream inputStream, String mimeType,
 			boolean generateManifest)
-		throws IOException, DLibraException
+		throws IOException, DLibraException, TransformerException
 	{
 		PublicationId publicationId = getPublicationId(
 			getGroupId(groupPublicationName), publicationName);
@@ -863,7 +866,7 @@ public class DLibraDataSource
 
 	public void deleteFile(String versionUri, String groupPublicationName,
 			String publicationName, String filePath)
-		throws DLibraException, IOException
+		throws DLibraException, IOException, TransformerException
 	{
 		PublicationId publicationId = getPublicationId(
 			getGroupId(groupPublicationName), publicationName);

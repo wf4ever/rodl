@@ -1,10 +1,19 @@
 package pl.psnc.dl.wf4ever;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.apache.log4j.Logger;
 
@@ -63,6 +72,7 @@ public class RdfBuilder
 		READ_ONLY_PROPERTIES.add(DCTerms.hasVersion);
 		READ_ONLY_PROPERTIES.add(OXDS_CURRENT_VERSION);
 		READ_ONLY_PROPERTIES.add(DCTerms.modified);
+		READ_ONLY_PROPERTIES.add(RDF.type);
 		//		READ_ONLY_PROPERTIES.add(DCTerms.created);
 	}
 
@@ -94,6 +104,7 @@ public class RdfBuilder
 
 
 	public static String serializeResource(Resource resource)
+		throws TransformerException
 	{
 		String output;
 		OutputStream out = new ByteArrayOutputStream();
@@ -106,7 +117,27 @@ public class RdfBuilder
 			output = out.toString();
 		}
 
-		return output;
+		return transform(output);
+	}
+
+
+	private static String transform(String xml)
+		throws TransformerException
+	{
+		TransformerFactory tFactory = TransformerFactory.newInstance();
+
+		InputStream inputStream = RdfBuilder.class.getClassLoader()
+				.getResourceAsStream("rdf-order.xsl");
+
+		Transformer transformer = tFactory.newTransformer(new StreamSource(
+				inputStream));
+
+		StreamSource source = new StreamSource(new StringReader(xml));
+		StringWriter sw = new StringWriter();
+		StreamResult result = new StreamResult(sw);
+		transformer.transform(source, result);
+
+		return sw.toString();
 	}
 
 
