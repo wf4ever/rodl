@@ -15,8 +15,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.apache.log4j.Logger;
-
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
@@ -33,7 +31,7 @@ import com.hp.hpl.jena.vocabulary.RDF;
 public class RdfBuilder
 {
 
-	private final static Logger logger = Logger.getLogger(RdfBuilder.class);
+	//	private final static Logger logger = Logger.getLogger(RdfBuilder.class);
 
 	public static final String DateFormatXSDUri = "http://www.w3.org/2001/XMLSchema#date";
 
@@ -103,6 +101,9 @@ public class RdfBuilder
 	}
 
 
+	/**
+	 * Returns rdf/xml serialization of specified Resource in String. 
+	 */
 	public static String serializeResource(Resource resource)
 		throws TransformerException
 	{
@@ -117,11 +118,21 @@ public class RdfBuilder
 			output = out.toString();
 		}
 
-		return transform(output);
+		return output;
 	}
 
 
-	private static String transform(String xml)
+	public static Resource createResource(String uri)
+	{
+		model.removeAll();
+		return model.createResource(uri);
+	}
+
+
+	/**
+	 * Performs xslt transformation of manifest.rdf serialized to String and returns transformed manifest as String.
+	 */
+	public static String transformManifest(String manifest)
 		throws TransformerException
 	{
 		TransformerFactory tFactory = TransformerFactory.newInstance();
@@ -132,19 +143,12 @@ public class RdfBuilder
 		Transformer transformer = tFactory.newTransformer(new StreamSource(
 				inputStream));
 
-		StreamSource source = new StreamSource(new StringReader(xml));
+		StreamSource source = new StreamSource(new StringReader(manifest));
 		StringWriter sw = new StringWriter();
 		StreamResult result = new StreamResult(sw);
 		transformer.transform(source, result);
 
 		return sw.toString();
-	}
-
-
-	public static Resource createResource(String uri)
-	{
-		model.removeAll();
-		return model.createResource(uri);
 	}
 
 }

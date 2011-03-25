@@ -11,6 +11,7 @@ import javax.ws.rs.ext.Provider;
 import pl.psnc.dlibra.service.DuplicatedValueException;
 
 /**
+ * Maps <code>DuplicatedValueException</code> to <code>409 (Conflict)</code> HTTP response.
  * @author nowakm
  *
  */

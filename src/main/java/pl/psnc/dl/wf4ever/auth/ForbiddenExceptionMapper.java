@@ -6,7 +6,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 /**
- * <p>Map an access denied exception to an HTTP 403 response.</p>
+ * <p>Maps <code>ForbiddenException</code> to a HTTP <code>403 (Forbidden)</code> response.</p>
  */
 @Provider
 public class ForbiddenExceptionMapper

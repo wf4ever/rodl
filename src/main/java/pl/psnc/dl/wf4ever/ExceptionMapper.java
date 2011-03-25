@@ -11,7 +11,8 @@ import javax.ws.rs.ext.Provider;
 import org.apache.log4j.Logger;
 
 /**
- * Used for catching exception that were not caught by other mappers
+ * Used for catching exception that were not caught by other mappers 
+ * and returning <code>500 (Internal Server Error)</code> responses.
  * 
  * @author nowakm
  *

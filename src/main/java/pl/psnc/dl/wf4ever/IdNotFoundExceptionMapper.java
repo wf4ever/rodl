@@ -7,7 +7,11 @@ import javax.ws.rs.ext.Provider;
 
 import pl.psnc.dlibra.service.IdNotFoundException;
 
-
+/**
+ * Maps <code>IdNotFoundException</code> to <code>404 (Not Found)</code> HTTP response.
+ * @author nowakm
+ *
+ */
 @Provider
 public class IdNotFoundExceptionMapper
 	implements ExceptionMapper<IdNotFoundException>

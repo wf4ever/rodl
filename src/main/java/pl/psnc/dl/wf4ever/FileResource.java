@@ -16,8 +16,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
-import org.apache.log4j.Logger;
-
 import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 
@@ -34,7 +32,7 @@ import com.sun.jersey.core.header.ContentDisposition;
 public class FileResource
 {
 
-	private final static Logger logger = Logger.getLogger(FileResource.class);
+	//	private final static Logger logger = Logger.getLogger(FileResource.class);
 
 	@Context
 	private HttpServletRequest request;

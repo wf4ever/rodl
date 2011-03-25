@@ -604,8 +604,8 @@ public class DLibraDataSource
 			}
 		}
 
-		InputStream is = new ByteArrayInputStream(RdfBuilder.serializeResource(
-			resource).getBytes());
+		InputStream is = new ByteArrayInputStream(RdfBuilder.transformManifest(
+			RdfBuilder.serializeResource(resource)).getBytes());
 		// save manifest.rdf
 		createOrUpdateFile(versionUri, groupPublicationName, publicationName,
 			Constants.MANIFEST_FILENAME, is, Constants.RDF_XML_MIME_TYPE, false);
