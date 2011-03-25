@@ -1,18 +1,26 @@
 require 'net/http'
 require 'choice'
 
-#BASE_URI="ivy.man.poznan.pl"
-#PORT=80
-#APP_NAME="rosrs"
+IVY=true
+if IVY then
+	BASE_URI="ivy.man.poznan.pl"
+	PORT=80
+	APP_NAME="rosrs"
+	ADMIN_LOGIN="wfadmin"
+	ADMIN_PASSWORD="wfadmin!!!"
+else 
+	BASE_URI="localhost"
+	PORT=8081
+	APP_NAME="ro-srs"
+	ADMIN_LOGIN="admin"
+	ADMIN_PASSWORD="admin"
+end
 
-BASE_URI="localhost"
-PORT=8081
-APP_NAME="ro-srs"
 
-#ADMIN_LOGIN="wfadmin"
-#ADMIN_PASSWORD="wfadmin!!!"
-ADMIN_LOGIN="admin"
-ADMIN_PASSWORD="admin"
+
+
+
+
 
 WORKSPACE_ID="rubyUser"
 PASSWORD="pass"
