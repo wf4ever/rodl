@@ -139,13 +139,7 @@
 		<repository>
 			<id>ivy-maven1</id>
 			<name>Ivy Maven 1.x repository</name>
-			<url>http://ivy.man.poznan.pl/protected/maven/</url>
-			<layout>legacy</layout>
-		</repository>
-		<repository>
-			<id>ivy-maven1-snapshots</id>
-			<name>Ivy Maven 1.x snapshots repository</name>
-			<url>http://ivy.man.poznan.pl/protected/maven-snapshots/</url>
+			<url>http://ivy.man.poznan.pl/maven/</url>
 			<layout>legacy</layout>
 		</repository>
 	</repositories>
