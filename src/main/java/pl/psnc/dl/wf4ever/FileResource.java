@@ -26,9 +26,10 @@ import com.sun.jersey.core.header.ContentDisposition;
  * @author nowakm
  *
  */
-@Path(Constants.WORKSPACES_URL_PART + "/{W_ID}/"
+@Path(Constants.WORKSPACES_URL_PART
+		+ "/{W_ID}/"
 		+ Constants.RESEARCH_OBJECTS_URL_PART
-		+ "/{RO_ID}/{RO_VERSION_ID}/{FILE_PATH : [a-zA-Z0-9.%/]+}")
+		+ "/{RO_ID}/{RO_VERSION_ID}/{FILE_PATH : [\\w\\d:#%/;$()~_?\\-=\\\\.&]+}")
 public class FileResource
 {
 
