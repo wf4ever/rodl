@@ -33,7 +33,7 @@ FILE1_NAME="file1.txt"
 FILE1_PATH="file1.txt"
 
 FILE2_NAME="file2.txt"
-FILE2_PATH="dir/file2.txt"
+FILE2_PATH="dir/file_a-2.txt"
 
 MESSAGE_WIDTH=50
 code = 200
