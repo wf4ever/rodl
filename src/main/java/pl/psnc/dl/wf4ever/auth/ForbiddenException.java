@@ -2,7 +2,6 @@ package pl.psnc.dl.wf4ever.auth;
 
 /**
  * <p>A runtime exception thrown when user does not have permission to access particular resource.</p>
- * 
  *
  * @author nowakm
  */

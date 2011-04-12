@@ -550,8 +550,8 @@ public class DLibraDataSource
 		resource.addLiteral(DCTerms.description, "");
 		resource.addLiteral(RdfBuilder.OXDS_CURRENT_VERSION,
 			uri.substring(1 + uri.lastIndexOf("/")));
-		resource.addProperty(DCTerms.created, resource.getModel()
-				.createTypedLiteral(new Date(), RdfBuilder.DateFormatXSDUri));
+		resource.addProperty(DCTerms.created,
+			RdfBuilder.createDateLiteral(new Date()));
 		resource.addLiteral(DCTerms.source, "");
 		return RdfBuilder.serializeResource(resource);
 	}
@@ -583,10 +583,8 @@ public class DLibraDataSource
 
 			resource.addProperty(RdfBuilder.OXDS_CURRENT_VERSION,
 				publicationName);
-			resource.addProperty(
-				DCTerms.modified,
-				resource.getModel().createTypedLiteral(new Date(),
-					RdfBuilder.DateFormatXSDUri));
+			resource.addProperty(DCTerms.modified,
+				RdfBuilder.createDateLiteral(new Date()));
 		}
 
 		// read manifest and copy user-editable tags
@@ -677,11 +675,8 @@ public class DLibraDataSource
 		String digest = getHex(fileDigest);
 		Resource resource = RdfBuilder.createResource(fullPath);
 
-		resource.addProperty(
-			DCTerms.modified,
-			resource.getModel().createTypedLiteral(
-				versionInfo.getLastModificationDate(),
-				RdfBuilder.DateFormatXSDUri));
+		resource.addProperty(DCTerms.modified,
+			RdfBuilder.createDateLiteral(versionInfo.getLastModificationDate()));
 
 		resource.addLiteral(DCTerms.identifier, "MD5: " + digest);
 		resource.addLiteral(DCTerms.type, fileInfo.getMimeType());

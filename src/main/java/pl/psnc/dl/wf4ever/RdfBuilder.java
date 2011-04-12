@@ -6,7 +6,9 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.xml.transform.Transformer;
@@ -15,6 +17,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
@@ -32,10 +35,12 @@ public class RdfBuilder
 {
 
 	//	private final static Logger logger = Logger.getLogger(RdfBuilder.class);
-
-	public static final String DateFormatXSDUri = "http://www.w3.org/2001/XMLSchema#date";
-
 	private static Model model = ModelFactory.createDefaultModel();
+
+	private static SimpleDateFormat sdf = new SimpleDateFormat(
+			"yyyy-MM-dd'T'HH:mm:ssZ");
+
+	private static final String DateFormatXSDUri = "http://www.w3.org/2001/XMLSchema#date";
 
 	private static final String ORE_NAMESPACE = "http://www.openarchives.org/ore/terms/";
 
@@ -48,15 +53,15 @@ public class RdfBuilder
 	private static final Resource AGGREGATION = model
 			.createResource(ORE_NAMESPACE + "Aggregation");
 
-	public static final Property AGGREGATES = model
-			.createProperty(ORE_NAMESPACE + "aggregates");
-
 	private static final String TYPE = "RDF/XML";
 
 	private static final PrefixMapping StandardNamespaces = PrefixMapping.Factory
 			.create().setNsPrefix(ORE_PREFIX, ORE_NAMESPACE)
 			.setNsPrefix(OXDS_PREFIX, OXDS_NAMESPACE)
 			.setNsPrefix("dcterms", DCTerms.NS).lock();
+
+	public static final Property AGGREGATES = model
+			.createProperty(ORE_NAMESPACE + "aggregates");
 
 	public static final Property OXDS_CURRENT_VERSION = model
 			.createProperty(OXDS_NAMESPACE + "currentVersion");
@@ -119,6 +124,14 @@ public class RdfBuilder
 		}
 
 		return output;
+	}
+
+
+	public static Literal createDateLiteral(Date date)
+	{
+
+		String text = sdf.format(date);
+		return model.createTypedLiteral(text, DateFormatXSDUri);
 	}
 
 
