@@ -15,6 +15,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.xml.transform.TransformerException;
 
@@ -27,8 +29,6 @@ import pl.psnc.dlibra.common.Info;
 import pl.psnc.dlibra.common.InputFilter;
 import pl.psnc.dlibra.common.OutputFilter;
 import pl.psnc.dlibra.content.ContentServer;
-import pl.psnc.dlibra.content.server.BasicRemoteOutputStream;
-import pl.psnc.dlibra.content.server.DigestedElementOutputStream;
 import pl.psnc.dlibra.metadata.AbstractPublicationInfo;
 import pl.psnc.dlibra.metadata.Directory;
 import pl.psnc.dlibra.metadata.DirectoryFilter;
@@ -67,6 +67,7 @@ import pl.psnc.dlibra.user.User;
 import pl.psnc.dlibra.user.UserId;
 import pl.psnc.dlibra.user.UserManager;
 import pl.psnc.dlibra.user.UserServer;
+import pl.psnc.util.IOUtils;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -306,10 +307,10 @@ public class DLibraDataSource
 		Collection<Id> versionIds = publicationManager.getObjects(
 			new EditionFilter(editionId), new OutputFilter(VersionId.class))
 				.getResultIds();
-		Collection<Info> resultInfos = fileManager.getObjects(
+		Collection<Info> fileInfos = fileManager.getObjects(
 			new InputFilter(new ArrayList<Id>(versionIds)),
 			new OutputFilter(FileInfo.class)).getResultInfos();
-		for (Info info : resultInfos) {
+		for (Info info : fileInfos) {
 			String filePath = ((FileInfo) info).getFullPath();
 			if (!filePath.equals("/" + Constants.MANIFEST_FILENAME)) {
 				result.add(filePath);
@@ -364,26 +365,45 @@ public class DLibraDataSource
 	{
 		PublicationId publicationId = getPublicationId(
 			getGroupId(groupPublicationName), publicationName);
-		final EditionId editionId = getEditionId(publicationId);
+		EditionId editionId = getEditionId(publicationId);
 
-		final PipedInputStream in = new PipedInputStream();
-		final PipedOutputStream[] out = new PipedOutputStream[1];
+		final List<Id> versionIds = (List<Id>) publicationManager.getObjects(
+			new EditionFilter(editionId), new OutputFilter(VersionId.class))
+				.getResultIds();
+		final List<Info> fileInfos = (List<Info>) fileManager.getObjects(
+			new InputFilter(new ArrayList<Id>(versionIds)),
+			new OutputFilter(FileInfo.class)).getResultInfos();
+
+		PipedInputStream in = new PipedInputStream();
+		PipedOutputStream out;
 		try {
-			out[0] = new PipedOutputStream(in);
+			out = new PipedOutputStream(in);
 		}
 		catch (IOException e) {
 			throw new RuntimeException("This should never happen", e);
 		}
+
+		final ZipOutputStream zipOut = new ZipOutputStream(out);
 
 		new Thread("edition zip downloader (" + editionId + ")") {
 
 			public void run()
 			{
 				try {
-					contentServer.writeCompressedEdition(editionId,
-						new DigestedElementOutputStream(
-								new BasicRemoteOutputStream(out[0], false)));
-					out[0].flush();
+					for (int i = 0; i < versionIds.size(); i++) {
+						VersionId versionId = (VersionId) versionIds.get(i);
+						String filePath = ((FileInfo) fileInfos.get(i))
+								.getFullPath();
+						if (filePath.startsWith("/")) {
+							filePath = filePath.substring(1);
+						}
+						ZipEntry entry = new ZipEntry(filePath);
+						zipOut.putNextEntry(entry);
+						InputStream versionInputStream = contentServer
+							.getVersionInputStream(versionId);
+						IOUtils.copyStream(versionInputStream, zipOut);
+						versionInputStream.close();
+					}
 				}
 				catch (IOException e) {
 					logger.error("Zip transmission failed", e);
@@ -393,7 +413,7 @@ public class DLibraDataSource
 				}
 				finally {
 					try {
-						out[0].close();
+						zipOut.close();
 					}
 					catch (Exception e) {
 						// ignore
