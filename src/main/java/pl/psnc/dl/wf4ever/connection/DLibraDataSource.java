@@ -352,6 +352,8 @@ public class DLibraDataSource
 		if (resultIds.size() != 1) {
 			throw new DLibraException(null, "Invalid state of publication "
 					+ publicationId + ": " + resultIds.size() + " editions.") {
+
+						private static final long serialVersionUID = -7493352685629908419L;
 				// TODO probably another exception would fit better here
 			};
 		}

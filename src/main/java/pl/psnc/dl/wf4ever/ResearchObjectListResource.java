@@ -4,11 +4,14 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
@@ -32,6 +35,13 @@ public class ResearchObjectListResource
 	UriInfo uriInfo;
 
 
+	/**
+	 * Returns list of links to research objects. Output format is TBD.
+	 * @param workspaceId identifier of a workspace in the RO SRS
+	 * @return TBD
+	 * @throws RemoteException
+	 * @throws DLibraException
+	 */
 	@GET
 	@Produces("text/plain")
 	public String getResearchObjectList(@PathParam("W_ID") String workspaceId)
@@ -54,4 +64,29 @@ public class ResearchObjectListResource
 
 		return sb.toString();
 	}
+	
+	/**
+	 * Creates new RO with given RO_ID.
+
+	 * @param workspaceId identifier of a workspace in the RO SRS
+	 * @param researchObjectId RO_ID in plain text (text/plain)
+	 * @return 201 (Created) when the RO was successfully created, 409 (Conflict) if the RO_ID is already used in the WORKSPACE_ID workspace
+	 * @throws RemoteException
+	 * @throws DLibraException
+	 */
+	@POST
+	@Consumes("text/plain")
+	public Response createResearchObject(@PathParam("W_ID") String workspaceId,
+			String researchObjectId)
+		throws RemoteException, DLibraException
+	{
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
+				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+
+		dLibraDataSource.createGroupPublication(researchObjectId);
+
+		return Response.created(uriInfo.getAbsolutePath()).build();
+	}
+
+
 }

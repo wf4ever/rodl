@@ -56,6 +56,7 @@ public class DLibraConnection
 		}
 		this.host = properties.getProperty("host");
 		this.port = Integer.parseInt(properties.getProperty("port"));
+		logger.debug("Connection parameters: " + this.host + ":" + this.port);
 
 		this.workspacesDirectory = Long.parseLong(properties
 				.getProperty("workspacesDir"));
