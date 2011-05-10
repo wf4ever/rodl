@@ -34,6 +34,7 @@ FILE1_PATH="file1.txt"
 
 FILE2_NAME="file2.txt"
 FILE2_PATH="dir/file_a-2.txt"
+FILE2_DIRECTORY="dir"
 
 MESSAGE_WIDTH=50
 code = 200
@@ -166,14 +167,14 @@ if code == 201
 					}	
 		
 				#get version rdf
-#				Net::HTTP.start(BASE_URI, PORT) {|http|
-#						printConstantWidth "Retrieving version description........"
-#						req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
-#						req.basic_auth WORKSPACE_ID, PASSWORD
-#						req.add_field "Accept", "application/rdf+xml"
-#						response = http.request(req)
-#						printResponse(response, 200)
-#					}	
+				Net::HTTP.start(BASE_URI, PORT) {|http|
+						printConstantWidth "Retrieving version description........"
+						req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
+						req.basic_auth WORKSPACE_ID, PASSWORD
+						req.add_field "Accept", "application/rdf+xml"
+						response = http.request(req)
+						printResponse(response, 200)
+					}	
 				#get version zip
 				Net::HTTP.start(BASE_URI, PORT) {|http|
 						printConstantWidth "Retrieving version archive........"
@@ -237,6 +238,26 @@ if code == 201
 						response = http.request(req)
 						printResponse(response, 200)
 				}	
+				#get list of files in /dir
+				Net::HTTP.start(BASE_URI, PORT) {|http|
+						printConstantWidth "Retrieving list of file in a directory........"
+						req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '/' + FILE2_DIRECTORY)
+						req.basic_auth WORKSPACE_ID, PASSWORD
+						req.add_field "Accept", "application/xml+rdf"
+
+						response = http.request(req)
+						printResponse(response, 200)
+				}	
+				#get zipped files in /dir
+				Net::HTTP.start(BASE_URI, PORT) {|http|
+						printConstantWidth "Retrieving zipped content of a directory........"
+						req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '/' + FILE2_DIRECTORY + "?content=true")
+						req.basic_auth WORKSPACE_ID, PASSWORD
+						req.add_field "Accept", "application/zip"
+
+						response = http.request(req)
+						printResponse(response, 200)
+				}	
 
 				#update file1
 				Net::HTTP.start(BASE_URI, PORT) {|http|
@@ -267,7 +288,7 @@ if code == 201
 				#update manifest
 				Net::HTTP.start(BASE_URI, PORT) {|http|
 					printConstantWidth "Updating manifest........"
-					req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '/' + FILE2_PATH)
+					req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
 					req.basic_auth WORKSPACE_ID, PASSWORD
 					req.body = File.read("manifest.rdf")
 					req.add_field "Content-Type", "application/rdf+xml"
