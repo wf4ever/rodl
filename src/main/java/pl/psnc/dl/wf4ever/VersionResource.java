@@ -79,7 +79,6 @@ public class VersionResource {
 			return Response.ok(body)
 					.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
 					.build();
-
 		}
 	}
 

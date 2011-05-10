@@ -362,7 +362,13 @@ public class DLibraDataSource
 
 
 	public InputStream getZippedPublication(String groupPublicationName,
-			String publicationName)
+			String publicationName) throws RemoteException, DLibraException {
+		return getZippedPublication(groupPublicationName, publicationName, null);
+	}
+
+	
+	public InputStream getZippedPublication(String groupPublicationName,
+			String publicationName, final String folder)
 		throws RemoteException, DLibraException
 	{
 		PublicationId publicationId = getPublicationId(
@@ -398,6 +404,10 @@ public class DLibraDataSource
 								.getFullPath();
 						if (filePath.startsWith("/")) {
 							filePath = filePath.substring(1);
+						}
+						if (folder != null) {
+							if (!filePath.startsWith(folder))
+								continue;
 						}
 						ZipEntry entry = new ZipEntry(filePath);
 						zipOut.putNextEntry(entry);

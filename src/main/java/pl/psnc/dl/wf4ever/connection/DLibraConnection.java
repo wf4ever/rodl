@@ -60,6 +60,7 @@ public class DLibraConnection
 
 		this.workspacesDirectory = Long.parseLong(properties
 				.getProperty("workspacesDir"));
+		logger.debug("Workspaces directory: " + this.workspacesDirectory);
 	}
 
 
