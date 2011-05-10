@@ -185,10 +185,10 @@ public class DLibraDataSource
 		// TODO do we really want to permanently remove the user and its directory?
 
 		User userData = userManager.getUserData(login);
-
+		
 		directoryManager.removeDirectory(userData.getHomedir(), true,
 			"Workspace removed from RO SRS");
-
+		
 		userManager.removeUser(userData.getId());
 	}
 

@@ -1,7 +1,7 @@
 require 'net/http'
 require 'choice'
 
-IVY=true
+IVY=false
 if IVY then
 	BASE_URI="ivy.man.poznan.pl"
 	PORT=80
@@ -12,8 +12,8 @@ else
 	BASE_URI="localhost"
 	PORT=8081
 	APP_NAME="ro-srs"
-	ADMIN_LOGIN="admin"
-	ADMIN_PASSWORD="admin"
+	ADMIN_LOGIN="wfadmin"
+	ADMIN_PASSWORD="wfadmin!!!"
 end
 
 
@@ -76,9 +76,10 @@ end
 #create workspace
 Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Creating workspace........"
-		req = Net::HTTP::Put.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID)
+		req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces')
 		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
-		req.body = PASSWORD
+		req.body = WORKSPACE_ID + "
+" + PASSWORD
 		req.add_field "Content-Type", "text/plain"
 
 		response = http.request(req)
@@ -90,9 +91,10 @@ if code == 201
 	#create ro
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Creating research object........"
-		req = Net::HTTP::Put.new('/' + APP_NAME+ '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME)
+		req = Net::HTTP::Post.new('/' + APP_NAME+ '/workspaces/' + WORKSPACE_ID + '/ROs')
 		req.basic_auth WORKSPACE_ID, PASSWORD
-        req.content_length = 0
+        req.body = RO_NAME
+		req.add_field "Content-Type", "text/plain"
 
 		response = http.request(req)
 		code = response.code.to_i 
@@ -104,9 +106,10 @@ if code == 201
 		#create version
 		Net::HTTP.start(BASE_URI, PORT) {|http|
 			printConstantWidth "Creating version........"
-			req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
+			req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME)
 			req.basic_auth WORKSPACE_ID, PASSWORD
-            req.content_length = 0
+            req.body = VERSION_NAME
+            req.add_field "Content-Type", "text/plain"
 
 			response = http.request(req)
 			printResponse(response, 201)
@@ -163,18 +166,18 @@ if code == 201
 					}	
 		
 				#get version rdf
-				Net::HTTP.start(BASE_URI, PORT) {|http|
-						printConstantWidth "Retrieving version description........"
-						req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
-						req.basic_auth WORKSPACE_ID, PASSWORD
-						req.add_field "Accept", "application/rdf+xml"
-						response = http.request(req)
-						printResponse(response, 200)
-					}	
+#				Net::HTTP.start(BASE_URI, PORT) {|http|
+#						printConstantWidth "Retrieving version description........"
+#						req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
+#						req.basic_auth WORKSPACE_ID, PASSWORD
+#						req.add_field "Accept", "application/rdf+xml"
+#						response = http.request(req)
+#						printResponse(response, 200)
+#					}	
 				#get version zip
 				Net::HTTP.start(BASE_URI, PORT) {|http|
 						printConstantWidth "Retrieving version archive........"
-						req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
+						req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '?content=true')
 						req.basic_auth WORKSPACE_ID, PASSWORD
 						req.add_field "Accept", "application/zip"
 						response = http.request(req)
@@ -191,7 +194,7 @@ if code == 201
 				#get manifest
 				Net::HTTP.start(BASE_URI, PORT) {|http|
 						printConstantWidth "Retrieving manifest........"
-						req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + "/manifest.rdf")
+						req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
 						req.basic_auth WORKSPACE_ID, PASSWORD
 						response = http.request(req)
 						printResponse(response, 200)
@@ -276,8 +279,9 @@ if code == 201
 				#create version as a copy of another version
 				Net::HTTP.start(BASE_URI, PORT) {|http|
 					printConstantWidth "Creating version basing on another........"
-					req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_2_NAME)
-					req.body = "http://" + BASE_URI + ':' + PORT.to_s + '/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME
+					req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME)
+					req.body = VERSION_2_NAME + "
+http://" + BASE_URI + ':' + PORT.to_s + '/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME
 					req.add_field "Content-Type", "text/plain"
 					req.basic_auth WORKSPACE_ID, PASSWORD
 

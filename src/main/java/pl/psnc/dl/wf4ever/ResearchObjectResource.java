@@ -15,9 +15,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
+
+import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
 import pl.psnc.dlibra.metadata.PublicationInfo;
@@ -33,6 +35,10 @@ import com.sun.jersey.core.header.ContentDisposition;
 @Path(Constants.WORKSPACES_URL_PART + "/{W_ID}/"
 		+ Constants.RESEARCH_OBJECTS_URL_PART + "/{RO_ID}")
 public class ResearchObjectResource {
+
+	@SuppressWarnings("unused")
+	private final static Logger logger = Logger
+			.getLogger(ResearchObjectResource.class);
 
 	@Context
 	HttpServletRequest request;
@@ -85,8 +91,9 @@ public class ResearchObjectResource {
 	 * 
 	 * @param workspaceId
 	 * @param researchObjectId
-	 * @param data  Input format is
-	 * text/plain with RO_VERSION_ID in first line and base version URI in second (optional).
+	 * @param data
+	 *            Input format is text/plain with RO_VERSION_ID in first line
+	 *            and base version URI in second (optional).
 	 * @return 201 (Created) if the version was created, 409 (Conflict) if
 	 *         version with given RO_VERSION_ID already exists
 	 * @throws DLibraException
@@ -112,12 +119,6 @@ public class ResearchObjectResource {
 		String baseVersionUri = (lines.length > 1 ? lines[1] : null);
 		String baseVersionId = null;
 		if (baseVersionUri != null && baseVersionUri.length() > 0) {
-			String roPath = uriInfo
-					.getPath()
-					.toString()
-					.substring(0,
-							uriInfo.getPath().toString().lastIndexOf(versionId));
-
 			// remove "/" from the end of uri
 			if (baseVersionUri.lastIndexOf("/") == baseVersionUri.length() - 1) {
 				baseVersionUri = baseVersionUri.substring(0,
@@ -125,7 +126,7 @@ public class ResearchObjectResource {
 			}
 
 			// check if this is correct URI
-			if (!baseVersionUri.contains(roPath)) {
+			if (!baseVersionUri.contains(uriInfo.getPath())) {
 				return Response
 						.status(Status.BAD_REQUEST)
 						.entity("Bad base version URI")
@@ -134,10 +135,10 @@ public class ResearchObjectResource {
 			}
 
 			baseVersionId = baseVersionUri.substring(baseVersionUri
-					.indexOf(roPath) + roPath.length());
+					.indexOf(uriInfo.getPath()) + uriInfo.getPath().length() + 1);
 		}
 
-		String manifestUri = uriInfo.getAbsolutePath().toString();
+		String manifestUri = uriInfo.getAbsolutePath().toString() + "/" + versionId;
 		dLibraDataSource.createPublication(researchObjectId, versionId,
 				baseVersionId, manifestUri);
 
