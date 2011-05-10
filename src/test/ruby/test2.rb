@@ -254,7 +254,7 @@ end
 def getDirectoryList
 	#get list of files in /dir
 	Net::HTTP.start(BASE_URI, PORT) {|http|
-			printConstantWidth "Retrieving list of file in a directory........"
+			printConstantWidth "Retrieving list of files in a directory........"
 			req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '/' + FILE2_DIRECTORY)
 			req.basic_auth WORKSPACE_ID, PASSWORD
 			req.add_field "Accept", "application/xml+rdf"
