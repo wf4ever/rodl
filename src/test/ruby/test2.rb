@@ -1,11 +1,11 @@
 require 'net/http'
 require 'choice'
 
-IVY=false
+IVY=true
 if IVY then
 	BASE_URI="ivy.man.poznan.pl"
 	PORT=80
-	APP_NAME="rosrs"
+	APP_NAME="rosrs2"
 	ADMIN_LOGIN="wfadmin"
 	ADMIN_PASSWORD="wfadmin!!!"
 else 
