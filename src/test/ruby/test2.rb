@@ -41,11 +41,15 @@ code = 200
 
 def printResponse(response, expectedCode)
 		puts response.code + " " + response.message
+    if Choice.choices[:printHeaders]
+      puts response.to_hash
+    end   
 		if response.code.to_i == expectedCode
 			puts response.body if Choice.choices[:printBody] and expectedCode != 204#NO CONTENT
 		else
 			puts response.body if Choice.choices[:printErrors]
 		end
+		
 end
 
 def printConstantWidth(message) 
@@ -71,6 +75,13 @@ Choice.options do
 		desc 'If set, error messages will be printed'
 		default false
 	end
+	
+	option :printHeaders do
+    short '-H'
+    long '--print-headers'
+    desc 'If set, HTTP headers will be printed'
+    default false
+  end
 end
 
 def createWorkspace
@@ -384,6 +395,20 @@ def deleteWorkspace
 		response = http.request(req)
 		printResponse(response, 204)
 	}
+end
+
+# Tidy up
+begin  
+  deleteVersion
+rescue 
+end
+begin
+  deleteRO
+rescue 
+end
+begin
+  deleteWorkspace
+rescue
 end
 
 if createWorkspace == 201
