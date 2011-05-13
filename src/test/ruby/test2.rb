@@ -3,7 +3,7 @@ require 'choice'
 require 'uuidtools'
 require 'base64'
 
-IVY=false
+IVY=true
 if IVY then
 	BASE_URI="ivy.man.poznan.pl"
 	PORT=80

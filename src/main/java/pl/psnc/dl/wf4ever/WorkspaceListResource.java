@@ -3,6 +3,7 @@
  */
 package pl.psnc.dl.wf4ever;
 
+import java.net.URI;
 import java.rmi.RemoteException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -67,6 +68,6 @@ public class WorkspaceListResource {
 		// password can be empty
 		dLibraDataSource.createUser(workspaceId, password);
 
-		return Response.created(uriInfo.getAbsolutePath()).build();
+		return Response.created(URI.create(uriInfo.getAbsolutePath() + "/" + workspaceId)).build();
 	}
 }
