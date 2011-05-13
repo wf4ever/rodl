@@ -1,7 +1,9 @@
 require 'net/http'
 require 'choice'
+require 'uuidtools'
+require 'base64'
 
-IVY=true
+IVY=false
 if IVY then
 	BASE_URI="ivy.man.poznan.pl"
 	PORT=80
@@ -22,7 +24,7 @@ end
 
 
 
-WORKSPACE_ID="rubyUser"
+WORKSPACE_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")[0,22]
 PASSWORD="pass"
 
 RO_NAME="ro1"
@@ -421,20 +423,6 @@ def deleteWorkspace
 		response = http.request(req)
 		printResponse(response, 204)
 	}
-end
-
-# Tidy up
-begin  
-  deleteVersion
-rescue 
-end
-begin
-  deleteRO
-rescue 
-end
-begin
-  deleteWorkspace
-rescue
 end
 
 if createWorkspace == 201
