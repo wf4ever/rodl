@@ -20,6 +20,7 @@ import javax.xml.transform.TransformerException;
 import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 
+import com.hp.hpl.jena.shared.JenaException;
 import com.sun.jersey.core.header.ContentDisposition;
 
 /**
@@ -100,13 +101,14 @@ public class VersionResource {
 	 * @throws DLibraException
 	 * @throws IOException
 	 * @throws TransformerException
+	 * @throws SAXException 
 	 */
 	@POST
 	@Consumes("application/rdf+xml")
 	public Response updateManifestFile(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId, String rdfAsString)
-			throws DLibraException, IOException, TransformerException {
+			throws DLibraException, IOException, TransformerException, JenaException {
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 

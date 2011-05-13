@@ -34,7 +34,8 @@ import com.sun.jersey.core.header.ContentDisposition;
  */
 @Path(Constants.WORKSPACES_URL_PART + "/{W_ID}/"
 		+ Constants.RESEARCH_OBJECTS_URL_PART + "/{RO_ID}")
-public class ResearchObjectResource {
+public class ResearchObjectResource
+{
 
 	@SuppressWarnings("unused")
 	private final static Logger logger = Logger
@@ -45,6 +46,7 @@ public class ResearchObjectResource {
 
 	@Context
 	UriInfo uriInfo;
+
 
 	/**
 	 * Returns list of versions of this research object.
@@ -63,7 +65,8 @@ public class ResearchObjectResource {
 	@Produces("application/rdf+xml")
 	public Response getListOfVersions(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId)
-			throws RemoteException, DLibraException, TransformerException {
+		throws RemoteException, DLibraException, TransformerException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 		List<PublicationInfo> list = dLibraDataSource
@@ -85,6 +88,7 @@ public class ResearchObjectResource {
 				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
 	}
 
+
 	/**
 	 * Creates new version. Input is RO_VERSION_ID and optional URI of the base
 	 * version that should be used to create a new version.
@@ -99,12 +103,14 @@ public class ResearchObjectResource {
 	 * @throws DLibraException
 	 * @throws IOException
 	 * @throws TransformerException
+	 * @throws SAXException 
 	 */
 	@POST
 	@Consumes("text/plain")
 	public Response createVersion(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId, String data)
-			throws DLibraException, IOException, TransformerException {
+		throws DLibraException, IOException, TransformerException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
@@ -122,7 +128,7 @@ public class ResearchObjectResource {
 			// remove "/" from the end of uri
 			if (baseVersionUri.lastIndexOf("/") == baseVersionUri.length() - 1) {
 				baseVersionUri = baseVersionUri.substring(0,
-						baseVersionUri.length() - 1);
+					baseVersionUri.length() - 1);
 			}
 
 			// check if this is correct URI
@@ -131,19 +137,23 @@ public class ResearchObjectResource {
 						.status(Status.BAD_REQUEST)
 						.entity("Bad base version URI")
 						.header(Constants.CONTENT_TYPE_HEADER_NAME,
-								"text/plain").build();
+							"text/plain").build();
 			}
 
 			baseVersionId = baseVersionUri.substring(baseVersionUri
-					.indexOf(uriInfo.getPath()) + uriInfo.getPath().length() + 1);
+					.indexOf(uriInfo.getPath())
+					+ uriInfo.getPath().length()
+					+ 1);
 		}
 
-		String manifestUri = uriInfo.getAbsolutePath().toString() + "/" + versionId;
+		String manifestUri = uriInfo.getAbsolutePath().toString() + "/"
+				+ versionId;
 		dLibraDataSource.createPublication(researchObjectId, versionId,
-				baseVersionId, manifestUri);
+			baseVersionId, manifestUri);
 
 		return Response.created(uriInfo.getAbsolutePath()).build();
 	}
+
 
 	/**
 	 * Deletes the research object.
@@ -158,7 +168,8 @@ public class ResearchObjectResource {
 	@DELETE
 	public void deleteResearchObject(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId)
-			throws RemoteException, DLibraException {
+		throws RemoteException, DLibraException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 

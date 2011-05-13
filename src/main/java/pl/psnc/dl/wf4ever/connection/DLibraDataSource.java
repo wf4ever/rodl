@@ -74,6 +74,7 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.shared.JenaException;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 
 /**
@@ -480,9 +481,14 @@ public class DLibraDataSource {
 		{
 			List<PublicationInfo> list = listPublicationsInGroup(groupPublicationName);
 			for (PublicationInfo p : list) {
-				regenerateManifest(groupPublicationName, p.getLabel(),
-						manifestUri,
-						getManifest(groupPublicationName, p.getLabel()));
+				try {
+					regenerateManifest(groupPublicationName, p.getLabel(),
+							manifestUri,
+							getManifest(groupPublicationName, p.getLabel()));
+				}
+				catch (JenaException e) {
+					logger.warn("Manifest stored for publication " + groupPublicationName + " is malformed");
+				}
 			}
 		}
 	}
@@ -499,9 +505,14 @@ public class DLibraDataSource {
 		{
 			List<PublicationInfo> list = listPublicationsInGroup(groupPublicationName);
 			for (PublicationInfo p : list) {
-				regenerateManifest(groupPublicationName, p.getLabel(),
-						versionUri,
-						getManifest(groupPublicationName, p.getLabel()));
+				try {
+					regenerateManifest(groupPublicationName, p.getLabel(),
+							versionUri,
+							getManifest(groupPublicationName, p.getLabel()));
+				}
+				catch (JenaException e) {
+					logger.warn("Manifest stored for publication " + groupPublicationName + " is malformed");
+				}
 			}
 		}
 	}
@@ -528,7 +539,7 @@ public class DLibraDataSource {
 
 	public void updateManifest(String versionUri, String groupPublicationName,
 			String publicationName, String manifest) throws DLibraException,
-			IOException, TransformerException {
+			IOException, TransformerException, JenaException {
 
 		regenerateManifest(groupPublicationName, publicationName, versionUri,
 				manifest);
@@ -552,7 +563,7 @@ public class DLibraDataSource {
 
 	private void regenerateManifest(String groupPublicationName,
 			String publicationName, String versionUri, String baseManifest)
-			throws DLibraException, IOException, TransformerException {
+			throws DLibraException, IOException, TransformerException, JenaException {
 
 		List<String> list = listFilesInPublication(groupPublicationName,
 				publicationName);
@@ -747,9 +758,14 @@ public class DLibraDataSource {
 		}
 
 		if (generateManifest) {
-			regenerateManifest(groupPublicationName, publicationName,
-					versionUri,
-					getManifest(groupPublicationName, publicationName));
+			try {
+				regenerateManifest(groupPublicationName, publicationName,
+						versionUri,
+						getManifest(groupPublicationName, publicationName));
+			}
+			catch (JenaException e) {
+				logger.warn("Manifest stored for publication " + groupPublicationName + " is malformed");
+			}
 		}
 	}
 
@@ -845,12 +861,18 @@ public class DLibraDataSource {
 				exclude);
 		publicationManager.updateEditionVersions(editionId, copiesIds);
 
-		regenerateManifest(groupPublicationName, publicationName, versionUri,
-				getManifest(groupPublicationName, publicationName));
+		try {
+			regenerateManifest(groupPublicationName, publicationName, versionUri,
+					getManifest(groupPublicationName, publicationName));
+		}
+		catch (JenaException e) {
+			logger.warn("Manifest stored for publication " + groupPublicationName + " is malformed");
+		}
 	}
 
 	private DirectoryId getWorkspaceDir() throws RemoteException,
-			DLibraException {
+ DLibraException
+	{
 		User userData = userManager.getUserData(userLogin);
 		return userData.getHomedir();
 	}

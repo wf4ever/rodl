@@ -316,6 +316,32 @@ def updateManifest
 	}
 end
 
+def updateManifestMalformed
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Updating malformed manifest........"
+		req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
+		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.body = File.read("manifest_malformed.rdf")
+		req.add_field "Content-Type", "application/rdf+xml"
+
+		response = http.request(req)
+		printResponse(response, 400)
+	}
+end
+
+def updateManifestIncorrect
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Updating incorrect manifest........"
+		req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
+		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.body = File.read("manifest_incorrect.rdf")
+		req.add_field "Content-Type", "application/rdf+xml"
+
+		response = http.request(req)
+		printResponse(response, 409)
+	}
+end
+
 def createVersionAsCopy				
 	#create version as a copy of another version
 	Net::HTTP.start(BASE_URI, PORT) {|http|
@@ -404,6 +430,8 @@ if createWorkspace == 201
 				updateFile1
 				updateFile2
 				updateManifest
+				updateManifestMalformed
+				updateManifestIncorrect
 				createVersionAsCopy
 				deleteFile1
 				deleteFile2
