@@ -73,7 +73,7 @@ public class FileResource {
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		if (isContentRequested != null) { // file or directory
+		if (isContentRequested != null) { // file or directory content
 			try { // file
 				InputStream body = dLibraDataSource.getFileContents(
 						researchObjectId, versionId, filePath);
@@ -112,16 +112,20 @@ public class FileResource {
 						.header(Constants.CONTENT_TYPE_HEADER_NAME,
 								Constants.RDF_XML_MIME_TYPE).build();
 			} catch (IdNotFoundException ex) { // directory
+				if (!filePath.endsWith("/"))
+					filePath = filePath.concat("/");
 				List<String> files = dLibraDataSource.listFilesInDirectory(
 						researchObjectId, versionId, filePath);
 
 				List<String> links = new ArrayList<String>(files.size());
 
 				for (String path : files) {
-					links.add(uriInfo.getAbsolutePath()
-							+ "/"
-							+ path.substring(path.indexOf(filePath)
-									+ filePath.length() + 1));
+					String fileUri = uriInfo.getAbsolutePath().toString();
+					if (!fileUri.endsWith("/"))
+						fileUri = fileUri.concat("/");
+					fileUri = fileUri.concat(path.substring(path.indexOf(filePath)
+						+ filePath.length()));
+					links.add(fileUri);
 				}
 				logger.debug("For directory " + filePath + " found "
 						+ links.size() + " files, " + "for example "

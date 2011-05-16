@@ -3,7 +3,7 @@ require 'choice'
 require 'uuidtools'
 require 'base64'
 
-IVY=true
+IVY=false
 if IVY then
 	BASE_URI="ivy.man.poznan.pl"
 	PORT=80
@@ -36,7 +36,7 @@ FILE1_PATH="file1.txt"
 
 FILE2_NAME="file2.txt"
 FILE2_PATH="dir/file_a-2.txt"
-FILE2_DIRECTORY="dir"
+FILE2_DIRECTORY="dir/"
 
 MESSAGE_WIDTH=50
 code = 200
@@ -425,6 +425,54 @@ def deleteWorkspace
 	}
 end
 
+def addEmptyDirectory
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Creating empty directory........"
+		req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '/' + FILE2_DIRECTORY)
+		req.basic_auth WORKSPACE_ID, PASSWORD
+
+		response = http.request(req)
+		printResponse(response, 200)
+		code = response.code.to_i 
+	}
+end
+
+def getEmptyDirectoryMetadata				
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+			printConstantWidth "Retrieving empty directory metadata........"
+			req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '/' + FILE2_DIRECTORY)
+			req.basic_auth WORKSPACE_ID, PASSWORD
+			
+			response = http.request(req)
+			printResponse(response, 200)
+	}	
+end
+
+def deleteEmptyDirectory
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Deleting empty directory........"
+		req = Net::HTTP::Delete.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '/' + FILE2_DIRECTORY)
+		req.basic_auth WORKSPACE_ID, PASSWORD
+
+		response = http.request(req)
+		printResponse(response, 204)
+		code = response.code.to_i 
+	}
+end
+
+def checkNoEmptyDirectory
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+			printConstantWidth "Retrieving empty directory metadata........"
+			req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '/' + FILE2_DIRECTORY)
+			req.basic_auth WORKSPACE_ID, PASSWORD
+			
+			response = http.request(req)
+			printResponse(response, 404)
+	}	
+end
+
+
+
 if createWorkspace == 201
 	if createRO == 201
 		if createVersion == 201
@@ -448,6 +496,15 @@ if createWorkspace == 201
 				createVersionAsCopy
 				deleteFile1
 				deleteFile2
+			end
+			if addEmptyDirectory == 200
+				getEmptyDirectoryMetadata
+				addFile2
+				getEmptyDirectoryMetadata
+				deleteFile2
+				getEmptyDirectoryMetadata
+				deleteEmptyDirectory
+				checkNoEmptyDirectory
 			end
 			deleteVersion
 		end
