@@ -3,7 +3,7 @@ require 'choice'
 require 'uuidtools'
 require 'base64'
 
-IVY=false
+IVY=true
 if IVY then
 	BASE_URI="ivy.man.poznan.pl"
 	PORT=80
@@ -13,7 +13,7 @@ if IVY then
 else 
 	BASE_URI="localhost"
 	PORT=8081
-	APP_NAME="ro-srs"
+	APP_NAME="rosrs"
 	ADMIN_LOGIN="wfadmin"
 	ADMIN_PASSWORD="wfadmin!!!"
 end
@@ -42,22 +42,33 @@ MESSAGE_WIDTH=50
 code = 200
 
 def printResponse(response, expectedCode)
-		puts response.code + " " + response.message
+	printConstantWidth2(response.code + " " + response.message)
+	if response.code.to_i == expectedCode
+		puts " ok"
+	else
+		puts " failed"
+	end
     if Choice.choices[:printHeaders]
       puts response.to_hash
     end   
-		if response.code.to_i == expectedCode
-			puts response.body if Choice.choices[:printBody] and expectedCode != 204#NO CONTENT
-		else
-			puts response.body if Choice.choices[:printErrors]
-		end
-		
+	if response.code.to_i == expectedCode
+		puts response.body if Choice.choices[:printBody] and expectedCode != 204#NO CONTENT
+	else
+		puts response.body if Choice.choices[:printErrors]
+	end
 end
 
 def printConstantWidth(message) 
 	print message
 	(MESSAGE_WIDTH - message.size).times {
 		print "."
+	}
+end
+
+def printConstantWidth2(message) 
+	print message
+	(25 - message.size).times {
+		print " "
 	}
 end
 
@@ -460,6 +471,18 @@ def deleteEmptyDirectory
 	}
 end
 
+def deleteDirectory
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Deleting directory........"
+		req = Net::HTTP::Delete.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '/' + FILE2_DIRECTORY)
+		req.basic_auth WORKSPACE_ID, PASSWORD
+
+		response = http.request(req)
+		printResponse(response, 204)
+		code = response.code.to_i 
+	}
+end
+
 def checkNoEmptyDirectory
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 			printConstantWidth "Retrieving empty directory metadata........"
@@ -492,7 +515,7 @@ if createWorkspace == 201
 				updateFile2
 				updateManifest
 				updateManifestMalformed
-				updateManifestIncorrect
+#				updateManifestIncorrect
 				createVersionAsCopy
 				deleteFile1
 				deleteFile2
@@ -504,6 +527,9 @@ if createWorkspace == 201
 				deleteFile2
 				getEmptyDirectoryMetadata
 				deleteEmptyDirectory
+				checkNoEmptyDirectory
+				addFile2
+				deleteDirectory
 				checkNoEmptyDirectory
 			end
 			deleteVersion

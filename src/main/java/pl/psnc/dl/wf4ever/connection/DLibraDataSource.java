@@ -427,8 +427,9 @@ public class DLibraDataSource
 		}
 
 		final ZipOutputStream zipOut = new ZipOutputStream(out);
-		final String folder = (folderNotStandardized == null ? null : (folderNotStandardized.endsWith("/") ? folderNotStandardized
-				: folderNotStandardized.concat("/")));
+		final String folder = (folderNotStandardized == null ? null
+				: (folderNotStandardized.endsWith("/") ? folderNotStandardized
+						: folderNotStandardized.concat("/")));
 
 		new Thread("edition zip downloader (" + editionId + ")") {
 
@@ -823,7 +824,8 @@ public class DLibraDataSource
 
 		if (filePath.endsWith("/")) {
 			// slash at the end means empty folder
-			logger.debug("Slash at the end, file " + filePath + " will be an empty folder");
+			logger.debug("Slash at the end, file " + filePath
+					+ " will be an empty folder");
 			filePath = EmptyFoldersUtility.convertReal2Dlibra(filePath);
 		}
 
@@ -996,8 +998,6 @@ public class DLibraDataSource
 		try {
 			exclude.add(getVersionId(editionId, filePath));
 			emptyFolder = filePath.substring(0, filePath.lastIndexOf("/") + 1);
-			logger.debug("Empty folder is " + emptyFolder + " and contains " + listFilesInDirectory(groupPublicationName, publicationName,
-				emptyFolder).size() + " files");
 			if (listFilesInDirectory(groupPublicationName, publicationName,
 				emptyFolder).size() == 1)
 				recreateEmptyFolder = true;
@@ -1008,8 +1008,9 @@ public class DLibraDataSource
 			List<String> files = listFilesInDirectory(groupPublicationName,
 				publicationName, filePath);
 			if (!files.isEmpty()) {
-				logger.debug("Deleting folder with " + files.size() + " files");
 				for (String file : files) {
+					if (file.startsWith("/"))
+						file = file.substring(1);
 					exclude.add(getVersionId(editionId, file));
 				}
 			}
