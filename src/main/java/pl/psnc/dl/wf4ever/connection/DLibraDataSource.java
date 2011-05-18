@@ -12,8 +12,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -297,18 +299,43 @@ public class DLibraDataSource
 	/**
 	 * Returns list of URIs of files in publication
 	 */
-	public List<String> listFilesInPublication(String groupName,
+	public List<String> getFilePathsInPublication(String groupName,
 			String publicationName)
 		throws RemoteException, DLibraException
 	{
-		return listFilesInDirectory(groupName, publicationName, null);
+		return getFilePathsInFolder(groupName, publicationName, null);
+	}
+
+
+	public List<String> getFilePathsInFolder(String groupName,
+			String publicationName, String folder)
+		throws RemoteException, DLibraException
+	{
+		ArrayList<String> result = new ArrayList<String>();
+		for (FileInfo fileInfo : getFilesInFolder(groupName, publicationName,
+			folder).values()) {
+			if (EmptyFoldersUtility.isDlibraPath(fileInfo.getFullPath())) {
+				result.add(EmptyFoldersUtility.convertDlibra2Real(fileInfo
+						.getFullPath()));
+			}
+			else {
+				result.add(fileInfo.getFullPath());
+			}
+		}
+		return result;
 	}
 
 
 	/**
-	 * Returns list of URIs of files in a directory in a publication
+	 * 
+	 * @param groupName
+	 * @param publicationName
+	 * @param folder
+	 * @return FileInfo will have paths starting with "/"
+	 * @throws RemoteException
+	 * @throws DLibraException
 	 */
-	public List<String> listFilesInDirectory(String groupName,
+	private Map<VersionId, FileInfo> getFilesInFolder(String groupName,
 			String publicationName, String folder)
 		throws RemoteException, DLibraException
 	{
@@ -316,36 +343,47 @@ public class DLibraDataSource
 			publicationName);
 		EditionId editionId = getEditionId(publicationId);
 
-		ArrayList<String> result = new ArrayList<String>();
+		Map<VersionId, FileInfo> result = new HashMap<VersionId, FileInfo>();
 		if (folder != null && !folder.endsWith("/"))
 			folder = folder.concat("/");
 
-		Collection<Id> versionIds = publicationManager.getObjects(
+		List<Id> versionIds = (List<Id>) publicationManager.getObjects(
 			new EditionFilter(editionId), new OutputFilter(VersionId.class))
 				.getResultIds();
-		Collection<Info> fileInfos = fileManager.getObjects(
+		List<Info> fileInfos = (List<Info>) fileManager.getObjects(
 			new InputFilter(new ArrayList<Id>(versionIds)),
 			new OutputFilter(FileInfo.class)).getResultInfos();
-		for (Info info : fileInfos) {
-			String filePath = ((FileInfo) info).getFullPath();
+		if (versionIds.size() != fileInfos.size()) {
+			logger.error("Version ids size is not equal to file infos size");
+		}
+		for (int i = 0; i < versionIds.size(); i++) {
+			VersionId versionId = (VersionId) versionIds.get(i);
+			FileInfo fileInfo = (FileInfo) fileInfos.get(i);
+			String filePath = fileInfo.getFullPath();
+			logger.debug("File path is " + filePath + ".");
+			if (EmptyFoldersUtility.isDlibraPath(filePath) &&
+				EmptyFoldersUtility.convertDlibra2Real(filePath).equals("/" + folder)) {
+				// empty folder
+				result.clear();
+				return result;
+			}
 			if (!filePath.equals("/" + Constants.MANIFEST_FILENAME)) {
-				if (EmptyFoldersUtility.isDlibraPath(filePath))
-					filePath = EmptyFoldersUtility.convertDlibra2Real(filePath);
-				if (folder == null || filePath.startsWith(folder)
-						|| filePath.startsWith("/" + folder)) {
-					result.add(filePath);
+				if (folder == null || filePath.startsWith("/" + folder)) {
+					logger.debug("File " + fileInfo.getFullPath()
+							+ " is inside " + folder);
+					result.put(versionId, fileInfo);
 				}
 			}
 		}
 
-		// check if directory is in fact empty
-		if (folder != null
-				&& result.size() == 1
-				&& (result.get(0).equals(folder) || result.get(0).equals(
-					"/" + folder))) {
-			result.clear();
-		}
-		else if (folder != null && result.isEmpty()) {
+//		// check if directory is in fact empty
+//		if (folder != null
+//				&& result.size() == 1
+//				&& result.containsValue("/"
+//						+ EmptyFoldersUtility.convertReal2Dlibra(folder))) {
+//			result.clear();
+//		}
+		if (folder != null && result.isEmpty()) {
 			throw new IdNotFoundException(folder);
 		}
 
@@ -398,27 +436,22 @@ public class DLibraDataSource
 			String publicationName)
 		throws RemoteException, DLibraException
 	{
-		return getZippedDirectory(groupPublicationName, publicationName, null);
+		return getZippedFolder(groupPublicationName, publicationName, null);
 	}
 
 
-	public InputStream getZippedDirectory(String groupPublicationName,
+	public InputStream getZippedFolder(String groupPublicationName,
 			String publicationName, String folderNotStandardized)
 		throws RemoteException, DLibraException
 	{
-		PublicationId publicationId = getPublicationId(
-			getGroupId(groupPublicationName), publicationName);
-		EditionId editionId = getEditionId(publicationId);
-
-		final List<Id> versionIds = (List<Id>) publicationManager.getObjects(
-			new EditionFilter(editionId), new OutputFilter(VersionId.class))
-				.getResultIds();
-		final List<Info> fileInfos = (List<Info>) fileManager.getObjects(
-			new InputFilter(new ArrayList<Id>(versionIds)),
-			new OutputFilter(FileInfo.class)).getResultInfos();
+		final String folder = (folderNotStandardized == null ? null
+				: (folderNotStandardized.endsWith("/") ? folderNotStandardized
+						: folderNotStandardized.concat("/")));
+		final Map<VersionId, FileInfo> fileVersionsAndInfos = getFilesInFolder(
+			groupPublicationName, publicationName, folder);
 
 		PipedInputStream in = new PipedInputStream();
-		PipedOutputStream out;
+		final PipedOutputStream out;
 		try {
 			out = new PipedOutputStream(in);
 		}
@@ -427,37 +460,17 @@ public class DLibraDataSource
 		}
 
 		final ZipOutputStream zipOut = new ZipOutputStream(out);
-		final String folder = (folderNotStandardized == null ? null
-				: (folderNotStandardized.endsWith("/") ? folderNotStandardized
-						: folderNotStandardized.concat("/")));
 
-		new Thread("edition zip downloader (" + editionId + ")") {
+		new Thread("publication zip downloader (" + publicationName + ")") {
 
 			public void run()
 			{
 				try {
-					for (int i = 0; i < versionIds.size(); i++) {
-						VersionId versionId = (VersionId) versionIds.get(i);
-						String filePath = ((FileInfo) fileInfos.get(i))
-								.getFullPath();
-						if (filePath.startsWith("/")) {
-							filePath = filePath.substring(1);
-						}
-						if (folder != null) {
-							if (!filePath.startsWith(folder))
-								continue;
-							if (EmptyFoldersUtility.isDlibraPath(filePath)
-									&& EmptyFoldersUtility.convertDlibra2Real(
-										filePath).equals(folder)) {
-								logger.debug("Returning an empty folder: "
-										+ filePath);
-								break;
-							}
-						}
-						if (EmptyFoldersUtility.isDlibraPath(filePath)) {
-							filePath = EmptyFoldersUtility
-									.convertDlibra2Real(filePath);
-						}
+					for (Map.Entry<VersionId, FileInfo> mapEntry : fileVersionsAndInfos
+							.entrySet()) {
+						VersionId versionId = mapEntry.getKey();
+						String filePath = mapEntry.getValue().getFullPath()
+								.substring(1);
 						ZipEntry entry = new ZipEntry(filePath);
 						zipOut.putNextEntry(entry);
 						InputStream versionInputStream = contentServer
@@ -477,7 +490,15 @@ public class DLibraDataSource
 						zipOut.close();
 					}
 					catch (Exception e) {
-						// ignore
+						logger.warn("Could not close the ZIP file: "
+								+ e.getMessage());
+						try {
+							out.close();
+						}
+						catch (IOException e1) {
+							logger.error(
+								"Could not close the ZIP output stream", e1);
+						}
 					}
 				}
 			};
@@ -659,7 +680,7 @@ public class DLibraDataSource
 		JenaException
 	{
 
-		List<String> list = listFilesInPublication(groupPublicationName,
+		List<String> list = getFilePathsInPublication(groupPublicationName,
 			publicationName);
 
 		for (int i = 0; i < list.size(); i++) {
@@ -998,19 +1019,25 @@ public class DLibraDataSource
 		try {
 			exclude.add(getVersionId(editionId, filePath));
 			emptyFolder = filePath.substring(0, filePath.lastIndexOf("/") + 1);
-			if (listFilesInDirectory(groupPublicationName, publicationName,
-				emptyFolder).size() == 1)
+			logger.debug("Will check for files in folder " + emptyFolder + ".");
+			if (!emptyFolder.isEmpty()
+					&& getFilePathsInFolder(groupPublicationName,
+						publicationName, emptyFolder).size() == 1)
 				recreateEmptyFolder = true;
+			logger.debug("checked");
 		}
 		catch (IdNotFoundException ex) {
 			logger.debug("File " + filePath + " not found, maybe a folder");
 			// maybe it is a folder
-			List<String> files = listFilesInDirectory(groupPublicationName,
+			List<String> files = getFilePathsInFolder(groupPublicationName,
 				publicationName, filePath);
+			logger.debug("Will delete " + files.size() + " files");
 			if (!files.isEmpty()) {
 				for (String file : files) {
 					if (file.startsWith("/"))
 						file = file.substring(1);
+					logger.debug("Deleting file " + file + " from folder "
+							+ filePath);
 					exclude.add(getVersionId(editionId, file));
 				}
 			}

@@ -3,9 +3,9 @@ require 'choice'
 require 'uuidtools'
 require 'base64'
 
-IVY=true
-if IVY then
-	BASE_URI="ivy.man.poznan.pl"
+CALATOLA=false
+if CALATOLA then
+	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
 	APP_NAME="rosrs2"
 	ADMIN_LOGIN="wfadmin"
@@ -494,6 +494,28 @@ def checkNoEmptyDirectory
 	}	
 end
 
+def checkNoFile1Metadata
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+			printConstantWidth "Retrieving file1 metadata........"
+			req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '/' + FILE1_PATH)
+			req.basic_auth WORKSPACE_ID, PASSWORD
+			
+			response = http.request(req)
+			printResponse(response, 404)
+	}	
+end
+
+def checkNoFile1Content
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+			printConstantWidth "Retrieving file1 content........"
+			req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '/' + FILE1_PATH + '?content=true')
+			req.basic_auth WORKSPACE_ID, PASSWORD
+
+			response = http.request(req)
+			printResponse(response, 404)
+	}	
+end
+
 
 
 if createWorkspace == 201
@@ -519,6 +541,8 @@ if createWorkspace == 201
 				createVersionAsCopy
 				deleteFile1
 				deleteFile2
+				checkNoFile1Metadata
+				checkNoFile1Content
 			end
 			if addEmptyDirectory == 200
 				getEmptyDirectoryMetadata

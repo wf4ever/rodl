@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,11 +47,11 @@ public class FileResource {
 	private UriInfo uriInfo;
 
 	/**
-	 * Returns requested file metadata. If requested URI leads to a directory,
-	 * returns rdf file with list of files in this directory. Content - if this
+	 * Returns requested file metadata. If requested URI leads to a folder,
+	 * returns rdf file with list of files in this folder. Content - if this
 	 * optional parameter is added to the query, instead of the metadata of the
 	 * file, the file content will be returned. If requested URI leads to a
-	 * directory, returns zip archive with contents of directory.
+	 * folder, returns zip archive with contents of folder.
 	 * 
 	 * @param workspaceId
 	 * @param researchObjectId
@@ -73,78 +74,111 @@ public class FileResource {
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		if (isContentRequested != null) { // file or directory content
+		if (isContentRequested != null) { // file or folder content
 			try { // file
-				InputStream body = dLibraDataSource.getFileContents(
-						researchObjectId, versionId, filePath);
-				String mimeType = dLibraDataSource.getFileMimeType(
-						researchObjectId, versionId, filePath);
-
-				String fileName = uriInfo.getPath().substring(
-						1 + uriInfo.getPath().lastIndexOf("/"));
-				ContentDisposition cd = ContentDisposition.type(mimeType)
-						.fileName(fileName).build();
-				return Response.ok(body)
-						.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
-						.header(Constants.CONTENT_TYPE_HEADER_NAME, mimeType)
-						.build();
-			} catch (IdNotFoundException ex) { // directory
-				logger.debug("Detected query for a directory: " + filePath);
-				InputStream body = dLibraDataSource.getZippedDirectory(
-						researchObjectId, versionId, filePath);
-				ContentDisposition cd = ContentDisposition
-						.type("application/zip").fileName(versionId + ".zip")
-						.build();
-				return Response.ok(body)
-						.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
-						.build();
+				return getFileContent(researchObjectId, versionId, filePath,
+					dLibraDataSource);
+			} catch (IdNotFoundException ex) { // folder
+				return getFolderContent(researchObjectId, versionId,
+					filePath, dLibraDataSource);
 			}
 		} else { // metadata
 			try { // file
-				String metadata = dLibraDataSource.getFileMetadata(
-						researchObjectId, versionId, filePath, uriInfo
-								.getAbsolutePath().toString());
-				ContentDisposition cd = ContentDisposition.type(
-						Constants.RDF_XML_MIME_TYPE).build();
-				return Response
-						.ok(metadata)
-						.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
-						.header(Constants.CONTENT_TYPE_HEADER_NAME,
-								Constants.RDF_XML_MIME_TYPE).build();
-			} catch (IdNotFoundException ex) { // directory
-				if (!filePath.endsWith("/"))
-					filePath = filePath.concat("/");
-				List<String> files = dLibraDataSource.listFilesInDirectory(
-						researchObjectId, versionId, filePath);
-
-				List<String> links = new ArrayList<String>(files.size());
-
-				for (String path : files) {
-					String fileUri = uriInfo.getAbsolutePath().toString();
-					if (!fileUri.endsWith("/"))
-						fileUri = fileUri.concat("/");
-					fileUri = fileUri.concat(path.substring(path.indexOf(filePath)
-						+ filePath.length()));
-					links.add(fileUri);
-				}
-				logger.debug("For directory " + filePath + " found "
-						+ links.size() + " files, " + "for example "
-						+ (links.isEmpty() ? "-" : links.get(0)));
-
-				String responseBody = RdfBuilder.serializeResource(RdfBuilder
-						.createCollection(uriInfo.getAbsolutePath().toString(),
-								links));
-
-				ContentDisposition cd = ContentDisposition
-						.type("application/rdf+xml")
-						.fileName(researchObjectId + ".rdf").build();
-
-				return Response.ok().entity(responseBody)
-						.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
-						.build();
+				return getFileMetadata(researchObjectId, versionId, filePath,
+					dLibraDataSource);
+			} catch (IdNotFoundException ex) { // folder
+				return getFolderMetadata(researchObjectId, versionId,
+					filePath, dLibraDataSource);
 			}
 		}
 
+	}
+
+	private Response getFolderMetadata(String researchObjectId,
+			String versionId, String filePath, DLibraDataSource dLibraDataSource)
+		throws RemoteException, DLibraException, TransformerException
+	{
+		logger.debug("Detected query for a folder: " + filePath);
+		if (!filePath.endsWith("/"))
+			filePath = filePath.concat("/");
+		List<String> files = dLibraDataSource.getFilePathsInFolder(
+				researchObjectId, versionId, filePath);
+
+		List<String> links = new ArrayList<String>(files.size());
+
+		for (String path : files) {
+			String fileUri = uriInfo.getAbsolutePath().toString();
+			if (!fileUri.endsWith("/"))
+				fileUri = fileUri.concat("/");
+			fileUri = fileUri.concat(path.substring(path.indexOf(filePath)
+				+ filePath.length()));
+			links.add(fileUri);
+		}
+		logger.debug("For folder " + filePath + " found "
+				+ links.size() + " files, " + "for example "
+				+ (links.isEmpty() ? "-" : links.get(0)));
+
+		String responseBody = RdfBuilder.serializeResource(RdfBuilder
+				.createCollection(uriInfo.getAbsolutePath().toString(),
+						links));
+
+		ContentDisposition cd = ContentDisposition
+				.type("application/rdf+xml")
+				.fileName(researchObjectId + ".rdf").build();
+
+		return Response.ok().entity(responseBody)
+				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
+				.build();
+	}
+
+	private Response getFileMetadata(String researchObjectId, String versionId,
+			String filePath, DLibraDataSource dLibraDataSource)
+		throws RemoteException, DLibraException, TransformerException
+	{
+		String metadata = dLibraDataSource.getFileMetadata(
+				researchObjectId, versionId, filePath, uriInfo
+						.getAbsolutePath().toString());
+		ContentDisposition cd = ContentDisposition.type(
+				Constants.RDF_XML_MIME_TYPE).build();
+		return Response
+				.ok(metadata)
+				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
+				.header(Constants.CONTENT_TYPE_HEADER_NAME,
+						Constants.RDF_XML_MIME_TYPE).build();
+	}
+
+	private Response getFolderContent(String researchObjectId,
+			String versionId, String filePath, DLibraDataSource dLibraDataSource)
+		throws RemoteException, DLibraException
+	{
+		logger.debug("Detected query for a folder: " + filePath);
+		InputStream body = dLibraDataSource.getZippedFolder(
+				researchObjectId, versionId, filePath);
+		ContentDisposition cd = ContentDisposition
+				.type("application/zip").fileName(versionId + ".zip")
+				.build();
+		return Response.ok(body)
+				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
+				.build();
+	}
+
+	private Response getFileContent(String researchObjectId, String versionId,
+			String filePath, DLibraDataSource dLibraDataSource)
+		throws IOException, DLibraException, RemoteException
+	{
+		InputStream body = dLibraDataSource.getFileContents(
+				researchObjectId, versionId, filePath);
+		String mimeType = dLibraDataSource.getFileMimeType(
+				researchObjectId, versionId, filePath);
+
+		String fileName = uriInfo.getPath().substring(
+				1 + uriInfo.getPath().lastIndexOf("/"));
+		ContentDisposition cd = ContentDisposition.type(mimeType)
+				.fileName(fileName).build();
+		return Response.ok(body)
+				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
+				.header(Constants.CONTENT_TYPE_HEADER_NAME, mimeType)
+				.build();
 	}
 
 	@POST
