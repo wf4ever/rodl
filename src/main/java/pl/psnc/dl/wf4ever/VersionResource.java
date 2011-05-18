@@ -17,7 +17,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
-import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
+import pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface;
 import pl.psnc.dlibra.service.DLibraException;
 
 import com.hp.hpl.jena.shared.JenaException;
@@ -60,7 +60,7 @@ public class VersionResource {
 			@PathParam("RO_VERSION_ID") String versionId,
 			@QueryParam("content") String isContentRequested)
 			throws IOException, DLibraException {
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
+		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		if (isContentRequested == null) {
@@ -109,7 +109,7 @@ public class VersionResource {
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId, String rdfAsString)
 			throws DLibraException, IOException, TransformerException, JenaException {
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
+		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		String versionUri = uriInfo
@@ -142,7 +142,7 @@ public class VersionResource {
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId)
 			throws DLibraException, IOException, TransformerException {
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
+		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		dLibraDataSource.deletePublication(researchObjectId, versionId, uriInfo

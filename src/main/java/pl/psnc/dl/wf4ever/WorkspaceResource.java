@@ -8,7 +8,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 
-import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
+import pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface;
 import pl.psnc.dlibra.service.DLibraException;
 
 /**
@@ -33,7 +33,7 @@ public class WorkspaceResource
 	public void deleteWorkspace(@PathParam("W_ID") String workspaceId)
 		throws RemoteException, DLibraException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
+		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		dLibraDataSource.deleteUser(workspaceId);

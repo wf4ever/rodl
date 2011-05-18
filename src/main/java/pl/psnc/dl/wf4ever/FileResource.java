@@ -21,7 +21,7 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
+import pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
@@ -71,7 +71,7 @@ public class FileResource {
 			@QueryParam("content") String isContentRequested)
 			throws IOException, DLibraException, TransformerException {
 
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
+		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		if (isContentRequested != null) { // file or folder content
@@ -95,7 +95,7 @@ public class FileResource {
 	}
 
 	private Response getFolderMetadata(String researchObjectId,
-			String versionId, String filePath, DLibraDataSource dLibraDataSource)
+			String versionId, String filePath, DLibraDataSourceInterface dLibraDataSource)
 		throws RemoteException, DLibraException, TransformerException
 	{
 		logger.debug("Detected query for a folder: " + filePath);
@@ -132,7 +132,7 @@ public class FileResource {
 	}
 
 	private Response getFileMetadata(String researchObjectId, String versionId,
-			String filePath, DLibraDataSource dLibraDataSource)
+			String filePath, DLibraDataSourceInterface dLibraDataSource)
 		throws RemoteException, DLibraException, TransformerException
 	{
 		String metadata = dLibraDataSource.getFileMetadata(
@@ -148,7 +148,7 @@ public class FileResource {
 	}
 
 	private Response getFolderContent(String researchObjectId,
-			String versionId, String filePath, DLibraDataSource dLibraDataSource)
+			String versionId, String filePath, DLibraDataSourceInterface dLibraDataSource)
 		throws RemoteException, DLibraException
 	{
 		logger.debug("Detected query for a folder: " + filePath);
@@ -163,7 +163,7 @@ public class FileResource {
 	}
 
 	private Response getFileContent(String researchObjectId, String versionId,
-			String filePath, DLibraDataSource dLibraDataSource)
+			String filePath, DLibraDataSourceInterface dLibraDataSource)
 		throws IOException, DLibraException, RemoteException
 	{
 		InputStream body = dLibraDataSource.getFileContents(
@@ -190,7 +190,7 @@ public class FileResource {
 			InputStream inputStream) throws IOException, DLibraException,
 			TransformerException {
 
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
+		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		String versionUri = uriInfo
@@ -213,7 +213,7 @@ public class FileResource {
 			@PathParam("RO_VERSION_ID") String versionId,
 			@PathParam("FILE_PATH") String filePath) throws DLibraException,
 			IOException, TransformerException {
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
+		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		String versionUri = uriInfo

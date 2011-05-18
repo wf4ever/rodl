@@ -22,7 +22,7 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
+import pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface;
 import pl.psnc.dlibra.metadata.PublicationInfo;
 import pl.psnc.dlibra.service.DLibraException;
 
@@ -68,7 +68,7 @@ public class ResearchObjectResource
 			@PathParam("RO_ID") String researchObjectId)
 		throws RemoteException, DLibraException, TransformerException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
+		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 		List<PublicationInfo> list = dLibraDataSource
 				.listPublicationsInGroup(researchObjectId);
@@ -112,7 +112,7 @@ public class ResearchObjectResource
 			@PathParam("RO_ID") String researchObjectId, String data)
 		throws DLibraException, IOException, TransformerException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
+		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		String lines[] = data.split("[\\r\\n]+");
@@ -171,7 +171,7 @@ public class ResearchObjectResource
 			@PathParam("RO_ID") String researchObjectId)
 		throws RemoteException, DLibraException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
+		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		dLibraDataSource.deleteGroupPublication(researchObjectId);

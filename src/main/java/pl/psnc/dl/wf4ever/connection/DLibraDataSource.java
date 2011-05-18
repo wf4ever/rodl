@@ -82,10 +82,10 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
 
 /**
  * 
- * @author nowakm
+ * @author nowakm, piotrhol
  * 
  */
-public class DLibraDataSource
+public class DLibraDataSource implements DLibraDataSourceInterface
 {
 
 	private final static Logger logger = Logger
@@ -133,6 +133,10 @@ public class DLibraDataSource
 
 
 	// user == workspace
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#createUser(java.lang.String, java.lang.String)
+	 */
+	@Override
 	public void createUser(String login, String password)
 		throws RemoteException, DLibraException
 	{
@@ -183,6 +187,10 @@ public class DLibraDataSource
 	}
 
 
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#deleteUser(java.lang.String)
+	 */
+	@Override
 	public void deleteUser(String login)
 		throws RemoteException, DLibraException
 	{
@@ -199,6 +207,10 @@ public class DLibraDataSource
 
 
 	// user group publications == research objects in workspace
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#listUserGroupPublications()
+	 */
+	@Override
 	public List<GroupPublicationInfo> listUserGroupPublications()
 		throws RemoteException, DLibraException
 	{
@@ -222,14 +234,18 @@ public class DLibraDataSource
 	}
 
 
-	public void createGroupPublication(String groupName)
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#createGroupPublication(java.lang.String)
+	 */
+	@Override
+	public void createGroupPublication(String groupPublicationName)
 		throws RemoteException, DLibraException
 	{
 		DirectoryId parent = getWorkspaceDir();
 		try {
-			getGroupId(groupName);
+			getGroupId(groupPublicationName);
 			throw new DuplicatedValueException(null, "RO already exists",
-					groupName);
+					groupPublicationName);
 		}
 		catch (IdNotFoundException e) {
 			// OK - group does not exist
@@ -237,26 +253,34 @@ public class DLibraDataSource
 
 		Publication publication = new Publication(parent);
 		publication.setGroupStatus(Publication.PUB_GROUP_ROOT);
-		publication.setName(groupName);
+		publication.setName(groupPublicationName);
 
 		publicationManager.createPublication(publication);
 	}
 
 
-	public void deleteGroupPublication(String groupName)
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#deleteGroupPublication(java.lang.String)
+	 */
+	@Override
+	public void deleteGroupPublication(String groupPublicationName)
 		throws RemoteException, DLibraException
 	{
-		PublicationId groupId = getGroupId(groupName);
+		PublicationId groupId = getGroupId(groupPublicationName);
 		publicationManager.removePublication(groupId, true,
 			"Research object removed");
 	}
 
 
 	// publication in group == version of research object
-	public List<PublicationInfo> listPublicationsInGroup(String groupName)
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#listPublicationsInGroup(java.lang.String)
+	 */
+	@Override
+	public List<PublicationInfo> listPublicationsInGroup(String groupPublicationName)
 		throws RemoteException, DLibraException
 	{
-		PublicationId groupId = getGroupId(groupName);
+		PublicationId groupId = getGroupId(groupPublicationName);
 
 		Collection<Info> resultInfos = publicationManager
 				.getObjects(
@@ -275,7 +299,7 @@ public class DLibraDataSource
 	}
 
 
-	private PublicationId getGroupId(String groupName)
+	private PublicationId getGroupId(String groupPublicationName)
 		throws RemoteException, DLibraException
 	{
 		Collection<Info> resultInfos = directoryManager
@@ -288,31 +312,35 @@ public class DLibraDataSource
 				.getResultInfos();
 		for (Info info : resultInfos) {
 			if (info instanceof GroupPublicationInfo
-					&& info.getLabel().equals(groupName)) {
+					&& info.getLabel().equals(groupPublicationName)) {
 				return (PublicationId) info.getId();
 			}
 		}
-		throw new IdNotFoundException(groupName);
+		throw new IdNotFoundException(groupPublicationName);
 	}
 
 
 	/**
 	 * Returns list of URIs of files in publication
 	 */
-	public List<String> getFilePathsInPublication(String groupName,
+	private List<String> getFilePathsInPublication(String groupPublicationName,
 			String publicationName)
 		throws RemoteException, DLibraException
 	{
-		return getFilePathsInFolder(groupName, publicationName, null);
+		return getFilePathsInFolder(groupPublicationName, publicationName, null);
 	}
 
 
-	public List<String> getFilePathsInFolder(String groupName,
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#getFilePathsInFolder(java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
+	public List<String> getFilePathsInFolder(String groupPublicationName,
 			String publicationName, String folder)
 		throws RemoteException, DLibraException
 	{
 		ArrayList<String> result = new ArrayList<String>();
-		for (FileInfo fileInfo : getFilesInFolder(groupName, publicationName,
+		for (FileInfo fileInfo : getFilesInFolder(groupPublicationName, publicationName,
 			folder).values()) {
 			if (EmptyFoldersUtility.isDlibraPath(fileInfo.getFullPath())) {
 				result.add(EmptyFoldersUtility.convertDlibra2Real(fileInfo
@@ -328,18 +356,18 @@ public class DLibraDataSource
 
 	/**
 	 * 
-	 * @param groupName
+	 * @param groupPublicationName
 	 * @param publicationName
 	 * @param folder
 	 * @return FileInfo will have paths starting with "/"
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 */
-	private Map<VersionId, FileInfo> getFilesInFolder(String groupName,
+	private Map<VersionId, FileInfo> getFilesInFolder(String groupPublicationName,
 			String publicationName, String folder)
 		throws RemoteException, DLibraException
 	{
-		PublicationId publicationId = getPublicationId(getGroupId(groupName),
+		PublicationId publicationId = getPublicationId(getGroupId(groupPublicationName),
 			publicationName);
 		EditionId editionId = getEditionId(publicationId);
 
@@ -376,13 +404,6 @@ public class DLibraDataSource
 			}
 		}
 
-//		// check if directory is in fact empty
-//		if (folder != null
-//				&& result.size() == 1
-//				&& result.containsValue("/"
-//						+ EmptyFoldersUtility.convertReal2Dlibra(folder))) {
-//			result.clear();
-//		}
 		if (folder != null && result.isEmpty()) {
 			throw new IdNotFoundException(folder);
 		}
@@ -432,6 +453,10 @@ public class DLibraDataSource
 	}
 
 
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#getZippedPublication(java.lang.String, java.lang.String)
+	 */
+	@Override
 	public InputStream getZippedPublication(String groupPublicationName,
 			String publicationName)
 		throws RemoteException, DLibraException
@@ -440,6 +465,10 @@ public class DLibraDataSource
 	}
 
 
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#getZippedFolder(java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
 	public InputStream getZippedFolder(String groupPublicationName,
 			String publicationName, String folderNotStandardized)
 		throws RemoteException, DLibraException
@@ -507,12 +536,10 @@ public class DLibraDataSource
 	}
 
 
-	/**
-	 * Creates new publication in group publication.
-	 * <p>
-	 * If basePublicationName is not null, then new publication is a copy of
-	 * base publication
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#createPublication(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
 	 */
+	@Override
 	public void createPublication(String groupPublicationName,
 			String publicationName, String basePublicationName,
 			String manifestUri)
@@ -593,6 +620,10 @@ public class DLibraDataSource
 	}
 
 
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#deletePublication(java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
 	public void deletePublication(String groupPublicationName,
 			String publicationName, String versionUri)
 		throws DLibraException, IOException, TransformerException
@@ -620,9 +651,10 @@ public class DLibraDataSource
 	}
 
 
-	/**
-	 * Returns manifest.rdf serialized as String
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#getManifest(java.lang.String, java.lang.String)
 	 */
+	@Override
 	public String getManifest(String groupPublicationName,
 			String publicationName)
 		throws IOException, DLibraException
@@ -644,6 +676,10 @@ public class DLibraDataSource
 	}
 
 
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#updateManifest(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
 	public void updateManifest(String versionUri, String groupPublicationName,
 			String publicationName, String manifest)
 		throws DLibraException, IOException, TransformerException,
@@ -729,6 +765,10 @@ public class DLibraDataSource
 
 
 	// maybe we should merge getFileContents and getFileMimeType in one method?
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#getFileContents(java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
 	public InputStream getFileContents(String groupPublicationName,
 			String publicationName, String filePath)
 		throws IOException, DLibraException
@@ -755,6 +795,10 @@ public class DLibraDataSource
 	}
 
 
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#getFileMimeType(java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
 	public String getFileMimeType(String groupPublicationName,
 			String publicationName, String filePath)
 		throws RemoteException, DLibraException
@@ -774,6 +818,10 @@ public class DLibraDataSource
 	}
 
 
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#getFileMetadata(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
 	public String getFileMetadata(String groupPublicationName,
 			String publicationName, String filePath, String fullPath)
 		throws RemoteException, DLibraException, TransformerException
@@ -823,6 +871,10 @@ public class DLibraDataSource
 	}
 
 
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#createOrUpdateFile(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.io.InputStream, java.lang.String)
+	 */
+	@Override
 	public void createOrUpdateFile(String versionUri,
 			String groupPublicationName, String publicationName,
 			String filePath, InputStream inputStream, String mimeType)
@@ -1005,6 +1057,10 @@ public class DLibraDataSource
 	}
 
 
+	/* (non-Javadoc)
+	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#deleteFile(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
 	public void deleteFile(String versionUri, String groupPublicationName,
 			String publicationName, String filePath)
 		throws DLibraException, IOException, TransformerException
