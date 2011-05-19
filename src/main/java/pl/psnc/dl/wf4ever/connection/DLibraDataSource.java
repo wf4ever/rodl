@@ -778,7 +778,7 @@ public class DLibraDataSource implements DLibraDataSourceInterface
 
 		InputStream versionInputStream = contentServer
 				.getVersionInputStream(versionId);
-		return new EOFInputStream(versionInputStream);
+		return versionInputStream;
 	}
 
 
