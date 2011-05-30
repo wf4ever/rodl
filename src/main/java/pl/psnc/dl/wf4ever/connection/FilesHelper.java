@@ -266,7 +266,7 @@ public class FilesHelper
 
 		InputStream versionInputStream = contentServer
 				.getVersionInputStream(versionId);
-		return new EOFInputStream(versionInputStream);
+		return versionInputStream;
 	}
 
 
