@@ -22,7 +22,7 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface;
+import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
 import pl.psnc.dlibra.metadata.PublicationInfo;
 import pl.psnc.dlibra.service.DLibraException;
 
@@ -68,9 +68,9 @@ public class ResearchObjectResource
 			@PathParam("RO_ID") String researchObjectId)
 		throws RemoteException, DLibraException, TransformerException
 	{
-		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
-		List<PublicationInfo> list = dLibraDataSource
+		List<PublicationInfo> list = dLibraDataSource.getPublicationsHelper()
 				.listPublicationsInGroup(researchObjectId);
 
 		List<String> links = new ArrayList<String>(list.size());
@@ -112,7 +112,7 @@ public class ResearchObjectResource
 			@PathParam("RO_ID") String researchObjectId, String data)
 		throws DLibraException, IOException, TransformerException
 	{
-		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		String lines[] = data.split("[\\r\\n]+");
@@ -149,7 +149,7 @@ public class ResearchObjectResource
 
 		String manifestUri = uriInfo.getAbsolutePath().toString() + "/"
 				+ versionId;
-		dLibraDataSource.createPublication(researchObjectId, versionId,
+		dLibraDataSource.getPublicationsHelper().createPublication(researchObjectId, versionId,
 			baseVersionId, manifestUri);
 
 		return Response.created(URI.create(uriInfo.getAbsolutePath() + "/" + versionId)).build();
@@ -171,10 +171,10 @@ public class ResearchObjectResource
 			@PathParam("RO_ID") String researchObjectId)
 		throws RemoteException, DLibraException
 	{
-		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		dLibraDataSource.deleteGroupPublication(researchObjectId);
+		dLibraDataSource.getPublicationsHelper().deleteGroupPublication(researchObjectId);
 
 	}
 }

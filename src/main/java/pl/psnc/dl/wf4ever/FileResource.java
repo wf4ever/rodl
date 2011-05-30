@@ -21,7 +21,7 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface;
+import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
@@ -71,7 +71,7 @@ public class FileResource {
 			@QueryParam("content") String isContentRequested)
 			throws IOException, DLibraException, TransformerException {
 
-		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		if (isContentRequested != null) { // file or folder content
@@ -95,13 +95,13 @@ public class FileResource {
 	}
 
 	private Response getFolderMetadata(String researchObjectId,
-			String versionId, String filePath, DLibraDataSourceInterface dLibraDataSource)
+			String versionId, String filePath, DLibraDataSource dLibraDataSource)
 		throws RemoteException, DLibraException, TransformerException
 	{
 		logger.debug("Detected query for a folder: " + filePath);
 		if (!filePath.endsWith("/"))
 			filePath = filePath.concat("/");
-		List<String> files = dLibraDataSource.getFilePathsInFolder(
+		List<String> files = dLibraDataSource.getFilesHelper().getFilePathsInFolder(
 				researchObjectId, versionId, filePath);
 
 		List<String> links = new ArrayList<String>(files.size());
@@ -132,10 +132,10 @@ public class FileResource {
 	}
 
 	private Response getFileMetadata(String researchObjectId, String versionId,
-			String filePath, DLibraDataSourceInterface dLibraDataSource)
+			String filePath, DLibraDataSource dLibraDataSource)
 		throws RemoteException, DLibraException, TransformerException
 	{
-		String metadata = dLibraDataSource.getFileMetadata(
+		String metadata = dLibraDataSource.getFilesHelper().getFileMetadata(
 				researchObjectId, versionId, filePath, uriInfo
 						.getAbsolutePath().toString());
 		ContentDisposition cd = ContentDisposition.type(
@@ -148,11 +148,11 @@ public class FileResource {
 	}
 
 	private Response getFolderContent(String researchObjectId,
-			String versionId, String filePath, DLibraDataSourceInterface dLibraDataSource)
+			String versionId, String filePath, DLibraDataSource dLibraDataSource)
 		throws RemoteException, DLibraException
 	{
 		logger.debug("Detected query for a folder: " + filePath);
-		InputStream body = dLibraDataSource.getZippedFolder(
+		InputStream body = dLibraDataSource.getFilesHelper().getZippedFolder(
 				researchObjectId, versionId, filePath);
 		ContentDisposition cd = ContentDisposition
 				.type("application/zip").fileName(versionId + ".zip")
@@ -163,12 +163,12 @@ public class FileResource {
 	}
 
 	private Response getFileContent(String researchObjectId, String versionId,
-			String filePath, DLibraDataSourceInterface dLibraDataSource)
+			String filePath, DLibraDataSource dLibraDataSource)
 		throws IOException, DLibraException, RemoteException
 	{
-		InputStream body = dLibraDataSource.getFileContents(
+		InputStream body = dLibraDataSource.getFilesHelper().getFileContents(
 				researchObjectId, versionId, filePath);
-		String mimeType = dLibraDataSource.getFileMimeType(
+		String mimeType = dLibraDataSource.getFilesHelper().getFileMimeType(
 				researchObjectId, versionId, filePath);
 
 		String fileName = uriInfo.getPath().substring(
@@ -190,7 +190,7 @@ public class FileResource {
 			InputStream inputStream) throws IOException, DLibraException,
 			TransformerException {
 
-		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		String versionUri = uriInfo
@@ -201,7 +201,7 @@ public class FileResource {
 						uriInfo.getAbsolutePath().toString()
 								.lastIndexOf(filePath) - 1);
 
-		dLibraDataSource.createOrUpdateFile(versionUri, researchObjectId,
+		dLibraDataSource.getFilesHelper().createOrUpdateFile(versionUri, researchObjectId,
 				versionId, filePath, inputStream, type);
 
 		return Response.ok().build();
@@ -213,7 +213,7 @@ public class FileResource {
 			@PathParam("RO_VERSION_ID") String versionId,
 			@PathParam("FILE_PATH") String filePath) throws DLibraException,
 			IOException, TransformerException {
-		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		String versionUri = uriInfo
@@ -224,7 +224,7 @@ public class FileResource {
 						uriInfo.getAbsolutePath().toString()
 								.lastIndexOf(filePath) - 1);
 
-		dLibraDataSource.deleteFile(versionUri, researchObjectId, versionId,
+		dLibraDataSource.getFilesHelper().deleteFile(versionUri, researchObjectId, versionId,
 				filePath);
 	}
 }

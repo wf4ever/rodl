@@ -15,7 +15,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface;
+import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
 import pl.psnc.dlibra.metadata.GroupPublicationInfo;
 import pl.psnc.dlibra.service.DLibraException;
 
@@ -49,9 +49,9 @@ public class ResearchObjectListResource
 		throws RemoteException, DLibraException
 	{
 
-		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
-		List<GroupPublicationInfo> list = dLibraDataSource
+		List<GroupPublicationInfo> list = dLibraDataSource.getPublicationsHelper()
 				.listUserGroupPublications();
 
 		StringBuilder sb = new StringBuilder("");
@@ -81,10 +81,10 @@ public class ResearchObjectListResource
 			String researchObjectId)
 		throws RemoteException, DLibraException
 	{
-		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		dLibraDataSource.createGroupPublication(researchObjectId);
+		dLibraDataSource.getPublicationsHelper().createGroupPublication(researchObjectId);
 
 		return Response.created(URI.create(uriInfo.getAbsolutePath() + "/" + researchObjectId)).build();
 	}

@@ -17,7 +17,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
-import pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface;
+import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 
 import com.hp.hpl.jena.shared.JenaException;
@@ -60,11 +60,11 @@ public class VersionResource {
 			@PathParam("RO_VERSION_ID") String versionId,
 			@QueryParam("content") String isContentRequested)
 			throws IOException, DLibraException {
-		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		if (isContentRequested == null) {
-			String manifest = dLibraDataSource.getManifest(researchObjectId,
+			String manifest = dLibraDataSource.getManifestHelper().getManifest(researchObjectId,
 					versionId);
 			ContentDisposition cd = ContentDisposition
 					.type("application/rdf+xml")
@@ -73,7 +73,7 @@ public class VersionResource {
 					.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
 					.build();
 		} else {
-			InputStream body = dLibraDataSource.getZippedPublication(
+			InputStream body = dLibraDataSource.getPublicationsHelper().getZippedPublication(
 					researchObjectId, versionId);
 			ContentDisposition cd = ContentDisposition.type("application/zip")
 					.fileName(versionId + ".zip").build();
@@ -109,7 +109,7 @@ public class VersionResource {
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId, String rdfAsString)
 			throws DLibraException, IOException, TransformerException, JenaException {
-		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		String versionUri = uriInfo
@@ -118,7 +118,7 @@ public class VersionResource {
 				.substring(0,
 						uriInfo.getAbsolutePath().toString().lastIndexOf("/"));
 
-		dLibraDataSource.updateManifest(versionUri, researchObjectId,
+		dLibraDataSource.getManifestHelper().updateManifest(versionUri, researchObjectId,
 				versionId, rdfAsString);
 
 		return Response.ok().build();
@@ -142,10 +142,10 @@ public class VersionResource {
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId)
 			throws DLibraException, IOException, TransformerException {
-		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		dLibraDataSource.deletePublication(researchObjectId, versionId, uriInfo
+		dLibraDataSource.getPublicationsHelper().deletePublication(researchObjectId, versionId, uriInfo
 				.getAbsolutePath().toString());
 	}
 }

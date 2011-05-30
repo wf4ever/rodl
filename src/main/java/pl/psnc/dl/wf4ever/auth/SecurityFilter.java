@@ -11,7 +11,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface;
+import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
 import pl.psnc.dl.wf4ever.connection.DlibraConnectionRegistry;
 import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.DLibraException;
@@ -39,7 +39,7 @@ public class SecurityFilter
 	public ContainerRequest filter(ContainerRequest request)
 	{
 		try {
-			DLibraDataSourceInterface dLibraDataSource = authenticate(request);
+			DLibraDataSource dLibraDataSource = authenticate(request);
 			httpRequest.setAttribute(Constants.DLIBRA_DATA_SOURCE,
 				dLibraDataSource);
 		}
@@ -64,7 +64,7 @@ public class SecurityFilter
 	}
 
 
-	private DLibraDataSourceInterface authenticate(ContainerRequest request)
+	private DLibraDataSource authenticate(ContainerRequest request)
 		throws MalformedURLException, RemoteException, AccessDeniedException,
 		UnknownHostException, DLibraException
 	{

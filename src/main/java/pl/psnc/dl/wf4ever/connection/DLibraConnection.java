@@ -64,7 +64,7 @@ public class DLibraConnection
 	}
 
 
-	public DLibraDataSourceInterface getDLibraDataSource(String user, String password)
+	public DLibraDataSource getDLibraDataSource(String user, String password)
 		throws MalformedURLException, RemoteException, AccessDeniedException,
 		UnknownHostException, DLibraException
 	{

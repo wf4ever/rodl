@@ -3,7 +3,7 @@ require 'choice'
 require 'uuidtools'
 require 'base64'
 
-CALATOLA=true
+CALATOLA=false
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80

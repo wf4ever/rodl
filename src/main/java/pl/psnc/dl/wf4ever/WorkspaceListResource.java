@@ -15,7 +15,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
-import pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface;
+import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 
 /**
@@ -47,7 +47,7 @@ public class WorkspaceListResource {
 	@Consumes("text/plain")
 	public Response createWorkspace(String data) throws RemoteException,
 			DLibraException {
-		DLibraDataSourceInterface dLibraDataSource = (DLibraDataSourceInterface) request
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		String lines[] = data.split("[\\r\\n]+");
@@ -66,7 +66,7 @@ public class WorkspaceListResource {
 					.build();
 		}
 		// password can be empty
-		dLibraDataSource.createUser(workspaceId, password);
+		dLibraDataSource.getUsersHelper().createUser(workspaceId, password);
 
 		return Response.created(URI.create(uriInfo.getAbsolutePath() + "/" + workspaceId)).build();
 	}
