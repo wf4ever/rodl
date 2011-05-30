@@ -4,7 +4,7 @@
 	<groupId>pl.psnc.dl.wf4ever</groupId>
 	<artifactId>rosrs</artifactId>
 	<packaging>war</packaging>
-	<version>2.1.1-SNAPSHOT</version>
+	<version>2.1.2-SNAPSHOT</version>
 	<name>rosrs</name>
 	<url>http://maven.apache.org</url>
 	<developers>
@@ -135,21 +135,16 @@
 	</dependencies>
 	<repositories>
 		<repository>
-			<id>maven2-repository.dev.java.net</id>
-			<name>Java.net Repository for Maven</name>
-			<url>http://download.java.net/maven/2/</url>
-			<layout>default</layout>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>dlibra-releases</id>
+			<url>http://maven.man.poznan.pl/repository/dlibra-libs-releases/</url>
 		</repository>
 		<repository>
-			<id>Central</id>
-			<name>Central</name>
-			<url>http://repo1.maven.org/maven2/</url>
-		</repository>
-		<repository>
-			<id>ivy-maven1</id>
-			<name>Ivy Maven 1.x repository</name>
-			<url>http://ivy.man.poznan.pl/maven/</url>
-			<layout>legacy</layout>
+			<snapshots />
+			<id>dlibra-snapshots</id>
+			<url>http://maven.man.poznan.pl/repository/dlibra-libs-snapshots/</url>
 		</repository>
 	</repositories>
 	<organization>

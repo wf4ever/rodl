@@ -85,7 +85,8 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
  * @author nowakm, piotrhol
  * 
  */
-public class DLibraDataSource implements DLibraDataSourceInterface
+public class DLibraDataSource
+	implements DLibraDataSourceInterface
 {
 
 	private final static Logger logger = Logger
@@ -277,7 +278,8 @@ public class DLibraDataSource implements DLibraDataSourceInterface
 	 * @see pl.psnc.dl.wf4ever.connection.DLibraDataSourceInterface#listPublicationsInGroup(java.lang.String)
 	 */
 	@Override
-	public List<PublicationInfo> listPublicationsInGroup(String groupPublicationName)
+	public List<PublicationInfo> listPublicationsInGroup(
+			String groupPublicationName)
 		throws RemoteException, DLibraException
 	{
 		PublicationId groupId = getGroupId(groupPublicationName);
@@ -340,8 +342,8 @@ public class DLibraDataSource implements DLibraDataSourceInterface
 		throws RemoteException, DLibraException
 	{
 		ArrayList<String> result = new ArrayList<String>();
-		for (FileInfo fileInfo : getFilesInFolder(groupPublicationName, publicationName,
-			folder).values()) {
+		for (FileInfo fileInfo : getFilesInFolder(groupPublicationName,
+			publicationName, folder).values()) {
 			if (EmptyFoldersUtility.isDlibraPath(fileInfo.getFullPath())) {
 				result.add(EmptyFoldersUtility.convertDlibra2Real(fileInfo
 						.getFullPath()));
@@ -363,12 +365,12 @@ public class DLibraDataSource implements DLibraDataSourceInterface
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 */
-	private Map<VersionId, FileInfo> getFilesInFolder(String groupPublicationName,
-			String publicationName, String folder)
+	private Map<VersionId, FileInfo> getFilesInFolder(
+			String groupPublicationName, String publicationName, String folder)
 		throws RemoteException, DLibraException
 	{
-		PublicationId publicationId = getPublicationId(getGroupId(groupPublicationName),
-			publicationName);
+		PublicationId publicationId = getPublicationId(
+			getGroupId(groupPublicationName), publicationName);
 		EditionId editionId = getEditionId(publicationId);
 
 		Map<VersionId, FileInfo> result = new HashMap<VersionId, FileInfo>();
@@ -389,8 +391,9 @@ public class DLibraDataSource implements DLibraDataSourceInterface
 			FileInfo fileInfo = (FileInfo) fileInfos.get(i);
 			String filePath = fileInfo.getFullPath();
 			logger.debug("File path is " + filePath + ".");
-			if (EmptyFoldersUtility.isDlibraPath(filePath) &&
-				EmptyFoldersUtility.convertDlibra2Real(filePath).equals("/" + folder)) {
+			if (EmptyFoldersUtility.isDlibraPath(filePath)
+					&& EmptyFoldersUtility.convertDlibra2Real(filePath).equals(
+						"/" + folder)) {
 				// empty folder
 				result.clear();
 				return result;
@@ -586,7 +589,7 @@ public class DLibraDataSource implements DLibraDataSourceInterface
 			Version createdVersion = fileManager.createVersion(file, 0,
 				new Date(), "");
 
-			String manifest = createManifest(manifestUri);
+			String manifest = createEmptyManifest(manifestUri);
 
 			OutputStream output = contentServer
 					.getVersionOutputStream(createdVersion.getId());
@@ -688,11 +691,13 @@ public class DLibraDataSource implements DLibraDataSourceInterface
 
 		regenerateManifest(groupPublicationName, publicationName, versionUri,
 			manifest);
+		
+		updateDlibraAttributes(versionUri, groupPublicationName, publicationName, manifest);
 
 	}
 
 
-	private String createManifest(String uri)
+	private String createEmptyManifest(String uri)
 		throws TransformerException
 	{
 		Resource resource = RdfBuilder.createResource(uri);
@@ -763,6 +768,22 @@ public class DLibraDataSource implements DLibraDataSourceInterface
 			Constants.MANIFEST_FILENAME, is, Constants.RDF_XML_MIME_TYPE, false);
 	}
 
+
+	/**
+	 * Updates dLibra attributes based on a manifest, see 
+	 * http://www.wf4ever-project.org/wiki/display/docs/Research+Objects+Store+and+Retrieve+Service#ResearchObjectsStoreandRetrieveService-Metadata
+	 * This method does not modify resource links, so it doesn't need to be called when
+	 * resources themselves are deleted/added, etc. 
+	 * @param versionUri
+	 * @param groupPublicationName
+	 * @param publicationName
+	 * @param manifest
+	 */
+	private void updateDlibraAttributes(String versionUri, String groupPublicationName,
+			String publicationName, String manifest)
+	{
+
+	}
 
 	// maybe we should merge getFileContents and getFileMimeType in one method?
 	/* (non-Javadoc)

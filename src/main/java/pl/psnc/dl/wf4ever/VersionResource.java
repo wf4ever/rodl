@@ -101,7 +101,7 @@ public class VersionResource {
 	 * @throws DLibraException
 	 * @throws IOException
 	 * @throws TransformerException
-	 * @throws SAXException 
+	 * @throws JenaException if the manifest is malformed
 	 */
 	@POST
 	@Consumes("application/rdf+xml")

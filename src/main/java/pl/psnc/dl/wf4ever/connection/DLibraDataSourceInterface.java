@@ -80,10 +80,9 @@ public interface DLibraDataSourceInterface
 
 
 	/**
-	 * Creates new publication (version) in a group publication (RO).
-	 * <p>
-	 * If basePublicationName is not null, then the new publication is a copy of
-	 * base publication.
+	 * Creates new publication (version) in a group publication (RO). If basePublicationName is not
+	 * null, then the new publication is a copy of base publication. This method creates a manifest.rdf 
+	 * with empty RO metadata.
 	 * @param groupPublicationName
 	 * @param publicationName
 	 * @param basePublicationName Optional name of base publication to copy from
@@ -110,6 +109,7 @@ public interface DLibraDataSourceInterface
 	public abstract void deletePublication(String groupPublicationName,
 			String publicationName, String versionUri)
 		throws DLibraException, IOException, TransformerException;
+
 
 	/**
 	 * Returns filepaths of all files in a given folder, except for manifest.rdf.
@@ -142,7 +142,7 @@ public interface DLibraDataSourceInterface
 	 * Returns input stream for a zipped content of file in a publication that are inside a given folder.
 	 * @param groupPublicationName
 	 * @param publicationName
-	 * @param folderNotStandardized
+	 * @param folderNotStandardized Folder name with or without the "/" at the end
 	 * @return
 	 * @throws RemoteException
 	 * @throws DLibraException
@@ -153,13 +153,30 @@ public interface DLibraDataSourceInterface
 
 
 	/**
-	 * Returns manifest.rdf serialized as String
+	 * Returns manifest.rdf serialized as String.
+	 * @param groupPublicationName
+	 * @param publicationName
+	 * @return manifest.rdf serialized as String
+	 * @throws IOException
+	 * @throws DLibraException
 	 */
 	public abstract String getManifest(String groupPublicationName,
 			String publicationName)
 		throws IOException, DLibraException;
 
 
+	/**
+	 * Updated manifest content. Only RO metadata is updated, any changes to the resource 
+	 * list by users will be ignored. 
+	 * @param versionUri
+	 * @param groupPublicationName
+	 * @param publicationName
+	 * @param manifest Manifest content as serialized String
+	 * @throws DLibraException
+	 * @throws IOException
+	 * @throws TransformerException
+	 * @throws JenaException
+	 */
 	public abstract void updateManifest(String versionUri,
 			String groupPublicationName, String publicationName, String manifest)
 		throws DLibraException, IOException, TransformerException,
