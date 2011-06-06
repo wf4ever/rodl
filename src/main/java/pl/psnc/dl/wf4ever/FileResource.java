@@ -21,6 +21,7 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
@@ -223,6 +224,9 @@ public class FileResource {
 						0,
 						uriInfo.getAbsolutePath().toString()
 								.lastIndexOf(filePath) - 1);
+		
+		if (filePath.equals("manifest.rdf"))
+			throw new ForbiddenException("Blocked attempt to delete manifest.rdf");
 
 		dLibraDataSource.getFilesHelper().deleteFile(versionUri, researchObjectId, versionId,
 				filePath);
