@@ -1,9 +1,10 @@
+require 'nokogiri'	
 require 'net/http'
 require 'choice'
 require 'uuidtools'
 require 'base64'
 
-CALATOLA=false
+CALATOLA=true
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
@@ -40,6 +41,8 @@ FILE2_DIRECTORY="dir/"
 
 MESSAGE_WIDTH=50
 code = 200
+
+@retrievedManifest = ""
 
 def printResponse(response, expectedCode)
 	printConstantWidth2(response.code + " " + response.message)
@@ -190,18 +193,6 @@ def getROrdf
 	}
 end
 		
-def getVersionRdf
-	#get version rdf
-	Net::HTTP.start(BASE_URI, PORT) {|http|
-		printConstantWidth "Retrieving version description........"
-		req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
-		req.basic_auth WORKSPACE_ID, PASSWORD
-		req.add_field "Accept", "application/rdf+xml"
-		response = http.request(req)
-		printResponse(response, 200)
-	}
-end
-
 def getVersionZip
 	#get version zip
 	Net::HTTP.start(BASE_URI, PORT) {|http|
@@ -221,14 +212,51 @@ def getVersionZip
 end
 	
 def getManifest				
-	#get manifest
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Retrieving manifest........"
 		req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
 		req.basic_auth WORKSPACE_ID, PASSWORD
 		response = http.request(req)
+		@retrievedManifest = response.body
 		printResponse(response, 200)
 	}	
+end
+
+def assertElementExists(rdf, att)
+	if rdf.xpath("//#{att}").empty?
+		puts "                         #{att} missing"
+	else
+		el = rdf.xpath("//#{att}").first
+		puts "                         #{att} blank" if el.content.empty? and el.attribute("resource").nil?
+	end
+end
+
+def validateManifest
+	getManifest if @retrievedManifest.empty? or @retrievedManifest.nil?
+	if @retrievedManifest.empty? or @retrievedManifest.nil?
+		puts "Failed to retrieve manifest for validation"
+		return
+	end
+	
+	doc = Nokogiri::XML(@retrievedManifest)
+	ns = doc.namespaces()
+	if ns.size() != 4 or !ns.key?("xmlns:rdf") or !ns.key?("xmlns:ore") or !ns.key?("xmlns:dcterms") or !ns.key?("xmlns:oxds")
+		puts "Wrong namespaces"
+	end
+	if doc.xpath("//rdf:Description").empty?
+		puts "rdf:Description missing"
+	else
+		rdf = doc.xpath("//rdf:Description").first()
+		assertElementExists(rdf, "dcterms:description")
+		assertElementExists(rdf, "dcterms:title")
+		assertElementExists(rdf, "dcterms:creator")
+		assertElementExists(rdf, "dcterms:identifier")
+		assertElementExists(rdf, "dcterms:created")
+		assertElementExists(rdf, "dcterms:modified")
+		assertElementExists(rdf, "oxds:currentVersion")
+
+		assertElementExists(rdf, "ore:aggregates")
+	end
 end
 				
 def getFile1Metadata				
@@ -524,9 +552,9 @@ if createWorkspace == 201
 			if addFile1 == 200 && addFile2 == 200
 				getListRO
 				getROrdf
-				getVersionRdf
 				getVersionZip
 				getManifest
+				validateManifest
 				getFile1Metadata
 				getFile2Metadata
 				getFile1

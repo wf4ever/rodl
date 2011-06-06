@@ -6,18 +6,26 @@ package pl.psnc.dl.wf4ever.connection;
 import java.io.ByteArrayInputStream;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
+import pl.psnc.dlibra.common.CollectionResult;
 import pl.psnc.dlibra.common.DLObject;
 import pl.psnc.dlibra.common.OutputFilter;
 import pl.psnc.dlibra.metadata.EditionId;
 import pl.psnc.dlibra.metadata.PublicationId;
+import pl.psnc.dlibra.metadata.attributes.Attribute;
+import pl.psnc.dlibra.metadata.attributes.AttributeFilter;
+import pl.psnc.dlibra.metadata.attributes.AttributeId;
 import pl.psnc.dlibra.metadata.attributes.AttributeValue;
 import pl.psnc.dlibra.metadata.attributes.AttributeValueFilter;
 import pl.psnc.dlibra.metadata.attributes.AttributeValueId;
 import pl.psnc.dlibra.metadata.attributes.AttributeValueManager;
+import pl.psnc.dlibra.metadata.attributes.AttributeValueSet;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
@@ -33,6 +41,11 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
  */
 public class AttributesHelper
 {
+
+	public static final String CREATOR_RDF_NAME = "Creator";
+
+	private final static Logger logger = Logger
+			.getLogger(AttributesHelper.class);
 
 	private DLibraDataSource dLibra;
 
@@ -59,28 +72,58 @@ public class AttributesHelper
 			String groupPublicationName, String publicationName, String manifest)
 		throws RemoteException, DLibraException
 	{
-//		PublicationId publicationId = dLibra.getPublicationsHelper()
-//				.getPublicationId(groupPublicationName, publicationName);
-//		EditionId editionId = dLibra.getFilesHelper().getEditionId(
-//			publicationId);
+		PublicationId publicationId = dLibra.getPublicationsHelper()
+				.getPublicationId(groupPublicationName, publicationName);
+		EditionId editionId = dLibra.getFilesHelper().getEditionId(
+			publicationId);
 
-//		Model model = ModelFactory.createDefaultModel();
-//		model.read(new ByteArrayInputStream(manifest.getBytes()), null);
-//
-//		StmtIterator iterator = model.listStatements();
-//		for (Statement statement : iterator.toList()) {
-//			if (statement.getPredicate().equals(DCTerms.identifier)) {
-//			}
-//			else if (statement.getPredicate().equals(DCTerms.creator)) {
-//				AttributeValue value = new AttributeValue(null);
-//				value.setValue(statement.getString());
-//				createAttributeValue(value);
-//			}
-//			else if (statement.getPredicate().equals(DCTerms.title)) {
-//			}
-//			else if (statement.getPredicate().equals(DCTerms.description)) {
-//			}
-//		}
+		Model model = ModelFactory.createDefaultModel();
+		model.read(new ByteArrayInputStream(manifest.getBytes()), null);
+
+		AttributeValueSet avs = new AttributeValueSet();
+		avs.setElementId(editionId);
+
+		StmtIterator iterator = model.listStatements();
+		for (Statement statement : iterator.toList()) {
+			if (statement.getPredicate().equals(DCTerms.identifier)) {
+			}
+			else if (statement.getPredicate().equals(DCTerms.creator)) {
+				// find the attribute
+				Attribute attribute = null;
+				CollectionResult result = dLibra
+						.getMetadataServer()
+						.getAttributeManager()
+						.getObjects(
+							new AttributeFilter((AttributeId) null).setRDFNames(Arrays
+									.asList(CREATOR_RDF_NAME)),
+							new OutputFilter(Attribute.class));
+				if (result.getResultsCount() != 1) {
+					logger.error(String.format(
+						"Found %d attributes with RDF name '%s",
+						result.getResultsCount(), CREATOR_RDF_NAME));
+					continue;
+				} else {
+					attribute = (Attribute)result.getResults().iterator().next();
+				}
+
+				// create attribute value
+				AttributeValue value = new AttributeValue(null);
+				value.setAttributeId(attribute.getId());
+				value.setValue(statement.getString());
+				value = createAttributeValue(value);
+
+				// update attribute value set
+				avs.setAttributeValues(attribute.getId(), value.getValue(),
+					null, null);
+			}
+			else if (statement.getPredicate().equals(DCTerms.title)) {
+			}
+			else if (statement.getPredicate().equals(DCTerms.description)) {
+			}
+		}
+
+		// commit?
+
 	}
 
 
@@ -135,7 +178,7 @@ public class AttributesHelper
 	private AttributeValue getAttributeValueFromGroup(String value,
 			AttributeValue group, String selLang)
 		throws RemoteException, IdNotFoundException, DLibraException
-		
+
 	{
 		Collection<DLObject> groupValues = dLibra
 				.getMetadataServer()

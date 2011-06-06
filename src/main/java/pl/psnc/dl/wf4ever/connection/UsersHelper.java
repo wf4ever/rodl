@@ -91,6 +91,22 @@ public class UsersHelper
 			Arrays.asList((ActorId) userId),
 			new RightOperation(DirectoryRightId.PUBLICATION_MGMT,
 					RightOperation.ADD));
+		// directory access rights
+		userServer.getRightManager().setDirectoryRights(
+			DLibraDataSource.ROOT_DIRECTORY_ID,
+			Arrays.asList((ActorId) userId),
+			new RightOperation(DirectoryRightId.DIRECTORY_ACCESS,
+					RightOperation.ADD));
+		userServer.getRightManager().setDirectoryRights(
+			dLibra.getWorkspacesContainerDirectoryId(),
+			Arrays.asList((ActorId) userId),
+			new RightOperation(DirectoryRightId.DIRECTORY_ACCESS,
+					RightOperation.ADD));
+		userServer.getRightManager().setDirectoryRights(
+			workspaceDir,
+			Arrays.asList((ActorId) userId),
+			new RightOperation(DirectoryRightId.DIRECTORY_ACCESS,
+					RightOperation.ADD));
 	}
 
 
@@ -99,8 +115,8 @@ public class UsersHelper
 	{
 		MetadataServer metadataServer = DLStaticServiceResolver
 				.getMetadataServer(serviceResolver, null);
-		Directory directory = new Directory(null, new DirectoryId(
-				dLibra.getWorkspacesDir()));
+		Directory directory = new Directory(null,
+				dLibra.getWorkspacesContainerDirectoryId());
 		for (String language : metadataServer.getLanguageManager()
 				.getLanguageNames(Language.LAN_INTERFACE)) {
 			directory.setLanguageName(language);

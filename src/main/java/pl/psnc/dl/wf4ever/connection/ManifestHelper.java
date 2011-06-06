@@ -74,7 +74,10 @@ public class ManifestHelper
 	{
 		Resource resource = RdfBuilder.createResource(uri);
 
-		resource.addLiteral(DCTerms.identifier, "");
+		String roName = uri.substring(0, uri.lastIndexOf("/"));
+		roName = roName.substring(1 + roName.lastIndexOf("/"));
+		
+		resource.addLiteral(DCTerms.identifier, roName);
 		resource.addLiteral(DCTerms.creator, "");
 		resource.addLiteral(DCTerms.title, "");
 		resource.addLiteral(DCTerms.description, "");

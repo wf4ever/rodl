@@ -5,6 +5,7 @@ import java.rmi.RemoteException;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dlibra.content.ContentServer;
+import pl.psnc.dlibra.metadata.DirectoryId;
 import pl.psnc.dlibra.metadata.MetadataServer;
 import pl.psnc.dlibra.mgmt.DLStaticServiceResolver;
 import pl.psnc.dlibra.mgmt.UserServiceResolver;
@@ -22,6 +23,8 @@ public class DLibraDataSource
 	@SuppressWarnings("unused")
 	private final static Logger logger = Logger
 			.getLogger(DLibraDataSource.class);
+	
+	public static final DirectoryId ROOT_DIRECTORY_ID = new DirectoryId(1L);
 
 	public final static int BUFFER_SIZE = 4096;
 
@@ -45,16 +48,16 @@ public class DLibraDataSource
 
 	private AttributesHelper attributesHelper;
 
-	private long workspacesDir;
+	private DirectoryId workspacesContainerDirectoryId;
 
 
 	public DLibraDataSource(UserServiceResolver userServiceResolver,
-			String userLogin, long workspacesDirectoryId)
+			String userLogin, long workspacesContainerDirectoryId)
 		throws RemoteException, DLibraException
 	{
 		this.serviceResolver = userServiceResolver;
 		this.userLogin = userLogin;
-		this.workspacesDir = workspacesDirectoryId;
+		this.workspacesContainerDirectoryId = new DirectoryId(workspacesContainerDirectoryId);
 
 		metadataServer = DLStaticServiceResolver.getMetadataServer(
 			serviceResolver, null);
@@ -133,9 +136,9 @@ public class DLibraDataSource
 	}
 
 
-	long getWorkspacesDir()
+	DirectoryId getWorkspacesContainerDirectoryId()
 	{
-		return workspacesDir;
+		return workspacesContainerDirectoryId;
 	}
 
 }

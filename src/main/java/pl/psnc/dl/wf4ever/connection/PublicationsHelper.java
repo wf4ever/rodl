@@ -91,7 +91,7 @@ public class PublicationsHelper
 	public List<GroupPublicationInfo> listUserGroupPublications()
 		throws RemoteException, DLibraException
 	{
-		DirectoryId workspaceDir = getWorkspaceDir();
+		DirectoryId workspaceDir = getWorkspaceDirectoryId();
 		Collection<Info> resultInfos = directoryManager
 				.getObjects(
 					new DirectoryFilter(null, workspaceDir)
@@ -120,7 +120,7 @@ public class PublicationsHelper
 	public void createGroupPublication(String groupPublicationName)
 		throws RemoteException, DLibraException
 	{
-		DirectoryId parent = getWorkspaceDir();
+		DirectoryId parent = getWorkspaceDirectoryId();
 		try {
 			getGroupId(groupPublicationName);
 			throw new DuplicatedValueException(null, "RO already exists",
@@ -212,7 +212,7 @@ public class PublicationsHelper
 			// OK - the publication does not exist
 		}
 
-		Publication publication = new Publication(null, getWorkspaceDir());
+		Publication publication = new Publication(null, getWorkspaceDirectoryId());
 		publication.setParentPublicationId(groupId);
 		publication.setName(publicationName);
 		publication.setPosition(0);
@@ -324,7 +324,7 @@ public class PublicationsHelper
 	{
 		Collection<Info> resultInfos = directoryManager
 				.getObjects(
-					new DirectoryFilter(null, getWorkspaceDir())
+					new DirectoryFilter(null, getWorkspaceDirectoryId())
 							.setGroupStatus(Publication.PUB_GROUP_ROOT)
 							.setState(
 								(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED)),
@@ -370,7 +370,7 @@ public class PublicationsHelper
 	}
 
 
-	private DirectoryId getWorkspaceDir()
+	private DirectoryId getWorkspaceDirectoryId()
 		throws RemoteException, DLibraException
 	{
 		User userData = userManager.getUserData(dLibra.getUserLogin());
