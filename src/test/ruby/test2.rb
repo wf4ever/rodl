@@ -4,7 +4,7 @@ require 'choice'
 require 'uuidtools'
 require 'base64'
 
-CALATOLA=true
+CALATOLA=false
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
@@ -222,16 +222,20 @@ def getManifest
 	}	
 end
 
-def assertElementExists(rdf, att)
+def assertElementExists(rdf, att, expected)
 	if rdf.xpath("//#{att}").empty?
 		puts "                         #{att} missing"
 	else
 		el = rdf.xpath("//#{att}").first
-		puts "                         #{att} blank" if el.content.empty? and el.attribute("resource").nil?
+		if expected.nil?
+			puts "                         #{att} blank value" if el.content.empty? and el.attribute("resource").nil?
+		else
+			puts "                         #{att} wrong value" if el.content != expected and el.attribute("resource").nil?
+		end
 	end
 end
 
-def validateManifest
+def validateManifest1
 	getManifest if @retrievedManifest.empty? or @retrievedManifest.nil?
 	if @retrievedManifest.empty? or @retrievedManifest.nil?
 		puts "Failed to retrieve manifest for validation"
@@ -247,15 +251,41 @@ def validateManifest
 		puts "rdf:Description missing"
 	else
 		rdf = doc.xpath("//rdf:Description").first()
-		assertElementExists(rdf, "dcterms:description")
-		assertElementExists(rdf, "dcterms:title")
-		assertElementExists(rdf, "dcterms:creator")
-		assertElementExists(rdf, "dcterms:identifier")
-		assertElementExists(rdf, "dcterms:created")
-		assertElementExists(rdf, "dcterms:modified")
-		assertElementExists(rdf, "oxds:currentVersion")
+		assertElementExists(rdf, "dcterms:description", "")
+		assertElementExists(rdf, "dcterms:title", "")
+		assertElementExists(rdf, "dcterms:creator", "")
+		assertElementExists(rdf, "dcterms:identifier", RO_NAME)
+		assertElementExists(rdf, "dcterms:created", nil)
+		assertElementExists(rdf, "dcterms:modified", nil)
+		assertElementExists(rdf, "oxds:currentVersion", VERSION_NAME)
+	end
+end
+			
+def validateManifest2
+	getManifest if @retrievedManifest.empty? or @retrievedManifest.nil?
+	if @retrievedManifest.empty? or @retrievedManifest.nil?
+		puts "Failed to retrieve manifest for validation"
+		return
+	end
+	
+	doc = Nokogiri::XML(@retrievedManifest)
+	ns = doc.namespaces()
+	if ns.size() != 4 or !ns.key?("xmlns:rdf") or !ns.key?("xmlns:ore") or !ns.key?("xmlns:dcterms") or !ns.key?("xmlns:oxds")
+		puts "Wrong namespaces"
+	end
+	if doc.xpath("//rdf:Description").empty?
+		puts "rdf:Description missing"
+	else
+		rdf = doc.xpath("//rdf:Description").first()
+		assertElementExists(rdf, "dcterms:description", "Description")
+		assertElementExists(rdf, "dcterms:title", "Some title")
+		assertElementExists(rdf, "dcterms:creator", "Wf4Ever test user")
+		assertElementExists(rdf, "dcterms:identifier", RO_NAME)
+		assertElementExists(rdf, "dcterms:created", nil)
+		assertElementExists(rdf, "dcterms:modified", nil)
+		assertElementExists(rdf, "oxds:currentVersion", VERSION_2_NAME)
 
-		assertElementExists(rdf, "ore:aggregates")
+		assertElementExists(rdf, "ore:aggregates", "")
 	end
 end
 				
@@ -432,6 +462,17 @@ def deleteFile2
 	}
 end
 			
+def checkDeleteManifest
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Deleting manifest........"
+		req = Net::HTTP::Delete.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '/manifest.rdf')
+		req.basic_auth WORKSPACE_ID, PASSWORD
+
+		response = http.request(req)
+		printResponse(response, 403)
+	}
+end
+			
 def deleteVersion
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Deleting version........"
@@ -549,12 +590,13 @@ end
 if createWorkspace == 201
 	if createRO == 201
 		if createVersion == 201
+			getManifest
+			validateManifest1
 			if addFile1 == 200 && addFile2 == 200
 				getListRO
 				getROrdf
 				getVersionZip
 				getManifest
-				validateManifest
 				getFile1Metadata
 				getFile2Metadata
 				getFile1
@@ -567,10 +609,13 @@ if createWorkspace == 201
 				updateManifestMalformed
 #				updateManifestIncorrect
 				createVersionAsCopy
+				getManifest
+				validateManifest2
 				deleteFile1
 				deleteFile2
 				checkNoFile1Metadata
 				checkNoFile1Content
+				checkDeleteManifest
 			end
 			if addEmptyDirectory == 200
 				getEmptyDirectoryMetadata

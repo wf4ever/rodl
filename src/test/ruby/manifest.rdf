@@ -8,6 +8,8 @@
     <oxds:currentVersion>ver1</oxds:currentVersion>
     <ore:aggregates rdf:resource="http://localhost:8081/ro-srs/workspaces/user/ROs/ro1/ver1//file1.txt"/>
     <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/Aggregation"/>
-    <dcterms:description>custom field</dcterms:description>
+    <dcterms:description>Description</dcterms:description>
+    <dcterms:title>Some title</dcterms:title>
+    <dcterms:creator>Wf4Ever test user</dcterms:creator>
   </rdf:Description>
 </rdf:RDF>
