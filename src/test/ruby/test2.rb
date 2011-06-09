@@ -4,7 +4,7 @@ require 'choice'
 require 'uuidtools'
 require 'base64'
 
-CALATOLA=false
+CALATOLA=true
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
@@ -231,7 +231,7 @@ def assertElementExists(rdf, att, expected)
 		if expected.nil?
 			puts "                         #{att} blank value" if el.content.empty? and el.attribute("resource").nil?
 		else
-			puts "                         #{att} wrong value" if el.content != expected and el.attribute("resource").nil?
+			puts "                         #{att} wrong value, expected #{expected} found #{el.content}" if el.content != expected and el.attribute("resource").nil?
 		end
 	end
 end
@@ -609,12 +609,12 @@ if createWorkspace == 201
 				getROrdf
 				getVersionZip
 				getManifest
-#				getFile1Metadata
-#				getFile2Metadata
-#				getFile1
-#				getFile2
-#				getDirectoryList
-#				getDirectoryZipped
+				getFile1Metadata
+				getFile2Metadata
+				getFile1
+				getFile2
+				getDirectoryList
+				getDirectoryZipped
 				updateFile1
 				updateFile2
 				updateManifest
@@ -629,18 +629,18 @@ if createWorkspace == 201
 				checkNoFile1Content
 				checkDeleteManifest
 			end
-#			if addEmptyDirectory == 200
-#				getEmptyDirectoryMetadata
-#				addFile2
-#				getEmptyDirectoryMetadata
-#				deleteFile2
-#				getEmptyDirectoryMetadata
-#				deleteEmptyDirectory
-#				checkNoEmptyDirectory
-#				addFile2
-#				deleteDirectory
-#				checkNoEmptyDirectory
-#			end
+			if addEmptyDirectory == 200
+				getEmptyDirectoryMetadata
+				addFile2
+				getEmptyDirectoryMetadata
+				deleteFile2
+				getEmptyDirectoryMetadata
+				deleteEmptyDirectory
+				checkNoEmptyDirectory
+				addFile2
+				deleteDirectory
+				checkNoEmptyDirectory
+			end
 			deleteVersion
 		end
 		deleteRO

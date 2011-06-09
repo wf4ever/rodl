@@ -204,8 +204,12 @@ public class ManifestHelper
 					+ info.getLabel());
 		}
 
+		Date creationDate = new Date();
 		resource.addProperty(DCTerms.modified,
-			RdfBuilder.createDateLiteral(new Date()));
+			RdfBuilder.createDateLiteral(creationDate));
+		dLibra.getAttributesHelper().updateCreatedAttribute(
+			groupPublicationName, publicationName,
+			RdfBuilder.createDateLiteral(creationDate).toString());
 	}
 
 

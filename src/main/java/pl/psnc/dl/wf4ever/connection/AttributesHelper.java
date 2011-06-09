@@ -90,7 +90,6 @@ public class AttributesHelper
 				.getPublicationId(groupPublicationName, publicationName);
 		EditionId editionId = dLibra.getFilesHelper().getEditionId(
 			publicationId);
-		logger.debug("Edition id: " + editionId);
 
 		AttributeValueSet avs = new AttributeValueSet();
 		avs.setElementId(editionId);
@@ -100,8 +99,6 @@ public class AttributesHelper
 
 		StmtIterator iterator = model.listStatements();
 		for (Statement statement : iterator.toList()) {
-			logger.debug("Iterating with statement: "
-					+ statement.getPredicate() + ":" + statement.getObject());
 			if (statement.getPredicate().equals(DCTerms.identifier)) {
 				if (!statement.getString().equals(groupPublicationName)) {
 					logger.warn(String

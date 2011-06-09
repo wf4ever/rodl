@@ -193,14 +193,14 @@ public class PublicationsHelper
 	* @param groupPublicationName
 	* @param publicationName
 	* @param basePublicationName Optional name of base publication to copy from
-	* @param versionUri URI of this RO version, used for creating manifest
+	* @param versionURI URI of the new RO version, used for creating manifest
 	* @throws DLibraException
 	* @throws IOException
 	* @throws TransformerException
 	*/
 	public void createPublication(String groupPublicationName,
 			String publicationName, String basePublicationName,
-			String versionUri)
+			String versionURI)
 		throws DLibraException, IOException, TransformerException
 	{
 		PublicationId groupId = getGroupId(groupPublicationName);
@@ -214,6 +214,29 @@ public class PublicationsHelper
 			// OK - the publication does not exist
 		}
 
+		Publication publication = getNewPublication(publicationName, groupId);
+		PublicationId publicationId = publicationManager
+				.createPublication(publication);
+		if (basePublicationName != null && !basePublicationName.isEmpty()) {
+			PublicationId basePublicationId = getPublicationId(groupId,
+				basePublicationName);
+			preparePublicationAsACopy(groupPublicationName, publicationName,
+				versionURI, publicationId, basePublicationName,
+				basePublicationId);
+		}
+		else {
+			preparePublicationAsNew(groupPublicationName, publicationName,
+				versionURI, publicationId);
+		}
+
+		addHasVersionPropertyToAll(groupPublicationName, versionURI);
+	}
+
+
+	private Publication getNewPublication(String publicationName,
+			PublicationId groupId)
+		throws RemoteException, DLibraException
+	{
 		Publication publication = new Publication(null,
 				getWorkspaceDirectoryId());
 		publication.setParentPublicationId(groupId);
@@ -222,89 +245,117 @@ public class PublicationsHelper
 		publication.setGroupStatus(Publication.PUB_GROUP_LEAF);
 		publication.setSecured(false);
 		publication.setState(Publication.PUB_STATE_ACTUAL);
-		if (basePublicationName != null && !basePublicationName.isEmpty()) {
-			createPublicationAsACopy(publicationName, basePublicationName,
-				groupId, publication);
-
-		}
-		else {
-			Date creationDate = new Date();
-
-			PublicationId publicationId = publicationManager
-					.createPublication(publication);
-
-			File file = new File("application/rdf+xml", publicationId, "/"
-					+ Constants.MANIFEST_FILENAME);
-
-			Version createdVersion = fileManager.createVersion(file, 0,
-				creationDate, "");
-
-			String manifest = dLibra.getManifestHelper().createInitialManifest(
-				versionUri, groupPublicationName, "", "", "", publicationName,
-				RdfBuilder.createDateLiteral(creationDate));
-
-			OutputStream output = contentServer
-					.getVersionOutputStream(createdVersion.getId());
-			output.write(manifest.getBytes());
-			output.close();
-
-			publicationManager.setMainFile(publicationId,
-				createdVersion.getFileId());
-
-			Edition edition = new Edition(null, publicationId, false);
-			edition.setName(publicationName);
-			publicationManager.createEdition(edition,
-				new VersionId[] { createdVersion.getId()});
-
-			dLibra.getAttributesHelper().updateDlibraMetadataAttributes(
-				groupPublicationName, publicationName, manifest);
-			dLibra.getAttributesHelper().updateCreatedAttribute(
-				groupPublicationName, publicationName,
-				RdfBuilder.createDateLiteral(creationDate).toString());
-		}
-
-		// add hasVersion tag to all versions
-		{
-			List<PublicationInfo> list = listPublicationsInGroup(groupPublicationName);
-			for (PublicationInfo p : list) {
-				try {
-					dLibra.getManifestHelper().regenerateManifest(
-						groupPublicationName,
-						p.getLabel(),
-						versionUri,
-						dLibra.getManifestHelper().getManifest(
-							groupPublicationName, p.getLabel()));
-				}
-				catch (JenaException e) {
-					logger.warn("Manifest stored for publication "
-							+ groupPublicationName + " is malformed");
-				}
-				catch (IncorrectManifestException e) {
-					logger.warn("Manifest stored for publication "
-							+ groupPublicationName + " is incorrect ("
-							+ e.getMessage() + ")");
-				}
-			}
-		}
+		return publication;
 	}
 
 
-	private void createPublicationAsACopy(String publicationName,
-			String basePublicationName, PublicationId groupId,
-			Publication publication)
-		throws RemoteException, DLibraException, AccessDeniedException,
-		IdNotFoundException, IOException
+	private void preparePublicationAsNew(String groupPublicationName,
+			String publicationName, String versionUri,
+			PublicationId publicationId)
+		throws DLibraException, AccessDeniedException, IdNotFoundException,
+		RemoteException, TransformerException, IOException
 	{
-		PublicationId basePublicationId = getPublicationId(groupId,
-			basePublicationName);
+		Date creationDate = new Date();
 
-		PublicationId publicationId = publicationManager
-				.createPublication(publication);
+		File file = new File("application/rdf+xml", publicationId, "/"
+				+ Constants.MANIFEST_FILENAME);
+
+		Version createdVersion = fileManager.createVersion(file, 0,
+			creationDate, "");
+
+		String manifest = dLibra.getManifestHelper().createInitialManifest(
+			versionUri, groupPublicationName, "", "", "", publicationName,
+			RdfBuilder.createDateLiteral(creationDate));
+
+		OutputStream output = contentServer
+				.getVersionOutputStream(createdVersion.getId());
+		output.write(manifest.getBytes());
+		output.close();
+
+		publicationManager.setMainFile(publicationId,
+			createdVersion.getFileId());
+
+		Edition edition = new Edition(null, publicationId, false);
+		edition.setName(publicationName);
+		publicationManager.createEdition(edition,
+			new VersionId[] { createdVersion.getId()});
+
+		dLibra.getAttributesHelper().updateDlibraMetadataAttributes(
+			groupPublicationName, publicationName, manifest);
+		dLibra.getAttributesHelper().updateCreatedAttribute(
+			groupPublicationName, publicationName,
+			RdfBuilder.createDateLiteral(creationDate).toString());
+	}
+
+
+	private void preparePublicationAsACopy(String groupPublicationName,
+			String publicationName, String versionURI,
+			PublicationId publicationId, String basePublicationName,
+			PublicationId basePublicationId)
+		throws RemoteException, DLibraException, AccessDeniedException,
+		IdNotFoundException, IOException, TransformerException
+	{
 		VersionId[] copyVersions = dLibra.getFilesHelper().copyVersions(
 			basePublicationId, publicationId, null);
 		Edition edition = new Edition(null, publicationId, false);
 		edition.setName(publicationName);
 		publicationManager.createEdition(edition, copyVersions);
+
+		try {
+			String baseVersionURI = versionURI.substring(0,
+				versionURI.lastIndexOf("/") + 1)
+					+ basePublicationName;
+			dLibra.getManifestHelper().regenerateManifest(
+				groupPublicationName,
+				publicationName,
+				baseVersionURI,
+				dLibra.getManifestHelper().getManifest(groupPublicationName,
+					basePublicationName));
+		}
+		catch (JenaException e) {
+			logger.warn("Manifest stored for publication "
+					+ groupPublicationName + " is malformed");
+		}
+		catch (IncorrectManifestException e) {
+			logger.warn(
+				String.format("Manifest stored for publication %s/%s is incorrect (%s)",
+				groupPublicationName, basePublicationName, e.getMessage()));
+		}
+	}
+
+
+	private void addHasVersionPropertyToAll(String groupPublicationName,
+			String versionURI)
+		throws RemoteException, DLibraException, IOException,
+		TransformerException
+	{
+		List<PublicationInfo> list = listPublicationsInGroup(groupPublicationName);
+		for (PublicationInfo p : list) {
+			try {
+				String pubVersionURI = versionURI.substring(0,
+					versionURI.lastIndexOf("/") + 1)
+						+ p.getLabel();
+				logger.debug("Will regenerate manifest for version "
+						+ p.getLabel() + " URI: " + pubVersionURI);
+				dLibra.getManifestHelper().regenerateManifest(
+					groupPublicationName,
+					p.getLabel(),
+					pubVersionURI,
+					dLibra.getManifestHelper().getManifest(
+						groupPublicationName, p.getLabel()));
+			}
+			catch (JenaException e) {
+				logger.warn("Manifest stored for publication "
+						+ groupPublicationName + " is malformed");
+			}
+			catch (IncorrectManifestException e) {
+				logger.warn("Manifest stored for publication "
+						+ groupPublicationName + " is incorrect ("
+						+ e.getMessage() + ")");
+				logger.warn(dLibra.getManifestHelper().getManifest(
+					groupPublicationName, p.getLabel()));
+			}
+		}
 	}
 
 
@@ -328,26 +379,7 @@ public class PublicationsHelper
 			"Research Object Version removed.");
 
 		{
-			List<PublicationInfo> list = listPublicationsInGroup(groupPublicationName);
-			for (PublicationInfo p : list) {
-				try {
-					dLibra.getManifestHelper().regenerateManifest(
-						groupPublicationName,
-						p.getLabel(),
-						versionUri,
-						dLibra.getManifestHelper().getManifest(
-							groupPublicationName, p.getLabel()));
-				}
-				catch (JenaException e) {
-					logger.warn("Manifest stored for publication "
-							+ groupPublicationName + " is malformed");
-				}
-				catch (IncorrectManifestException e) {
-					logger.warn("Manifest stored for publication "
-							+ groupPublicationName + " is incorrect ("
-							+ e.getMessage() + ")");
-				}
-			}
+			addHasVersionPropertyToAll(groupPublicationName, versionUri);
 		}
 	}
 
