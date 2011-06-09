@@ -154,7 +154,6 @@ public class FilesHelper
 			VersionId versionId = (VersionId) versionIds.get(i);
 			FileInfo fileInfo = (FileInfo) fileInfos.get(i);
 			String filePath = fileInfo.getFullPath();
-			logger.debug("File path is " + filePath + ".");
 			if (EmptyFoldersUtility.isDlibraPath(filePath)
 					&& EmptyFoldersUtility.convertDlibra2Real(filePath).equals(
 						"/" + folder)) {
@@ -164,8 +163,6 @@ public class FilesHelper
 			}
 			if (!filePath.equals("/" + Constants.MANIFEST_FILENAME)) {
 				if (folder == null || filePath.startsWith("/" + folder)) {
-					logger.debug("File " + fileInfo.getFullPath()
-							+ " is inside " + folder);
 					result.put(versionId, fileInfo);
 				}
 			}
@@ -422,6 +419,11 @@ public class FilesHelper
 				logger.warn("Manifest stored for publication "
 						+ groupPublicationName + " is malformed");
 			}
+			catch (IncorrectManifestException e) {
+				logger.warn("Manifest stored for publication "
+						+ groupPublicationName + " is incorrect ("
+						+ e.getMessage() + ")");
+			}
 		}
 
 		String intermediateFilePath = filePath;
@@ -454,25 +456,19 @@ public class FilesHelper
 		try {
 			exclude.add(getVersionId(editionId, filePath));
 			emptyFolder = filePath.substring(0, filePath.lastIndexOf("/") + 1);
-			logger.debug("Will check for files in folder " + emptyFolder + ".");
 			if (!emptyFolder.isEmpty()
 					&& getFilePathsInFolder(groupPublicationName,
 						publicationName, emptyFolder).size() == 1)
 				recreateEmptyFolder = true;
-			logger.debug("checked");
 		}
 		catch (IdNotFoundException ex) {
-			logger.debug("File " + filePath + " not found, maybe a folder");
 			// maybe it is a folder
 			List<String> files = getFilePathsInFolder(groupPublicationName,
 				publicationName, filePath);
-			logger.debug("Will delete " + files.size() + " files");
 			if (!files.isEmpty()) {
 				for (String file : files) {
 					if (file.startsWith("/"))
 						file = file.substring(1);
-					logger.debug("Deleting file " + file + " from folder "
-							+ filePath);
 					exclude.add(getVersionId(editionId, file));
 				}
 			}
@@ -512,6 +508,11 @@ public class FilesHelper
 		catch (JenaException e) {
 			logger.warn("Manifest stored for publication "
 					+ groupPublicationName + " is malformed");
+		}
+		catch (IncorrectManifestException e) {
+			logger.warn("Manifest stored for publication "
+				+ groupPublicationName + " is incorrect ("
+				+ e.getMessage() + ")");
 		}
 	}
 

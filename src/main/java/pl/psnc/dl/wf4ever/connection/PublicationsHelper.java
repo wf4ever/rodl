@@ -17,6 +17,7 @@ import javax.xml.transform.TransformerException;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.RdfBuilder;
 import pl.psnc.dlibra.common.Info;
 import pl.psnc.dlibra.common.OutputFilter;
 import pl.psnc.dlibra.content.ContentServer;
@@ -36,6 +37,7 @@ import pl.psnc.dlibra.metadata.PublicationInfo;
 import pl.psnc.dlibra.metadata.PublicationManager;
 import pl.psnc.dlibra.metadata.Version;
 import pl.psnc.dlibra.metadata.VersionId;
+import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.DuplicatedValueException;
 import pl.psnc.dlibra.service.IdNotFoundException;
@@ -198,7 +200,7 @@ public class PublicationsHelper
 	*/
 	public void createPublication(String groupPublicationName,
 			String publicationName, String basePublicationName,
-			String manifestUri)
+			String versionUri)
 		throws DLibraException, IOException, TransformerException
 	{
 		PublicationId groupId = getGroupId(groupPublicationName);
@@ -212,7 +214,8 @@ public class PublicationsHelper
 			// OK - the publication does not exist
 		}
 
-		Publication publication = new Publication(null, getWorkspaceDirectoryId());
+		Publication publication = new Publication(null,
+				getWorkspaceDirectoryId());
 		publication.setParentPublicationId(groupId);
 		publication.setName(publicationName);
 		publication.setPosition(0);
@@ -220,19 +223,13 @@ public class PublicationsHelper
 		publication.setSecured(false);
 		publication.setState(Publication.PUB_STATE_ACTUAL);
 		if (basePublicationName != null && !basePublicationName.isEmpty()) {
-			PublicationId basePublicationId = getPublicationId(groupId,
-				basePublicationName);
-
-			PublicationId publicationId = publicationManager
-					.createPublication(publication);
-			VersionId[] copyVersions = dLibra.getFilesHelper().copyVersions(
-				basePublicationId, publicationId, null);
-			Edition edition = new Edition(null, publicationId, false);
-			edition.setName(publicationName);
-			publicationManager.createEdition(edition, copyVersions);
+			createPublicationAsACopy(publicationName, basePublicationName,
+				groupId, publication);
 
 		}
 		else {
+			Date creationDate = new Date();
+
 			PublicationId publicationId = publicationManager
 					.createPublication(publication);
 
@@ -240,10 +237,11 @@ public class PublicationsHelper
 					+ Constants.MANIFEST_FILENAME);
 
 			Version createdVersion = fileManager.createVersion(file, 0,
-				new Date(), "");
+				creationDate, "");
 
-			String manifest = dLibra.getManifestHelper().createEmptyManifest(
-				manifestUri);
+			String manifest = dLibra.getManifestHelper().createInitialManifest(
+				versionUri, groupPublicationName, "", "", "", publicationName,
+				RdfBuilder.createDateLiteral(creationDate));
 
 			OutputStream output = contentServer
 					.getVersionOutputStream(createdVersion.getId());
@@ -257,6 +255,12 @@ public class PublicationsHelper
 			edition.setName(publicationName);
 			publicationManager.createEdition(edition,
 				new VersionId[] { createdVersion.getId()});
+
+			dLibra.getAttributesHelper().updateDlibraMetadataAttributes(
+				groupPublicationName, publicationName, manifest);
+			dLibra.getAttributesHelper().updateCreatedAttribute(
+				groupPublicationName, publicationName,
+				RdfBuilder.createDateLiteral(creationDate).toString());
 		}
 
 		// add hasVersion tag to all versions
@@ -267,7 +271,7 @@ public class PublicationsHelper
 					dLibra.getManifestHelper().regenerateManifest(
 						groupPublicationName,
 						p.getLabel(),
-						manifestUri,
+						versionUri,
 						dLibra.getManifestHelper().getManifest(
 							groupPublicationName, p.getLabel()));
 				}
@@ -275,8 +279,32 @@ public class PublicationsHelper
 					logger.warn("Manifest stored for publication "
 							+ groupPublicationName + " is malformed");
 				}
+				catch (IncorrectManifestException e) {
+					logger.warn("Manifest stored for publication "
+							+ groupPublicationName + " is incorrect ("
+							+ e.getMessage() + ")");
+				}
 			}
 		}
+	}
+
+
+	private void createPublicationAsACopy(String publicationName,
+			String basePublicationName, PublicationId groupId,
+			Publication publication)
+		throws RemoteException, DLibraException, AccessDeniedException,
+		IdNotFoundException, IOException
+	{
+		PublicationId basePublicationId = getPublicationId(groupId,
+			basePublicationName);
+
+		PublicationId publicationId = publicationManager
+				.createPublication(publication);
+		VersionId[] copyVersions = dLibra.getFilesHelper().copyVersions(
+			basePublicationId, publicationId, null);
+		Edition edition = new Edition(null, publicationId, false);
+		edition.setName(publicationName);
+		publicationManager.createEdition(edition, copyVersions);
 	}
 
 
@@ -313,6 +341,11 @@ public class PublicationsHelper
 				catch (JenaException e) {
 					logger.warn("Manifest stored for publication "
 							+ groupPublicationName + " is malformed");
+				}
+				catch (IncorrectManifestException e) {
+					logger.warn("Manifest stored for publication "
+							+ groupPublicationName + " is incorrect ("
+							+ e.getMessage() + ")");
 				}
 			}
 		}

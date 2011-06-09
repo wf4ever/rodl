@@ -17,7 +17,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
+import org.apache.log4j.Logger;
+
 import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
+import pl.psnc.dl.wf4ever.connection.IncorrectManifestException;
 import pl.psnc.dlibra.service.DLibraException;
 
 import com.hp.hpl.jena.shared.JenaException;
@@ -30,13 +33,18 @@ import com.sun.jersey.core.header.ContentDisposition;
  */
 @Path(Constants.WORKSPACES_URL_PART + "/{W_ID}/"
 		+ Constants.RESEARCH_OBJECTS_URL_PART + "/{RO_ID}/{RO_VERSION_ID}")
-public class VersionResource {
+public class VersionResource
+{
+
+	private final static Logger logger = Logger
+			.getLogger(VersionResource.class);
 
 	@Context
 	private HttpServletRequest request;
 
 	@Context
 	private UriInfo uriInfo;
+
 
 	/**
 	 * Returns metadata of RO version as manifest.rdf file. Content - if this
@@ -54,27 +62,31 @@ public class VersionResource {
 	 * @throws DLibraException
 	 */
 	@GET
-	@Produces({ "application/rdf+xml", "application/zip" })
+	@Produces({ "application/rdf+xml", "application/zip"})
 	public Response getManifestFile(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId,
 			@QueryParam("content") String isContentRequested)
-			throws IOException, DLibraException {
+		throws IOException, DLibraException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		if (isContentRequested == null) {
-			String manifest = dLibraDataSource.getManifestHelper().getManifest(researchObjectId,
-					versionId);
+			logger.debug("Getting manifest");
+			String manifest = dLibraDataSource.getManifestHelper().getManifest(
+				researchObjectId, versionId);
 			ContentDisposition cd = ContentDisposition
 					.type("application/rdf+xml")
 					.fileName(Constants.MANIFEST_FILENAME).build();
 			return Response.ok(manifest)
 					.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
 					.build();
-		} else {
-			InputStream body = dLibraDataSource.getPublicationsHelper().getZippedPublication(
-					researchObjectId, versionId);
+		}
+		else {
+			logger.debug("Getting zipped pub");
+			InputStream body = dLibraDataSource.getPublicationsHelper()
+					.getZippedPublication(researchObjectId, versionId);
 			ContentDisposition cd = ContentDisposition.type("application/zip")
 					.fileName(versionId + ".zip").build();
 			return Response.ok(body)
@@ -82,6 +94,7 @@ public class VersionResource {
 					.build();
 		}
 	}
+
 
 	/**
 	 * Used for updating metadata of version of RO (manifest.rdf file).
@@ -102,27 +115,27 @@ public class VersionResource {
 	 * @throws IOException
 	 * @throws TransformerException
 	 * @throws JenaException if the manifest is malformed
+	 * @throws IncorrectManifestException if the manifest is missing a property
 	 */
 	@POST
 	@Consumes("application/rdf+xml")
 	public Response updateManifestFile(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId, String rdfAsString)
-			throws DLibraException, IOException, TransformerException, JenaException {
+		throws DLibraException, IOException, TransformerException,
+		JenaException, IncorrectManifestException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		String versionUri = uriInfo
-				.getAbsolutePath()
-				.toString()
-				.substring(0,
-						uriInfo.getAbsolutePath().toString().lastIndexOf("/"));
+		String versionUri = uriInfo.getAbsolutePath().toString();
 
-		dLibraDataSource.getManifestHelper().updateManifest(versionUri, researchObjectId,
-				versionId, rdfAsString);
+		dLibraDataSource.getManifestHelper().updateManifest(versionUri,
+			researchObjectId, versionId, rdfAsString);
 
 		return Response.ok().build();
 	}
+
 
 	/**
 	 * Deletes this version of research object.
@@ -141,11 +154,12 @@ public class VersionResource {
 	public void deleteVersion(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId)
-			throws DLibraException, IOException, TransformerException {
+		throws DLibraException, IOException, TransformerException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		dLibraDataSource.getPublicationsHelper().deletePublication(researchObjectId, versionId, uriInfo
-				.getAbsolutePath().toString());
+		dLibraDataSource.getPublicationsHelper().deletePublication(
+			researchObjectId, versionId, uriInfo.getAbsolutePath().toString());
 	}
 }

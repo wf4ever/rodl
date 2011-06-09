@@ -7,7 +7,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -16,6 +16,8 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+
+import pl.psnc.dl.wf4ever.connection.IncorrectManifestException;
 
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -66,17 +68,22 @@ public class RdfBuilder
 	public static final Property OXDS_CURRENT_VERSION = model
 			.createProperty(OXDS_NAMESPACE + "currentVersion");
 
-	public static final List<Property> READ_ONLY_PROPERTIES;
+	/**
+	 * Manifest properties that cannot be changed by users.
+	 */
+	public static final List<Property> READ_ONLY_PROPERTIES = Arrays.asList(
+		DCTerms.identifier, AGGREGATES, DCTerms.hasVersion,
+		OXDS_CURRENT_VERSION, RDF.type, DCTerms.modified, DCTerms.created);
+
+	/**
+	 * Properties that have to be present in the manifest.
+	 */
+	public static final List<Property> MANDATORY_PROPERTIES = Arrays.asList(
+		DCTerms.identifier, DCTerms.creator, DCTerms.title,
+		DCTerms.description, OXDS_CURRENT_VERSION, DCTerms.created);
 
 	static {
 		model.setNsPrefixes(StandardNamespaces);
-		READ_ONLY_PROPERTIES = new ArrayList<Property>();
-		READ_ONLY_PROPERTIES.add(AGGREGATES);
-		READ_ONLY_PROPERTIES.add(DCTerms.hasVersion);
-		READ_ONLY_PROPERTIES.add(OXDS_CURRENT_VERSION);
-		READ_ONLY_PROPERTIES.add(DCTerms.modified);
-		READ_ONLY_PROPERTIES.add(RDF.type);
-		//		READ_ONLY_PROPERTIES.add(DCTerms.created);
 	}
 
 
@@ -95,16 +102,21 @@ public class RdfBuilder
 		model.removeAll();
 		Resource collection = model.createResource(collectionUri);
 
-		collection.addProperty(RDF.type, AGGREGATION);
-		for (String uri : links) {
-			Resource object = model.createResource(uri);
-			collection.addProperty(AGGREGATES, object);
-
-		}
+		addAggregation(collection, links);
 
 		return collection;
 	}
 
+
+	public static void addAggregation(Resource resource, List<String> links)
+	{
+		resource.addProperty(RDF.type, AGGREGATION);
+		for (String uri : links) {
+			Resource object = model.createResource(uri);
+			resource.addProperty(AGGREGATES, object);
+
+		}
+	}
 
 	/**
 	 * Returns rdf/xml serialization of specified Resource in String. 
@@ -162,6 +174,19 @@ public class RdfBuilder
 		transformer.transform(source, result);
 
 		return sw.toString();
+	}
+
+
+	public static void checkMandatoryProperties(Resource resource)
+		throws IncorrectManifestException
+	{
+		for (Property property : MANDATORY_PROPERTIES) {
+			if (!resource.hasProperty(property)) {
+				throw new IncorrectManifestException(
+						"Resource does not have a mandatory property: "
+								+ property + " " + resource.toString());
+			}
+		}
 	}
 
 }

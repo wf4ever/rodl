@@ -26,6 +26,7 @@ end
 
 
 WORKSPACE_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")[0,22]
+WORKSPACE_ID_IN_MANIFEST = "USER_TO_SUBSTITUTE"
 PASSWORD="pass"
 
 RO_NAME="ro1"
@@ -261,6 +262,17 @@ def validateManifest1
 	end
 end
 			
+def getManifest2				
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Retrieving manifest........"
+		req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_2_NAME)
+		req.basic_auth WORKSPACE_ID, PASSWORD
+		response = http.request(req)
+		@retrievedManifest = response.body
+		printResponse(response, 200)
+	}	
+end
+
 def validateManifest2
 	getManifest if @retrievedManifest.empty? or @retrievedManifest.nil?
 	if @retrievedManifest.empty? or @retrievedManifest.nil?
@@ -390,7 +402,7 @@ def updateManifest
 		printConstantWidth "Updating manifest........"
 		req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
 		req.basic_auth WORKSPACE_ID, PASSWORD
-		req.body = File.read("manifest.rdf")
+		req.body = File.read("manifest.rdf").sub(WORKSPACE_ID_IN_MANIFEST, WORKSPACE_ID)
 		req.add_field "Content-Type", "application/rdf+xml"
 
 		response = http.request(req)
@@ -403,7 +415,7 @@ def updateManifestMalformed
 		printConstantWidth "Updating malformed manifest........"
 		req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
 		req.basic_auth WORKSPACE_ID, PASSWORD
-		req.body = File.read("manifest_malformed.rdf")
+		req.body = File.read("manifest_malformed.rdf").sub(WORKSPACE_ID_IN_MANIFEST, WORKSPACE_ID)
 		req.add_field "Content-Type", "application/rdf+xml"
 
 		response = http.request(req)
@@ -416,7 +428,7 @@ def updateManifestIncorrect
 		printConstantWidth "Updating incorrect manifest........"
 		req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
 		req.basic_auth WORKSPACE_ID, PASSWORD
-		req.body = File.read("manifest_incorrect.rdf")
+		req.body = File.read("manifest_incorrect.rdf").sub(WORKSPACE_ID_IN_MANIFEST, WORKSPACE_ID)
 		req.add_field "Content-Type", "application/rdf+xml"
 
 		response = http.request(req)
@@ -597,19 +609,19 @@ if createWorkspace == 201
 				getROrdf
 				getVersionZip
 				getManifest
-				getFile1Metadata
-				getFile2Metadata
-				getFile1
-				getFile2
-				getDirectoryList
-				getDirectoryZipped
+#				getFile1Metadata
+#				getFile2Metadata
+#				getFile1
+#				getFile2
+#				getDirectoryList
+#				getDirectoryZipped
 				updateFile1
 				updateFile2
 				updateManifest
 				updateManifestMalformed
-#				updateManifestIncorrect
+				updateManifestIncorrect
 				createVersionAsCopy
-				getManifest
+				getManifest2
 				validateManifest2
 				deleteFile1
 				deleteFile2
@@ -617,18 +629,18 @@ if createWorkspace == 201
 				checkNoFile1Content
 				checkDeleteManifest
 			end
-			if addEmptyDirectory == 200
-				getEmptyDirectoryMetadata
-				addFile2
-				getEmptyDirectoryMetadata
-				deleteFile2
-				getEmptyDirectoryMetadata
-				deleteEmptyDirectory
-				checkNoEmptyDirectory
-				addFile2
-				deleteDirectory
-				checkNoEmptyDirectory
-			end
+#			if addEmptyDirectory == 200
+#				getEmptyDirectoryMetadata
+#				addFile2
+#				getEmptyDirectoryMetadata
+#				deleteFile2
+#				getEmptyDirectoryMetadata
+#				deleteEmptyDirectory
+#				checkNoEmptyDirectory
+#				addFile2
+#				deleteDirectory
+#				checkNoEmptyDirectory
+#			end
 			deleteVersion
 		end
 		deleteRO

@@ -18,15 +18,17 @@ import pl.psnc.dlibra.common.DLObject;
 import pl.psnc.dlibra.common.OutputFilter;
 import pl.psnc.dlibra.metadata.EditionId;
 import pl.psnc.dlibra.metadata.PublicationId;
-import pl.psnc.dlibra.metadata.attributes.Attribute;
 import pl.psnc.dlibra.metadata.attributes.AttributeFilter;
 import pl.psnc.dlibra.metadata.attributes.AttributeId;
+import pl.psnc.dlibra.metadata.attributes.AttributeInfo;
 import pl.psnc.dlibra.metadata.attributes.AttributeValue;
 import pl.psnc.dlibra.metadata.attributes.AttributeValueFilter;
 import pl.psnc.dlibra.metadata.attributes.AttributeValueId;
 import pl.psnc.dlibra.metadata.attributes.AttributeValueManager;
 import pl.psnc.dlibra.metadata.attributes.AttributeValueSet;
+import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.DLibraException;
+import pl.psnc.dlibra.service.DuplicatedValueException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.hp.hpl.jena.rdf.model.Model;
@@ -42,7 +44,20 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
 public class AttributesHelper
 {
 
+	//TODO: change into a configuration file
 	public static final String CREATOR_RDF_NAME = "Creator";
+
+	public static final String TITLE_RDF_NAME = "Title";
+
+	public static final String DESCRIPTION_RDF_NAME = "Description";
+
+	public static final String SOURCE_RDF_NAME = "Source";
+
+	public static final String CREATED_RDF_NAME = "Created";
+
+	public static final String MODIFIED_RDF_NAME = "Modified";
+
+	public static final String ATTRIBUTE_LANGUAGE = "en";
 
 	private final static Logger logger = Logger
 			.getLogger(AttributesHelper.class);
@@ -61,69 +76,145 @@ public class AttributesHelper
 	 * http://www.wf4ever-project.org/wiki/display/docs/Research+Objects+Store+and+Retrieve+Service#ResearchObjectsStoreandRetrieveService-Metadata
 	 * This method does not modify resource links, so it doesn't need to be called when
 	 * resources themselves are deleted/added, etc. 
-	 * @param versionUri
 	 * @param groupPublicationName
 	 * @param publicationName
 	 * @param manifest
 	 * @throws DLibraException 
 	 * @throws RemoteException 
 	 */
-	public void updateDlibraAttributes(String versionUri,
-			String groupPublicationName, String publicationName, String manifest)
+	public void updateDlibraMetadataAttributes(String groupPublicationName,
+			String publicationName, String manifest)
 		throws RemoteException, DLibraException
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
 		EditionId editionId = dLibra.getFilesHelper().getEditionId(
 			publicationId);
-
-		Model model = ModelFactory.createDefaultModel();
-		model.read(new ByteArrayInputStream(manifest.getBytes()), null);
+		logger.debug("Edition id: " + editionId);
 
 		AttributeValueSet avs = new AttributeValueSet();
 		avs.setElementId(editionId);
 
+		Model model = ModelFactory.createDefaultModel();
+		model.read(new ByteArrayInputStream(manifest.getBytes()), null);
+
 		StmtIterator iterator = model.listStatements();
 		for (Statement statement : iterator.toList()) {
+			logger.debug("Iterating with statement: "
+					+ statement.getPredicate() + ":" + statement.getObject());
 			if (statement.getPredicate().equals(DCTerms.identifier)) {
+				if (!statement.getString().equals(groupPublicationName)) {
+					logger.warn(String
+							.format(
+								"dcterms:identifier is '%s' but group publication name was '%s', ignoring dcterms:identifier",
+								statement.getString(), groupPublicationName));
+				}
 			}
 			else if (statement.getPredicate().equals(DCTerms.creator)) {
-				// find the attribute
-				Attribute attribute = null;
-				CollectionResult result = dLibra
-						.getMetadataServer()
-						.getAttributeManager()
-						.getObjects(
-							new AttributeFilter((AttributeId) null).setRDFNames(Arrays
-									.asList(CREATOR_RDF_NAME)),
-							new OutputFilter(Attribute.class));
-				if (result.getResultsCount() != 1) {
-					logger.error(String.format(
-						"Found %d attributes with RDF name '%s",
-						result.getResultsCount(), CREATOR_RDF_NAME));
-					continue;
-				} else {
-					attribute = (Attribute)result.getResults().iterator().next();
-				}
-
-				// create attribute value
-				AttributeValue value = new AttributeValue(null);
-				value.setAttributeId(attribute.getId());
-				value.setValue(statement.getString());
-				value = createAttributeValue(value);
-
-				// update attribute value set
-				avs.setAttributeValues(attribute.getId(), value.getValue(),
-					null, null);
+				updateAttribute(avs, CREATOR_RDF_NAME, statement.getString());
 			}
 			else if (statement.getPredicate().equals(DCTerms.title)) {
+				updateAttribute(avs, TITLE_RDF_NAME, statement.getString());
 			}
 			else if (statement.getPredicate().equals(DCTerms.description)) {
+				updateAttribute(avs, DESCRIPTION_RDF_NAME,
+					statement.getString());
+			}
+			else if (statement.getPredicate().equals(DCTerms.source)) {
+				updateAttribute(avs, SOURCE_RDF_NAME, statement.getString());
 			}
 		}
 
 		// commit?
 
+	}
+
+
+	/**
+	 * Update the creation date of RO version.
+	 * @param groupPublicationName RO name
+	 * @param publicationName version name
+	 * @param date creation date
+	 * @throws RemoteException
+	 * @throws DLibraException
+	 */
+	public void updateCreatedAttribute(String groupPublicationName,
+			String publicationName, String date)
+		throws RemoteException, DLibraException
+	{
+		updateSingleAttribute(groupPublicationName, publicationName,
+			CREATED_RDF_NAME, date);
+	}
+
+
+	/**
+	 * Update the modification date of RO version.
+	 * @param groupPublicationName RO name
+	 * @param publicationName version name
+	 * @param date modification date
+	 * @throws RemoteException
+	 * @throws DLibraException
+	 */
+	public void updateModifiedAttribute(String groupPublicationName,
+			String publicationName, String date)
+		throws RemoteException, DLibraException
+	{
+		updateSingleAttribute(groupPublicationName, publicationName,
+			MODIFIED_RDF_NAME, date);
+	}
+
+
+	private void updateSingleAttribute(String groupPublicationName,
+			String publicationName, String attributeRdfName, String value)
+		throws RemoteException, DLibraException
+	{
+		PublicationId publicationId = dLibra.getPublicationsHelper()
+				.getPublicationId(groupPublicationName, publicationName);
+		EditionId editionId = dLibra.getFilesHelper().getEditionId(
+			publicationId);
+		logger.debug("Edition id: " + editionId);
+
+		AttributeValueSet avs = new AttributeValueSet();
+		avs.setElementId(editionId);
+
+		updateAttribute(avs, attributeRdfName, value);
+
+	}
+
+
+	private void updateAttribute(AttributeValueSet avs,
+			String attributeRdfName, String value)
+		throws IdNotFoundException, RemoteException, DLibraException
+	{
+		// find the attribute
+		AttributeInfo attributeInfo = null;
+		CollectionResult result = dLibra
+				.getMetadataServer()
+				.getAttributeManager()
+				.getObjects(
+					new AttributeFilter((AttributeId) null).setRDFNames(Arrays
+							.asList(CREATOR_RDF_NAME)),
+					new OutputFilter(AttributeInfo.class));
+		if (result.getResultsCount() != 1) {
+			logger.error(String.format(
+				"Found %d attributes with RDF name '%s'",
+				result.getResultsCount(), CREATOR_RDF_NAME));
+			return;
+		}
+		else {
+			attributeInfo = (AttributeInfo) result.getResultInfo();
+		}
+
+		// create attribute value
+		AttributeValue attValue = new AttributeValue(null);
+		attValue.setAttributeId(attributeInfo.getId());
+		attValue.setValue(value);
+		attValue.setLanguageName(ATTRIBUTE_LANGUAGE);
+		attValue = createAttributeValue(attValue);
+
+		// update attribute value set
+		avs.setAttributeValues(attributeInfo.getId(), attValue.getValue(),
+			null, null);
 	}
 
 
@@ -156,6 +247,7 @@ public class AttributesHelper
 			new OutputFilter(AttributeValue.class)).getResults())
 			groupsWithValue.add((AttributeValue) obj);
 		if (groupsWithValue.isEmpty()) {
+			logger.debug("No groups with value " + value);
 			AttributeValueId id = attributeValueManager
 					.addAttributeValue(value);
 			value.setId(id);

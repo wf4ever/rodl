@@ -122,17 +122,17 @@ public class ResearchObjectResource
 					.header(Constants.CONTENT_TYPE_HEADER_NAME, "text/plain")
 					.build();
 		}
-		String versionId = lines[0];
+		String version = lines[0];
 		String baseVersionUri = (lines.length > 1 ? lines[1] : null);
-		String baseVersionId = null;
-		if (baseVersionUri != null && baseVersionUri.length() > 0) {
-			// remove "/" from the end of uri
+		String baseVersion = null;
+		if (baseVersionUri != null && !baseVersionUri.isEmpty()) {
+			// remove "/" from the end of URI
 			if (baseVersionUri.lastIndexOf("/") == baseVersionUri.length() - 1) {
 				baseVersionUri = baseVersionUri.substring(0,
 					baseVersionUri.length() - 1);
 			}
 
-			// check if this is correct URI
+			// check if this is a correct URI
 			if (!baseVersionUri.contains(uriInfo.getPath())) {
 				return Response
 						.status(Status.BAD_REQUEST)
@@ -141,18 +141,18 @@ public class ResearchObjectResource
 							"text/plain").build();
 			}
 
-			baseVersionId = baseVersionUri.substring(baseVersionUri
+			baseVersion = baseVersionUri.substring(baseVersionUri
 					.indexOf(uriInfo.getPath())
 					+ uriInfo.getPath().length()
 					+ 1);
 		}
 
-		String manifestUri = uriInfo.getAbsolutePath().toString() + "/"
-				+ versionId;
-		dLibraDataSource.getPublicationsHelper().createPublication(researchObjectId, versionId,
-			baseVersionId, manifestUri);
+		String versionUri = uriInfo.getAbsolutePath().toString() + "/"
+				+ version;
+		dLibraDataSource.getPublicationsHelper().createPublication(researchObjectId, version,
+			baseVersion, versionUri);
 
-		return Response.created(URI.create(uriInfo.getAbsolutePath() + "/" + versionId)).build();
+		return Response.created(URI.create(uriInfo.getAbsolutePath() + "/" + version)).build();
 	}
 
 
