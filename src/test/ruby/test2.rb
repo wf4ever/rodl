@@ -20,13 +20,7 @@ else
 end
 
 
-
-
-
-
-
 WORKSPACE_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")[0,22]
-WORKSPACE_ID_IN_MANIFEST = "USER_TO_SUBSTITUTE"
 PASSWORD="pass"
 
 RO_NAME="ro1"
@@ -42,6 +36,13 @@ FILE2_DIRECTORY="dir/"
 
 MESSAGE_WIDTH=50
 code = 200
+
+URI_PREFIX_IN_MANIFEST = "URI_PREFIX"
+if CALATOLA then
+	URI_PREFIX = "http://calatola.man.poznan.pl/rosrs2/workspaces/" + WORKSPACE_ID
+else
+	URI_PREFIX = "http://localhost:8081/rosrs/workspaces/" + WORKSPACE_ID
+end
 
 @retrievedManifest = ""
 
@@ -402,7 +403,7 @@ def updateManifest
 		printConstantWidth "Updating manifest........"
 		req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
 		req.basic_auth WORKSPACE_ID, PASSWORD
-		req.body = File.read("manifest.rdf").sub(WORKSPACE_ID_IN_MANIFEST, WORKSPACE_ID)
+		req.body = File.read("manifest.rdf").sub(URI_PREFIX_IN_MANIFEST, URI_PREFIX)
 		req.add_field "Content-Type", "application/rdf+xml"
 
 		response = http.request(req)
@@ -415,7 +416,7 @@ def updateManifestMalformed
 		printConstantWidth "Updating malformed manifest........"
 		req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
 		req.basic_auth WORKSPACE_ID, PASSWORD
-		req.body = File.read("manifest_malformed.rdf").sub(WORKSPACE_ID_IN_MANIFEST, WORKSPACE_ID)
+		req.body = File.read("manifest_malformed.rdf").sub(URI_PREFIX_IN_MANIFEST, URI_PREFIX)
 		req.add_field "Content-Type", "application/rdf+xml"
 
 		response = http.request(req)
@@ -428,7 +429,7 @@ def updateManifestIncorrect
 		printConstantWidth "Updating incorrect manifest........"
 		req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
 		req.basic_auth WORKSPACE_ID, PASSWORD
-		req.body = File.read("manifest_incorrect.rdf").sub(WORKSPACE_ID_IN_MANIFEST, WORKSPACE_ID)
+		req.body = File.read("manifest_incorrect.rdf").sub(URI_PREFIX_IN_MANIFEST, URI_PREFIX)
 		req.add_field "Content-Type", "application/rdf+xml"
 
 		response = http.request(req)

@@ -5,7 +5,7 @@
     xmlns:oxds="http://vocab.ox.ac.uk/dataset/schema#"
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
  >
-   <rdf:Description rdf:about="http://localhost:8081/rosrs/workspaces/USER_TO_SUBSTITUTE/ROs/ro1/ver1">
+   <rdf:Description rdf:about="URI_PREFIX/ROs/ro1/ver1">
      <dcterms:description>Description</dcterms:description>
      <dcterms:title>Some title</dcterms:title>
      <dcterms:creator>Wf4Ever test user</dcterms:creator>
@@ -16,7 +16,7 @@
      <!-- ROSRS generated data -->
      <dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-02-02T14:17:52.666744</dcterms:created>
      <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-02-02T14:17:52.667536</dcterms:modified>
-     <ore:aggregates rdf:resource="http://localhost:8081/rosrs/workspaces/USER_TO_SUBSTITUTE/ROs/ro1/ver1/file1.txt"/>
+     <ore:aggregates rdf:resource="URI_PREFIX/ROs/ro1/ver1/file1.txt"/>
      <oxds:currentVersion>ver1</oxds:currentVersion>
    </rdf:Description>
 </rdf:RDF>
