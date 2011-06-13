@@ -123,7 +123,7 @@ public class AttributesHelper
 					predicates.contains(statement.getPredicate()));
 			}
 			else if (statement.getPredicate().equals(DCTerms.source)) {
-				updateAttribute(avs, SOURCE_RDF_NAME, statement.getString(),
+				updateAttribute(avs, SOURCE_RDF_NAME, statement.getResource().getURI(),
 					predicates.contains(statement.getPredicate()));
 			}
 			predicates.add(statement.getPredicate());

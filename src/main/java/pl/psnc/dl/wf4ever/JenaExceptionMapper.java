@@ -8,6 +8,8 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.apache.log4j.Logger;
+
 import com.hp.hpl.jena.shared.JenaException;
 
 /**
@@ -21,10 +23,15 @@ public class JenaExceptionMapper
 
 {
 
+	private final static Logger logger = Logger
+			.getLogger(JenaExceptionMapper.class);
+
+
 	@Override
 	public Response toResponse(JenaException e)
 	{
 		{
+			logger.error("Caught Jena exception", e);
 			return Response.status(Status.BAD_REQUEST).type("text/plain")
 					.entity(e.getMessage()).build();
 		}

@@ -143,6 +143,7 @@ public class ManifestHelper
 
 		InputStream is = new ByteArrayInputStream(RdfBuilder.transformManifest(
 			RdfBuilder.serializeResource(resource)).getBytes());
+
 		// save manifest.rdf
 		dLibra.getFilesHelper().createOrUpdateFile(versionUri,
 			groupPublicationName, publicationName, Constants.MANIFEST_FILENAME,

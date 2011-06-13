@@ -4,7 +4,7 @@ require 'choice'
 require 'uuidtools'
 require 'base64'
 
-CALATOLA=false
+CALATOLA=true
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
@@ -606,45 +606,45 @@ if createWorkspace == 201
 			getManifest
 			validateManifest1
 			if addFile1 == 200 && addFile2 == 200
-#				getListRO
-#				getROrdf
-#				getVersionZip
-#				getManifest
-#				getFile1Metadata
-#				getFile2Metadata
-#				getFile1
-#				getFile2
-#				getDirectoryList
-#				getDirectoryZipped
-#				updateFile1
-#				updateFile2
+				getListRO
+				getROrdf
+				getVersionZip
+				getManifest
+				getFile1Metadata
+				getFile2Metadata
+				getFile1
+				getFile2
+				getDirectoryList
+				getDirectoryZipped
+				updateFile1
+				updateFile2
 				updateManifest
-#				updateManifestMalformed
-#				updateManifestIncorrect
-#				createVersionAsCopy
-#				getManifest2
-#				validateManifest2
-#				deleteFile1
-#				deleteFile2
-#				checkNoFile1Metadata
-#				checkNoFile1Content
-#				checkDeleteManifest
+				updateManifestMalformed
+				updateManifestIncorrect
+				createVersionAsCopy
+				getManifest2
+				validateManifest2
+				deleteFile1
+				deleteFile2
+				checkNoFile1Metadata
+				checkNoFile1Content
+				checkDeleteManifest
 			end
-#			if addEmptyDirectory == 200
-#				getEmptyDirectoryMetadata
-#				addFile2
-#				getEmptyDirectoryMetadata
-#				deleteFile2
-#				getEmptyDirectoryMetadata
-#				deleteEmptyDirectory
-#				checkNoEmptyDirectory
-#				addFile2
-#				deleteDirectory
-#				checkNoEmptyDirectory
-#			end
-#			deleteVersion
+			if addEmptyDirectory == 200
+				getEmptyDirectoryMetadata
+				addFile2
+				getEmptyDirectoryMetadata
+				deleteFile2
+				getEmptyDirectoryMetadata
+				deleteEmptyDirectory
+				checkNoEmptyDirectory
+				addFile2
+				deleteDirectory
+				checkNoEmptyDirectory
+			end
+			deleteVersion
 		end
-#		deleteRO
+		deleteRO
 	end
-#	deleteWorkspace
+	deleteWorkspace
 end
