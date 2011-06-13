@@ -4,7 +4,7 @@ require 'choice'
 require 'uuidtools'
 require 'base64'
 
-CALATOLA=true
+CALATOLA=false
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
@@ -403,7 +403,7 @@ def updateManifest
 		printConstantWidth "Updating manifest........"
 		req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
 		req.basic_auth WORKSPACE_ID, PASSWORD
-		req.body = File.read("manifest.rdf").sub(URI_PREFIX_IN_MANIFEST, URI_PREFIX)
+		req.body = File.read("manifest.rdf").gsub(URI_PREFIX_IN_MANIFEST, URI_PREFIX)
 		req.add_field "Content-Type", "application/rdf+xml"
 
 		response = http.request(req)
@@ -416,7 +416,7 @@ def updateManifestMalformed
 		printConstantWidth "Updating malformed manifest........"
 		req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
 		req.basic_auth WORKSPACE_ID, PASSWORD
-		req.body = File.read("manifest_malformed.rdf").sub(URI_PREFIX_IN_MANIFEST, URI_PREFIX)
+		req.body = File.read("manifest_malformed.rdf").gsub(URI_PREFIX_IN_MANIFEST, URI_PREFIX)
 		req.add_field "Content-Type", "application/rdf+xml"
 
 		response = http.request(req)
@@ -429,7 +429,7 @@ def updateManifestIncorrect
 		printConstantWidth "Updating incorrect manifest........"
 		req = Net::HTTP::Post.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME)
 		req.basic_auth WORKSPACE_ID, PASSWORD
-		req.body = File.read("manifest_incorrect.rdf").sub(URI_PREFIX_IN_MANIFEST, URI_PREFIX)
+		req.body = File.read("manifest_incorrect.rdf").gsub(URI_PREFIX_IN_MANIFEST, URI_PREFIX)
 		req.add_field "Content-Type", "application/rdf+xml"
 
 		response = http.request(req)
@@ -606,45 +606,45 @@ if createWorkspace == 201
 			getManifest
 			validateManifest1
 			if addFile1 == 200 && addFile2 == 200
-				getListRO
-				getROrdf
-				getVersionZip
-				getManifest
-				getFile1Metadata
-				getFile2Metadata
-				getFile1
-				getFile2
-				getDirectoryList
-				getDirectoryZipped
-				updateFile1
-				updateFile2
+#				getListRO
+#				getROrdf
+#				getVersionZip
+#				getManifest
+#				getFile1Metadata
+#				getFile2Metadata
+#				getFile1
+#				getFile2
+#				getDirectoryList
+#				getDirectoryZipped
+#				updateFile1
+#				updateFile2
 				updateManifest
-				updateManifestMalformed
-				updateManifestIncorrect
-				createVersionAsCopy
-				getManifest2
-				validateManifest2
-				deleteFile1
-				deleteFile2
-				checkNoFile1Metadata
-				checkNoFile1Content
-				checkDeleteManifest
+#				updateManifestMalformed
+#				updateManifestIncorrect
+#				createVersionAsCopy
+#				getManifest2
+#				validateManifest2
+#				deleteFile1
+#				deleteFile2
+#				checkNoFile1Metadata
+#				checkNoFile1Content
+#				checkDeleteManifest
 			end
-			if addEmptyDirectory == 200
-				getEmptyDirectoryMetadata
-				addFile2
-				getEmptyDirectoryMetadata
-				deleteFile2
-				getEmptyDirectoryMetadata
-				deleteEmptyDirectory
-				checkNoEmptyDirectory
-				addFile2
-				deleteDirectory
-				checkNoEmptyDirectory
-			end
-			deleteVersion
+#			if addEmptyDirectory == 200
+#				getEmptyDirectoryMetadata
+#				addFile2
+#				getEmptyDirectoryMetadata
+#				deleteFile2
+#				getEmptyDirectoryMetadata
+#				deleteEmptyDirectory
+#				checkNoEmptyDirectory
+#				addFile2
+#				deleteDirectory
+#				checkNoEmptyDirectory
+#			end
+#			deleteVersion
 		end
-		deleteRO
+#		deleteRO
 	end
-	deleteWorkspace
+#	deleteWorkspace
 end

@@ -71,7 +71,7 @@ public class ManifestHelper
 		regenerateManifest(groupPublicationName, publicationName, versionUri,
 			manifest);
 
-		dLibra.getAttributesHelper().updateDlibraMetadataAttributes(
+		dLibra.getAttributesHelper().updateMetadataAttributes(
 			groupPublicationName, publicationName, manifest);
 
 	}
@@ -207,9 +207,9 @@ public class ManifestHelper
 		Date creationDate = new Date();
 		resource.addProperty(DCTerms.modified,
 			RdfBuilder.createDateLiteral(creationDate));
-		dLibra.getAttributesHelper().updateCreatedAttribute(
+		dLibra.getAttributesHelper().updateModifiedAttribute(
 			groupPublicationName, publicationName,
-			RdfBuilder.createDateLiteral(creationDate).toString());
+			creationDate.toString());
 	}
 
 

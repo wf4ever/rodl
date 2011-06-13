@@ -42,7 +42,7 @@ public class RdfBuilder
 	private static SimpleDateFormat sdf = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ssZ");
 
-	private static final String DateFormatXSDUri = "http://www.w3.org/2001/XMLSchema#date";
+	private static final String DateTimeFormatXSDUri = "http://www.w3.org/2001/XMLSchema#dateTime";
 
 	private static final String ORE_NAMESPACE = "http://www.openarchives.org/ore/terms/";
 
@@ -143,7 +143,7 @@ public class RdfBuilder
 	{
 
 		String text = sdf.format(date);
-		return model.createTypedLiteral(text, DateFormatXSDUri);
+		return model.createTypedLiteral(text, DateTimeFormatXSDUri);
 	}
 
 

@@ -280,11 +280,11 @@ public class PublicationsHelper
 		publicationManager.createEdition(edition,
 			new VersionId[] { createdVersion.getId()});
 
-		dLibra.getAttributesHelper().updateDlibraMetadataAttributes(
+		dLibra.getAttributesHelper().updateMetadataAttributes(
 			groupPublicationName, publicationName, manifest);
 		dLibra.getAttributesHelper().updateCreatedAttribute(
 			groupPublicationName, publicationName,
-			RdfBuilder.createDateLiteral(creationDate).toString());
+			creationDate.toString());
 	}
 
 
@@ -335,8 +335,8 @@ public class PublicationsHelper
 				String pubVersionURI = versionURI.substring(0,
 					versionURI.lastIndexOf("/") + 1)
 						+ p.getLabel();
-				logger.debug("Will regenerate manifest for version "
-						+ p.getLabel() + " URI: " + pubVersionURI);
+				logger.debug(String.format("Will regenerate manifest and add hasVersion for version %s",
+						p.getLabel()));
 				dLibra.getManifestHelper().regenerateManifest(
 					groupPublicationName,
 					p.getLabel(),

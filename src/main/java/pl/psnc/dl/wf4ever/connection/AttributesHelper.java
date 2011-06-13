@@ -8,8 +8,10 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -17,7 +19,9 @@ import pl.psnc.dlibra.common.CollectionResult;
 import pl.psnc.dlibra.common.DLObject;
 import pl.psnc.dlibra.common.OutputFilter;
 import pl.psnc.dlibra.metadata.EditionId;
+import pl.psnc.dlibra.metadata.Language;
 import pl.psnc.dlibra.metadata.PublicationId;
+import pl.psnc.dlibra.metadata.attributes.AbstractAttributeValue;
 import pl.psnc.dlibra.metadata.attributes.AttributeFilter;
 import pl.psnc.dlibra.metadata.attributes.AttributeId;
 import pl.psnc.dlibra.metadata.attributes.AttributeInfo;
@@ -33,6 +37,7 @@ import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.vocabulary.DCTerms;
@@ -57,7 +62,7 @@ public class AttributesHelper
 
 	public static final String MODIFIED_RDF_NAME = "Modified";
 
-	public static final String ATTRIBUTE_LANGUAGE = "en";
+	public static final String ATTRIBUTE_LANGUAGE = Language.UNIVERSAL;
 
 	private final static Logger logger = Logger
 			.getLogger(AttributesHelper.class);
@@ -82,20 +87,17 @@ public class AttributesHelper
 	 * @throws DLibraException 
 	 * @throws RemoteException 
 	 */
-	public void updateDlibraMetadataAttributes(String groupPublicationName,
+	public void updateMetadataAttributes(String groupPublicationName,
 			String publicationName, String manifest)
 		throws RemoteException, DLibraException
 	{
-		PublicationId publicationId = dLibra.getPublicationsHelper()
-				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getFilesHelper().getEditionId(
-			publicationId);
-
-		AttributeValueSet avs = new AttributeValueSet();
-		avs.setElementId(editionId);
+		AttributeValueSet avs = getAttributeValueSet(groupPublicationName,
+			publicationName);
 
 		Model model = ModelFactory.createDefaultModel();
 		model.read(new ByteArrayInputStream(manifest.getBytes()), null);
+
+		Set<Property> predicates = new HashSet<Property>();
 
 		StmtIterator iterator = model.listStatements();
 		for (Statement statement : iterator.toList()) {
@@ -108,22 +110,26 @@ public class AttributesHelper
 				}
 			}
 			else if (statement.getPredicate().equals(DCTerms.creator)) {
-				updateAttribute(avs, CREATOR_RDF_NAME, statement.getString());
+				updateAttribute(avs, CREATOR_RDF_NAME, statement.getString(),
+					predicates.contains(statement.getPredicate()));
 			}
 			else if (statement.getPredicate().equals(DCTerms.title)) {
-				updateAttribute(avs, TITLE_RDF_NAME, statement.getString());
+				updateAttribute(avs, TITLE_RDF_NAME, statement.getString(),
+					predicates.contains(statement.getPredicate()));
 			}
 			else if (statement.getPredicate().equals(DCTerms.description)) {
 				updateAttribute(avs, DESCRIPTION_RDF_NAME,
-					statement.getString());
+					statement.getString(),
+					predicates.contains(statement.getPredicate()));
 			}
 			else if (statement.getPredicate().equals(DCTerms.source)) {
-				updateAttribute(avs, SOURCE_RDF_NAME, statement.getString());
+				updateAttribute(avs, SOURCE_RDF_NAME, statement.getString(),
+					predicates.contains(statement.getPredicate()));
 			}
+			predicates.add(statement.getPredicate());
 		}
 
-		// commit?
-
+		commitAttributeValueSet(avs);
 	}
 
 
@@ -139,8 +145,10 @@ public class AttributesHelper
 			String publicationName, String date)
 		throws RemoteException, DLibraException
 	{
-		updateSingleAttribute(groupPublicationName, publicationName,
-			CREATED_RDF_NAME, date);
+		AttributeValueSet avs = getAttributeValueSet(groupPublicationName,
+			publicationName);
+		updateAttribute(avs, CREATED_RDF_NAME, date, false);
+		commitAttributeValueSet(avs);
 	}
 
 
@@ -156,33 +164,23 @@ public class AttributesHelper
 			String publicationName, String date)
 		throws RemoteException, DLibraException
 	{
-		updateSingleAttribute(groupPublicationName, publicationName,
-			MODIFIED_RDF_NAME, date);
-	}
-
-
-	private void updateSingleAttribute(String groupPublicationName,
-			String publicationName, String attributeRdfName, String value)
-		throws RemoteException, DLibraException
-	{
-		PublicationId publicationId = dLibra.getPublicationsHelper()
-				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getFilesHelper().getEditionId(
-			publicationId);
-		logger.debug("Edition id: " + editionId);
-
-		AttributeValueSet avs = new AttributeValueSet();
-		avs.setElementId(editionId);
-
-		updateAttribute(avs, attributeRdfName, value);
-
+		AttributeValueSet avs = getAttributeValueSet(groupPublicationName,
+			publicationName);
+		updateAttribute(avs, MODIFIED_RDF_NAME, date, false);
+		commitAttributeValueSet(avs);
 	}
 
 
 	private void updateAttribute(AttributeValueSet avs,
-			String attributeRdfName, String value)
+			String attributeRdfName, String value, boolean keepOld)
 		throws IdNotFoundException, RemoteException, DLibraException
 	{
+		if (value.isEmpty()) {
+			logger.warn(String.format("Ignoring empty value for attribute %s",
+				attributeRdfName));
+			return;
+		}
+
 		// find the attribute
 		AttributeInfo attributeInfo = null;
 		CollectionResult result = dLibra
@@ -190,12 +188,12 @@ public class AttributesHelper
 				.getAttributeManager()
 				.getObjects(
 					new AttributeFilter((AttributeId) null).setRDFNames(Arrays
-							.asList(CREATOR_RDF_NAME)),
+							.asList(attributeRdfName)),
 					new OutputFilter(AttributeInfo.class));
 		if (result.getResultsCount() != 1) {
 			logger.error(String.format(
 				"Found %d attributes with RDF name '%s'",
-				result.getResultsCount(), CREATOR_RDF_NAME));
+				result.getResultsCount(), attributeRdfName));
 			return;
 		}
 		else {
@@ -209,9 +207,20 @@ public class AttributesHelper
 		attValue.setLanguageName(ATTRIBUTE_LANGUAGE);
 		attValue = createAttributeValue(attValue);
 
+		// wrap in a list
+		List<AbstractAttributeValue> attValues = (List<AbstractAttributeValue>) (keepOld
+				&& avs.getAttributeIds().contains(attributeInfo.getId()) ? avs
+				.getAttributeValues(attributeInfo.getId())
+				: new ArrayList<AbstractAttributeValue>());
+		attValues.add(attValue);
+
 		// update attribute value set
-		avs.setAttributeValues(attributeInfo.getId(), attValue.getValue(),
-			null, null);
+		avs.setDirectAttributeValues(attributeInfo.getId(), ATTRIBUTE_LANGUAGE,
+			attValues);
+
+		logger.debug(String.format("Updated attribute %s (%d) with value %s",
+			attributeInfo.getRDFName(), attributeInfo.getId().getId(),
+			attValue.getValue()));
 	}
 
 
@@ -297,4 +306,30 @@ public class AttributesHelper
 				+ value + " Group id: " + group.getBaseId()
 				+ " Language name: " + selLang);
 	}
+
+
+	private AttributeValueSet getAttributeValueSet(String groupPublicationName,
+			String publicationName)
+		throws RemoteException, DLibraException, IdNotFoundException
+	{
+		PublicationId publicationId = dLibra.getPublicationsHelper()
+				.getPublicationId(groupPublicationName, publicationName);
+		EditionId editionId = dLibra.getFilesHelper().getEditionId(
+			publicationId);
+
+		AttributeValueSet avs = dLibra.getMetadataServer()
+				.getElementMetadataManager()
+				.getAttributeValueSet(editionId, AttributeValue.AV_ASSOC_ALL);
+		return avs;
+	}
+
+
+	private void commitAttributeValueSet(AttributeValueSet avs)
+		throws RemoteException, IdNotFoundException, AccessDeniedException,
+		DLibraException
+	{
+		dLibra.getMetadataServer().getElementMetadataManager()
+				.setAttributeValueSet(avs);
+	}
+
 }
