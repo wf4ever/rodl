@@ -23,10 +23,6 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
 
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.shared.JenaException;
-import com.hp.hpl.jena.vocabulary.DCTerms;
-
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.EmptyFoldersUtility;
 import pl.psnc.dl.wf4ever.RdfBuilder;
@@ -35,7 +31,6 @@ import pl.psnc.dlibra.common.Info;
 import pl.psnc.dlibra.common.InputFilter;
 import pl.psnc.dlibra.common.OutputFilter;
 import pl.psnc.dlibra.content.ContentServer;
-import pl.psnc.dlibra.metadata.Edition;
 import pl.psnc.dlibra.metadata.EditionFilter;
 import pl.psnc.dlibra.metadata.EditionId;
 import pl.psnc.dlibra.metadata.File;
@@ -53,6 +48,10 @@ import pl.psnc.dlibra.metadata.VersionInfo;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 import pl.psnc.util.IOUtils;
+
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.shared.JenaException;
+import com.hp.hpl.jena.vocabulary.DCTerms;
 
 public class FilesHelper
 {
@@ -135,7 +134,7 @@ public class FilesHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = getEditionId(publicationId);
+		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(publicationId);
 
 		Map<VersionId, FileInfo> result = new HashMap<VersionId, FileInfo>();
 		if (folder != null && !folder.endsWith("/"))
@@ -258,7 +257,7 @@ public class FilesHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = getEditionId(publicationId);
+		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(publicationId);
 		VersionId versionId = getVersionId(editionId, filePath);
 
 		InputStream versionInputStream = contentServer
@@ -273,7 +272,7 @@ public class FilesHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = getEditionId(publicationId);
+		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(publicationId);
 		VersionId versionId = getVersionId(editionId, filePath);
 		VersionInfo versionInfo = (VersionInfo) fileManager.getObjects(
 			new InputFilter(versionId), new OutputFilter(VersionInfo.class))
@@ -292,7 +291,7 @@ public class FilesHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = getEditionId(publicationId);
+		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(publicationId);
 		VersionId versionId = getVersionId(editionId, filePath);
 		VersionInfo versionInfo = (VersionInfo) fileManager.getObjects(
 			new InputFilter(versionId), new OutputFilter(VersionInfo.class))
@@ -352,7 +351,7 @@ public class FilesHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = getEditionId(publicationId);
+		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(publicationId);
 
 		if (filePath.endsWith("/")) {
 			// slash at the end means empty folder
@@ -448,7 +447,7 @@ public class FilesHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = getEditionId(publicationId);
+		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(publicationId);
 
 		boolean recreateEmptyFolder = false;
 		String emptyFolder = "";
@@ -517,26 +516,6 @@ public class FilesHelper
 	}
 
 
-	public EditionId getEditionId(PublicationId publicationId)
-		throws RemoteException, DLibraException
-	{
-		Collection<Id> resultIds = publicationManager
-				.getObjects(
-					new PublicationFilter(null, publicationId).setEditionState(Edition.ALL_STATES
-							- Edition.PERMANENT_DELETED),
-					new OutputFilter(EditionId.class)).getResultIds();
-		if (resultIds.size() != 1) {
-			throw new DLibraException(null, "Invalid state of publication "
-					+ publicationId + ": " + resultIds.size() + " editions.") {
-
-				private static final long serialVersionUID = -7493352685629908419L;
-				// TODO probably another exception would fit better here
-			};
-		}
-		return (EditionId) resultIds.iterator().next();
-	}
-
-
 	private VersionId getVersionId(EditionId editionId, String filePath)
 		throws IdNotFoundException, RemoteException, DLibraException
 	{
@@ -553,7 +532,7 @@ public class FilesHelper
 			PublicationId targetPublicationId, Set<VersionId> exclude)
 		throws IOException, DLibraException
 	{
-		EditionId sourceEditionId = dLibra.getFilesHelper().getEditionId(
+		EditionId sourceEditionId = dLibra.getPublicationsHelper().getEditionId(
 			sourcePublicationId);
 		Collection<Id> sourceVersionIds = publicationManager.getObjects(
 			new EditionFilter(sourceEditionId),

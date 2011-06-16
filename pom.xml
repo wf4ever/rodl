@@ -4,7 +4,7 @@
 	<groupId>pl.psnc.dl.wf4ever</groupId>
 	<artifactId>rosrs</artifactId>
 	<packaging>war</packaging>
-	<version>2.3.1</version>
+	<version>2.3.2-SNAPSHOT</version>
 	<name>rosrs</name>
 	<url>http://maven.apache.org</url>
 	<inceptionYear>2010</inceptionYear>

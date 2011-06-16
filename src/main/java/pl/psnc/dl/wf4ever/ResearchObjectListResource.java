@@ -15,8 +15,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.log4j.Logger;
+
 import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
-import pl.psnc.dlibra.metadata.GroupPublicationInfo;
+import pl.psnc.dlibra.metadata.AbstractPublicationInfo;
 import pl.psnc.dlibra.service.DLibraException;
 
 /**
@@ -28,6 +30,9 @@ import pl.psnc.dlibra.service.DLibraException;
 		+ Constants.RESEARCH_OBJECTS_URL_PART)
 public class ResearchObjectListResource
 {
+
+	private final static Logger logger = Logger
+			.getLogger(ResearchObjectListResource.class);
 
 	@Context
 	HttpServletRequest request;
@@ -51,12 +56,21 @@ public class ResearchObjectListResource
 
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
-		List<GroupPublicationInfo> list = dLibraDataSource.getPublicationsHelper()
-				.listUserGroupPublications();
+		List<AbstractPublicationInfo> list;
+		logger.debug(String.format("Received %d query params", uriInfo
+				.getQueryParameters().size()));
+		if (uriInfo.getQueryParameters().isEmpty()) {
+			list = dLibraDataSource.getPublicationsHelper()
+					.listUserGroupPublications();
+		}
+		else {
+			list = dLibraDataSource.getPublicationsHelper()
+					.listUserGroupPublications(uriInfo.getQueryParameters());
+		}
 
 		StringBuilder sb = new StringBuilder("");
 
-		for (GroupPublicationInfo gp : list) {
+		for (AbstractPublicationInfo gp : list) {
 			sb.append(uriInfo.getAbsolutePath());
 			sb.append("/");
 			sb.append(gp.getLabel());
@@ -65,7 +79,8 @@ public class ResearchObjectListResource
 
 		return sb.toString();
 	}
-	
+
+
 	/**
 	 * Creates new RO with given RO_ID.
 
@@ -84,10 +99,12 @@ public class ResearchObjectListResource
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		dLibraDataSource.getPublicationsHelper().createGroupPublication(researchObjectId);
+		dLibraDataSource.getPublicationsHelper().createGroupPublication(
+			researchObjectId);
 
-		return Response.created(URI.create(uriInfo.getAbsolutePath() + "/" + researchObjectId)).build();
+		return Response.created(
+			URI.create(uriInfo.getAbsolutePath() + "/" + researchObjectId))
+				.build();
 	}
-
 
 }

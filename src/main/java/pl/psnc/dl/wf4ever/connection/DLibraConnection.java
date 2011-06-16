@@ -34,6 +34,8 @@ public class DLibraConnection
 
 	private long workspacesDirectory;
 
+	private long collectionId;
+
 
 	public DLibraConnection(String configFileName)
 	{
@@ -61,7 +63,10 @@ public class DLibraConnection
 		this.workspacesDirectory = Long.parseLong(properties
 				.getProperty("workspacesDir"));
 		logger.debug("Workspaces directory: " + this.workspacesDirectory);
-	}
+
+		this.collectionId = Long.parseLong(properties.getProperty("collectionId"));
+		logger.debug("Collection id: " + this.collectionId);
+}
 
 
 	public DLibraDataSource getDLibraDataSource(String user, String password)
@@ -75,6 +80,6 @@ public class DLibraConnection
 				new ServiceUrl(InetAddress.getByName(host),
 						UserInterface.SERVICE_TYPE, port), authorizationToken);
 
-		return new DLibraDataSource(userServiceResolver, user, workspacesDirectory);
+		return new DLibraDataSource(userServiceResolver, user, workspacesDirectory, collectionId);
 	}
 }

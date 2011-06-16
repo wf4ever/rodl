@@ -4,7 +4,7 @@ require 'choice'
 require 'uuidtools'
 require 'base64'
 
-CALATOLA=true
+CALATOLA=false
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
@@ -178,6 +178,17 @@ def getListRO
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Retrieving list of research objects........"
 		req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs')
+		req.basic_auth WORKSPACE_ID, PASSWORD
+		response = http.request(req)
+		printResponse(response, 200)
+	}
+end
+
+def searchForROs
+	#get list of research objects
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Searching for research objects........"
+		req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs?Creator=Wf4Ever+test+user')
 		req.basic_auth WORKSPACE_ID, PASSWORD
 		response = http.request(req)
 		printResponse(response, 200)
@@ -606,45 +617,46 @@ if createWorkspace == 201
 			getManifest
 			validateManifest1
 			if addFile1 == 200 && addFile2 == 200
-				getListRO
-				getROrdf
-				getVersionZip
-				getManifest
-				getFile1Metadata
-				getFile2Metadata
-				getFile1
-				getFile2
-				getDirectoryList
-				getDirectoryZipped
-				updateFile1
-				updateFile2
+#				getListRO
+#				getROrdf
+#				getVersionZip
+#				getManifest
+#				getFile1Metadata
+#				getFile2Metadata
+#				getFile1
+#				getFile2
+#				getDirectoryList
+#				getDirectoryZipped
+#				updateFile1
+#				updateFile2
 				updateManifest
-				updateManifestMalformed
-				updateManifestIncorrect
+#				updateManifestMalformed
+#				updateManifestIncorrect
 				createVersionAsCopy
 				getManifest2
 				validateManifest2
-				deleteFile1
-				deleteFile2
-				checkNoFile1Metadata
-				checkNoFile1Content
-				checkDeleteManifest
+				searchForROs
+#				deleteFile1
+#				deleteFile2
+#				checkNoFile1Metadata
+#				checkNoFile1Content
+#				checkDeleteManifest
 			end
-			if addEmptyDirectory == 200
-				getEmptyDirectoryMetadata
-				addFile2
-				getEmptyDirectoryMetadata
-				deleteFile2
-				getEmptyDirectoryMetadata
-				deleteEmptyDirectory
-				checkNoEmptyDirectory
-				addFile2
-				deleteDirectory
-				checkNoEmptyDirectory
-			end
-			deleteVersion
+#			if addEmptyDirectory == 200
+#				getEmptyDirectoryMetadata
+#				addFile2
+#				getEmptyDirectoryMetadata
+#				deleteFile2
+#				getEmptyDirectoryMetadata
+#				deleteEmptyDirectory
+#				checkNoEmptyDirectory
+#				addFile2
+#				deleteDirectory
+#				checkNoEmptyDirectory
+#			end
+#			deleteVersion
 		end
-		deleteRO
+#		deleteRO
 	end
-	deleteWorkspace
+#	deleteWorkspace
 end

@@ -6,9 +6,11 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dlibra.content.ContentServer;
 import pl.psnc.dlibra.metadata.DirectoryId;
+import pl.psnc.dlibra.metadata.LibCollectionId;
 import pl.psnc.dlibra.metadata.MetadataServer;
 import pl.psnc.dlibra.mgmt.DLStaticServiceResolver;
 import pl.psnc.dlibra.mgmt.UserServiceResolver;
+import pl.psnc.dlibra.search.server.SearchServer;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.user.UserManager;
 
@@ -23,7 +25,7 @@ public class DLibraDataSource
 	@SuppressWarnings("unused")
 	private final static Logger logger = Logger
 			.getLogger(DLibraDataSource.class);
-	
+
 	public static final DirectoryId ROOT_DIRECTORY_ID = new DirectoryId(1L);
 
 	public final static int BUFFER_SIZE = 4096;
@@ -50,14 +52,21 @@ public class DLibraDataSource
 
 	private DirectoryId workspacesContainerDirectoryId;
 
+	private SearchServer searchServer;
+
+	private LibCollectionId collectionId;
+
 
 	public DLibraDataSource(UserServiceResolver userServiceResolver,
-			String userLogin, long workspacesContainerDirectoryId)
+			String userLogin, long workspacesContainerDirectoryId,
+			long collectionId)
 		throws RemoteException, DLibraException
 	{
 		this.serviceResolver = userServiceResolver;
 		this.userLogin = userLogin;
-		this.workspacesContainerDirectoryId = new DirectoryId(workspacesContainerDirectoryId);
+		this.workspacesContainerDirectoryId = new DirectoryId(
+				workspacesContainerDirectoryId);
+		this.collectionId = new LibCollectionId(collectionId);
 
 		metadataServer = DLStaticServiceResolver.getMetadataServer(
 			serviceResolver, null);
@@ -67,6 +76,9 @@ public class DLibraDataSource
 
 		userManager = DLStaticServiceResolver.getUserServer(serviceResolver,
 			null).getUserManager();
+
+		searchServer = DLStaticServiceResolver.getSearchServer(serviceResolver,
+			null);
 
 		usersHelper = new UsersHelper(this);
 		publicationsHelper = new PublicationsHelper(this);
@@ -139,6 +151,18 @@ public class DLibraDataSource
 	DirectoryId getWorkspacesContainerDirectoryId()
 	{
 		return workspacesContainerDirectoryId;
+	}
+
+
+	public SearchServer getSearchServer()
+	{
+		return searchServer;
+	}
+
+
+	public LibCollectionId getCollectionId()
+	{
+		return collectionId;
 	}
 
 }

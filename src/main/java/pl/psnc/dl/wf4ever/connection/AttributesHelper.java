@@ -123,7 +123,8 @@ public class AttributesHelper
 					predicates.contains(statement.getPredicate()));
 			}
 			else if (statement.getPredicate().equals(DCTerms.source)) {
-				updateAttribute(avs, SOURCE_RDF_NAME, statement.getResource().getURI(),
+				updateAttribute(avs, SOURCE_RDF_NAME, statement.getResource()
+						.getURI(),
 					predicates.contains(statement.getPredicate()));
 			}
 			predicates.add(statement.getPredicate());
@@ -182,23 +183,7 @@ public class AttributesHelper
 		}
 
 		// find the attribute
-		AttributeInfo attributeInfo = null;
-		CollectionResult result = dLibra
-				.getMetadataServer()
-				.getAttributeManager()
-				.getObjects(
-					new AttributeFilter((AttributeId) null).setRDFNames(Arrays
-							.asList(attributeRdfName)),
-					new OutputFilter(AttributeInfo.class));
-		if (result.getResultsCount() != 1) {
-			logger.error(String.format(
-				"Found %d attributes with RDF name '%s'",
-				result.getResultsCount(), attributeRdfName));
-			return;
-		}
-		else {
-			attributeInfo = (AttributeInfo) result.getResultInfo();
-		}
+		AttributeInfo attributeInfo = getAttributeInfo(attributeRdfName);
 
 		// create attribute value
 		AttributeValue attValue = new AttributeValue(null);
@@ -221,6 +206,35 @@ public class AttributesHelper
 		logger.debug(String.format("Updated attribute %s (%d) with value %s",
 			attributeInfo.getRDFName(), attributeInfo.getId().getId(),
 			attValue.getValue()));
+	}
+
+
+	public AttributeInfo getAttributeInfo(String attributeRdfName)
+		throws IdNotFoundException, RemoteException, DLibraException
+	{
+		AttributeInfo attributeInfo = null;
+		CollectionResult result = dLibra
+				.getMetadataServer()
+				.getAttributeManager()
+				.getObjects(
+					new AttributeFilter((AttributeId) null).setRDFNames(Arrays
+							.asList(attributeRdfName)),
+					new OutputFilter(AttributeInfo.class));
+		if (result.getResultsCount() == 0) {
+			logger.warn(String
+					.format("Could not find attribute with RDF name '%s'",
+						attributeRdfName));
+			return null;
+		}
+		if (result.getResultsCount() > 1) {
+			logger.warn(String.format("Found %d attributes with RDF name '%s'",
+				result.getResultsCount(), attributeRdfName));
+			return (AttributeInfo) result.getResultInfos().iterator().next();
+		}
+		else {
+			attributeInfo = (AttributeInfo) result.getResultInfo();
+		}
+		return attributeInfo;
 	}
 
 
@@ -314,7 +328,7 @@ public class AttributesHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getFilesHelper().getEditionId(
+		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(
 			publicationId);
 
 		AttributeValueSet avs = dLibra.getMetadataServer()

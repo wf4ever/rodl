@@ -8,16 +8,21 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
+import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.RdfBuilder;
+import pl.psnc.dlibra.common.DLObject;
+import pl.psnc.dlibra.common.Id;
 import pl.psnc.dlibra.common.Info;
 import pl.psnc.dlibra.common.OutputFilter;
 import pl.psnc.dlibra.content.ContentServer;
@@ -26,10 +31,14 @@ import pl.psnc.dlibra.metadata.DirectoryFilter;
 import pl.psnc.dlibra.metadata.DirectoryId;
 import pl.psnc.dlibra.metadata.DirectoryManager;
 import pl.psnc.dlibra.metadata.Edition;
+import pl.psnc.dlibra.metadata.EditionId;
+import pl.psnc.dlibra.metadata.ElementId;
 import pl.psnc.dlibra.metadata.ElementInfo;
 import pl.psnc.dlibra.metadata.File;
 import pl.psnc.dlibra.metadata.FileManager;
 import pl.psnc.dlibra.metadata.GroupPublicationInfo;
+import pl.psnc.dlibra.metadata.LibCollectionFilter;
+import pl.psnc.dlibra.metadata.LibCollectionId;
 import pl.psnc.dlibra.metadata.Publication;
 import pl.psnc.dlibra.metadata.PublicationFilter;
 import pl.psnc.dlibra.metadata.PublicationId;
@@ -37,6 +46,12 @@ import pl.psnc.dlibra.metadata.PublicationInfo;
 import pl.psnc.dlibra.metadata.PublicationManager;
 import pl.psnc.dlibra.metadata.Version;
 import pl.psnc.dlibra.metadata.VersionId;
+import pl.psnc.dlibra.metadata.attributes.AttributeInfo;
+import pl.psnc.dlibra.search.AbstractSearchResult;
+import pl.psnc.dlibra.search.QueryParseException;
+import pl.psnc.dlibra.search.local.AdvancedQuery;
+import pl.psnc.dlibra.search.local.QueryElement;
+import pl.psnc.dlibra.search.server.SearchServer;
 import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.DuplicatedValueException;
@@ -90,7 +105,7 @@ public class PublicationsHelper
 	* @throws RemoteException
 	* @throws DLibraException
 	*/
-	public List<GroupPublicationInfo> listUserGroupPublications()
+	public List<AbstractPublicationInfo> listUserGroupPublications()
 		throws RemoteException, DLibraException
 	{
 		DirectoryId workspaceDir = getWorkspaceDirectoryId();
@@ -103,7 +118,7 @@ public class PublicationsHelper
 					new OutputFilter(ElementInfo.class, List.class))
 				.getResultInfos();
 
-		ArrayList<GroupPublicationInfo> result = new ArrayList<GroupPublicationInfo>();
+		ArrayList<AbstractPublicationInfo> result = new ArrayList<AbstractPublicationInfo>();
 		for (Info info : resultInfos) {
 			if (info instanceof GroupPublicationInfo) {
 				result.add((GroupPublicationInfo) info);
@@ -230,6 +245,23 @@ public class PublicationsHelper
 		}
 
 		addHasVersionPropertyToAll(groupPublicationName, versionURI);
+
+//		publishPublication(publicationId);
+	}
+
+
+	@SuppressWarnings("unused")
+	private void publishPublication(PublicationId publicationId)
+		throws RemoteException, DLibraException
+	{
+		Edition edition = getEdition(publicationId);
+		edition.setPublished(true);
+		publicationManager.setEditionData(edition);
+
+		dLibra.getMetadataServer()
+				.getLibCollectionManager()
+				.addToCollections(Arrays.asList(dLibra.getCollectionId()),
+					Arrays.asList((ElementId) publicationId), false);
 	}
 
 
@@ -283,8 +315,7 @@ public class PublicationsHelper
 		dLibra.getAttributesHelper().updateMetadataAttributes(
 			groupPublicationName, publicationName, manifest);
 		dLibra.getAttributesHelper().updateCreatedAttribute(
-			groupPublicationName, publicationName,
-			creationDate.toString());
+			groupPublicationName, publicationName, creationDate.toString());
 	}
 
 
@@ -317,8 +348,8 @@ public class PublicationsHelper
 					+ groupPublicationName + " is malformed");
 		}
 		catch (IncorrectManifestException e) {
-			logger.warn(
-				String.format("Manifest stored for publication %s/%s is incorrect (%s)",
+			logger.warn(String.format(
+				"Manifest stored for publication %s/%s is incorrect (%s)",
 				groupPublicationName, basePublicationName, e.getMessage()));
 		}
 	}
@@ -335,8 +366,10 @@ public class PublicationsHelper
 				String pubVersionURI = versionURI.substring(0,
 					versionURI.lastIndexOf("/") + 1)
 						+ p.getLabel();
-				logger.debug(String.format("Will regenerate manifest and add hasVersion for version %s",
-						p.getLabel()));
+				logger.debug(String
+						.format(
+							"Will regenerate manifest and add hasVersion for version %s",
+							p.getLabel()));
 				dLibra.getManifestHelper().regenerateManifest(
 					groupPublicationName,
 					p.getLabel(),
@@ -435,6 +468,46 @@ public class PublicationsHelper
 	}
 
 
+	public EditionId getEditionId(PublicationId publicationId)
+		throws RemoteException, DLibraException
+	{
+		Collection<Id> resultIds = publicationManager
+				.getObjects(
+					new PublicationFilter(null, publicationId).setEditionState(Edition.ALL_STATES
+							- Edition.PERMANENT_DELETED),
+					new OutputFilter(EditionId.class)).getResultIds();
+		if (resultIds.size() != 1) {
+			throw new DLibraException(null, "Invalid state of publication "
+					+ publicationId + ": " + resultIds.size() + " editions.") {
+
+				private static final long serialVersionUID = -7493352685629908419L;
+				// TODO probably another exception would fit better here
+			};
+		}
+		return (EditionId) resultIds.iterator().next();
+	}
+
+
+	public Edition getEdition(PublicationId publicationId)
+		throws RemoteException, DLibraException
+	{
+		Collection<DLObject> results = publicationManager
+				.getObjects(
+					new PublicationFilter(null, publicationId).setEditionState(Edition.ALL_STATES
+							- Edition.PERMANENT_DELETED),
+					new OutputFilter(Edition.class)).getResults();
+		if (results.size() != 1) {
+			throw new DLibraException(null, "Invalid state of publication "
+					+ publicationId + ": " + results.size() + " editions.") {
+
+				private static final long serialVersionUID = -7493352685629908419L;
+				// TODO probably another exception would fit better here
+			};
+		}
+		return (Edition) results.iterator().next();
+	}
+
+
 	private DirectoryId getWorkspaceDirectoryId()
 		throws RemoteException, DLibraException
 	{
@@ -457,6 +530,78 @@ public class PublicationsHelper
 	{
 		return dLibra.getFilesHelper().getZippedFolder(groupPublicationName,
 			publicationName, null);
+	}
+
+
+	public List<AbstractPublicationInfo> listUserGroupPublications(
+			MultivaluedMap<String, String> queryParameters)
+		throws RemoteException, DLibraException
+	{
+		SearchServer searchServer = dLibra.getSearchServer();
+		if (searchServer == null) {
+			logger.error("Search server is null, returning list of group publications");
+			return listUserGroupPublications();
+		}
+
+		AdvancedQuery query = null;
+
+		for (Map.Entry<String, List<String>> entry : queryParameters.entrySet()) {
+			String attributeRdfName = entry.getKey();
+			AttributeInfo info = null;
+			try {
+				info = dLibra.getAttributesHelper().getAttributeInfo(
+					attributeRdfName);
+			}
+			catch (IdNotFoundException e) {
+				logger.error("Id null not found, should not happen", e);
+			}
+			if (info == null) {
+				logger.debug(String.format(
+					"Query param %s is not a valid dLibra attribute",
+					attributeRdfName));
+				continue;
+			}
+			if (query == null)
+				query = new AdvancedQuery();
+			logger.debug(String.format("Adding query element %s=%s",
+				info.getId(), entry.getValue().get(0)));
+			query.addQueryElement(new QueryElement(info.getId(), entry
+					.getValue().get(0)));
+		}
+
+		if (query == null) {
+			logger.debug("No dLibra query params, returning list of group publications");
+			return listUserGroupPublications();
+		}
+
+		query.setSearchRemoteResources(false);
+		query.setExpandable(false);
+		query.setAggregate(false);
+
+		query.setLibCollectionId((LibCollectionId) dLibra
+				.getMetadataServer()
+				.getLibCollectionManager()
+				.getObjects(new LibCollectionFilter(),
+					new OutputFilter(LibCollectionId.class)).getResultId());
+		query.setLanguageName(AttributesHelper.ATTRIBUTE_LANGUAGE);
+
+		List<AbstractPublicationInfo> result = new ArrayList<AbstractPublicationInfo>();
+		try {
+			List<AbstractSearchResult> hits = searchServer.getSearchManager()
+					.getSearchResults(
+						searchServer.getSearchManager().search(query));
+			for (AbstractSearchResult hit : hits) {
+				Publication publication = hit.getRoot();
+				result.add((AbstractPublicationInfo) publication.getInfo());
+			}
+		}
+		catch (QueryParseException e) {
+			logger.error(
+				String.format("Error when parsing query %s.", query.toString()),
+				e);
+			return listUserGroupPublications();
+		}
+		return result;
 	}
 
 }
