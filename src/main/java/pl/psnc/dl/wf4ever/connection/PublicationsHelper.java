@@ -405,7 +405,7 @@ public class PublicationsHelper
 		IdNotFoundException, IOException, TransformerException
 	{
 		VersionId[] copyVersions = dLibra.getFilesHelper().copyVersions(
-			basePublicationId, publicationId, null);
+			basePublicationId, publicationId);
 		Edition edition = new Edition(null, publicationId, false);
 		edition.setName(publicationName);
 		publicationManager.createEdition(edition, copyVersions);

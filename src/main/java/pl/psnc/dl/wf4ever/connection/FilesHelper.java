@@ -8,14 +8,11 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -347,7 +344,8 @@ public class FilesHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getEditionHelper().getEditionId(publicationId);
+		EditionId editionId = dLibra.getEditionHelper().getEditionId(
+			publicationId);
 
 		if (filePath.endsWith("/")) {
 			// slash at the end means empty folder
@@ -393,12 +391,12 @@ public class FilesHelper
 			fileManager.replaceVersion(versionId, createdVersion.getId());
 		}
 		else {
-			VersionId[] copiesIds = copyVersions(publicationId, publicationId,
-				null);
-			VersionId[] versionIds = Arrays.copyOf(copiesIds,
-				copiesIds.length + 1);
-			versionIds[versionIds.length - 1] = createdVersion.getId();
-			publicationManager.updateEditionVersions(editionId, versionIds);
+			Collection<Id> versionIds = publicationManager
+					.getObjects(new EditionFilter(editionId),
+						new OutputFilter(VersionId.class)).getResultIds();
+			versionIds.add(createdVersion.getId());
+			publicationManager.updateEditionVersions(editionId,
+				versionIds.toArray(new VersionId[versionIds.size()]));
 		}
 
 		if (generateManifest) {
@@ -443,13 +441,17 @@ public class FilesHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getEditionHelper().getEditionId(publicationId);
+		EditionId editionId = dLibra.getEditionHelper().getEditionId(
+			publicationId);
+
+		Collection<Id> versionIds = publicationManager.getObjects(
+			new EditionFilter(editionId), new OutputFilter(VersionId.class))
+				.getResultIds();
 
 		boolean recreateEmptyFolder = false;
 		String emptyFolder = "";
-		HashSet<VersionId> exclude = new HashSet<VersionId>();
 		try {
-			exclude.add(getVersionId(editionId, filePath));
+			versionIds.remove(getVersionId(editionId, filePath));
 			emptyFolder = filePath.substring(0, filePath.lastIndexOf("/") + 1);
 			if (!emptyFolder.isEmpty()
 					&& getFilePathsInFolder(groupPublicationName,
@@ -464,14 +466,14 @@ public class FilesHelper
 				for (String file : files) {
 					if (file.startsWith("/"))
 						file = file.substring(1);
-					exclude.add(getVersionId(editionId, file));
+					versionIds.remove(getVersionId(editionId, file));
 				}
 			}
 			else {
 				// it must be an empty folder
 				try {
 					filePath = EmptyFoldersUtility.convertReal2Dlibra(filePath);
-					exclude.add(getVersionId(editionId, filePath));
+					versionIds.remove(getVersionId(editionId, filePath));
 					logger.debug("Deleting empty folder");
 				}
 				catch (IdNotFoundException ex2) {
@@ -482,9 +484,8 @@ public class FilesHelper
 			}
 		}
 
-		VersionId[] copiesIds = copyVersions(publicationId, publicationId,
-			exclude);
-		publicationManager.updateEditionVersions(editionId, copiesIds);
+		publicationManager.updateEditionVersions(editionId,
+			(VersionId[]) versionIds.toArray(new VersionId[versionIds.size()]));
 
 		if (recreateEmptyFolder) {
 			createOrUpdateFile(versionUri, groupPublicationName,
@@ -506,8 +507,8 @@ public class FilesHelper
 		}
 		catch (IncorrectManifestException e) {
 			logger.warn("Manifest stored for publication "
-				+ groupPublicationName + " is incorrect ("
-				+ e.getMessage() + ")");
+					+ groupPublicationName + " is incorrect (" + e.getMessage()
+					+ ")");
 		}
 	}
 
@@ -523,9 +524,8 @@ public class FilesHelper
 	}
 
 
-	// TODO this is ridiculous, dLibra API should be changed
 	VersionId[] copyVersions(PublicationId sourcePublicationId,
-			PublicationId targetPublicationId, Set<VersionId> exclude)
+			PublicationId targetPublicationId)
 		throws IOException, DLibraException
 	{
 		EditionId sourceEditionId = dLibra.getEditionHelper().getEditionId(
@@ -546,9 +546,6 @@ public class FilesHelper
 
 		int i = 0;
 		for (Id id : sourceVersionIds) {
-			if (exclude != null && exclude.contains(id)) {
-				continue;
-			}
 			copyVersionIds
 					.add(copyVersion((VersionId) id, targetPublicationId));
 			if (id.equals(sourceMainVersionId)) {
