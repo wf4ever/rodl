@@ -2,12 +2,15 @@ package pl.psnc.dl.wf4ever;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.rmi.RemoteException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -117,7 +120,7 @@ public class VersionResource
 	 * @throws JenaException if the manifest is malformed
 	 * @throws IncorrectManifestException if the manifest is missing a property
 	 */
-	@POST
+	@PUT
 	@Consumes("application/rdf+xml")
 	public Response updateManifestFile(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId,
@@ -134,6 +137,25 @@ public class VersionResource
 			researchObjectId, versionId, rdfAsString);
 
 		return Response.ok().build();
+	}
+
+
+	@POST
+	public Response createEdition(@PathParam("W_ID") String workspaceId,
+			@PathParam("RO_ID") String researchObjectId,
+			@PathParam("RO_VERSION_ID") String versionId)
+		throws RemoteException, DLibraException
+	{
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
+				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+
+		long editionId = dLibraDataSource.getEditionHelper()
+				.createEdition(versionId, researchObjectId, versionId).getId();
+
+		String uri = uriInfo.getAbsolutePath().toString() + "?edition_id="
+				+ editionId;
+
+		return Response.created(URI.create(uri)).build();
 	}
 
 

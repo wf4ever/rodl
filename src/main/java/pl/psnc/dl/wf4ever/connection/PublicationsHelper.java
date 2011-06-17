@@ -21,9 +21,8 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.RdfBuilder;
-import pl.psnc.dlibra.common.DLObject;
-import pl.psnc.dlibra.common.Id;
 import pl.psnc.dlibra.common.Info;
+import pl.psnc.dlibra.common.InputFilter;
 import pl.psnc.dlibra.common.OutputFilter;
 import pl.psnc.dlibra.content.ContentServer;
 import pl.psnc.dlibra.metadata.AbstractPublicationInfo;
@@ -129,6 +128,85 @@ public class PublicationsHelper
 
 
 	/**
+	 * Performs search using attributes.
+	 * @param queryParameters List of pairs <attribute_RDF_name, value>. Unrecognized RDF names are ignored.
+	 * @return List of publication infos.
+	 * @throws RemoteException
+	 * @throws DLibraException
+	 */
+	public List<AbstractPublicationInfo> listUserGroupPublications(
+			MultivaluedMap<String, String> queryParameters)
+		throws RemoteException, DLibraException
+	{
+		SearchServer searchServer = dLibra.getSearchServer();
+		if (searchServer == null) {
+			logger.error("Search server is null, returning list of group publications");
+			return listUserGroupPublications();
+		}
+
+		AdvancedQuery query = null;
+
+		for (Map.Entry<String, List<String>> entry : queryParameters.entrySet()) {
+			String attributeRdfName = entry.getKey();
+			AttributeInfo info = null;
+			try {
+				info = dLibra.getAttributesHelper().getAttributeInfo(
+					attributeRdfName);
+			}
+			catch (IdNotFoundException e) {
+				logger.error("Id null not found, should not happen", e);
+			}
+			if (info == null) {
+				logger.debug(String.format(
+					"Query param %s is not a valid dLibra attribute",
+					attributeRdfName));
+				continue;
+			}
+			if (query == null)
+				query = new AdvancedQuery();
+			logger.debug(String.format("Adding query element %s=%s",
+				info.getId(), entry.getValue().get(0)));
+			query.addQueryElement(new QueryElement(info.getId(), entry
+					.getValue().get(0)));
+		}
+
+		if (query == null) {
+			logger.debug("No dLibra query params, returning list of group publications");
+			return listUserGroupPublications();
+		}
+
+		query.setSearchRemoteResources(false);
+		query.setExpandable(false);
+		query.setAggregate(false);
+
+		query.setLibCollectionId((LibCollectionId) dLibra
+				.getMetadataServer()
+				.getLibCollectionManager()
+				.getObjects(new LibCollectionFilter(),
+					new OutputFilter(LibCollectionId.class)).getResultId());
+		query.setLanguageName(AttributesHelper.ATTRIBUTE_LANGUAGE);
+
+		List<AbstractPublicationInfo> result = new ArrayList<AbstractPublicationInfo>();
+		try {
+			List<AbstractSearchResult> hits = searchServer.getSearchManager()
+					.getSearchResults(
+						searchServer.getSearchManager().search(query));
+			for (AbstractSearchResult hit : hits) {
+				Publication publication = hit.getRoot();
+				result.add((AbstractPublicationInfo) publication.getInfo());
+			}
+		}
+		catch (QueryParseException e) {
+			logger.error(
+				String.format("Error when parsing query %s.", query.toString()),
+				e);
+			return listUserGroupPublications();
+		}
+		return result;
+	}
+
+
+	/**
 	* Creates a new group publication (RO) for the current user.
 	* @param groupPublicationName
 	* @throws RemoteException
@@ -183,13 +261,13 @@ public class PublicationsHelper
 	{
 		PublicationId groupId = getGroupId(groupPublicationName);
 
-		Collection<Info> resultInfos = publicationManager
-				.getObjects(
-					new PublicationFilter(null, groupId)
-							.setGroupStatus(Publication.PUB_GROUP_LEAF)
-							.setPublicationState(
-								(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED)),
-					new OutputFilter(AbstractPublicationInfo.class, List.class))
+		InputFilter in = new PublicationFilter(null, groupId)
+				.setGroupStatus(Publication.PUB_GROUP_LEAF)
+				.setPublicationState(
+					(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED));
+		OutputFilter out = new OutputFilter(AbstractPublicationInfo.class,
+				List.class);
+		Collection<Info> resultInfos = publicationManager.getObjects(in, out)
 				.getResultInfos();
 
 		ArrayList<PublicationInfo> result = new ArrayList<PublicationInfo>();
@@ -246,7 +324,7 @@ public class PublicationsHelper
 
 		addHasVersionPropertyToAll(groupPublicationName, versionURI);
 
-//		publishPublication(publicationId);
+		//		publishPublication(publicationId);
 	}
 
 
@@ -254,7 +332,7 @@ public class PublicationsHelper
 	private void publishPublication(PublicationId publicationId)
 		throws RemoteException, DLibraException
 	{
-		Edition edition = getEdition(publicationId);
+		Edition edition = dLibra.getEditionHelper().getEdition(publicationId);
 		edition.setPublished(true);
 		publicationManager.setEditionData(edition);
 
@@ -281,7 +359,7 @@ public class PublicationsHelper
 	}
 
 
-	private void preparePublicationAsNew(String groupPublicationName,
+	private EditionId preparePublicationAsNew(String groupPublicationName,
 			String publicationName, String versionUri,
 			PublicationId publicationId)
 		throws DLibraException, AccessDeniedException, IdNotFoundException,
@@ -307,15 +385,15 @@ public class PublicationsHelper
 		publicationManager.setMainFile(publicationId,
 			createdVersion.getFileId());
 
-		Edition edition = new Edition(null, publicationId, false);
-		edition.setName(publicationName);
-		publicationManager.createEdition(edition,
-			new VersionId[] { createdVersion.getId()});
+		EditionId editionId = dLibra.getEditionHelper().createEdition(
+			publicationName, publicationId, createdVersion.getId());
 
 		dLibra.getAttributesHelper().updateMetadataAttributes(
 			groupPublicationName, publicationName, manifest);
 		dLibra.getAttributesHelper().updateCreatedAttribute(
 			groupPublicationName, publicationName, creationDate.toString());
+
+		return editionId;
 	}
 
 
@@ -340,6 +418,11 @@ public class PublicationsHelper
 				groupPublicationName,
 				publicationName,
 				baseVersionURI,
+				dLibra.getManifestHelper().getManifest(groupPublicationName,
+					basePublicationName));
+			dLibra.getAttributesHelper().updateMetadataAttributes(
+				groupPublicationName,
+				publicationName,
 				dLibra.getManifestHelper().getManifest(groupPublicationName,
 					basePublicationName));
 		}
@@ -468,46 +551,6 @@ public class PublicationsHelper
 	}
 
 
-	public EditionId getEditionId(PublicationId publicationId)
-		throws RemoteException, DLibraException
-	{
-		Collection<Id> resultIds = publicationManager
-				.getObjects(
-					new PublicationFilter(null, publicationId).setEditionState(Edition.ALL_STATES
-							- Edition.PERMANENT_DELETED),
-					new OutputFilter(EditionId.class)).getResultIds();
-		if (resultIds.size() != 1) {
-			throw new DLibraException(null, "Invalid state of publication "
-					+ publicationId + ": " + resultIds.size() + " editions.") {
-
-				private static final long serialVersionUID = -7493352685629908419L;
-				// TODO probably another exception would fit better here
-			};
-		}
-		return (EditionId) resultIds.iterator().next();
-	}
-
-
-	public Edition getEdition(PublicationId publicationId)
-		throws RemoteException, DLibraException
-	{
-		Collection<DLObject> results = publicationManager
-				.getObjects(
-					new PublicationFilter(null, publicationId).setEditionState(Edition.ALL_STATES
-							- Edition.PERMANENT_DELETED),
-					new OutputFilter(Edition.class)).getResults();
-		if (results.size() != 1) {
-			throw new DLibraException(null, "Invalid state of publication "
-					+ publicationId + ": " + results.size() + " editions.") {
-
-				private static final long serialVersionUID = -7493352685629908419L;
-				// TODO probably another exception would fit better here
-			};
-		}
-		return (Edition) results.iterator().next();
-	}
-
-
 	private DirectoryId getWorkspaceDirectoryId()
 		throws RemoteException, DLibraException
 	{
@@ -530,78 +573,6 @@ public class PublicationsHelper
 	{
 		return dLibra.getFilesHelper().getZippedFolder(groupPublicationName,
 			publicationName, null);
-	}
-
-
-	public List<AbstractPublicationInfo> listUserGroupPublications(
-			MultivaluedMap<String, String> queryParameters)
-		throws RemoteException, DLibraException
-	{
-		SearchServer searchServer = dLibra.getSearchServer();
-		if (searchServer == null) {
-			logger.error("Search server is null, returning list of group publications");
-			return listUserGroupPublications();
-		}
-
-		AdvancedQuery query = null;
-
-		for (Map.Entry<String, List<String>> entry : queryParameters.entrySet()) {
-			String attributeRdfName = entry.getKey();
-			AttributeInfo info = null;
-			try {
-				info = dLibra.getAttributesHelper().getAttributeInfo(
-					attributeRdfName);
-			}
-			catch (IdNotFoundException e) {
-				logger.error("Id null not found, should not happen", e);
-			}
-			if (info == null) {
-				logger.debug(String.format(
-					"Query param %s is not a valid dLibra attribute",
-					attributeRdfName));
-				continue;
-			}
-			if (query == null)
-				query = new AdvancedQuery();
-			logger.debug(String.format("Adding query element %s=%s",
-				info.getId(), entry.getValue().get(0)));
-			query.addQueryElement(new QueryElement(info.getId(), entry
-					.getValue().get(0)));
-		}
-
-		if (query == null) {
-			logger.debug("No dLibra query params, returning list of group publications");
-			return listUserGroupPublications();
-		}
-
-		query.setSearchRemoteResources(false);
-		query.setExpandable(false);
-		query.setAggregate(false);
-
-		query.setLibCollectionId((LibCollectionId) dLibra
-				.getMetadataServer()
-				.getLibCollectionManager()
-				.getObjects(new LibCollectionFilter(),
-					new OutputFilter(LibCollectionId.class)).getResultId());
-		query.setLanguageName(AttributesHelper.ATTRIBUTE_LANGUAGE);
-
-		List<AbstractPublicationInfo> result = new ArrayList<AbstractPublicationInfo>();
-		try {
-			List<AbstractSearchResult> hits = searchServer.getSearchManager()
-					.getSearchResults(
-						searchServer.getSearchManager().search(query));
-			for (AbstractSearchResult hit : hits) {
-				Publication publication = hit.getRoot();
-				result.add((AbstractPublicationInfo) publication.getInfo());
-			}
-		}
-		catch (QueryParseException e) {
-			logger.error(
-				String.format("Error when parsing query %s.", query.toString()),
-				e);
-			return listUserGroupPublications();
-		}
-		return result;
 	}
 
 }

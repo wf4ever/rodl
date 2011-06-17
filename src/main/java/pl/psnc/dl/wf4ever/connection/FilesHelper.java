@@ -132,9 +132,8 @@ public class FilesHelper
 			String groupPublicationName, String publicationName, String folder)
 		throws RemoteException, DLibraException
 	{
-		PublicationId publicationId = dLibra.getPublicationsHelper()
-				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(publicationId);
+		EditionId editionId = dLibra.getEditionHelper().getEditionId(
+			groupPublicationName, publicationName);
 
 		Map<VersionId, FileInfo> result = new HashMap<VersionId, FileInfo>();
 		if (folder != null && !folder.endsWith("/"))
@@ -255,9 +254,8 @@ public class FilesHelper
 			String publicationName, String filePath)
 		throws IOException, DLibraException
 	{
-		PublicationId publicationId = dLibra.getPublicationsHelper()
-				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(publicationId);
+		EditionId editionId = dLibra.getEditionHelper().getEditionId(
+			groupPublicationName, publicationName);
 		VersionId versionId = getVersionId(editionId, filePath);
 
 		InputStream versionInputStream = contentServer
@@ -270,9 +268,8 @@ public class FilesHelper
 			String publicationName, String filePath)
 		throws RemoteException, DLibraException
 	{
-		PublicationId publicationId = dLibra.getPublicationsHelper()
-				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(publicationId);
+		EditionId editionId = dLibra.getEditionHelper().getEditionId(
+			groupPublicationName, publicationName);
 		VersionId versionId = getVersionId(editionId, filePath);
 		VersionInfo versionInfo = (VersionInfo) fileManager.getObjects(
 			new InputFilter(versionId), new OutputFilter(VersionInfo.class))
@@ -289,9 +286,8 @@ public class FilesHelper
 			String publicationName, String filePath, String fullPath)
 		throws RemoteException, DLibraException, TransformerException
 	{
-		PublicationId publicationId = dLibra.getPublicationsHelper()
-				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(publicationId);
+		EditionId editionId = dLibra.getEditionHelper().getEditionId(
+			groupPublicationName, publicationName);
 		VersionId versionId = getVersionId(editionId, filePath);
 		VersionInfo versionInfo = (VersionInfo) fileManager.getObjects(
 			new InputFilter(versionId), new OutputFilter(VersionInfo.class))
@@ -351,7 +347,7 @@ public class FilesHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(publicationId);
+		EditionId editionId = dLibra.getEditionHelper().getEditionId(publicationId);
 
 		if (filePath.endsWith("/")) {
 			// slash at the end means empty folder
@@ -447,7 +443,7 @@ public class FilesHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(publicationId);
+		EditionId editionId = dLibra.getEditionHelper().getEditionId(publicationId);
 
 		boolean recreateEmptyFolder = false;
 		String emptyFolder = "";
@@ -516,7 +512,7 @@ public class FilesHelper
 	}
 
 
-	private VersionId getVersionId(EditionId editionId, String filePath)
+	public VersionId getVersionId(EditionId editionId, String filePath)
 		throws IdNotFoundException, RemoteException, DLibraException
 	{
 		VersionId versionId = (VersionId) fileManager.getObjects(
@@ -532,7 +528,7 @@ public class FilesHelper
 			PublicationId targetPublicationId, Set<VersionId> exclude)
 		throws IOException, DLibraException
 	{
-		EditionId sourceEditionId = dLibra.getPublicationsHelper().getEditionId(
+		EditionId sourceEditionId = dLibra.getEditionHelper().getEditionId(
 			sourcePublicationId);
 		Collection<Id> sourceVersionIds = publicationManager.getObjects(
 			new EditionFilter(sourceEditionId),

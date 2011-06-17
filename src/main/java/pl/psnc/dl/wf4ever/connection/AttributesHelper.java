@@ -20,7 +20,6 @@ import pl.psnc.dlibra.common.DLObject;
 import pl.psnc.dlibra.common.OutputFilter;
 import pl.psnc.dlibra.metadata.EditionId;
 import pl.psnc.dlibra.metadata.Language;
-import pl.psnc.dlibra.metadata.PublicationId;
 import pl.psnc.dlibra.metadata.attributes.AbstractAttributeValue;
 import pl.psnc.dlibra.metadata.attributes.AttributeFilter;
 import pl.psnc.dlibra.metadata.attributes.AttributeId;
@@ -326,10 +325,8 @@ public class AttributesHelper
 			String publicationName)
 		throws RemoteException, DLibraException, IdNotFoundException
 	{
-		PublicationId publicationId = dLibra.getPublicationsHelper()
-				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getPublicationsHelper().getEditionId(
-			publicationId);
+		EditionId editionId = dLibra.getEditionHelper().getEditionId(
+			groupPublicationName, publicationName);
 
 		AttributeValueSet avs = dLibra.getMetadataServer()
 				.getElementMetadataManager()

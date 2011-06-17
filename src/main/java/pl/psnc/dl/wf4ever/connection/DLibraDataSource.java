@@ -44,6 +44,8 @@ public class DLibraDataSource
 
 	private PublicationsHelper publicationsHelper;
 
+	private EditionHelper editionHelper;
+
 	private FilesHelper filesHelper;
 
 	private ManifestHelper manifestHelper;
@@ -85,6 +87,7 @@ public class DLibraDataSource
 		filesHelper = new FilesHelper(this);
 		manifestHelper = new ManifestHelper(this);
 		attributesHelper = new AttributesHelper(this);
+		editionHelper = new EditionHelper(this);
 	}
 
 
@@ -163,6 +166,12 @@ public class DLibraDataSource
 	public LibCollectionId getCollectionId()
 	{
 		return collectionId;
+	}
+
+
+	public EditionHelper getEditionHelper()
+	{
+		return editionHelper;
 	}
 
 }
