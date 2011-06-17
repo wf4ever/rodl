@@ -98,7 +98,7 @@ public class SecurityFilter
 					"Missing username or password\r\n", REALM));
 		}
 
-		logger.info("Request from user: " + username + " | password: "
+		logger.debug("Request from user: " + username + " | password: "
 				+ password);
 
 		// extract workspace name from uri and compare with username

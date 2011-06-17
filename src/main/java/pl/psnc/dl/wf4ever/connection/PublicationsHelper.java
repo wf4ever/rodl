@@ -283,8 +283,7 @@ public class PublicationsHelper
 		dLibra.getAttributesHelper().updateMetadataAttributes(
 			groupPublicationName, publicationName, manifest);
 		dLibra.getAttributesHelper().updateCreatedAttribute(
-			groupPublicationName, publicationName,
-			creationDate.toString());
+			groupPublicationName, publicationName, creationDate.toString());
 	}
 
 
@@ -308,17 +307,17 @@ public class PublicationsHelper
 			dLibra.getManifestHelper().regenerateManifest(
 				groupPublicationName,
 				publicationName,
-				baseVersionURI,
+				versionURI,
 				dLibra.getManifestHelper().getManifest(groupPublicationName,
-					basePublicationName));
+					basePublicationName), baseVersionURI);
 		}
 		catch (JenaException e) {
 			logger.warn("Manifest stored for publication "
 					+ groupPublicationName + " is malformed");
 		}
 		catch (IncorrectManifestException e) {
-			logger.warn(
-				String.format("Manifest stored for publication %s/%s is incorrect (%s)",
+			logger.warn(String.format(
+				"Manifest stored for publication %s/%s is incorrect (%s)",
 				groupPublicationName, basePublicationName, e.getMessage()));
 		}
 	}
@@ -335,8 +334,10 @@ public class PublicationsHelper
 				String pubVersionURI = versionURI.substring(0,
 					versionURI.lastIndexOf("/") + 1)
 						+ p.getLabel();
-				logger.debug(String.format("Will regenerate manifest and add hasVersion for version %s",
-						p.getLabel()));
+				logger.debug(String
+						.format(
+							"Will regenerate manifest and add hasVersion for version %s",
+							p.getLabel()));
 				dLibra.getManifestHelper().regenerateManifest(
 					groupPublicationName,
 					p.getLabel(),
@@ -349,9 +350,9 @@ public class PublicationsHelper
 						+ groupPublicationName + " is malformed");
 			}
 			catch (IncorrectManifestException e) {
-				logger.warn("Manifest stored for publication "
-						+ groupPublicationName + " is incorrect ("
-						+ e.getMessage() + ")");
+				logger.warn(String.format(
+					"Manifest stored for publication %s/%s is incorrect (%s)",
+					groupPublicationName, p.getLabel(), e.getMessage()));
 				logger.warn(dLibra.getManifestHelper().getManifest(
 					groupPublicationName, p.getLabel()));
 			}
@@ -378,9 +379,7 @@ public class PublicationsHelper
 		publicationManager.removePublication(publicationId, true,
 			"Research Object Version removed.");
 
-		{
-			addHasVersionPropertyToAll(groupPublicationName, versionUri);
-		}
+		addHasVersionPropertyToAll(groupPublicationName, versionUri);
 	}
 
 

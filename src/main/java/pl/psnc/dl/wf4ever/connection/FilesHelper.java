@@ -537,7 +537,7 @@ public class FilesHelper
 	}
 
 
-	private VersionId getVersionId(EditionId editionId, String filePath)
+	public VersionId getVersionId(EditionId editionId, String filePath)
 		throws IdNotFoundException, RemoteException, DLibraException
 	{
 		VersionId versionId = (VersionId) fileManager.getObjects(
