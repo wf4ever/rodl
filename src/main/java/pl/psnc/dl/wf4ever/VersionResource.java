@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.rmi.RemoteException;
+import java.util.Date;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -69,13 +71,25 @@ public class VersionResource
 	public Response getManifestFile(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId,
-			@QueryParam("content") String isContentRequested)
+			@QueryParam("content") String isContentRequested,
+			@QueryParam("edition_id") String editionId,
+			@QueryParam("edition_list") String isEditionListRequested)
 		throws IOException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
-
-		if (isContentRequested == null) {
+		
+		if (isEditionListRequested != null) {
+			logger.debug("Getting edition list");
+			Map<Date, Long> editions = dLibraDataSource.getEditionHelper()
+					.getEditionList(researchObjectId, versionId);
+			StringBuilder sb = new StringBuilder();
+			for (Map.Entry<Date, Long> entry : editions.entrySet()) {
+				sb.append("" + entry.getValue() + "=" + entry.getKey() + "\n");
+			}
+			return Response.ok(sb.toString()).build();
+		}
+		else if (isContentRequested == null) {
 			logger.debug("Getting manifest");
 			String manifest = dLibraDataSource.getManifestHelper().getManifest(
 				researchObjectId, versionId);

@@ -118,8 +118,8 @@ public class ManifestHelper
 	 * 
 	 * @param groupPublicationName RO name
 	 * @param publicationName version name
-	 * @param versionUri RO version URI
-	 * @param baseManifest Has to have the same URI as the new one.
+	 * @param versionURI RO version URI
+	 * @param baseManifest Manifest from which data should be taken with the same URI as new one.
 	 * @throws DLibraException
 	 * @throws IOException
 	 * @throws TransformerException
@@ -127,16 +127,35 @@ public class ManifestHelper
 	 * @throws IncorrectManifestException thrown if a property is missing
 	 */
 	void regenerateManifest(String groupPublicationName,
-			String publicationName, String versionUri, String baseManifest)
+			String publicationName, String versionURI, String baseManifest)
+		throws JenaException, DLibraException, IOException, TransformerException, IncorrectManifestException {
+		regenerateManifest(groupPublicationName, publicationName, versionURI, baseManifest, versionURI);
+	}
+
+	/**
+	 * 
+	 * @param groupPublicationName RO name
+	 * @param publicationName version name
+	 * @param versionURI RO version URI
+	 * @param baseManifest Manifest from which data should be taken.
+	 * @param baseVersionURI URI to use from base manifest
+	 * @throws DLibraException
+	 * @throws IOException
+	 * @throws TransformerException
+	 * @throws JenaException thrown on malformed base manifest
+	 * @throws IncorrectManifestException thrown if a property is missing
+	 */
+	void regenerateManifest(String groupPublicationName,
+			String publicationName, String versionURI, String baseManifest, String baseVersionURI)
 		throws DLibraException, IOException, TransformerException,
 		JenaException, IncorrectManifestException
 	{
-		Resource baseResource = getBaseResource(versionUri, baseManifest);
+		Resource baseResource = getBaseResource(baseVersionURI, baseManifest);
 
-		Resource resource = createInitialManifestResource(versionUri,
+		Resource resource = createInitialManifestResource(versionURI,
 			publicationName, baseResource);
 
-		addOptionalROSRSProperties(resource, versionUri, groupPublicationName,
+		addOptionalROSRSProperties(resource, versionURI, groupPublicationName,
 			publicationName);
 
 		addRemainingBaseManifestProperties(resource, baseResource);
@@ -145,7 +164,7 @@ public class ManifestHelper
 			RdfBuilder.serializeResource(resource)).getBytes());
 
 		// save manifest.rdf
-		dLibra.getFilesHelper().createOrUpdateFile(versionUri,
+		dLibra.getFilesHelper().createOrUpdateFile(versionURI,
 			groupPublicationName, publicationName, Constants.MANIFEST_FILENAME,
 			is, Constants.RDF_XML_MIME_TYPE, false);
 	}
@@ -209,8 +228,7 @@ public class ManifestHelper
 		resource.addProperty(DCTerms.modified,
 			RdfBuilder.createDateLiteral(creationDate));
 		dLibra.getAttributesHelper().updateModifiedAttribute(
-			groupPublicationName, publicationName,
-			creationDate.toString());
+			groupPublicationName, publicationName, creationDate.toString());
 	}
 
 

@@ -386,7 +386,8 @@ public class PublicationsHelper
 			createdVersion.getFileId());
 
 		EditionId editionId = dLibra.getEditionHelper().createEdition(
-			publicationName, publicationId, createdVersion.getId());
+			publicationName, publicationId,
+			new VersionId[] { createdVersion.getId()});
 
 		dLibra.getAttributesHelper().updateMetadataAttributes(
 			groupPublicationName, publicationName, manifest);
@@ -417,9 +418,9 @@ public class PublicationsHelper
 			dLibra.getManifestHelper().regenerateManifest(
 				groupPublicationName,
 				publicationName,
-				baseVersionURI,
+				versionURI,
 				dLibra.getManifestHelper().getManifest(groupPublicationName,
-					basePublicationName));
+					basePublicationName), baseVersionURI);
 			dLibra.getAttributesHelper().updateMetadataAttributes(
 				groupPublicationName,
 				publicationName,
@@ -465,9 +466,9 @@ public class PublicationsHelper
 						+ groupPublicationName + " is malformed");
 			}
 			catch (IncorrectManifestException e) {
-				logger.warn("Manifest stored for publication "
-						+ groupPublicationName + " is incorrect ("
-						+ e.getMessage() + ")");
+				logger.warn(String.format(
+					"Manifest stored for publication %s/%s is incorrect (%s)",
+					groupPublicationName, p.getLabel(), e.getMessage()));
 				logger.warn(dLibra.getManifestHelper().getManifest(
 					groupPublicationName, p.getLabel()));
 			}
@@ -494,9 +495,7 @@ public class PublicationsHelper
 		publicationManager.removePublication(publicationId, true,
 			"Research Object Version removed.");
 
-		{
-			addHasVersionPropertyToAll(groupPublicationName, versionUri);
-		}
+		addHasVersionPropertyToAll(groupPublicationName, versionUri);
 	}
 
 

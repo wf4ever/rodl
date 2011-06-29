@@ -184,7 +184,7 @@ public class RdfBuilder
 			if (!resource.hasProperty(property)) {
 				throw new IncorrectManifestException(
 						"Resource does not have a mandatory property: "
-								+ property + " " + resource.toString());
+								+ property + " resource: " + resource.toString());
 			}
 		}
 	}

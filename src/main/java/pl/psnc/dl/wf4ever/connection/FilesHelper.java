@@ -387,17 +387,27 @@ public class FilesHelper
 			output.close();
 		}
 
+		//		if (versionId != null) {
+		//			fileManager.replaceVersion(versionId, createdVersion.getId());
+		//		}
+		//		else {
+		//			Collection<Id> versionIds = publicationManager
+		//					.getObjects(new EditionFilter(editionId),
+		//						new OutputFilter(VersionId.class)).getResultIds();
+		//			versionIds.add(createdVersion.getId());
+		//			publicationManager.updateEditionVersions(editionId,
+		//				versionIds.toArray(new VersionId[versionIds.size()]));
+		//		}
+
 		if (versionId != null) {
-			fileManager.replaceVersion(versionId, createdVersion.getId());
+			logger.debug(String.format(
+				"Removing file version %s from edition %s", versionId,
+				editionId));
+			publicationManager.removeEditionVersion(editionId, versionId);
 		}
-		else {
-			Collection<Id> versionIds = publicationManager
-					.getObjects(new EditionFilter(editionId),
-						new OutputFilter(VersionId.class)).getResultIds();
-			versionIds.add(createdVersion.getId());
-			publicationManager.updateEditionVersions(editionId,
-				versionIds.toArray(new VersionId[versionIds.size()]));
-		}
+		logger.debug(String.format("Adding file version %s to edition %s",
+			createdVersion.getId(), editionId));
+		publicationManager.addEditionVersion(editionId, createdVersion.getId());
 
 		if (generateManifest) {
 			try {
@@ -444,19 +454,26 @@ public class FilesHelper
 		EditionId editionId = dLibra.getEditionHelper().getEditionId(
 			publicationId);
 
-		Collection<Id> versionIds = publicationManager.getObjects(
-			new EditionFilter(editionId), new OutputFilter(VersionId.class))
-				.getResultIds();
+		//		Collection<Id> versionIds = publicationManager.getObjects(
+		//			new EditionFilter(editionId), new OutputFilter(VersionId.class))
+		//				.getResultIds();
 
 		boolean recreateEmptyFolder = false;
 		String emptyFolder = "";
 		try {
-			versionIds.remove(getVersionId(editionId, filePath));
+			VersionId versionId = getVersionId(editionId, filePath);
+
 			emptyFolder = filePath.substring(0, filePath.lastIndexOf("/") + 1);
 			if (!emptyFolder.isEmpty()
 					&& getFilePathsInFolder(groupPublicationName,
-						publicationName, emptyFolder).size() == 1)
+						publicationName, emptyFolder).size() == 1) {
 				recreateEmptyFolder = true;
+			}
+
+			logger.debug(String.format(
+				"Removing file version %s from edition %s", versionId,
+				editionId));
+			publicationManager.removeEditionVersion(editionId, versionId);
 		}
 		catch (IdNotFoundException ex) {
 			// maybe it is a folder
@@ -466,15 +483,22 @@ public class FilesHelper
 				for (String file : files) {
 					if (file.startsWith("/"))
 						file = file.substring(1);
-					versionIds.remove(getVersionId(editionId, file));
+					VersionId versionId = getVersionId(editionId, file);
+					publicationManager.removeEditionVersion(editionId,
+						versionId);
 				}
 			}
 			else {
 				// it must be an empty folder
 				try {
 					filePath = EmptyFoldersUtility.convertReal2Dlibra(filePath);
-					versionIds.remove(getVersionId(editionId, filePath));
-					logger.debug("Deleting empty folder");
+					VersionId versionId = getVersionId(editionId, filePath);
+					logger.debug(String
+							.format(
+								"Removing empty folder, file version %s from edition %s",
+								versionId, editionId));
+					publicationManager.removeEditionVersion(editionId,
+						versionId);
 				}
 				catch (IdNotFoundException ex2) {
 					// if not, throw the original exception
@@ -484,14 +508,17 @@ public class FilesHelper
 			}
 		}
 
-		publicationManager.updateEditionVersions(editionId,
-			(VersionId[]) versionIds.toArray(new VersionId[versionIds.size()]));
+		//		publicationManager.updateEditionVersions(editionId,
+		//			(VersionId[]) versionIds.toArray(new VersionId[versionIds.size()]));
 
 		if (recreateEmptyFolder) {
+			logger.debug("Recreate empty folder " + emptyFolder);
 			createOrUpdateFile(versionUri, groupPublicationName,
 				publicationName, emptyFolder, new ByteArrayInputStream(
 						new byte[] {}), "text/plain");
 		}
+
+		//TODO check if there are any references to the file and delete with filemanager if no
 
 		try {
 			dLibra.getManifestHelper().regenerateManifest(
@@ -509,6 +536,11 @@ public class FilesHelper
 			logger.warn("Manifest stored for publication "
 					+ groupPublicationName + " is incorrect (" + e.getMessage()
 					+ ")");
+		}
+		catch (IdNotFoundException e) {
+			logger.error(String.format(
+				"Manifest stored for %s/%s not found (%s)",
+				groupPublicationName, publicationId, e.getMessage()));
 		}
 	}
 
