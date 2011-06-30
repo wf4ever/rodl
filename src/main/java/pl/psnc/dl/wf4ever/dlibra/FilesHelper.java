@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.connection;
+package pl.psnc.dl.wf4ever.dlibra;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -21,7 +21,6 @@ import javax.xml.transform.TransformerException;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.EmptyFoldersUtility;
 import pl.psnc.dl.wf4ever.RdfBuilder;
 import pl.psnc.dlibra.common.Id;
 import pl.psnc.dlibra.common.Info;
@@ -42,12 +41,12 @@ import pl.psnc.dlibra.metadata.PublicationManager;
 import pl.psnc.dlibra.metadata.Version;
 import pl.psnc.dlibra.metadata.VersionId;
 import pl.psnc.dlibra.metadata.VersionInfo;
+import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 import pl.psnc.util.IOUtils;
 
 import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.shared.JenaException;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 
 public class FilesHelper
@@ -80,11 +79,10 @@ public class FilesHelper
 	/**
 	 * Returns list of URIs of files in publication
 	 */
-	public List<String> getFilePathsInPublication(String groupPublicationName,
-			String publicationName)
+	public List<String> getFilePathsInPublication(EditionId editionId)
 		throws RemoteException, DLibraException
 	{
-		return getFilePathsInFolder(groupPublicationName, publicationName, null);
+		return getFilePathsInFolder(editionId, null);
 	}
 
 
@@ -97,13 +95,11 @@ public class FilesHelper
 	* @throws RemoteException
 	* @throws DLibraException
 	*/
-	public List<String> getFilePathsInFolder(String groupPublicationName,
-			String publicationName, String folder)
+	public List<String> getFilePathsInFolder(EditionId editionId, String folder)
 		throws RemoteException, DLibraException
 	{
 		ArrayList<String> result = new ArrayList<String>();
-		for (FileInfo fileInfo : getFilesInFolder(groupPublicationName,
-			publicationName, folder).values()) {
+		for (FileInfo fileInfo : getFilesInFolder(editionId, folder).values()) {
 			if (EmptyFoldersUtility.isDlibraPath(fileInfo.getFullPath())) {
 				result.add(EmptyFoldersUtility.convertDlibra2Real(fileInfo
 						.getFullPath()));
@@ -125,13 +121,10 @@ public class FilesHelper
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 */
-	private Map<VersionId, FileInfo> getFilesInFolder(
-			String groupPublicationName, String publicationName, String folder)
+	private Map<VersionId, FileInfo> getFilesInFolder(EditionId editionId,
+			String folder)
 		throws RemoteException, DLibraException
 	{
-		EditionId editionId = dLibra.getEditionHelper().getEditionId(
-			groupPublicationName, publicationName);
-
 		Map<VersionId, FileInfo> result = new HashMap<VersionId, FileInfo>();
 		if (folder != null && !folder.endsWith("/"))
 			folder = folder.concat("/");
@@ -180,15 +173,15 @@ public class FilesHelper
 	* @throws RemoteException
 	* @throws DLibraException
 	*/
-	public InputStream getZippedFolder(String groupPublicationName,
-			String publicationName, String folderNotStandardized)
+	public InputStream getZippedFolder(EditionId editionId,
+			String folderNotStandardized)
 		throws RemoteException, DLibraException
 	{
 		final String folder = (folderNotStandardized == null ? null
 				: (folderNotStandardized.endsWith("/") ? folderNotStandardized
 						: folderNotStandardized.concat("/")));
 		final Map<VersionId, FileInfo> fileVersionsAndInfos = getFilesInFolder(
-			groupPublicationName, publicationName, folder);
+			editionId, folder);
 
 		PipedInputStream in = new PipedInputStream();
 		final PipedOutputStream out;
@@ -201,7 +194,7 @@ public class FilesHelper
 
 		final ZipOutputStream zipOut = new ZipOutputStream(out);
 
-		new Thread("publication zip downloader (" + publicationName + ")") {
+		new Thread("edition zip downloader (" + editionId + ")") {
 
 			public void run()
 			{
@@ -247,12 +240,9 @@ public class FilesHelper
 	}
 
 
-	public InputStream getFileContents(String groupPublicationName,
-			String publicationName, String filePath)
-		throws IOException, DLibraException
+	public InputStream getFileContents(EditionId editionId, String filePath)
+		throws IdNotFoundException, RemoteException, DLibraException
 	{
-		EditionId editionId = dLibra.getEditionHelper().getEditionId(
-			groupPublicationName, publicationName);
 		VersionId versionId = getVersionId(editionId, filePath);
 
 		InputStream versionInputStream = contentServer
@@ -261,12 +251,9 @@ public class FilesHelper
 	}
 
 
-	public String getFileMimeType(String groupPublicationName,
-			String publicationName, String filePath)
-		throws RemoteException, DLibraException
+	public String getFileMimeType(EditionId editionId, String filePath)
+		throws IdNotFoundException, RemoteException, DLibraException
 	{
-		EditionId editionId = dLibra.getEditionHelper().getEditionId(
-			groupPublicationName, publicationName);
 		VersionId versionId = getVersionId(editionId, filePath);
 		VersionInfo versionInfo = (VersionInfo) fileManager.getObjects(
 			new InputFilter(versionId), new OutputFilter(VersionInfo.class))
@@ -279,12 +266,11 @@ public class FilesHelper
 	}
 
 
-	public String getFileMetadata(String groupPublicationName,
-			String publicationName, String filePath, String fullPath)
-		throws RemoteException, DLibraException, TransformerException
+	public String getFileMetadata(EditionId editionId, String filePath,
+			String fullPath)
+		throws IdNotFoundException, RemoteException, DLibraException,
+		TransformerException
 	{
-		EditionId editionId = dLibra.getEditionHelper().getEditionId(
-			groupPublicationName, publicationName);
 		VersionId versionId = getVersionId(editionId, filePath);
 		VersionInfo versionInfo = (VersionInfo) fileManager.getObjects(
 			new InputFilter(versionId), new OutputFilter(VersionInfo.class))
@@ -337,9 +323,10 @@ public class FilesHelper
 	}
 
 
-	void createOrUpdateFile(String versionUri, String groupPublicationName,
-			String publicationName, String filePath, InputStream inputStream,
-			String mimeType, boolean generateManifest)
+	public void createOrUpdateFile(String versionUri,
+			String groupPublicationName, String publicationName,
+			String filePath, InputStream inputStream, String mimeType,
+			boolean generateManifest)
 		throws IOException, DLibraException, TransformerException
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
@@ -354,50 +341,11 @@ public class FilesHelper
 			filePath = EmptyFoldersUtility.convertReal2Dlibra(filePath);
 		}
 
-		File file;
-		VersionId versionId;
-		try {
-			versionId = getVersionId(editionId, filePath);
-			VersionInfo versionInfo = (VersionInfo) fileManager
-					.getObjects(new InputFilter(versionId),
-						new OutputFilter(VersionInfo.class)).getResultInfo();
-			file = (File) fileManager.getObjects(
-				new FileFilter(versionInfo.getFileId()),
-				new OutputFilter(File.class)).getResult();
-		}
-		catch (IdNotFoundException e) {
-			versionId = null;
-			file = new File(mimeType, publicationId, "/" + filePath);
-		}
-		Version createdVersion = fileManager.createVersion(file, 0, new Date(),
-			"");
+		VersionId versionId = getVersionIdSafe(editionId, filePath);
+		VersionId createdVersionId = createNewVersion(versionId, mimeType,
+			publicationId, filePath);
 
-		OutputStream output = contentServer
-				.getVersionOutputStream(createdVersion.getId());
-		try {
-			byte[] buffer = new byte[DLibraDataSource.BUFFER_SIZE];
-			int bytesRead = 0;
-
-			while ((bytesRead = inputStream.read(buffer)) > 0) {
-				output.write(buffer, 0, bytesRead);
-			}
-		}
-		finally {
-			inputStream.close();
-			output.close();
-		}
-
-		//		if (versionId != null) {
-		//			fileManager.replaceVersion(versionId, createdVersion.getId());
-		//		}
-		//		else {
-		//			Collection<Id> versionIds = publicationManager
-		//					.getObjects(new EditionFilter(editionId),
-		//						new OutputFilter(VersionId.class)).getResultIds();
-		//			versionIds.add(createdVersion.getId());
-		//			publicationManager.updateEditionVersions(editionId,
-		//				versionIds.toArray(new VersionId[versionIds.size()]));
-		//		}
+		saveFileContents(inputStream, createdVersionId);
 
 		if (versionId != null) {
 			logger.debug(String.format(
@@ -406,29 +354,32 @@ public class FilesHelper
 			publicationManager.removeEditionVersion(editionId, versionId);
 		}
 		logger.debug(String.format("Adding file version %s to edition %s",
-			createdVersion.getId(), editionId));
-		publicationManager.addEditionVersion(editionId, createdVersion.getId());
+			createdVersionId.getId(), editionId));
+		publicationManager.addEditionVersion(editionId, createdVersionId);
 
 		if (generateManifest) {
-			try {
-				dLibra.getManifestHelper().regenerateManifest(
-					groupPublicationName,
-					publicationName,
-					versionUri,
-					dLibra.getManifestHelper().getManifest(
-						groupPublicationName, publicationName));
-			}
-			catch (JenaException e) {
-				logger.warn("Manifest stored for publication "
-						+ groupPublicationName + " is malformed");
-			}
-			catch (IncorrectManifestException e) {
-				logger.warn("Manifest stored for publication "
-						+ groupPublicationName + " is incorrect ("
-						+ e.getMessage() + ")");
-			}
+			dLibra.getManifestHelper().regerenerateManifestSafe(versionUri,
+				groupPublicationName, publicationName);
 		}
 
+		deleteUnnecessaryEmptyFolders(versionUri, groupPublicationName,
+			publicationName, filePath);
+	}
+
+
+	/**
+	 * @param versionUri
+	 * @param groupPublicationName
+	 * @param publicationName
+	 * @param filePath
+	 * @throws DLibraException
+	 * @throws IOException
+	 * @throws TransformerException
+	 */
+	private void deleteUnnecessaryEmptyFolders(String versionUri,
+			String groupPublicationName, String publicationName, String filePath)
+		throws DLibraException, IOException, TransformerException
+	{
 		String intermediateFilePath = filePath;
 		while (intermediateFilePath.lastIndexOf("/") > 0) {
 			intermediateFilePath = intermediateFilePath.substring(0,
@@ -445,6 +396,78 @@ public class FilesHelper
 	}
 
 
+	/**
+	 * @param filePath
+	 * @param editionId
+	 * @return
+	 * @throws RemoteException
+	 * @throws DLibraException
+	 */
+	public VersionId getVersionIdSafe(EditionId editionId, String filePath)
+		throws RemoteException, DLibraException
+	{
+		try {
+			return getVersionId(editionId, filePath);
+		}
+		catch (IdNotFoundException e) {
+			logger.debug(String.format(
+				"Failed to find version of %s for edition %s", filePath,
+				editionId));
+		}
+		return null;
+	}
+
+
+	private VersionId createNewVersion(VersionId oldVersionId, String mimeType,
+			PublicationId publicationId, String filePath)
+		throws IdNotFoundException, RemoteException, DLibraException
+	{
+		File file;
+		if (oldVersionId != null) {
+			VersionInfo versionInfo = (VersionInfo) fileManager.getObjects(
+				new InputFilter(oldVersionId),
+				new OutputFilter(VersionInfo.class)).getResultInfo();
+			file = (File) fileManager.getObjects(
+				new FileFilter(versionInfo.getFileId()),
+				new OutputFilter(File.class)).getResult();
+		}
+		else {
+			file = new File(mimeType, publicationId, "/" + filePath);
+		}
+		return fileManager.createVersion(file, 0, new Date(), "").getId();
+
+	}
+
+
+	/**
+	 * @param inputStream
+	 * @param versionId
+	 * @throws RemoteException
+	 * @throws IdNotFoundException
+	 * @throws AccessDeniedException
+	 * @throws DLibraException
+	 * @throws IOException
+	 */
+	private void saveFileContents(InputStream inputStream, VersionId versionId)
+		throws RemoteException, IdNotFoundException, AccessDeniedException,
+		DLibraException, IOException
+	{
+		OutputStream output = contentServer.getVersionOutputStream(versionId);
+		try {
+			byte[] buffer = new byte[DLibraDataSource.BUFFER_SIZE];
+			int bytesRead = 0;
+
+			while ((bytesRead = inputStream.read(buffer)) > 0) {
+				output.write(buffer, 0, bytesRead);
+			}
+		}
+		finally {
+			inputStream.close();
+			output.close();
+		}
+	}
+
+
 	public void deleteFile(String versionUri, String groupPublicationName,
 			String publicationName, String filePath)
 		throws DLibraException, IOException, TransformerException
@@ -454,10 +477,6 @@ public class FilesHelper
 		EditionId editionId = dLibra.getEditionHelper().getEditionId(
 			publicationId);
 
-		//		Collection<Id> versionIds = publicationManager.getObjects(
-		//			new EditionFilter(editionId), new OutputFilter(VersionId.class))
-		//				.getResultIds();
-
 		boolean recreateEmptyFolder = false;
 		String emptyFolder = "";
 		try {
@@ -465,8 +484,7 @@ public class FilesHelper
 
 			emptyFolder = filePath.substring(0, filePath.lastIndexOf("/") + 1);
 			if (!emptyFolder.isEmpty()
-					&& getFilePathsInFolder(groupPublicationName,
-						publicationName, emptyFolder).size() == 1) {
+					&& getFilePathsInFolder(editionId, emptyFolder).size() == 1) {
 				recreateEmptyFolder = true;
 			}
 
@@ -477,8 +495,7 @@ public class FilesHelper
 		}
 		catch (IdNotFoundException ex) {
 			// maybe it is a folder
-			List<String> files = getFilePathsInFolder(groupPublicationName,
-				publicationName, filePath);
+			List<String> files = getFilePathsInFolder(editionId, filePath);
 			if (!files.isEmpty()) {
 				for (String file : files) {
 					if (file.startsWith("/"))
@@ -508,11 +525,7 @@ public class FilesHelper
 			}
 		}
 
-		//		publicationManager.updateEditionVersions(editionId,
-		//			(VersionId[]) versionIds.toArray(new VersionId[versionIds.size()]));
-
 		if (recreateEmptyFolder) {
-			logger.debug("Recreate empty folder " + emptyFolder);
 			createOrUpdateFile(versionUri, groupPublicationName,
 				publicationName, emptyFolder, new ByteArrayInputStream(
 						new byte[] {}), "text/plain");
@@ -520,28 +533,8 @@ public class FilesHelper
 
 		//TODO check if there are any references to the file and delete with filemanager if no
 
-		try {
-			dLibra.getManifestHelper().regenerateManifest(
-				groupPublicationName,
-				publicationName,
-				versionUri,
-				dLibra.getManifestHelper().getManifest(groupPublicationName,
-					publicationName));
-		}
-		catch (JenaException e) {
-			logger.warn("Manifest stored for publication "
-					+ groupPublicationName + " is malformed");
-		}
-		catch (IncorrectManifestException e) {
-			logger.warn("Manifest stored for publication "
-					+ groupPublicationName + " is incorrect (" + e.getMessage()
-					+ ")");
-		}
-		catch (IdNotFoundException e) {
-			logger.error(String.format(
-				"Manifest stored for %s/%s not found (%s)",
-				groupPublicationName, publicationId, e.getMessage()));
-		}
+		dLibra.getManifestHelper().regerenerateManifestSafe(versionUri,
+			groupPublicationName, publicationName);
 	}
 
 
@@ -556,7 +549,7 @@ public class FilesHelper
 	}
 
 
-	VersionId[] copyVersions(PublicationId sourcePublicationId,
+	public VersionId[] copyVersions(PublicationId sourcePublicationId,
 			PublicationId targetPublicationId)
 		throws IOException, DLibraException
 	{
@@ -633,4 +626,5 @@ public class FilesHelper
 
 		return newVersion.getId();
 	}
+
 }

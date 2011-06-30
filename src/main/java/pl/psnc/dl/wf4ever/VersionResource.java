@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -10,6 +11,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -24,8 +26,8 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
-import pl.psnc.dl.wf4ever.connection.IncorrectManifestException;
+import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
+import pl.psnc.dl.wf4ever.dlibra.IncorrectManifestException;
 import pl.psnc.dlibra.service.DLibraException;
 
 import com.hp.hpl.jena.shared.JenaException;
@@ -68,48 +70,100 @@ public class VersionResource
 	 */
 	@GET
 	@Produces({ "application/rdf+xml", "application/zip"})
-	public Response getManifestFile(@PathParam("W_ID") String workspaceId,
+	public Response getManifestFile(
+			@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId,
 			@QueryParam("content") String isContentRequested,
-			@QueryParam("edition_id") String editionId,
+			@QueryParam("edition_id") @DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING) long editionId,
 			@QueryParam("edition_list") String isEditionListRequested)
 		throws IOException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
-		
+
 		if (isEditionListRequested != null) {
-			logger.debug("Getting edition list");
-			Map<Date, Long> editions = dLibraDataSource.getEditionHelper()
-					.getEditionList(researchObjectId, versionId);
-			StringBuilder sb = new StringBuilder();
-			for (Map.Entry<Date, Long> entry : editions.entrySet()) {
-				sb.append("" + entry.getValue() + "=" + entry.getKey() + "\n");
-			}
-			return Response.ok(sb.toString()).build();
+			return getEditionList(researchObjectId, versionId, dLibraDataSource);
 		}
 		else if (isContentRequested == null) {
-			logger.debug("Getting manifest");
-			String manifest = dLibraDataSource.getManifestHelper().getManifest(
-				researchObjectId, versionId);
-			ContentDisposition cd = ContentDisposition
-					.type("application/rdf+xml")
-					.fileName(Constants.MANIFEST_FILENAME).build();
-			return Response.ok(manifest)
-					.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
-					.build();
+			return getManifest(researchObjectId, versionId, dLibraDataSource,
+				editionId);
 		}
 		else {
-			logger.debug("Getting zipped pub");
-			InputStream body = dLibraDataSource.getPublicationsHelper()
-					.getZippedPublication(researchObjectId, versionId);
-			ContentDisposition cd = ContentDisposition.type("application/zip")
-					.fileName(versionId + ".zip").build();
-			return Response.ok(body)
-					.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
-					.build();
+			return getZippedPublication(researchObjectId, versionId,
+				dLibraDataSource, editionId);
 		}
+	}
+
+
+	/**
+	 * @param researchObjectId
+	 * @param versionId
+	 * @param dLibraDataSource
+	 * @param editionId 
+	 * @return
+	 * @throws RemoteException
+	 * @throws DLibraException
+	 */
+	private Response getZippedPublication(String researchObjectId,
+			String versionId, DLibraDataSource dLibraDataSource, long editionId)
+		throws RemoteException, DLibraException
+	{
+		InputStream body = dLibraDataSource.getPublicationsHelper()
+				.getZippedPublication(
+					Utils.getEditionId(dLibraDataSource, researchObjectId,
+						versionId, editionId));
+		ContentDisposition cd = ContentDisposition.type("application/zip")
+				.fileName(versionId + ".zip").build();
+		return Response.ok(body)
+				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
+	}
+
+
+	/**
+	 * @param researchObjectId
+	 * @param versionId
+	 * @param dLibraDataSource
+	 * @param editionId 
+	 * @return
+	 * @throws IOException
+	 * @throws DLibraException
+	 */
+	private Response getManifest(String researchObjectId, String versionId,
+			DLibraDataSource dLibraDataSource, Long editionId)
+		throws IOException, DLibraException
+	{
+		InputStream manifest = dLibraDataSource.getManifestHelper()
+				.getManifest(
+					Utils.getEditionId(dLibraDataSource, researchObjectId,
+						versionId, editionId));
+		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
+				.fileName(Constants.MANIFEST_FILENAME).build();
+		return Response.ok(manifest)
+				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
+	}
+
+
+	/**
+	 * @param researchObjectId
+	 * @param versionId
+	 * @param dLibraDataSource
+	 * @return
+	 * @throws RemoteException
+	 * @throws DLibraException
+	 */
+	private Response getEditionList(String researchObjectId, String versionId,
+			DLibraDataSource dLibraDataSource)
+		throws RemoteException, DLibraException
+	{
+		logger.debug("Getting edition list");
+		Map<Date, Long> editions = dLibraDataSource.getEditionHelper()
+				.getEditionList(researchObjectId, versionId);
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<Date, Long> entry : editions.entrySet()) {
+			sb.append("" + entry.getValue() + "=" + entry.getKey() + "\n");
+		}
+		return Response.ok(sb.toString()).build();
 	}
 
 
@@ -148,7 +202,8 @@ public class VersionResource
 		String versionUri = uriInfo.getAbsolutePath().toString();
 
 		dLibraDataSource.getManifestHelper().updateManifest(versionUri,
-			researchObjectId, versionId, rdfAsString);
+			researchObjectId, versionId,
+			new ByteArrayInputStream(rdfAsString.getBytes()));
 
 		return Response.ok().build();
 	}

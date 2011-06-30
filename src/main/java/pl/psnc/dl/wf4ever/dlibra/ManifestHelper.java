@@ -1,7 +1,6 @@
-package pl.psnc.dl.wf4ever.connection;
+package pl.psnc.dl.wf4ever.dlibra;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.rmi.RemoteException;
@@ -14,8 +13,10 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.RdfBuilder;
+import pl.psnc.dlibra.metadata.EditionId;
 import pl.psnc.dlibra.metadata.PublicationInfo;
 import pl.psnc.dlibra.service.DLibraException;
+import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -29,7 +30,6 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
 public class ManifestHelper
 {
 
-	@SuppressWarnings("unused")
 	private final static Logger logger = Logger.getLogger(ManifestHelper.class);
 
 	private DLibraDataSource dLibra;
@@ -41,29 +41,16 @@ public class ManifestHelper
 	}
 
 
-	public String getManifest(String groupPublicationName,
-			String publicationName)
+	public InputStream getManifest(EditionId editionId)
 		throws IOException, DLibraException
 	{
-		InputStream fileContents = dLibra.getFilesHelper().getFileContents(
-			groupPublicationName, publicationName, Constants.MANIFEST_FILENAME);
-		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		try {
-			byte[] buffer = new byte[DLibraDataSource.BUFFER_SIZE];
-			int bytesRead = 0;
-			while ((bytesRead = fileContents.read(buffer)) > 0) {
-				output.write(buffer, 0, bytesRead);
-			}
-		}
-		finally {
-			fileContents.close();
-		}
-		return new String(output.toByteArray());
+		return dLibra.getFilesHelper().getFileContents(editionId,
+			Constants.MANIFEST_FILENAME);
 	}
 
 
 	public void updateManifest(String versionUri, String groupPublicationName,
-			String publicationName, String manifest)
+			String publicationName, InputStream manifest)
 		throws DLibraException, IOException, TransformerException,
 		JenaException, IncorrectManifestException
 	{
@@ -71,6 +58,7 @@ public class ManifestHelper
 		regenerateManifest(groupPublicationName, publicationName, versionUri,
 			manifest);
 
+		manifest.reset();
 		dLibra.getAttributesHelper().updateMetadataAttributes(
 			groupPublicationName, publicationName, manifest);
 
@@ -89,12 +77,13 @@ public class ManifestHelper
 	 * @return Serialized manifest
 	 * @throws TransformerException when serializing the manifest ends with error
 	 */
-	String createInitialManifest(String uri, String identifier, String creator,
-			String title, String description, String version, Literal created)
+	InputStream createInitialManifest(String uri, String identifier,
+			String creator, String title, String description, String version,
+			Literal created)
 		throws TransformerException
 	{
-		return RdfBuilder.serializeResource(createInitialManifestResource(uri,
-			identifier, creator, title, description, version, created));
+		return RdfBuilder.getResourceAsStream(createInitialManifestResource(
+			uri, identifier, creator, title, description, version, created));
 	}
 
 
@@ -126,18 +115,22 @@ public class ManifestHelper
 	 * @throws JenaException thrown on malformed base manifest
 	 * @throws IncorrectManifestException thrown if a property is missing
 	 */
-	void regenerateManifest(String groupPublicationName,
-			String publicationName, String versionURI, String baseManifest)
-		throws JenaException, DLibraException, IOException, TransformerException, IncorrectManifestException {
-		regenerateManifest(groupPublicationName, publicationName, versionURI, baseManifest, versionURI);
+	public void regenerateManifest(String groupPublicationName,
+			String publicationName, String versionURI, InputStream baseManifest)
+		throws JenaException, DLibraException, IOException,
+		TransformerException, IncorrectManifestException
+	{
+		regenerateManifest(groupPublicationName, publicationName, versionURI,
+			baseManifest, versionURI);
 	}
+
 
 	/**
 	 * 
 	 * @param groupPublicationName RO name
 	 * @param publicationName version name
 	 * @param versionURI RO version URI
-	 * @param baseManifest Manifest from which data should be taken.
+	 * @param manifest Manifest from which data should be taken.
 	 * @param baseVersionURI URI to use from base manifest
 	 * @throws DLibraException
 	 * @throws IOException
@@ -146,11 +139,12 @@ public class ManifestHelper
 	 * @throws IncorrectManifestException thrown if a property is missing
 	 */
 	void regenerateManifest(String groupPublicationName,
-			String publicationName, String versionURI, String baseManifest, String baseVersionURI)
+			String publicationName, String versionURI, InputStream manifest,
+			String baseVersionURI)
 		throws DLibraException, IOException, TransformerException,
 		JenaException, IncorrectManifestException
 	{
-		Resource baseResource = getBaseResource(baseVersionURI, baseManifest);
+		Resource baseResource = getBaseResource(baseVersionURI, manifest);
 
 		Resource resource = createInitialManifestResource(versionURI,
 			publicationName, baseResource);
@@ -170,11 +164,11 @@ public class ManifestHelper
 	}
 
 
-	private Resource getBaseResource(String versionUri, String baseManifest)
+	private Resource getBaseResource(String versionUri, InputStream manifest)
 		throws IncorrectManifestException
 	{
 		Model model = ModelFactory.createDefaultModel();
-		model.read(new ByteArrayInputStream(baseManifest.getBytes()), null);
+		model.read(manifest, null);
 
 		// createResource may create new or use existing one
 		Resource baseResource = model.createResource(versionUri);
@@ -206,8 +200,10 @@ public class ManifestHelper
 			String publicationName)
 		throws RemoteException, DLibraException
 	{
-		List<String> list = dLibra.getFilesHelper().getFilePathsInPublication(
+		EditionId editionId = dLibra.getEditionHelper().getEditionId(
 			groupPublicationName, publicationName);
+		List<String> list = dLibra.getFilesHelper().getFilePathsInPublication(
+			editionId);
 
 		for (int i = 0; i < list.size(); i++) {
 			list.set(i, versionUri + list.get(i));
@@ -249,4 +245,58 @@ public class ManifestHelper
 
 	}
 
+
+	/**
+	 * @param versionUri
+	 * @param groupPublicationName
+	 * @param publicationName
+	 * @param generateManifest
+	 * @throws DLibraException
+	 * @throws IOException
+	 * @throws TransformerException
+	 */
+	public void regerenerateManifestSafe(String versionUri,
+			String groupPublicationName, String publicationName,
+			String baseVersionURI)
+		throws DLibraException, IOException, TransformerException
+	{
+		EditionId editionId = dLibra.getEditionHelper().getEditionId(
+			groupPublicationName, publicationName);
+		try {
+			regenerateManifest(groupPublicationName, publicationName,
+				versionUri, getManifest(editionId), baseVersionURI);
+		}
+		catch (JenaException e) {
+			logger.warn("Manifest stored for publication "
+					+ groupPublicationName + " is malformed");
+		}
+		catch (IncorrectManifestException e) {
+			logger.warn(String.format(
+				"Manifest stored for publication %s/%s is incorrect (%s)",
+				groupPublicationName, publicationName, e.getMessage()));
+		}
+		catch (IdNotFoundException e) {
+			logger.error(String.format(
+				"Manifest stored for %s/%s not found (%s)",
+				groupPublicationName, publicationName, e.getMessage()));
+		}
+	}
+
+
+	/**
+	 * @param versionUri
+	 * @param groupPublicationName
+	 * @param publicationName
+	 * @param generateManifest
+	 * @throws DLibraException
+	 * @throws IOException
+	 * @throws TransformerException
+	 */
+	public void regerenerateManifestSafe(String versionUri,
+			String groupPublicationName, String publicationName)
+		throws DLibraException, IOException, TransformerException
+	{
+		regerenerateManifestSafe(versionUri, groupPublicationName,
+			publicationName, versionUri);
+	}
 }

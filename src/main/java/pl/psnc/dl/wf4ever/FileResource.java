@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.PUT;
@@ -22,7 +23,7 @@ import javax.xml.transform.TransformerException;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
-import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
+import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
@@ -67,11 +68,13 @@ public class FileResource
 	 * @throws TransformerException
 	 */
 	@GET
-	public Response getFile(@PathParam("W_ID") String workspaceId,
+	public Response getFile(
+			@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId,
 			@PathParam("RO_VERSION_ID") String versionId,
 			@PathParam("FILE_PATH") String filePath,
-			@QueryParam("content") String isContentRequested)
+			@QueryParam("content") String isContentRequested,
+			@QueryParam("edition_id") @DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING) long editionId)
 		throws IOException, DLibraException, TransformerException
 	{
 
@@ -81,21 +84,21 @@ public class FileResource
 		if (isContentRequested != null) { // file or folder content
 			try { // file
 				return getFileContent(researchObjectId, versionId, filePath,
-					dLibraDataSource);
+					dLibraDataSource, editionId);
 			}
 			catch (IdNotFoundException ex) { // folder
 				return getFolderContent(researchObjectId, versionId, filePath,
-					dLibraDataSource);
+					dLibraDataSource, editionId);
 			}
 		}
 		else { // metadata
 			try { // file
 				return getFileMetadata(researchObjectId, versionId, filePath,
-					dLibraDataSource);
+					dLibraDataSource, editionId);
 			}
 			catch (IdNotFoundException ex) { // folder
 				return getFolderMetadata(researchObjectId, versionId, filePath,
-					dLibraDataSource);
+					dLibraDataSource, editionId);
 			}
 		}
 
@@ -103,13 +106,16 @@ public class FileResource
 
 
 	private Response getFolderMetadata(String researchObjectId,
-			String versionId, String filePath, DLibraDataSource dLibraDataSource)
+			String versionId, String filePath,
+			DLibraDataSource dLibraDataSource, Long editionId)
 		throws RemoteException, DLibraException, TransformerException
 	{
 		if (!filePath.endsWith("/"))
 			filePath = filePath.concat("/");
 		List<String> files = dLibraDataSource.getFilesHelper()
-				.getFilePathsInFolder(researchObjectId, versionId, filePath);
+				.getFilePathsInFolder(
+					Utils.getEditionId(dLibraDataSource, researchObjectId,
+						versionId, editionId), filePath);
 
 		List<String> links = new ArrayList<String>(files.size());
 
@@ -134,12 +140,12 @@ public class FileResource
 
 
 	private Response getFileMetadata(String researchObjectId, String versionId,
-			String filePath, DLibraDataSource dLibraDataSource)
+			String filePath, DLibraDataSource dLibraDataSource, Long editionId)
 		throws RemoteException, DLibraException, TransformerException
 	{
 		String metadata = dLibraDataSource.getFilesHelper().getFileMetadata(
-			researchObjectId, versionId, filePath,
-			uriInfo.getAbsolutePath().toString());
+			Utils.getEditionId(dLibraDataSource, researchObjectId, versionId,
+				editionId), filePath, uriInfo.getAbsolutePath().toString());
 		ContentDisposition cd = ContentDisposition.type(
 			Constants.RDF_XML_MIME_TYPE).build();
 		return Response
@@ -151,12 +157,14 @@ public class FileResource
 
 
 	private Response getFolderContent(String researchObjectId,
-			String versionId, String filePath, DLibraDataSource dLibraDataSource)
+			String versionId, String filePath,
+			DLibraDataSource dLibraDataSource, Long editionId)
 		throws RemoteException, DLibraException
 	{
 		logger.debug("Detected query for a folder: " + filePath);
 		InputStream body = dLibraDataSource.getFilesHelper().getZippedFolder(
-			researchObjectId, versionId, filePath);
+			Utils.getEditionId(dLibraDataSource, researchObjectId, versionId,
+				editionId), filePath);
 		ContentDisposition cd = ContentDisposition.type("application/zip")
 				.fileName(versionId + ".zip").build();
 		return Response.ok(body)
@@ -165,13 +173,15 @@ public class FileResource
 
 
 	private Response getFileContent(String researchObjectId, String versionId,
-			String filePath, DLibraDataSource dLibraDataSource)
+			String filePath, DLibraDataSource dLibraDataSource, Long editionId)
 		throws IOException, DLibraException, RemoteException
 	{
 		InputStream body = dLibraDataSource.getFilesHelper().getFileContents(
-			researchObjectId, versionId, filePath);
+			Utils.getEditionId(dLibraDataSource, researchObjectId, versionId,
+				editionId), filePath);
 		String mimeType = dLibraDataSource.getFilesHelper().getFileMimeType(
-			researchObjectId, versionId, filePath);
+			Utils.getEditionId(dLibraDataSource, researchObjectId, versionId,
+				editionId), filePath);
 
 		String fileName = uriInfo.getPath().substring(
 			1 + uriInfo.getPath().lastIndexOf("/"));

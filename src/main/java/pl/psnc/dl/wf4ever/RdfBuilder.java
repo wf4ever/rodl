@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -17,7 +18,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import pl.psnc.dl.wf4ever.connection.IncorrectManifestException;
+import pl.psnc.dl.wf4ever.dlibra.IncorrectManifestException;
 
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -137,6 +138,20 @@ public class RdfBuilder
 
 		return output;
 	}
+	
+	/**
+	 * Returns rdf/xml serialization of specified Resource in String. 
+	 */
+	public static InputStream getResourceAsStream(Resource resource)
+		throws TransformerException
+	{
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+		resource.getModel().write(out, TYPE);
+
+		return new ByteArrayInputStream(out.toByteArray());
+	}
+	
 
 
 	public static Literal createDateLiteral(Date date)

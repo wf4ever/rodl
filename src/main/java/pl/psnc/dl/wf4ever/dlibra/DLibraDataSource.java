@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.connection;
+package pl.psnc.dl.wf4ever.dlibra;
 
 import java.rmi.RemoteException;
 
@@ -97,7 +97,7 @@ public class DLibraDataSource
 	}
 
 
-	ContentServer getContentServer()
+	public ContentServer getContentServer()
 	{
 		return contentServer;
 	}
@@ -109,7 +109,7 @@ public class DLibraDataSource
 	}
 
 
-	MetadataServer getMetadataServer()
+	public MetadataServer getMetadataServer()
 	{
 		return metadataServer;
 	}

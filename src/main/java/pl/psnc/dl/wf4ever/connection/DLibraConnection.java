@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.mgmt.UserServiceResolver;
 import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.AuthorizationToken;

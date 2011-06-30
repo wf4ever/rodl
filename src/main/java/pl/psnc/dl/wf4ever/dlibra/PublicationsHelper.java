@@ -1,7 +1,7 @@
 /**
  * 
  */
-package pl.psnc.dl.wf4ever.connection;
+package pl.psnc.dl.wf4ever.dlibra;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,8 +57,6 @@ import pl.psnc.dlibra.service.DuplicatedValueException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 import pl.psnc.dlibra.user.User;
 import pl.psnc.dlibra.user.UserManager;
-
-import com.hp.hpl.jena.shared.JenaException;
 
 /**
  * @author piotrhol
@@ -373,14 +371,27 @@ public class PublicationsHelper
 		Version createdVersion = fileManager.createVersion(file, 0,
 			creationDate, "");
 
-		String manifest = dLibra.getManifestHelper().createInitialManifest(
-			versionUri, groupPublicationName, "", "", "", publicationName,
-			RdfBuilder.createDateLiteral(creationDate));
+		InputStream manifest = dLibra.getManifestHelper()
+				.createInitialManifest(versionUri, groupPublicationName, "",
+					"", "", publicationName,
+					RdfBuilder.createDateLiteral(creationDate));
 
 		OutputStream output = contentServer
 				.getVersionOutputStream(createdVersion.getId());
-		output.write(manifest.getBytes());
-		output.close();
+		try {
+			byte[] buffer = new byte[DLibraDataSource.BUFFER_SIZE];
+			int bytesRead = 0;
+			while ((bytesRead = manifest.read(buffer)) > 0) {
+				output.write(buffer, 0, bytesRead);
+			}
+		}
+		catch (IOException e) {
+			logger.error("Error when saving manifest to content server", e);
+		}
+		finally {
+			output.close();
+			manifest.reset();
+		}
 
 		publicationManager.setMainFile(publicationId,
 			createdVersion.getFileId());
@@ -411,31 +422,17 @@ public class PublicationsHelper
 		edition.setName(publicationName);
 		publicationManager.createEdition(edition, copyVersions);
 
-		try {
-			String baseVersionURI = versionURI.substring(0,
-				versionURI.lastIndexOf("/") + 1)
-					+ basePublicationName;
-			dLibra.getManifestHelper().regenerateManifest(
-				groupPublicationName,
-				publicationName,
-				versionURI,
-				dLibra.getManifestHelper().getManifest(groupPublicationName,
-					basePublicationName), baseVersionURI);
-			dLibra.getAttributesHelper().updateMetadataAttributes(
-				groupPublicationName,
-				publicationName,
-				dLibra.getManifestHelper().getManifest(groupPublicationName,
-					basePublicationName));
-		}
-		catch (JenaException e) {
-			logger.warn("Manifest stored for publication "
-					+ groupPublicationName + " is malformed");
-		}
-		catch (IncorrectManifestException e) {
-			logger.warn(String.format(
-				"Manifest stored for publication %s/%s is incorrect (%s)",
-				groupPublicationName, basePublicationName, e.getMessage()));
-		}
+		EditionId baseEditionId = dLibra.getEditionHelper().getEditionId(
+			groupPublicationName, basePublicationName);
+
+		String baseVersionURI = versionURI.substring(0,
+			versionURI.lastIndexOf("/") + 1)
+				+ basePublicationName;
+		dLibra.getManifestHelper().regerenerateManifestSafe(versionURI,
+			groupPublicationName, publicationName, baseVersionURI);
+		dLibra.getAttributesHelper().updateMetadataAttributes(
+			groupPublicationName, publicationName,
+			dLibra.getManifestHelper().getManifest(baseEditionId));
 	}
 
 
@@ -446,32 +443,14 @@ public class PublicationsHelper
 	{
 		List<PublicationInfo> list = listPublicationsInGroup(groupPublicationName);
 		for (PublicationInfo p : list) {
-			try {
-				String pubVersionURI = versionURI.substring(0,
-					versionURI.lastIndexOf("/") + 1)
-						+ p.getLabel();
-				logger.debug(String
-						.format(
-							"Will regenerate manifest and add hasVersion for version %s",
-							p.getLabel()));
-				dLibra.getManifestHelper().regenerateManifest(
-					groupPublicationName,
-					p.getLabel(),
-					pubVersionURI,
-					dLibra.getManifestHelper().getManifest(
-						groupPublicationName, p.getLabel()));
-			}
-			catch (JenaException e) {
-				logger.warn("Manifest stored for publication "
-						+ groupPublicationName + " is malformed");
-			}
-			catch (IncorrectManifestException e) {
-				logger.warn(String.format(
-					"Manifest stored for publication %s/%s is incorrect (%s)",
-					groupPublicationName, p.getLabel(), e.getMessage()));
-				logger.warn(dLibra.getManifestHelper().getManifest(
-					groupPublicationName, p.getLabel()));
-			}
+			String pubVersionURI = versionURI.substring(0,
+				versionURI.lastIndexOf("/") + 1)
+					+ p.getLabel();
+			logger.debug(String.format(
+				"Will regenerate manifest and add hasVersion for version %s",
+				p.getLabel()));
+			dLibra.getManifestHelper().regerenerateManifestSafe(pubVersionURI,
+				groupPublicationName, p.getLabel());
 		}
 	}
 
@@ -540,7 +519,7 @@ public class PublicationsHelper
 	}
 
 
-	PublicationId getPublicationId(String groupPublicationName,
+	public PublicationId getPublicationId(String groupPublicationName,
 			String publicationName)
 		throws RemoteException, DLibraException
 	{
@@ -570,8 +549,16 @@ public class PublicationsHelper
 			String publicationName)
 		throws RemoteException, DLibraException
 	{
-		return dLibra.getFilesHelper().getZippedFolder(groupPublicationName,
-			publicationName, null);
+		return dLibra.getFilesHelper().getZippedFolder(
+			dLibra.getEditionHelper().getEditionId(groupPublicationName,
+				publicationName), null);
+	}
+
+
+	public InputStream getZippedPublication(EditionId editionId)
+		throws RemoteException, DLibraException
+	{
+		return dLibra.getFilesHelper().getZippedFolder(editionId, null);
 	}
 
 }
