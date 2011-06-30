@@ -668,6 +668,7 @@ def getFile1Edition1
 		req.basic_auth WORKSPACE_ID, PASSWORD
 		response = http.request(req)
 		@edition1 = response.body.split("\n")[0].split("=")[0]
+		@edition1.slice!(0) if @edition1.chr == "*"
 		printResponse(response, 200)
 	}	
 	Net::HTTP.start(BASE_URI, PORT) {|http|
@@ -680,6 +681,50 @@ def getFile1Edition1
 	}	
 end
 
+def publishEdition
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Publishing edition........"
+		req = Net::HTTP::Put.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '?publish=true')
+		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.add_field "Content-Type", "application/rdf+xml" # leave?
+
+		response = http.request(req)
+		printResponse(response, 200)
+	}
+end
+
+def unPublishEdition
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Unpublishing edition........"
+		req = Net::HTTP::Put.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '?publish=false')
+		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.add_field "Content-Type", "application/rdf+xml" # leave?
+
+		response = http.request(req)
+		printResponse(response, 200)
+	}
+end
+
+def checkPublished (which)
+	Net::HTTP.start(BASE_URI, PORT) do |http|
+		printConstantWidth "Checking #{which} is published........"
+		req = Net::HTTP::Get.new('/' + APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSION_NAME + '?edition_list')
+		req.basic_auth WORKSPACE_ID, PASSWORD
+		response = http.request(req)
+		printResponse(response, 200)
+
+		i=0
+		response.body.each_line do |s|
+			edition = s.split("=")[0]
+			edition.slice!(0) if edition.chr == "*"
+			puts "Line #{i}: edition #{edition} should be published" if i == which && s.chr != "*"
+			puts "Line #{i}: edition #{edition} should not be published" if i != which && s.chr == "*"
+			i += 1
+		end
+	end	
+end
+
+
 
 
 if createWorkspace == 201
@@ -687,44 +732,44 @@ if createWorkspace == 201
 		if createVersion == 201
 			getManifest
 			validateManifest1
-#			if addFile1 == 200 && addFile2 == 200
-#				getListRO
-#				getROrdf
-#				getVersionZip
-#				getManifest
-#				getFile1Metadata
-#				getFile2Metadata
-#				getFile1
-#				getFile2
-#				getDirectoryList
-#				getDirectoryZipped
-#				updateFile1
-#				updateFile2
-#				updateManifest
-#				updateManifestMalformed
-#				updateManifestIncorrect
-#				createVersionAsCopy
-#				getManifest2
-#				validateManifest2
-#				searchForROs
-#				deleteFile1
-#				deleteFile2
-#				checkNoFile1Metadata
-#				checkNoFile1Content
-#				checkDeleteManifest
-#			end
-#			if addEmptyDirectory == 200
-#				getEmptyDirectoryMetadata
-#				addFile2
-#				getEmptyDirectoryMetadata
-#				deleteFile2
-#				getEmptyDirectoryMetadata
-#				deleteEmptyDirectory
-#				checkNoEmptyDirectory
-#				addFile2
-#				deleteDirectory
-#				checkNoEmptyDirectory
-#			end
+			if addFile1 == 200 && addFile2 == 200
+				getListRO
+				getROrdf
+				getVersionZip
+				getManifest
+				getFile1Metadata
+				getFile2Metadata
+				getFile1
+				getFile2
+				getDirectoryList
+				getDirectoryZipped
+				updateFile1
+				updateFile2
+				updateManifest
+				updateManifestMalformed
+				updateManifestIncorrect
+				createVersionAsCopy
+				getManifest2
+				validateManifest2
+				searchForROs
+				deleteFile1
+				deleteFile2
+				checkNoFile1Metadata
+				checkNoFile1Content
+				checkDeleteManifest
+			end
+			if addEmptyDirectory == 200
+				getEmptyDirectoryMetadata
+				addFile2
+				getEmptyDirectoryMetadata
+				deleteFile2
+				getEmptyDirectoryMetadata
+				deleteEmptyDirectory
+				checkNoEmptyDirectory
+				addFile2
+				deleteDirectory
+				checkNoEmptyDirectory
+			end
 			if addFile1 == 200 && addFile2 == 200 && createEdition == 201
 				getFile1Edition1
 				addFile3
@@ -733,6 +778,9 @@ if createWorkspace == 201
 				checkNoFile1Metadata
 				checkNoFile1Content
 				getFile1Edition1
+				checkPublished -1
+				publishEdition
+				checkPublished 1
 				if createEdition == 201
 					deleteFile2
 					checkNoFile2Metadata
@@ -742,6 +790,11 @@ if createWorkspace == 201
 					checkNoFile1Metadata
 					checkNoFile1Content
 					getFile1Edition1
+					checkPublished 1
+					publishEdition
+					checkPublished 2
+					unPublishEdition
+					checkPublished -1
 				end
 			end
 			deleteVersion

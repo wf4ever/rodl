@@ -6,10 +6,9 @@ package pl.psnc.dl.wf4ever.dlibra;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import pl.psnc.dlibra.common.DLObject;
 import pl.psnc.dlibra.common.Id;
@@ -54,7 +53,7 @@ public class EditionHelper
 	 * @throws RemoteException
 	 * @throws DLibraException in case no edition is found
 	 */
-	public Edition getEdition(PublicationId publicationId)
+	public Edition getLastEdition(PublicationId publicationId)
 		throws RemoteException, DLibraException
 	{
 		InputFilter in = new PublicationFilter(null, publicationId)
@@ -99,10 +98,10 @@ public class EditionHelper
 	 * @throws RemoteException
 	 * @throws DLibraException in case no edition is found
 	 */
-	public EditionId getEditionId(PublicationId publicationId)
+	public EditionId getLastEditionId(PublicationId publicationId)
 		throws RemoteException, DLibraException
 	{
-		return (EditionId) getEdition(publicationId).getId();
+		return (EditionId) getLastEdition(publicationId).getId();
 	}
 
 
@@ -114,14 +113,25 @@ public class EditionHelper
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 */
-	public EditionId getEditionId(String groupPublicationName,
+	public EditionId getLastEditionId(String groupPublicationName,
 			String publicationName)
 		throws RemoteException, DLibraException
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = getEditionId(publicationId);
+		EditionId editionId = getLastEditionId(publicationId);
 		return editionId;
+	}
+
+
+	public Edition getLastEdition(String groupPublicationName,
+			String publicationName)
+		throws RemoteException, DLibraException
+	{
+		PublicationId publicationId = dLibra.getPublicationsHelper()
+				.getPublicationId(groupPublicationName, publicationName);
+		Edition edition = getLastEdition(publicationId);
+		return edition;
 	}
 
 
@@ -136,8 +146,8 @@ public class EditionHelper
 	 * @throws RemoteException
 	 * @throws IllegalArgumentException
 	 */
-	EditionId createEdition(String editionName,
-			PublicationId publicationId, VersionId[] versionIds)
+	EditionId createEdition(String editionName, PublicationId publicationId,
+			VersionId[] versionIds)
 		throws DLibraException, AccessDeniedException, IdNotFoundException,
 		RemoteException, IllegalArgumentException
 	{
@@ -163,7 +173,7 @@ public class EditionHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId prevEditionId = getEditionId(publicationId);
+		EditionId prevEditionId = getLastEditionId(publicationId);
 
 		InputFilter in = new EditionFilter(prevEditionId);
 		OutputFilter out = new OutputFilter(VersionId.class);
@@ -187,11 +197,12 @@ public class EditionHelper
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 */
-	public Map<Date, Long> getEditionList(String groupPublicationName,
+	public SortedSet<Edition> getEditionList(String groupPublicationName,
 			String publicationName)
 		throws RemoteException, DLibraException
 	{
-		Map<Date, Long> result = new TreeMap<Date, Long>();
+		TreeSet<Edition> result = new TreeSet<Edition>(
+				new EditionCreatedComparator());
 
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
@@ -203,8 +214,7 @@ public class EditionHelper
 
 		for (DLObject object : editions) {
 			Edition edition = (Edition) object;
-			result.put(edition.getCreationDate(),
-				((EditionId) edition.getId()).getId());
+			result.add(edition);
 		}
 
 		return result;

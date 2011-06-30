@@ -200,7 +200,7 @@ public class ManifestHelper
 			String publicationName)
 		throws RemoteException, DLibraException
 	{
-		EditionId editionId = dLibra.getEditionHelper().getEditionId(
+		EditionId editionId = dLibra.getEditionHelper().getLastEditionId(
 			groupPublicationName, publicationName);
 		List<String> list = dLibra.getFilesHelper().getFilePathsInPublication(
 			editionId);
@@ -260,7 +260,7 @@ public class ManifestHelper
 			String baseVersionURI)
 		throws DLibraException, IOException, TransformerException
 	{
-		EditionId editionId = dLibra.getEditionHelper().getEditionId(
+		EditionId editionId = dLibra.getEditionHelper().getLastEditionId(
 			groupPublicationName, publicationName);
 		try {
 			regenerateManifest(groupPublicationName, publicationName,

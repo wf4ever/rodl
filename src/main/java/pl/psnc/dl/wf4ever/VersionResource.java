@@ -5,8 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.rmi.RemoteException;
-import java.util.Date;
-import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -28,6 +27,7 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dl.wf4ever.dlibra.IncorrectManifestException;
+import pl.psnc.dlibra.metadata.Edition;
 import pl.psnc.dlibra.service.DLibraException;
 
 import com.hp.hpl.jena.shared.JenaException;
@@ -157,11 +157,11 @@ public class VersionResource
 		throws RemoteException, DLibraException
 	{
 		logger.debug("Getting edition list");
-		Map<Date, Long> editions = dLibraDataSource.getEditionHelper()
+		Set<Edition> editions = dLibraDataSource.getEditionHelper()
 				.getEditionList(researchObjectId, versionId);
 		StringBuilder sb = new StringBuilder();
-		for (Map.Entry<Date, Long> entry : editions.entrySet()) {
-			sb.append("" + entry.getValue() + "=" + entry.getKey() + "\n");
+		for (Edition edition : editions) {
+			sb.append((edition.isPublished() ? "*" : "") + edition.getId() + "=" + edition.getCreationDate() + "\n");
 		}
 		return Response.ok(sb.toString()).build();
 	}
@@ -192,7 +192,8 @@ public class VersionResource
 	@Consumes("application/rdf+xml")
 	public Response updateManifestFile(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId,
-			@PathParam("RO_VERSION_ID") String versionId, String rdfAsString)
+			@PathParam("RO_VERSION_ID") String versionId,
+			@QueryParam("publish") String publish, String rdfAsString)
 		throws DLibraException, IOException, TransformerException,
 		JenaException, IncorrectManifestException
 	{
@@ -201,9 +202,18 @@ public class VersionResource
 
 		String versionUri = uriInfo.getAbsolutePath().toString();
 
-		dLibraDataSource.getManifestHelper().updateManifest(versionUri,
-			researchObjectId, versionId,
-			new ByteArrayInputStream(rdfAsString.getBytes()));
+		if (publish != null) {
+			if (!publish.equals("false")) {
+				dLibraDataSource.getPublicationsHelper().publishPublication(researchObjectId, versionId);
+			} else {
+				dLibraDataSource.getPublicationsHelper().unpublishPublication(researchObjectId, versionId);
+			}
+		}
+		else {
+			dLibraDataSource.getManifestHelper().updateManifest(versionUri,
+				researchObjectId, versionId,
+				new ByteArrayInputStream(rdfAsString.getBytes()));
+		}
 
 		return Response.ok().build();
 	}

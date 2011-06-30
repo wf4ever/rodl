@@ -331,7 +331,7 @@ public class FilesHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getEditionHelper().getEditionId(
+		EditionId editionId = dLibra.getEditionHelper().getLastEditionId(
 			publicationId);
 
 		if (filePath.endsWith("/")) {
@@ -474,7 +474,7 @@ public class FilesHelper
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()
 				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getEditionHelper().getEditionId(
+		EditionId editionId = dLibra.getEditionHelper().getLastEditionId(
 			publicationId);
 
 		boolean recreateEmptyFolder = false;
@@ -553,7 +553,7 @@ public class FilesHelper
 			PublicationId targetPublicationId)
 		throws IOException, DLibraException
 	{
-		EditionId sourceEditionId = dLibra.getEditionHelper().getEditionId(
+		EditionId sourceEditionId = dLibra.getEditionHelper().getLastEditionId(
 			sourcePublicationId);
 		Collection<Id> sourceVersionIds = publicationManager.getObjects(
 			new EditionFilter(sourceEditionId),

@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.transform.TransformerException;
@@ -322,22 +323,38 @@ public class PublicationsHelper
 
 		addHasVersionPropertyToAll(groupPublicationName, versionURI);
 
-		//		publishPublication(publicationId);
-	}
-
-
-	@SuppressWarnings("unused")
-	private void publishPublication(PublicationId publicationId)
-		throws RemoteException, DLibraException
-	{
-		Edition edition = dLibra.getEditionHelper().getEdition(publicationId);
-		edition.setPublished(true);
-		publicationManager.setEditionData(edition);
-
 		dLibra.getMetadataServer()
 				.getLibCollectionManager()
 				.addToCollections(Arrays.asList(dLibra.getCollectionId()),
 					Arrays.asList((ElementId) publicationId), false);
+	}
+
+
+	public void publishPublication(String groupPublicationName,
+			String publicationName)
+		throws RemoteException, DLibraException
+	{
+		unpublishPublication(groupPublicationName, publicationName);
+		
+		Edition edition = dLibra.getEditionHelper().getLastEdition(
+			groupPublicationName, publicationName);
+		edition.setPublished(true);
+		publicationManager.setEditionData(edition);
+	}
+
+
+	public void unpublishPublication(String groupPublicationName,
+			String publicationName)
+		throws RemoteException, DLibraException
+	{
+		Set<Edition> editions = dLibra.getEditionHelper().getEditionList(
+			groupPublicationName, publicationName);
+		for (Edition edition : editions) {
+			if (edition.isPublished()) {
+				edition.setPublished(false);
+				publicationManager.setEditionData(edition);
+			}
+		}
 	}
 
 
@@ -422,7 +439,7 @@ public class PublicationsHelper
 		edition.setName(publicationName);
 		publicationManager.createEdition(edition, copyVersions);
 
-		EditionId baseEditionId = dLibra.getEditionHelper().getEditionId(
+		EditionId baseEditionId = dLibra.getEditionHelper().getLastEditionId(
 			groupPublicationName, basePublicationName);
 
 		String baseVersionURI = versionURI.substring(0,
@@ -550,7 +567,7 @@ public class PublicationsHelper
 		throws RemoteException, DLibraException
 	{
 		return dLibra.getFilesHelper().getZippedFolder(
-			dLibra.getEditionHelper().getEditionId(groupPublicationName,
+			dLibra.getEditionHelper().getLastEditionId(groupPublicationName,
 				publicationName), null);
 	}
 

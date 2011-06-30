@@ -326,7 +326,7 @@ public class AttributesHelper
 			String publicationName)
 		throws RemoteException, DLibraException, IdNotFoundException
 	{
-		EditionId editionId = dLibra.getEditionHelper().getEditionId(
+		EditionId editionId = dLibra.getEditionHelper().getLastEditionId(
 			groupPublicationName, publicationName);
 
 		AttributeValueSet avs = dLibra.getMetadataServer()

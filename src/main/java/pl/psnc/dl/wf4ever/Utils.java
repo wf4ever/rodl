@@ -26,7 +26,7 @@ public class Utils
 		throws RemoteException, DLibraException
 	{
 		if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
-			return dLibra.getEditionHelper().getEditionId(RO, version);
+			return dLibra.getEditionHelper().getLastEditionId(RO, version);
 		}
 		else {
 			return new EditionId(editionId);
