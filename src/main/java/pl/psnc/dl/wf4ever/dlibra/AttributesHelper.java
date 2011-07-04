@@ -213,26 +213,33 @@ public class AttributesHelper
 		throws IdNotFoundException, RemoteException, DLibraException
 	{
 		AttributeInfo attributeInfo = null;
-		CollectionResult result = dLibra
-				.getMetadataServer()
-				.getAttributeManager()
-				.getObjects(
-					new AttributeFilter((AttributeId) null).setRDFNames(Arrays
-							.asList(attributeRdfName)),
-					new OutputFilter(AttributeInfo.class));
-		if (result.getResultsCount() == 0) {
-			logger.warn(String
-					.format("Could not find attribute with RDF name '%s'",
-						attributeRdfName));
-			return null;
+		try {
+			CollectionResult result = dLibra
+					.getMetadataServer()
+					.getAttributeManager()
+					.getObjects(
+						new AttributeFilter((AttributeId) null).setRDFNames(Arrays
+								.asList(attributeRdfName)),
+						new OutputFilter(AttributeInfo.class));
+			if (result.getResultsCount() == 0) {
+				logger.warn(String.format(
+					"Could not find attribute with RDF name '%s'",
+					attributeRdfName));
+				return null;
+			}
+			if (result.getResultsCount() > 1) {
+				logger.warn(String.format(
+					"Found %d attributes with RDF name '%s'",
+					result.getResultsCount(), attributeRdfName));
+				return (AttributeInfo) result.getResultInfos().iterator()
+						.next();
+			}
+			else {
+				attributeInfo = (AttributeInfo) result.getResultInfo();
+			}
 		}
-		if (result.getResultsCount() > 1) {
-			logger.warn(String.format("Found %d attributes with RDF name '%s'",
-				result.getResultsCount(), attributeRdfName));
-			return (AttributeInfo) result.getResultInfos().iterator().next();
-		}
-		else {
-			attributeInfo = (AttributeInfo) result.getResultInfo();
+		catch (IdNotFoundException e) {
+			logger.error("Id null not found, should not happen", e);
 		}
 		return attributeInfo;
 	}

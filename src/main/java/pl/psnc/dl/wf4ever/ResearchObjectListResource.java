@@ -65,7 +65,7 @@ public class ResearchObjectListResource
 		}
 		else {
 			list = dLibraDataSource.getPublicationsHelper()
-					.listUserGroupPublications(uriInfo.getQueryParameters());
+					.listUserPublications(uriInfo.getQueryParameters());
 		}
 
 		StringBuilder sb = new StringBuilder("");

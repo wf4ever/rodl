@@ -348,13 +348,8 @@ public class FilesHelper
 		saveFileContents(inputStream, createdVersionId);
 
 		if (versionId != null) {
-			logger.debug(String.format(
-				"Removing file version %s from edition %s", versionId,
-				editionId));
 			publicationManager.removeEditionVersion(editionId, versionId);
 		}
-		logger.debug(String.format("Adding file version %s to edition %s",
-			createdVersionId.getId(), editionId));
 		publicationManager.addEditionVersion(editionId, createdVersionId);
 
 		if (generateManifest) {
@@ -488,9 +483,6 @@ public class FilesHelper
 				recreateEmptyFolder = true;
 			}
 
-			logger.debug(String.format(
-				"Removing file version %s from edition %s", versionId,
-				editionId));
 			publicationManager.removeEditionVersion(editionId, versionId);
 		}
 		catch (IdNotFoundException ex) {
