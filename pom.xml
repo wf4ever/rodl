@@ -57,14 +57,14 @@
 		<dependency>
 			<groupId>dlteam.fwork.services</groupId>
 			<artifactId>dlteam-fwork-services-common</artifactId>
-			<version>1.0.1-SNAPSHOT</version>
+			<version>1.0.3-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>dcore.common</groupId>
 			<artifactId>dcore-common-base</artifactId>
-			<version>1.0.1-SNAPSHOT</version>
+			<version>1.0.4-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
