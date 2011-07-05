@@ -15,7 +15,6 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dlibra.app.common.exception.OperationFailedException;
 import pl.psnc.dlibra.common.CollectionResult;
 import pl.psnc.dlibra.common.DLObject;
 import pl.psnc.dlibra.common.OutputFilter;

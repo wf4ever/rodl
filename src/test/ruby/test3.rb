@@ -4,11 +4,11 @@ require 'choice'
 require 'uuidtools'
 require 'base64'
 
-CALATOLA=false
+CALATOLA=true
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
-	APP_NAME="rosrs2"
+	APP_NAME="rosrs3"
 	ADMIN_LOGIN="wfadmin"
 	ADMIN_PASSWORD="wfadmin!!!"
 else 
@@ -42,7 +42,7 @@ INDEXING_TIME_INTERVAL = 30
 
 URI_PREFIX_IN_MANIFEST = "URI_PREFIX"
 if CALATOLA then
-	URI_PREFIX = "http://calatola.man.poznan.pl/rosrs2/workspaces/" + WORKSPACE_ID
+	URI_PREFIX = "http://calatola.man.poznan.pl/rosrs3/workspaces/" + WORKSPACE_ID
 else
 	URI_PREFIX = "http://localhost:8081/rosrs/workspaces/" + WORKSPACE_ID
 end

@@ -69,13 +69,6 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>dcore.app</groupId>
-			<artifactId>dcore-app-base</artifactId>
-			<version>1.0.4-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
 			<version>2.1</version>

@@ -617,46 +617,46 @@ if createWorkspace == 201
 			getManifest
 			validateManifest1
 			if addFile1 == 200 && addFile2 == 200
-#				getListRO
-#				getROrdf
-#				getVersionZip
-#				getManifest
-#				getFile1Metadata
-#				getFile2Metadata
-#				getFile1
-#				getFile2
-#				getDirectoryList
-#				getDirectoryZipped
-#				updateFile1
-#				updateFile2
+				getListRO
+				getROrdf
+				getVersionZip
+				getManifest
+				getFile1Metadata
+				getFile2Metadata
+				getFile1
+				getFile2
+				getDirectoryList
+				getDirectoryZipped
+				updateFile1
+				updateFile2
 				updateManifest
-#				updateManifestMalformed
-#				updateManifestIncorrect
+				updateManifestMalformed
+				updateManifestIncorrect
 				createVersionAsCopy
 				getManifest2
 				validateManifest2
 				searchForROs
-#				deleteFile1
-#				deleteFile2
-#				checkNoFile1Metadata
-#				checkNoFile1Content
-#				checkDeleteManifest
+				deleteFile1
+				deleteFile2
+				checkNoFile1Metadata
+				checkNoFile1Content
+				checkDeleteManifest
 			end
-#			if addEmptyDirectory == 200
-#				getEmptyDirectoryMetadata
-#				addFile2
-#				getEmptyDirectoryMetadata
-#				deleteFile2
-#				getEmptyDirectoryMetadata
-#				deleteEmptyDirectory
-#				checkNoEmptyDirectory
-#				addFile2
-#				deleteDirectory
-#				checkNoEmptyDirectory
-#			end
-#			deleteVersion
+			if addEmptyDirectory == 200
+				getEmptyDirectoryMetadata
+				addFile2
+				getEmptyDirectoryMetadata
+				deleteFile2
+				getEmptyDirectoryMetadata
+				deleteEmptyDirectory
+				checkNoEmptyDirectory
+				addFile2
+				deleteDirectory
+				checkNoEmptyDirectory
+			end
+			deleteVersion
 		end
-#		deleteRO
+		deleteRO
 	end
-#	deleteWorkspace
+	deleteWorkspace
 end
