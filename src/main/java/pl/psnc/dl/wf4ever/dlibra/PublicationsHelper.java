@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.rmi.RemoteException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,6 +20,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
+
+import com.ibm.icu.text.SimpleDateFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.RdfBuilder;
@@ -78,6 +81,13 @@ public class PublicationsHelper {
 
 	private ContentServer contentServer;
 
+	private static final String QP_PUBLISHED_FROM = "PublishedFrom";
+
+	private static final String QP_PUBLISHED_UNTIL = "PublishedUntil";
+
+	private static final String[] NON_RDF_QUERY_PARAMS = { QP_PUBLISHED_FROM,
+			QP_PUBLISHED_UNTIL };
+
 	public PublicationsHelper(DLibraDataSource dLibraDataSource)
 			throws RemoteException {
 		this.dLibra = dLibraDataSource;
@@ -124,7 +134,9 @@ public class PublicationsHelper {
 	 * 
 	 * @param queryParameters
 	 *            List of pairs <attribute_RDF_name, value>. Unrecognized RDF
-	 *            names are ignored.
+	 *            names are ignored. Additionally, 'PublishedFrom' and
+	 *            'PublishedUntil' are also parsed as referring to published
+	 *            editions creation dates.
 	 * @return List of publication infos.
 	 * @throws RemoteException
 	 * @throws DLibraException
@@ -138,30 +150,33 @@ public class PublicationsHelper {
 			return listUserGroupPublications();
 		}
 
-		AdvancedQuery query = null;
+		AdvancedQuery query = new AdvancedQuery();
 
 		for (Map.Entry<String, List<String>> entry : queryParameters.entrySet()) {
 			String attributeRdfName = entry.getKey();
-			AttributeInfo info = null;
-			info = dLibra.getAttributesHelper().getAttributeInfo(
-					attributeRdfName);
-			if (info == null) {
-				logger.debug(String.format(
-						"Query param %s is not a valid dLibra attribute",
-						attributeRdfName));
-				continue;
+			String firstValue = entry.getValue().isEmpty() ? null : entry
+					.getValue().get(0);
+			if (Arrays.asList(NON_RDF_QUERY_PARAMS).contains(attributeRdfName)) {
+				if (attributeRdfName.equals(QP_PUBLISHED_FROM)) {
+					setQueryDate(query, firstValue, false);
+				} else if (attributeRdfName.equals(QP_PUBLISHED_UNTIL)) {
+					setQueryDate(query, firstValue, true);
+				}
+			} else {
+				AttributeInfo info = null;
+				info = dLibra.getAttributesHelper().getAttributeInfo(
+						attributeRdfName);
+				if (info == null) {
+					logger.debug(String.format(
+							"Query param %s is not a valid dLibra attribute",
+							attributeRdfName));
+					continue;
+				}
+				logger.debug(String.format("Adding query element %s=%s",
+						info.getId(), entry.getValue().get(0)));
+				query.addQueryElement(new QueryElement(info.getId(), entry
+						.getValue().get(0)));
 			}
-			if (query == null)
-				query = new AdvancedQuery();
-			logger.debug(String.format("Adding query element %s=%s",
-					info.getId(), entry.getValue().get(0)));
-			query.addQueryElement(new QueryElement(info.getId(), entry
-					.getValue().get(0)));
-		}
-
-		if (query == null) {
-			logger.debug("No dLibra query params, returning list of group publications");
-			return listUserGroupPublications();
 		}
 
 		query.setSearchRemoteResources(false);
@@ -178,16 +193,11 @@ public class PublicationsHelper {
 			logger.debug("Found " + hits.size() + " search results");
 			for (AbstractSearchHit hit : hits) {
 				try {
-					// PublicationId groupPublicationId = (PublicationId)
-					// hit.getRootId();
-					// logger.debug("Group publication id = " +
-					// groupPublicationId);
 					EditionId editionId = (EditionId) hit.getElementId();
 					Edition edition = dLibra.getEditionHelper().getEdition(
 							editionId);
 					PublicationId publicationId = (PublicationId) edition
 							.getParentId();
-					// logger.debug("Edition id = " + editionId);
 					Publication publication = getPublication(publicationId);
 					logger.debug("Found search result: "
 							+ publication.getName());
@@ -204,6 +214,25 @@ public class PublicationsHelper {
 			return listUserGroupPublications();
 		}
 		return result;
+	}
+
+	private void setQueryDate(AdvancedQuery query, String firstValue,
+			boolean until) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		try {
+			Date date = sdf.parse(firstValue);
+			if (date == null) {
+				logger.error("Could not parse date " + firstValue);
+			} else {
+				if (until)
+					query.setDateUntil(date);
+				else
+					query.setDate(date);
+			}
+		} catch (ParseException e) {
+			logger.error(String.format("Could not parse date %s (%s)",
+					firstValue, e.getMessage()));
+		}
 	}
 
 	private Publication getPublication(PublicationId publicationId)
@@ -408,8 +437,9 @@ public class PublicationsHelper {
 				createdVersion.getFileId());
 
 		EditionId editionId = dLibra.getEditionHelper().createEdition(
-				publicationName, publicationId,
-				new VersionId[] { createdVersion.getId() });
+				publicationName, publicationId, new VersionId[] {});
+
+		publicationManager.addEditionVersion(editionId, createdVersion.getId());
 
 		dLibra.getAttributesHelper().updateMetadataAttributes(
 				groupPublicationName, publicationName, manifest);
