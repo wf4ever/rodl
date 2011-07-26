@@ -5,7 +5,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import pl.psnc.dl.wf4ever.connection.IncorrectManifestException;
+import pl.psnc.dl.wf4ever.dlibra.IncorrectManifestException;
 
 /**
  * Maps <code>IdNotFoundException</code> to <code>409 (Conflict)</code> HTTP response.

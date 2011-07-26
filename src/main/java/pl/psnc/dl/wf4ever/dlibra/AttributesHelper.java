@@ -1,9 +1,9 @@
 /**
  * 
  */
-package pl.psnc.dl.wf4ever.connection;
+package pl.psnc.dl.wf4ever.dlibra;
 
-import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +20,6 @@ import pl.psnc.dlibra.common.DLObject;
 import pl.psnc.dlibra.common.OutputFilter;
 import pl.psnc.dlibra.metadata.EditionId;
 import pl.psnc.dlibra.metadata.Language;
-import pl.psnc.dlibra.metadata.PublicationId;
 import pl.psnc.dlibra.metadata.attributes.AbstractAttributeValue;
 import pl.psnc.dlibra.metadata.attributes.AttributeFilter;
 import pl.psnc.dlibra.metadata.attributes.AttributeId;
@@ -88,14 +87,14 @@ public class AttributesHelper
 	 * @throws RemoteException 
 	 */
 	public void updateMetadataAttributes(String groupPublicationName,
-			String publicationName, String manifest)
+			String publicationName, InputStream manifest)
 		throws RemoteException, DLibraException
 	{
 		AttributeValueSet avs = getAttributeValueSet(groupPublicationName,
 			publicationName);
 
 		Model model = ModelFactory.createDefaultModel();
-		model.read(new ByteArrayInputStream(manifest.getBytes()), null);
+		model.read(manifest, null);
 
 		Set<Property> predicates = new HashSet<Property>();
 
@@ -123,7 +122,8 @@ public class AttributesHelper
 					predicates.contains(statement.getPredicate()));
 			}
 			else if (statement.getPredicate().equals(DCTerms.source)) {
-				updateAttribute(avs, SOURCE_RDF_NAME, statement.getResource().getURI(),
+				updateAttribute(avs, SOURCE_RDF_NAME, statement.getResource()
+						.getURI(),
 					predicates.contains(statement.getPredicate()));
 			}
 			predicates.add(statement.getPredicate());
@@ -182,23 +182,7 @@ public class AttributesHelper
 		}
 
 		// find the attribute
-		AttributeInfo attributeInfo = null;
-		CollectionResult result = dLibra
-				.getMetadataServer()
-				.getAttributeManager()
-				.getObjects(
-					new AttributeFilter((AttributeId) null).setRDFNames(Arrays
-							.asList(attributeRdfName)),
-					new OutputFilter(AttributeInfo.class));
-		if (result.getResultsCount() != 1) {
-			logger.error(String.format(
-				"Found %d attributes with RDF name '%s'",
-				result.getResultsCount(), attributeRdfName));
-			return;
-		}
-		else {
-			attributeInfo = (AttributeInfo) result.getResultInfo();
-		}
+		AttributeInfo attributeInfo = getAttributeInfo(attributeRdfName);
 
 		// create attribute value
 		AttributeValue attValue = new AttributeValue(null);
@@ -221,6 +205,42 @@ public class AttributesHelper
 		logger.debug(String.format("Updated attribute %s (%d) with value %s",
 			attributeInfo.getRDFName(), attributeInfo.getId().getId(),
 			attValue.getValue()));
+	}
+
+
+	public AttributeInfo getAttributeInfo(String attributeRdfName)
+		throws IdNotFoundException, RemoteException, DLibraException
+	{
+		AttributeInfo attributeInfo = null;
+		try {
+			CollectionResult result = dLibra
+					.getMetadataServer()
+					.getAttributeManager()
+					.getObjects(
+						new AttributeFilter((AttributeId) null).setRDFNames(Arrays
+								.asList(attributeRdfName)),
+						new OutputFilter(AttributeInfo.class));
+			if (result.getResultsCount() == 0) {
+				logger.warn(String.format(
+					"Could not find attribute with RDF name '%s'",
+					attributeRdfName));
+				return null;
+			}
+			if (result.getResultsCount() > 1) {
+				logger.warn(String.format(
+					"Found %d attributes with RDF name '%s'",
+					result.getResultsCount(), attributeRdfName));
+				return (AttributeInfo) result.getResultInfos().iterator()
+						.next();
+			}
+			else {
+				attributeInfo = (AttributeInfo) result.getResultInfo();
+			}
+		}
+		catch (IdNotFoundException e) {
+			logger.error("Id null not found, should not happen", e);
+		}
+		return attributeInfo;
 	}
 
 
@@ -312,10 +332,8 @@ public class AttributesHelper
 			String publicationName)
 		throws RemoteException, DLibraException, IdNotFoundException
 	{
-		PublicationId publicationId = dLibra.getPublicationsHelper()
-				.getPublicationId(groupPublicationName, publicationName);
-		EditionId editionId = dLibra.getFilesHelper().getEditionId(
-			publicationId);
+		EditionId editionId = dLibra.getEditionHelper().getLastEditionId(
+			groupPublicationName, publicationName);
 
 		AttributeValueSet avs = dLibra.getMetadataServer()
 				.getElementMetadataManager()

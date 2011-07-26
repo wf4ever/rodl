@@ -11,8 +11,8 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.connection.DLibraDataSource;
 import pl.psnc.dl.wf4ever.connection.DlibraConnectionRegistry;
+import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.DLibraException;
 

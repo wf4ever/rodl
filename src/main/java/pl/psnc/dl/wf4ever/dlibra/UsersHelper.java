@@ -1,7 +1,7 @@
 /**
  * 
  */
-package pl.psnc.dl.wf4ever.connection;
+package pl.psnc.dl.wf4ever.dlibra;
 
 import java.rmi.RemoteException;
 import java.util.Arrays;
@@ -19,6 +19,7 @@ import pl.psnc.dlibra.service.IdNotFoundException;
 import pl.psnc.dlibra.user.Actor;
 import pl.psnc.dlibra.user.ActorId;
 import pl.psnc.dlibra.user.DirectoryRightId;
+import pl.psnc.dlibra.user.LibCollectionRightId;
 import pl.psnc.dlibra.user.RightOperation;
 import pl.psnc.dlibra.user.User;
 import pl.psnc.dlibra.user.UserId;
@@ -106,6 +107,12 @@ public class UsersHelper
 			workspaceDir,
 			Arrays.asList((ActorId) userId),
 			new RightOperation(DirectoryRightId.DIRECTORY_ACCESS,
+					RightOperation.ADD));
+		// add to collection
+		userServer.getRightManager().setLibCollectionRights(
+			dLibra.getCollectionId(),
+			Arrays.asList((ActorId) userId),
+			new RightOperation(LibCollectionRightId.COLLECTION_CONTENT_MGMT,
 					RightOperation.ADD));
 	}
 

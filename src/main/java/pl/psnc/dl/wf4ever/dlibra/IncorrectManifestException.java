@@ -1,7 +1,7 @@
 /**
  * 
  */
-package pl.psnc.dl.wf4ever.connection;
+package pl.psnc.dl.wf4ever.dlibra;
 
 /**
  * @author piotrhol
