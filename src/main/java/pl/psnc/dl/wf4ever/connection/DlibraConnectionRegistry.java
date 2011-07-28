@@ -21,16 +21,16 @@ public class DlibraConnectionRegistry
 
 	private static DlibraConnectionRegistry soleInstance;
 
-	private DLibraConnection connection;
+	private DlibraConnection connection;
 
 
-	public DlibraConnectionRegistry(DLibraConnection connection)
+	public DlibraConnectionRegistry(DlibraConnection connection)
 	{
 		this.connection = connection;
 	}
 
 
-	public static DLibraConnection getConnection()
+	public static DlibraConnection getConnection()
 	{
 		if (soleInstance == null) {
 			throw new NullPointerException(

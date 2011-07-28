@@ -23,11 +23,11 @@ import pl.psnc.dlibra.system.UserInterface;
  * @author nowakm
  *
  */
-public class DLibraConnection
+public class DlibraConnection
 {
 
 	private final static Logger logger = Logger
-			.getLogger(DLibraConnection.class);
+			.getLogger(DlibraConnection.class);
 
 	private int port;
 
@@ -38,10 +38,10 @@ public class DLibraConnection
 	private long collectionId;
 
 
-	public DLibraConnection(String configFileName)
+	public DlibraConnection(String configFileName)
 	{
 		logger.info("Loading connection properties file " + configFileName);
-		InputStream inputStream = DLibraConnection.class.getClassLoader()
+		InputStream inputStream = DlibraConnection.class.getClassLoader()
 				.getResourceAsStream(configFileName);
 		if (inputStream == null) {
 			logger.error("Connection properties file not found! ");

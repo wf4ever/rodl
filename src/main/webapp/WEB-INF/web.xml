@@ -3,18 +3,18 @@
  "http://java.sun.com/dtd/web-app_2_3.dtd" >
 
 <web-app>
-  <display-name>Research Object Store and Retrieve Service</display-name>
-  
+	<display-name>Research Object Store and Retrieve Service</display-name>
+
 	<context-param>
 		<param-name>connection.properties.filename</param-name>
 		<param-value>connection.properties</param-value>
 	</context-param>
-	
+
 	<listener>
 		<listener-class>pl.psnc.dl.wf4ever.connection.DlibraConnectionConfigurationListener</listener-class>
 	</listener>
-	
-  <servlet>
+
+	<servlet>
 		<servlet-name>Jersey Web Application</servlet-name>
 		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
 		<init-param>
@@ -30,9 +30,23 @@
 
 	<servlet-mapping>
 		<servlet-name>Jersey Web Application</servlet-name>
-		<url-pattern>/*</url-pattern>
+		<url-pattern>/rest/*</url-pattern>
 	</servlet-mapping>
-	
-	
-	
+
+  <servlet>
+    <servlet-name>Wicket OpenID Application</servlet-name>
+    <servlet-class>org.apache.wicket.protocol.http.WicketServlet</servlet-class>
+    <init-param>
+      <param-name>applicationClassName</param-name>
+      <param-value>pl.psnc.dl.wf4ever.openid.wicket.AuthenticationApplication</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+ 
+  <servlet-mapping>
+      <servlet-name>Wicket OpenID Application</servlet-name>
+      <url-pattern>/openid/*</url-pattern>
+  </servlet-mapping>
+
+
 </web-app>

@@ -33,7 +33,7 @@ public class DlibraConnectionConfigurationListener
 		String fileName = servletContext
 				.getInitParameter(CONNECTION_PROPERTIES_FILENAME);
 		DlibraConnectionRegistry.loadRegistry(new DlibraConnectionRegistry(
-				new DLibraConnection(fileName)));
+				new DlibraConnection(fileName)));
 	}
 
 
