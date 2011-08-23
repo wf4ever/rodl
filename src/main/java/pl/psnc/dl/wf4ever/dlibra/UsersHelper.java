@@ -153,4 +153,17 @@ public class UsersHelper
 		userManager.removeUser(userData.getId());
 	}
 
+
+	public boolean userExists(String login)
+		throws RemoteException, DLibraException
+	{
+		try {
+			userManager.getUserData(login);
+			return true;
+		}
+		catch (IdNotFoundException e) {
+			return false;
+		}
+	}
+
 }

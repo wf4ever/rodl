@@ -30,23 +30,7 @@
 
 	<servlet-mapping>
 		<servlet-name>Jersey Web Application</servlet-name>
-		<url-pattern>/rest/*</url-pattern>
+		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
-
-  <servlet>
-    <servlet-name>Wicket OpenID Application</servlet-name>
-    <servlet-class>org.apache.wicket.protocol.http.WicketServlet</servlet-class>
-    <init-param>
-      <param-name>applicationClassName</param-name>
-      <param-value>pl.psnc.dl.wf4ever.openid.wicket.AuthenticationApplication</param-value>
-    </init-param>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
- 
-  <servlet-mapping>
-      <servlet-name>Wicket OpenID Application</servlet-name>
-      <url-pattern>/openid/*</url-pattern>
-  </servlet-mapping>
-
 
 </web-app>

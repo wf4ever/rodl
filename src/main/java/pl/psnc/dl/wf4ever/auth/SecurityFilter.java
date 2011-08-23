@@ -80,11 +80,18 @@ public class SecurityFilter
 			throw new MappableContainerException(new AuthenticationException(
 					"Authentication credentials are required\r\n", REALM));
 		}
-		if (!authentication.startsWith("Basic ")) {
-			throw new MappableContainerException(new AuthenticationException(
-					"Only HTTP Basic authentication is supported\r\n", REALM));
+		if (authentication.startsWith("Basic ")) {
+			authentication = authentication.substring("Basic ".length());
 		}
-		authentication = authentication.substring("Basic ".length());
+		else if (authentication.startsWith("Bearer ")) {
+			authentication = authentication.substring("Bearer ".length());
+		}
+		else {
+			throw new MappableContainerException(
+					new AuthenticationException(
+							"Only HTTP Basic and OAuth 2.0 Bearer authentications are supported\r\n",
+							REALM));
+		}
 		String[] values = new String(Base64.base64Decode(authentication))
 				.split(":");
 		if (values.length < 2) {
