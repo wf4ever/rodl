@@ -77,20 +77,30 @@ public class SecurityFilter
 		String authentication = request
 				.getHeaderValue(ContainerRequest.AUTHORIZATION);
 		if (authentication == null) {
-			throw new MappableContainerException(new AuthenticationException(
-					"Authentication credentials are required\r\n", REALM));
-		}
-		if (authentication.startsWith("Basic ")) {
-			authentication = authentication.substring("Basic ".length());
-		}
-		else if (authentication.startsWith("Bearer ")) {
-			authentication = authentication.substring("Bearer ".length());
+			// not recommended by OAuth 2.0 but the only method provided by the Scribe library
+			authentication = request.getQueryParameters().getFirst(
+				"access_token");
+			if (authentication == null) {
+				throw new MappableContainerException(
+						new AuthenticationException(
+								"Authentication credentials are required\r\n",
+								REALM));
+			}
 		}
 		else {
-			throw new MappableContainerException(
-					new AuthenticationException(
-							"Only HTTP Basic and OAuth 2.0 Bearer authentications are supported\r\n",
-							REALM));
+			if (authentication.startsWith("Basic ")) {
+				authentication = authentication.substring("Basic ".length());
+			}
+			// this is the recommended OAuth 2.0 method
+			else if (authentication.startsWith("Bearer ")) {
+				authentication = authentication.substring("Bearer ".length());
+			}
+			else {
+				throw new MappableContainerException(
+						new AuthenticationException(
+								"Only HTTP Basic and OAuth 2.0 Bearer authentications are supported\r\n",
+								REALM));
+			}
 		}
 		String[] values = new String(Base64.base64Decode(authentication))
 				.split(":");
