@@ -41,9 +41,8 @@ public class Utils
 	public static URI createVersionURI(UriInfo uriInfo, String workspaceId,
 			String researchObjectId, String versionId)
 	{
-		String appName = uriInfo.getPathSegments().get(0).getPath();
-		String path = String.format("/%s/workspaces/%s/ROs/%s/%s", appName,
-			workspaceId, researchObjectId, versionId);
+		String path = String.format("workspaces/%s/ROs/%s/%s", workspaceId,
+			researchObjectId, versionId);
 		return uriInfo.getBaseUri().resolve(path);
 	}
 }
