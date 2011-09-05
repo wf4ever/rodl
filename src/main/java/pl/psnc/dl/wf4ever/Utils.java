@@ -3,7 +3,10 @@
  */
 package pl.psnc.dl.wf4ever;
 
+import java.net.URI;
 import java.rmi.RemoteException;
+
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
@@ -17,6 +20,7 @@ import pl.psnc.dlibra.service.DLibraException;
  */
 public class Utils
 {
+
 	@SuppressWarnings("unused")
 	private final static Logger logger = Logger.getLogger(Utils.class);
 
@@ -31,5 +35,15 @@ public class Utils
 		else {
 			return new EditionId(editionId);
 		}
+	}
+
+
+	public static URI createVersionURI(UriInfo uriInfo, String workspaceId,
+			String researchObjectId, String versionId)
+	{
+		String appName = uriInfo.getPathSegments().get(0).getPath();
+		String path = String.format("/%s/workspaces/%s/ROs/%s/%s", appName,
+			workspaceId, researchObjectId, versionId);
+		return uriInfo.getBaseUri().resolve(path);
 	}
 }

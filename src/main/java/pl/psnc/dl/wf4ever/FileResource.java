@@ -206,12 +206,9 @@ public class FileResource
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		String versionUri = uriInfo
-				.getAbsolutePath()
-				.toString()
-				.substring(
-					0,
-					uriInfo.getAbsolutePath().toString().lastIndexOf(filePath) - 1);
+		String versionUri = Utils.createVersionURI(uriInfo, workspaceId,
+			researchObjectId, versionId).toString();
+		logger.debug("Version URI: " + versionUri);
 
 		dLibraDataSource.getFilesHelper().createOrUpdateFile(versionUri,
 			researchObjectId, versionId, filePath, inputStream, type);
@@ -230,12 +227,8 @@ public class FileResource
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		String versionUri = uriInfo
-				.getAbsolutePath()
-				.toString()
-				.substring(
-					0,
-					uriInfo.getAbsolutePath().toString().lastIndexOf(filePath) - 1);
+		String versionUri = Utils.createVersionURI(uriInfo, workspaceId,
+			researchObjectId, versionId).toString();
 
 		if (filePath.equals("manifest.rdf"))
 			throw new ForbiddenException(

@@ -561,7 +561,6 @@ public class FilesHelper
 					new OutputFilter(VersionId.class)).getResultId();
 		ArrayList<VersionId> copyVersionIds = new ArrayList<VersionId>();
 
-		int i = 0;
 		for (Id id : sourceVersionIds) {
 			copyVersionIds
 					.add(copyVersion((VersionId) id, targetPublicationId));
@@ -572,7 +571,6 @@ public class FilesHelper
 					new OutputFilter(Version.class)).getResult();
 				mainFileId = copyVersion.getFileId();
 			}
-			i++;
 		}
 
 		Publication targetPublication = (Publication) publicationManager
