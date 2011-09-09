@@ -1,6 +1,5 @@
 package pl.psnc.dl.wf4ever;
 
-import java.net.URI;
 import java.rmi.RemoteException;
 import java.util.List;
 
@@ -100,11 +99,10 @@ public class ResearchObjectListResource
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		dLibraDataSource.getPublicationsHelper().createGroupPublication(
-			researchObjectId);
+			workspaceId, researchObjectId);
 
 		return Response.created(
-			URI.create(uriInfo.getAbsolutePath() + "/" + researchObjectId))
-				.build();
+			uriInfo.getAbsolutePath().resolve(researchObjectId)).build();
 	}
 
 }

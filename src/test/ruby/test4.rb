@@ -20,8 +20,8 @@ else
 end
 
 
-WORKSPACE_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")[0,22]
-USER_ID = WORKSPACE_ID
+WORKSPACE_ID = "testWorkspace"
+USER_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")[0,22]
 PASSWORD="pass"
 
 RO_NAME="ro1"
@@ -119,9 +119,8 @@ def createWorkspace
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Creating workspace........"
 		req = Net::HTTP::Post.new(APP_NAME + '/workspaces')
-		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
-		req.body = WORKSPACE_ID + "
-" + PASSWORD
+		req.basic_auth USER_ID, PASSWORD
+		req.body = WORKSPACE_ID
 		req.add_field "Content-Type", "text/plain"
 
 		response = http.request(req)
@@ -149,7 +148,7 @@ def createRO
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Creating research object........"
 		req = Net::HTTP::Post.new(APP_NAME+ '/workspaces/' + WORKSPACE_ID + '/ROs')
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
         req.body = RO_NAME
 		req.add_field "Content-Type", "text/plain"
 
@@ -163,7 +162,7 @@ def createVersion(which = :ver1)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Creating version #{VERSIONS[which]}........"
 		req = Net::HTTP::Post.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME)
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
         req.body = VERSIONS[which]
         req.add_field "Content-Type", "text/plain"
 
@@ -177,7 +176,7 @@ def addFile(which)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Adding #{FILES[which][:name]}........"
 		req = Net::HTTP::Put.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[which][:path])
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		req.body = File.read(FILES[which][:name])
 		req.add_field "Content-Type", "text/plain"
 
@@ -192,7 +191,7 @@ def getListRO
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Retrieving list of research objects........"
 		req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs')
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		response = http.request(req)
 		printResponse(response, 200)
 	}
@@ -203,7 +202,7 @@ def getROrdf
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Retrieving research object description........"
 		req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME)
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		response = http.request(req)
 		printResponse(response, 200)
 	}
@@ -214,7 +213,7 @@ def getVersionZip(which = :ver1)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Retrieving version #{VERSIONS[which]} archive........"
 		req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[which] + '?content=true')
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		req.add_field "Accept", "application/zip"
 		response = http.request(req)
 		puts response.code + " " + response.message
@@ -231,7 +230,7 @@ def getManifest(which = :ver1)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Retrieving manifest........"
 		req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[which])
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		response = http.request(req)
 		@retrievedManifest = response.body
 		printResponse(response, 200)
@@ -309,7 +308,7 @@ def getFileMetadata(which)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 			printConstantWidth "Retrieving #{FILES[which][:name]} metadata........"
 			req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[which][:path])
-			req.basic_auth WORKSPACE_ID, PASSWORD
+			req.basic_auth USER_ID, PASSWORD
 			
 			response = http.request(req)
 			printResponse(response, 200)
@@ -320,7 +319,7 @@ def getFile(which)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 			printConstantWidth "Retrieving #{FILES[which][:name]} content........"
 			req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[which][:path] + '?content=true')
-			req.basic_auth WORKSPACE_ID, PASSWORD
+			req.basic_auth USER_ID, PASSWORD
 
 			response = http.request(req)
 			printResponse(response, 200)
@@ -332,7 +331,7 @@ def getDirectoryList(which)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 			printConstantWidth "Retrieving list of files in #{FILES[which][:dir]}........"
 			req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[which][:dir])
-			req.basic_auth WORKSPACE_ID, PASSWORD
+			req.basic_auth USER_ID, PASSWORD
 			req.add_field "Accept", "application/xml+rdf"
 
 			response = http.request(req)
@@ -345,7 +344,7 @@ def getDirectoryZipped(which)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 			printConstantWidth "Retrieving zipped content of #{FILES[which][:dir]}........"
 			req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[which][:dir] + "?content=true")
-			req.basic_auth WORKSPACE_ID, PASSWORD
+			req.basic_auth USER_ID, PASSWORD
 			req.add_field "Accept", "application/zip"
 
 			response = http.request(req)
@@ -357,7 +356,7 @@ def updateFile(which)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Updating #{FILES[which][:name]}........"
 		req = Net::HTTP::Put.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[which][:path])
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		req.body = File.read(FILES[which][:name])
 		req.add_field "Content-Type", "text/plain"
 
@@ -370,7 +369,7 @@ def updateManifest(version = 0)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Updating manifest........"
 		req = Net::HTTP::Put.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1])
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		req.body = File.read("manifest.rdf").gsub(URI_PREFIX_IN_MANIFEST, URI_PREFIX)
 		if version == 1 then req.body = req.body.gsub("Some title","New title") end
 		req.add_field "Content-Type", "application/rdf+xml"
@@ -384,7 +383,7 @@ def updateManifestMalformed
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Updating malformed manifest........"
 		req = Net::HTTP::Put.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1])
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		req.body = File.read("manifest_malformed.rdf").gsub(URI_PREFIX_IN_MANIFEST, URI_PREFIX)
 		req.add_field "Content-Type", "application/rdf+xml"
 
@@ -397,7 +396,7 @@ def updateManifestIncorrect
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Updating incorrect manifest........"
 		req = Net::HTTP::Put.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1])
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		req.body = File.read("manifest_incorrect.rdf").gsub(URI_PREFIX_IN_MANIFEST, URI_PREFIX)
 		req.add_field "Content-Type", "application/rdf+xml"
 
@@ -414,7 +413,7 @@ def createVersionAsCopy
 		req.body = VERSIONS[:ver2] + "
 http://#{BASE_URI}:#{PORT.to_s}/#{APP_NAME}/workspaces/#{WORKSPACE_ID}/ROs/#{RO_NAME}/#{VERSIONS[:ver1]}"
 		req.add_field "Content-Type", "text/plain"
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 
 		response = http.request(req)
 		printResponse(response, 201)
@@ -426,7 +425,7 @@ def deleteFile(which)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Deleting #{FILES[which][:name]}........"
 		req = Net::HTTP::Delete.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[which][:path])
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 
 		response = http.request(req)
 		printResponse(response, 204)
@@ -437,7 +436,7 @@ def checkDeleteManifest(which = :ver1)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Deleting manifest........"
 		req = Net::HTTP::Delete.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[which] + '/manifest.rdf')
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 
 		response = http.request(req)
 		printResponse(response, 403)
@@ -448,7 +447,7 @@ def deleteVersion(which = :ver1)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Deleting version #{VERSIONS[which]}........"
 		req = Net::HTTP::Delete.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[which])
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 
 		response = http.request(req)
 		printResponse(response, 204)
@@ -459,7 +458,7 @@ def deleteRO
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Deleting research object........"
 		req = Net::HTTP::Delete.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME)
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 
 		response = http.request(req)
 		printResponse(response, 204)
@@ -470,7 +469,7 @@ def deleteWorkspace
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Deleting workspace........"
 		req = Net::HTTP::Delete.new(APP_NAME + '/workspaces/' + WORKSPACE_ID)
-		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		response = http.request(req)
 		printResponse(response, 204)
 	}
@@ -490,7 +489,7 @@ def addEmptyDirectory(which)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Creating empty directory........"
 		req = Net::HTTP::Put.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[which][:dir])
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 
 		response = http.request(req)
 		printResponse(response, 200)
@@ -502,7 +501,7 @@ def getDirectoryMetadata(which)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Retrieving directory metadata........"
 		req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[which][:dir])
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		
 		response = http.request(req)
 		printResponse(response, 200)
@@ -513,7 +512,7 @@ def deleteDirectory(which)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Deleting directory........"
 		req = Net::HTTP::Delete.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[which][:dir])
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 
 		response = http.request(req)
 		printResponse(response, 204)
@@ -525,7 +524,7 @@ def checkNoDirectory(which)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 			printConstantWidth "Retrieving empty directory metadata........"
 			req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[which][:dir])
-			req.basic_auth WORKSPACE_ID, PASSWORD
+			req.basic_auth USER_ID, PASSWORD
 			
 			response = http.request(req)
 			printResponse(response, 404)
@@ -536,7 +535,7 @@ def checkNoFileMetadata(which)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 			printConstantWidth "Retrieving #{FILES[which][:name]} metadata........"
 			req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[which][:path])
-			req.basic_auth WORKSPACE_ID, PASSWORD
+			req.basic_auth USER_ID, PASSWORD
 			
 			response = http.request(req)
 			printResponse(response, 404)
@@ -547,7 +546,7 @@ def checkNoFileContent(which)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Retrieving #{FILES[which][:name]} content........"
 		req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[which][:path] + '?content=true')
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 
 		response = http.request(req)
 		printResponse(response, 404)
@@ -558,7 +557,7 @@ def createEdition
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Creating edition........"
 		req = Net::HTTP::Post.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1])
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		req.add_field "Content-Type", "application/rdf+xml"
 
 		response = http.request(req)
@@ -571,7 +570,7 @@ def getFileEdition(whichFile, whichEdition)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Retrieving edition list........"
 		req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '?edition_list')
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		response = http.request(req)
 		@edition = response.body.split("\n")[whichEdition].split("=")[0]
 		@edition.slice!(0) if @edition.chr == "*"
@@ -580,7 +579,7 @@ def getFileEdition(whichFile, whichEdition)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Retrieving #{FILES[whichFile][:name]} content edition #{@edition}........"
 		req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '/' + FILES[whichFile][:path] + '?content=true&edition_id=' + @edition)
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 
 		response = http.request(req)
 		printResponse(response, 200)
@@ -591,7 +590,7 @@ def publishEdition(which = :ver1)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Publishing version #{VERSIONS[which]}........"
 		req = Net::HTTP::Put.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[which] + '?publish=true')
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		req.add_field "Content-Type", "application/rdf+xml" # leave?
 
 		response = http.request(req)
@@ -603,7 +602,7 @@ def unpublishEdition(which = :ver1)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Unpublishing version #{VERSIONS[which]}........"
 		req = Net::HTTP::Put.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[which] + '?publish=false')
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		req.add_field "Content-Type", "application/rdf+xml" # leave?
 
 		response = http.request(req)
@@ -615,7 +614,7 @@ def checkPublished (which)
 	Net::HTTP.start(BASE_URI, PORT) do |http|
 		printConstantWidth "Checking #{which} is published........"
 		req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs/' + RO_NAME + '/' + VERSIONS[:ver1] + '?edition_list')
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		response = http.request(req)
 		printResponse(response, 200)
 
@@ -635,7 +634,7 @@ def searchForROs(*expectedVersions)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Searching for research objects........"
 		req = Net::HTTP::Get.new(APP_NAME + '/workspaces/' + WORKSPACE_ID + '/ROs?Creator=Wf4Ever+test+user&Title=Some+title')
-		req.basic_auth WORKSPACE_ID, PASSWORD
+		req.basic_auth USER_ID, PASSWORD
 		response = http.request(req)
 		printResponse(response, 200)
 		
@@ -655,7 +654,6 @@ end
 
 
 if createUser == 201
-    deleteUser
     if createWorkspace == 201
 	    if createRO == 201
 		    if createVersion == 201
@@ -743,4 +741,5 @@ if createUser == 201
 	    end
 	    deleteWorkspace
     end
+    deleteUser
 end

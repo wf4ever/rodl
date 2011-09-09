@@ -1,18 +1,25 @@
 package pl.psnc.dl.wf4ever;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
+import javax.xml.transform.TransformerException;
 
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
+import pl.psnc.dlibra.metadata.PublicationInfo;
 import pl.psnc.dlibra.service.DLibraException;
+
+import com.sun.jersey.core.header.ContentDisposition;
 
 /**
  * 
@@ -26,22 +33,46 @@ public class WorkspaceResource
 	@Context
 	HttpServletRequest request;
 
+	@Context
+	UriInfo uriInfo;
 
+
+	/**
+	 * Returns list of research objects in this workspace.
+	 * 
+	 * @param workspaceId
+	 *            identifier of a workspace in the RO SRS
+	 * @return 200 (OK) response code with a rdf file in response body
+	 *         containing OAI-ORE aggreagates tags.
+	 * @throws RemoteException
+	 * @throws DLibraException
+	 * @throws TransformerException
+	 */
 	@GET
-	public Response getWorkspace(@PathParam("W_ID") String workspaceId)
-		throws RemoteException, DLibraException
+	@Produces("application/rdf+xml")
+	public Response getListOfVersions(@PathParam("W_ID") String workspaceId)
+		throws RemoteException, DLibraException, TransformerException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		List<PublicationInfo> list = dLibraDataSource.getPublicationsHelper()
+				.listPublicationsInGroup(workspaceId);
 
-		if (dLibraDataSource.getUsersHelper().userExists(workspaceId)) {
-			return Response.ok(workspaceId).build();
+		List<String> links = new ArrayList<String>(list.size());
+
+		for (PublicationInfo info : list) {
+			links.add(uriInfo.getAbsolutePath().resolve(info.getLabel())
+					.toString());
 		}
-		else {
-			return Response.status(Status.NOT_FOUND).type("text/plain")
-					.entity("Workspace " + workspaceId + " does not exist")
-					.build();
-		}
+
+		String responseBody = RdfBuilder.serializeResource(RdfBuilder
+				.createCollection(uriInfo.getAbsolutePath().toString(), links));
+
+		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
+				.fileName(workspaceId + ".rdf").build();
+
+		return Response.ok().entity(responseBody)
+				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
 	}
 
 
@@ -58,7 +89,8 @@ public class WorkspaceResource
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		dLibraDataSource.getUsersHelper().deleteUser(workspaceId);
+		dLibraDataSource.getPublicationsHelper().deleteGroupPublication(
+			workspaceId);
 
 	}
 }
