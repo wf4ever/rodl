@@ -76,7 +76,8 @@ public class ResearchObjectResource
 		List<String> links = new ArrayList<String>(list.size());
 
 		for (PublicationInfo info : list) {
-			links.add(uriInfo.getAbsolutePath() + "/" + info.getLabel());
+			links.add(uriInfo.getAbsolutePath().resolve(info.getLabel())
+					.toString());
 		}
 
 		String responseBody = RdfBuilder.serializeResource(RdfBuilder
@@ -149,10 +150,11 @@ public class ResearchObjectResource
 
 		String versionUri = uriInfo.getAbsolutePath().toString() + "/"
 				+ version;
-		dLibraDataSource.getPublicationsHelper().createPublication(researchObjectId, version,
-			baseVersion, versionUri);
+		dLibraDataSource.getPublicationsHelper().createPublication(
+			researchObjectId, version, baseVersion, versionUri);
 
-		return Response.created(URI.create(uriInfo.getAbsolutePath() + "/" + version)).build();
+		return Response.created(
+			URI.create(uriInfo.getAbsolutePath() + "/" + version)).build();
 	}
 
 
@@ -174,7 +176,8 @@ public class ResearchObjectResource
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		dLibraDataSource.getPublicationsHelper().deleteGroupPublication(researchObjectId);
+		dLibraDataSource.getPublicationsHelper().deleteGroupPublication(
+			researchObjectId);
 
 	}
 }

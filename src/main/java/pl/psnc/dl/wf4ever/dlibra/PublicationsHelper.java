@@ -112,14 +112,14 @@ public class PublicationsHelper
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 */
-	public List<AbstractPublicationInfo> listUserGroupPublications()
+	public List<AbstractPublicationInfo> listUserGroupPublications(byte groupState)
 		throws RemoteException, DLibraException
 	{
 		DirectoryId workspaceDir = getWorkspaceDirectoryId();
 		Collection<Info> resultInfos = directoryManager
 				.getObjects(
 					new DirectoryFilter(null, workspaceDir)
-							.setGroupStatus(Publication.PUB_GROUP_ROOT)
+							.setGroupStatus(groupState)
 							.setState(
 								(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED)),
 					new OutputFilter(ElementInfo.class, List.class))
@@ -154,7 +154,7 @@ public class PublicationsHelper
 		SearchServer searchServer = dLibra.getSearchServer();
 		if (searchServer == null) {
 			logger.error("Search server is null, returning list of group publications");
-			return listUserGroupPublications();
+			return listUserGroupPublications(Publication.PUB_GROUP_MID);
 		}
 
 		AdvancedQuery query = new AdvancedQuery();
@@ -222,7 +222,7 @@ public class PublicationsHelper
 			logger.error(
 				String.format("Error when parsing query %s.", query.toString()),
 				e);
-			return listUserGroupPublications();
+			return listUserGroupPublications(Publication.PUB_GROUP_MID);
 		}
 		return result;
 	}

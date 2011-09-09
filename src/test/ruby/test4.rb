@@ -186,6 +186,17 @@ def addFile(which)
 	}
 end
 
+def getWorkspacesRdf
+	#get list of research objects
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Retrieving list of workspaces........"
+		req = Net::HTTP::Get.new(APP_NAME + '/workspaces/')
+		req.basic_auth USER_ID, PASSWORD
+		response = http.request(req)
+		printResponse(response, 200)
+	}
+end
+
 def getListRO
 	#get list of research objects
 	Net::HTTP.start(BASE_URI, PORT) {|http|
@@ -655,6 +666,7 @@ end
 
 if createUser == 201
     if createWorkspace == 201
+        getWorkspacesRdf
 	    if createRO == 201
 		    if createVersion == 201
 			    getManifest

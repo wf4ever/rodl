@@ -4,17 +4,26 @@
 package pl.psnc.dl.wf4ever;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.xml.transform.TransformerException;
 
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
+import pl.psnc.dlibra.metadata.AbstractPublicationInfo;
+import pl.psnc.dlibra.metadata.Publication;
 import pl.psnc.dlibra.service.DLibraException;
+
+import com.sun.jersey.core.header.ContentDisposition;
 
 /**
  * @author Piotr Hołubowicz
@@ -29,6 +38,43 @@ public class WorkspaceListResource
 
 	@Context
 	private UriInfo uriInfo;
+
+
+	/**
+	 * Returns list of links to workspaces. Output format is RDF.
+	 * @param workspaceId identifier of a workspace in the RO SRS
+	 * @return TBD
+	 * @throws RemoteException
+	 * @throws DLibraException
+	 * @throws TransformerException 
+	 */
+	@GET
+	@Produces("application/rdf+xml")
+	public Response getWorkspaceList()
+		throws RemoteException, DLibraException, TransformerException
+	{
+		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
+				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		List<AbstractPublicationInfo> list = dLibraDataSource
+				.getPublicationsHelper().listUserGroupPublications(
+					Publication.PUB_GROUP_ROOT);
+
+		List<String> links = new ArrayList<String>(list.size());
+
+		for (AbstractPublicationInfo info : list) {
+			links.add(uriInfo.getAbsolutePath().resolve(info.getLabel())
+					.toString());
+		}
+
+		String responseBody = RdfBuilder.serializeResource(RdfBuilder
+				.createCollection(uriInfo.getAbsolutePath().toString(), links));
+
+		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
+				.fileName("workspaces.rdf").build();
+
+		return Response.ok().entity(responseBody)
+				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
+	}
 
 
 	/**
