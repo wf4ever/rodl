@@ -4,7 +4,7 @@
 	<groupId>pl.psnc.dl.wf4ever</groupId>
 	<artifactId>rosrs</artifactId>
 	<packaging>war</packaging>
-	<version>3.1.0-SNAPSHOT</version>
+	<version>4.0.0-SNAPSHOT</version>
 	<name>rosrs</name>
 	<url>http://maven.apache.org</url>
 	<inceptionYear>2010</inceptionYear>
@@ -98,7 +98,7 @@
 			<version>2.4</version>
 			<scope>provided</scope>
 		</dependency>
- 		<dependency>
+		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.16</version>
@@ -132,6 +132,27 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+		<!-- JETTY DEPENDENCIES FOR TESTING -->
+
+		<dependency>
+			<groupId>org.mortbay.jetty</groupId>
+			<artifactId>jetty</artifactId>
+			<version>${jetty.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mortbay.jetty</groupId>
+			<artifactId>jetty-util</artifactId>
+			<version>${jetty.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mortbay.jetty</groupId>
+			<artifactId>jetty-management</artifactId>
+			<version>${jetty.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
 	</dependencies>
 	<repositories>
 		<repository>
@@ -157,7 +178,7 @@
 		<url>http://dl.psnc.pl/</url>
 	</organization>
 	<build>
-		<finalName>rosrs3</finalName>
+		<finalName>rosrs4</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -239,4 +260,8 @@
 			</plugin>
 		</plugins>
 	</reporting>
+
+	<properties>
+		<jetty.version>6.1.4</jetty.version>
+	</properties>
 </project>
