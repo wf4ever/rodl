@@ -23,6 +23,7 @@ end
 WORKSPACE_ID = "testWorkspace"
 USER_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")[0,22]
 PASSWORD="pass"
+CLIENT_ID = "tester"
 
 RO_NAME="ro1"
 VERSIONS={
@@ -49,6 +50,7 @@ else
 end
 
 @retrievedManifest = ""
+@accessToken = ""
 
 def printResponse(response, expectedCode)
 	printConstantWidth2(response.code + " " + response.message)
@@ -663,7 +665,59 @@ def searchForROs(*expectedVersions)
 end
 
 
+def createAccessToken
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Creating access token........"
+		req = Net::HTTP::Post.new(APP_NAME + '/accesstoken')
+		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
+		req.body = CLIENT_ID + "
+" + USER_ID
+		req.add_field "Content-Type", "text/plain"
 
+		response = http.request(req)
+		printResponse(response, 201)
+		s = response["location"]
+		@accessToken = (s.include?('/') ? s[(s.rindex('/')+1)..-1] : s).chomp
+		code = response.code.to_i
+    }
+end
+	
+
+def getAccessTokenList
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Getting access token list........"
+		req = Net::HTTP::Get.new(APP_NAME + '/accesstoken')
+		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
+
+		response = http.request(req)
+		printResponse(response, 200)
+		if !response.body.include?(@accessToken)
+			puts "Access token missing"
+		end
+		code = response.code.to_i
+    }
+end
+
+
+def deleteAccessToken
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Deleting access token........"
+		req = Net::HTTP::Delete.new(APP_NAME + '/accesstoken/' + @accessToken)
+		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
+
+		response = http.request(req)
+		printResponse(response, 204)
+		code = response.code.to_i
+    }
+end
+
+
+if createAccessToken == 201
+	getAccessTokenList
+	deleteAccessToken
+end
+
+=begin
 if createUser == 201
     if createWorkspace == 201
         getWorkspacesRdf
@@ -755,3 +809,4 @@ if createUser == 201
     end
     deleteUser
 end
+=end

@@ -16,6 +16,8 @@ public final class Constants
 		// nop
 	}
 
+	public final static String ACCESSTOKEN_URL_PART = "accesstoken";
+
 	public final static String USERS_URL_PART = "users";
 
 	public final static String WORKSPACES_URL_PART = "workspaces";

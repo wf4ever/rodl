@@ -4,6 +4,7 @@ import java.rmi.RemoteException;
 
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.auth.AccessTokenManager;
 import pl.psnc.dlibra.content.ContentServer;
 import pl.psnc.dlibra.metadata.DirectoryId;
 import pl.psnc.dlibra.metadata.LibCollectionId;
@@ -12,6 +13,7 @@ import pl.psnc.dlibra.mgmt.DLStaticServiceResolver;
 import pl.psnc.dlibra.mgmt.UserServiceResolver;
 import pl.psnc.dlibra.search.server.SearchServer;
 import pl.psnc.dlibra.service.DLibraException;
+import pl.psnc.dlibra.service.IdNotFoundException;
 import pl.psnc.dlibra.user.UserManager;
 
 /**
@@ -57,6 +59,9 @@ public class DLibraDataSource
 	private SearchServer searchServer;
 
 	private LibCollectionId collectionId;
+	
+	// it is not directly related to dLibra but it is convenient to store it here
+	private AccessTokenManager accessTokenManager;
 
 
 	public DLibraDataSource(UserServiceResolver userServiceResolver,
@@ -88,6 +93,15 @@ public class DLibraDataSource
 		manifestHelper = new ManifestHelper(this);
 		attributesHelper = new AttributesHelper(this);
 		editionHelper = new EditionHelper(this);
+		
+		accessTokenManager = new AccessTokenManager();
+	}
+
+
+	
+	public AccessTokenManager getAccessTokenManager()
+	{
+		return accessTokenManager;
 	}
 
 
@@ -172,6 +186,12 @@ public class DLibraDataSource
 	public EditionHelper getEditionHelper()
 	{
 		return editionHelper;
+	}
+
+
+	public boolean isAdmin() throws RemoteException, IdNotFoundException, DLibraException
+	{
+		return usersHelper.isAdmin(userLogin);
 	}
 
 }

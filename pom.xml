@@ -132,6 +132,22 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+				<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>3.6.7.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>javassist</groupId>
+			<artifactId>javassist</artifactId>
+			<version>3.12.1.GA</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.derby</groupId>
+			<artifactId>derby</artifactId>
+			<version>10.8.1.2</version>
+		</dependency>
+		
 		<!-- JETTY DEPENDENCIES FOR TESTING -->
 
 		<dependency>
