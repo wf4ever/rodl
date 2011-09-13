@@ -76,6 +76,10 @@ public class SecurityFilter
 		// Extract authentication credentials
 		String authentication = request
 				.getHeaderValue(ContainerRequest.AUTHORIZATION);
+		if (authentication == null) {
+			throw new MappableContainerException(new AuthenticationException(
+					"Authentication credentials are required\r\n", REALM));
+		}
 		if (authentication.startsWith("Basic ")) {
 			authentication = authentication.substring("Basic ".length());
 		}
