@@ -109,21 +109,6 @@ public class SecurityFilter
 		logger.debug("Request from user: " + username + " | password: "
 				+ password);
 
-//		// extract workspace name from uri and compare with username
-//		// skip this check if we are adding or deleting workspace
-//		{
-//			// part of path after workspaces/
-//			String a = uriInfo.getPath().substring(
-//				uriInfo.getPath().indexOf("/") + 1);
-//			int idx = a.indexOf("/");
-//			if (idx > 0) {
-//				String workspaceId = a.substring(0, idx);
-//				if (!workspaceId.equals(username)) {
-//					throw new MappableContainerException(
-//							new ForbiddenException("Access denied\r\n"));
-//				}
-//			}
-//		}
 		return DlibraConnectionRegistry.getConnection().getDLibraDataSource(
 			username, password);
 

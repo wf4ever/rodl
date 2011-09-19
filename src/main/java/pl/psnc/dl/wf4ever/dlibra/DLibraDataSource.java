@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.auth.AccessTokenManager;
+import pl.psnc.dl.wf4ever.auth.OAuthManager;
 import pl.psnc.dlibra.content.ContentServer;
 import pl.psnc.dlibra.metadata.DirectoryId;
 import pl.psnc.dlibra.metadata.LibCollectionId;
@@ -61,7 +61,7 @@ public class DLibraDataSource
 	private LibCollectionId collectionId;
 	
 	// it is not directly related to dLibra but it is convenient to store it here
-	private AccessTokenManager accessTokenManager;
+	private OAuthManager accessTokenManager;
 
 
 	public DLibraDataSource(UserServiceResolver userServiceResolver,
@@ -94,12 +94,12 @@ public class DLibraDataSource
 		attributesHelper = new AttributesHelper(this);
 		editionHelper = new EditionHelper(this);
 		
-		accessTokenManager = new AccessTokenManager();
+		accessTokenManager = new OAuthManager();
 	}
 
 
 	
-	public AccessTokenManager getAccessTokenManager()
+	public OAuthManager getAccessTokenManager()
 	{
 		return accessTokenManager;
 	}

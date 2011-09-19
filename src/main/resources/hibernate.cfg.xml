@@ -31,6 +31,7 @@
 		<!-- Drop and re-create the database schema on startup -->
 		<property name="hbm2ddl.auto">update</property>
 
+		<mapping class="pl.psnc.dl.wf4ever.auth.UserCredentials" />
 		<mapping class="pl.psnc.dl.wf4ever.auth.AccessToken" />
 
 	</session-factory>

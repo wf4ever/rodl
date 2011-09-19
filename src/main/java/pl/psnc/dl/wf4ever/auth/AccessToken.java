@@ -3,10 +3,14 @@
  */
 package pl.psnc.dl.wf4ever.auth;
 
+import java.io.Serializable;
+
 import javax.persistence.Basic;
-import javax.persistence.Column;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -19,13 +23,19 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "tokens")
 @XmlRootElement(name = "access-token")
 public class AccessToken
+	implements Serializable
 {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8724845005623981779L;
 
 	private String token;
 
 	private String clientId;
 
-	private String user;
+	private UserCredentials user;
 
 
 	public AccessToken()
@@ -34,7 +44,7 @@ public class AccessToken
 	}
 
 
-	public AccessToken(String token, String clientId, String user)
+	public AccessToken(String token, String clientId, UserCredentials user)
 	{
 		super();
 		this.token = token;
@@ -86,10 +96,10 @@ public class AccessToken
 	/**
 	 * @return the user
 	 */
-	@Basic
-	@Column(name = "username")
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "username", nullable = false)
 	@XmlElement
-	public String getUser()
+	public UserCredentials getUser()
 	{
 		return user;
 	}
@@ -98,7 +108,7 @@ public class AccessToken
 	/**
 	 * @param user the user to set
 	 */
-	public void setUser(String user)
+	public void setUser(UserCredentials user)
 	{
 		this.user = user;
 	}

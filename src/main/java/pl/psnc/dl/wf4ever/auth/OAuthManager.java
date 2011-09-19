@@ -16,18 +16,17 @@ import org.hibernate.cfg.Configuration;
  * @author Piotr Hołubowicz
  *
  */
-public class AccessTokenManager
+public class OAuthManager
 {
 
-	private static final Logger log = Logger
-			.getLogger(AccessTokenManager.class);
+	private static final Logger log = Logger.getLogger(OAuthManager.class);
 
 	private static final int TOKEN_LENGTH = 20;
 
 	private final SessionFactory sessionFactory;
 
 
-	public AccessTokenManager()
+	public OAuthManager()
 	{
 		try {
 			// Create the SessionFactory from hibernate.cfg.xml
@@ -39,19 +38,43 @@ public class AccessTokenManager
 			log.error("Initial SessionFactory creation failed." + ex);
 			throw new ExceptionInInitializerError(ex);
 		}
-
 	}
 
 
-	public AccessToken createAccessToken(String clientId, String user)
+	public UserCredentials createUserCredentials(String username,
+			String password)
+	{
+		if (username == null || username.isEmpty())
+			throw new IllegalArgumentException(
+					"Username cannot be null or empty.");
+		if (password == null)
+			throw new IllegalArgumentException("Password cannot be null.");
+
+		UserCredentials creds = new UserCredentials(username, password);
+
+		Session session = sessionFactory.getCurrentSession();
+		session.beginTransaction();
+
+		session.save(creds);
+
+		session.getTransaction().commit();
+		return creds;
+	}
+
+
+	public AccessToken createAccessToken(String clientId, String username)
 	{
 		if (clientId == null || clientId.isEmpty())
 			throw new IllegalArgumentException(
 					"Client id cannot be null or empty.");
-		if (user == null || user.isEmpty())
+		if (username == null || username.isEmpty())
 			throw new IllegalArgumentException("User cannot be null or empty.");
+		UserCredentials creds = getUserCredentials(username);
+		if (creds == null)
+			throw new IllegalArgumentException("User not found");
+
 		String token = generateRandomToken();
-		AccessToken at = new AccessToken(token, clientId, user);
+		AccessToken at = new AccessToken(token, clientId, creds);
 
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
@@ -63,9 +86,53 @@ public class AccessTokenManager
 	}
 
 
+	private UserCredentials getUserCredentials(String username)
+	{
+		if (username == null || username.isEmpty())
+			throw new IllegalArgumentException(
+					"Username cannot be null or empty.");
+
+		Session session = sessionFactory.getCurrentSession();
+		session.beginTransaction();
+
+		Query query = session
+				.createQuery("from UserCredentials where username = :username");
+		query.setParameter("username", username);
+		@SuppressWarnings("unchecked")
+		List<UserCredentials> list = query.list();
+
+		session.getTransaction().commit();
+
+		return list.isEmpty() ? null : list.get(0);
+	}
+
+
 	private String generateRandomToken()
 	{
 		return UUID.randomUUID().toString().substring(0, TOKEN_LENGTH);
+	}
+
+
+	public void deleteUserCredentials(String username)
+	{
+		if (username == null || username.isEmpty())
+			throw new IllegalArgumentException(
+					"Username cannot be null or empty.");
+
+		Session session = sessionFactory.getCurrentSession();
+		session.beginTransaction();
+
+		Query query = session
+				.createQuery("delete UserCredentials where username = :username");
+		query.setParameter("username", username);
+		int result = query.executeUpdate();
+
+		if (result != 1) {
+			log.warn(String.format("Deleted %d rows when deleting %s", result,
+				username));
+		}
+
+		session.getTransaction().commit();
 	}
 
 
@@ -91,26 +158,26 @@ public class AccessTokenManager
 	}
 
 
-	public List<AccessToken> getAccessTokens(String clientId, String user)
+	public List<AccessToken> getAccessTokens(String clientId, String username)
 	{
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
 		Query query;
-		if (clientId != null && user != null) {
+		if (clientId != null && username != null) {
 			query = session
-					.createQuery("from AccessToken where clientId = :clientId and user = :user");
+					.createQuery("from AccessToken where clientId = :clientId and username = :username");
 			query.setParameter("clientId", clientId);
-			query.setParameter("user", user);
+			query.setParameter("user", username);
 		}
 		else if (clientId != null) {
 			query = session
 					.createQuery("from AccessToken where clientId = :clientId");
 			query.setParameter("clientId", clientId);
 		}
-		else if (user != null) {
+		else if (username != null) {
 			query = session.createQuery("from AccessToken where user = :user");
-			query.setParameter("user", user);
+			query.setParameter("user", username);
 		}
 		else {
 			query = session.createQuery("from AccessToken");
@@ -141,7 +208,6 @@ public class AccessTokenManager
 		session.getTransaction().commit();
 
 		return list.isEmpty() ? null : list.get(0);
-
 	}
 
 
