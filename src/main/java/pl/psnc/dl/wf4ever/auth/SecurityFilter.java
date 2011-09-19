@@ -80,12 +80,15 @@ public class SecurityFilter
 			throw new MappableContainerException(new AuthenticationException(
 					"Authentication credentials are required\r\n", REALM));
 		}
+		String[] values;
 		if (authentication.startsWith("Basic ")) {
-			authentication = authentication.substring("Basic ".length());
+			values = getBasicCredentials(authentication.substring("Basic "
+					.length()));
 		}
 		// this is the recommended OAuth 2.0 method
 		else if (authentication.startsWith("Bearer ")) {
-			authentication = authentication.substring("Bearer ".length());
+			values = getBearerCredentials(authentication.substring("Bearer "
+					.length()));
 		}
 		else {
 			throw new MappableContainerException(
@@ -93,8 +96,6 @@ public class SecurityFilter
 							"Only HTTP Basic and OAuth 2.0 Bearer authentications are supported\r\n",
 							REALM));
 		}
-		String[] values = new String(Base64.base64Decode(authentication))
-				.split(":");
 		if (values.length < 2) {
 			throw new MappableContainerException(new AuthenticationException(
 					"Invalid syntax for username and password\r\n", REALM));
@@ -112,6 +113,31 @@ public class SecurityFilter
 		return DlibraConnectionRegistry.getConnection().getDLibraDataSource(
 			username, password);
 
+	}
+
+
+	private String[] getBearerCredentials(String accessToken)
+	{
+		OAuthManager manager = new OAuthManager();
+		AccessToken token = manager.getAccessToken(accessToken);
+		if (token == null) {
+			throw new MappableContainerException(new AuthenticationException(
+					"Invalid access token\r\n", REALM));
+		}
+		return new String[] { token.getUser().getUsername(),
+				token.getUser().getPassword()};
+	}
+
+
+	/**
+	 * @param authentication
+	 * @return
+	 */
+	private String[] getBasicCredentials(String authentication)
+	{
+		String[] values = new String(Base64.base64Decode(authentication))
+				.split(":");
+		return values;
 	}
 
 
