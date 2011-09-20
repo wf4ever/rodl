@@ -44,7 +44,7 @@ INDEXING_TIME_INTERVAL = 30
 
 URI_PREFIX_IN_MANIFEST = "URI_PREFIX"
 if CALATOLA then
-	URI_PREFIX = "http://calatola.man.poznan.pl/rosrs3/workspaces/" + WORKSPACE_ID
+	URI_PREFIX = "http://calatola.man.poznan.pl/rosrs4/workspaces/" + WORKSPACE_ID
 else
 	URI_PREFIX = "http://localhost:8080/workspaces/" + WORKSPACE_ID
 end
@@ -746,6 +746,22 @@ def getClientList
 end
 
 
+def getClient
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Getting OAuth client data........"
+		req = Net::HTTP::Get.new(APP_NAME + '/clients/' + @clientId)
+		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
+
+		response = http.request(req)
+		printResponse(response, 200)
+		if !response.body.include?(@clientId)
+			puts "Client id missing"
+		end
+		code = response.code.to_i
+    }
+end
+
+
 def deleteClient
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Deleting OAuth client........"
@@ -761,6 +777,7 @@ end
 
 if createUser == 201 && createClient == 201
     getClientList
+    getClient
     if createAccessToken == 201
 	    getAccessTokenList
         if createWorkspace == 201
