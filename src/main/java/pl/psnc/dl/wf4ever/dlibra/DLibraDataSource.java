@@ -61,7 +61,7 @@ public class DLibraDataSource
 	private LibCollectionId collectionId;
 	
 	// it is not directly related to dLibra but it is convenient to store it here
-	private OAuthManager accessTokenManager;
+	private OAuthManager oauthManager;
 
 
 	public DLibraDataSource(UserServiceResolver userServiceResolver,
@@ -94,14 +94,14 @@ public class DLibraDataSource
 		attributesHelper = new AttributesHelper(this);
 		editionHelper = new EditionHelper(this);
 		
-		accessTokenManager = new OAuthManager();
+		oauthManager = new OAuthManager();
 	}
 
 
 	
-	public OAuthManager getAccessTokenManager()
+	public OAuthManager getOAuthManager()
 	{
-		return accessTokenManager;
+		return oauthManager;
 	}
 
 

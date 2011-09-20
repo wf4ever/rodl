@@ -72,9 +72,12 @@ public class OAuthManager
 		UserCredentials creds = getUserCredentials(username);
 		if (creds == null)
 			throw new IllegalArgumentException("User not found");
+		OAuthClient client = getClient(clientId);
+		if (client == null)
+			throw new IllegalArgumentException("Client not found");
 
 		String token = generateRandomToken();
-		AccessToken at = new AccessToken(token, clientId, creds);
+		AccessToken at = new AccessToken(token, client, creds);
 
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
@@ -95,15 +98,12 @@ public class OAuthManager
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Query query = session
-				.createQuery("from UserCredentials where username = :username");
-		query.setParameter("username", username);
-		@SuppressWarnings("unchecked")
-		List<UserCredentials> list = query.list();
+		UserCredentials user = (UserCredentials) session.get(
+			UserCredentials.class, username);
 
 		session.getTransaction().commit();
 
-		return list.isEmpty() ? null : list.get(0);
+		return user;
 	}
 
 
@@ -199,15 +199,11 @@ public class OAuthManager
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Query query = session
-				.createQuery("from AccessToken where token = :token");
-		query.setParameter("token", token);
-		@SuppressWarnings("unchecked")
-		List<AccessToken> list = query.list();
+		AccessToken at = (AccessToken) session.get(AccessToken.class, token);
 
 		session.getTransaction().commit();
 
-		return list.isEmpty() ? null : list.get(0);
+		return at;
 	}
 
 
@@ -217,4 +213,71 @@ public class OAuthManager
 		return at != null && at.getUser().equals(user);
 	}
 
+
+	public boolean clientExists(String clientId)
+	{
+		return getClient(clientId) != null;
+	}
+
+
+	public void storeClient(OAuthClient client)
+	{
+		Session session = sessionFactory.getCurrentSession();
+		session.beginTransaction();
+
+		session.saveOrUpdate(client);
+
+		session.getTransaction().commit();
+	}
+
+
+	public void deleteClient(String clientId)
+	{
+		if (clientId == null || clientId.isEmpty())
+			throw new IllegalArgumentException("Client id cannot be null or empty.");
+
+		Session session = sessionFactory.getCurrentSession();
+		session.beginTransaction();
+
+		Query query = session
+				.createQuery("delete OAuthClient where clientId = :clientId");
+		query.setParameter("clientId", clientId);
+		int result = query.executeUpdate();
+
+		if (result != 1) {
+			log.warn(String.format("Deleted %d rows when deleting %s", result,
+				clientId));
+		}
+
+		session.getTransaction().commit();
+	}
+
+
+	public OAuthClient getClient(String clientId)
+	{
+		Session session = sessionFactory.getCurrentSession();
+		session.beginTransaction();
+
+		OAuthClient client = (OAuthClient) session.get(OAuthClient.class,
+			clientId);
+
+		session.getTransaction().commit();
+
+		return client;
+	}
+
+
+	public List<OAuthClient> getClients()
+	{
+		Session session = sessionFactory.getCurrentSession();
+		session.beginTransaction();
+
+		Query query = session.createQuery("from OAuthClient");
+		@SuppressWarnings("unchecked")
+		List<OAuthClient> list = query.list();
+
+		session.getTransaction().commit();
+
+		return list;
+	}
 }

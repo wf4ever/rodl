@@ -5,7 +5,6 @@ package pl.psnc.dl.wf4ever.auth;
 
 import java.io.Serializable;
 
-import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -33,7 +32,7 @@ public class AccessToken
 
 	private String token;
 
-	private String clientId;
+	private OAuthClient client;
 
 	private UserCredentials user;
 
@@ -44,11 +43,11 @@ public class AccessToken
 	}
 
 
-	public AccessToken(String token, String clientId, UserCredentials user)
+	public AccessToken(String token, OAuthClient client, UserCredentials user)
 	{
 		super();
 		this.token = token;
-		this.clientId = clientId;
+		this.client = client;
 		this.user = user;
 	}
 
@@ -74,22 +73,23 @@ public class AccessToken
 
 
 	/**
-	 * @return the clientId
+	 * @return the client
 	 */
-	@Basic
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "client", nullable = false)
 	@XmlElement
-	public String getClientId()
+	public OAuthClient getClient()
 	{
-		return clientId;
+		return client;
 	}
 
 
 	/**
-	 * @param clientId the clientId to set
+	 * @param client the client to set
 	 */
-	public void setClientId(String clientId)
+	public void setClient(OAuthClient client)
 	{
-		this.clientId = clientId;
+		this.client = client;
 	}
 
 

@@ -58,6 +58,6 @@ public class UserResource
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		dLibraDataSource.getUsersHelper().deleteUser(userId);
-		dLibraDataSource.getAccessTokenManager().deleteUserCredentials(userId);
+		dLibraDataSource.getOAuthManager().deleteUserCredentials(userId);
 	}
 }

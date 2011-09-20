@@ -69,7 +69,7 @@ public class UserListResource
 		}
 		// password can be empty
 		dLibraDataSource.getUsersHelper().createUser(userId, password);
-		dLibraDataSource.getAccessTokenManager().createUserCredentials(userId, password);
+		dLibraDataSource.getOAuthManager().createUserCredentials(userId, password);
 
 		return Response.created(uriInfo.getAbsolutePath().resolve(userId))
 				.build();

@@ -24,6 +24,8 @@ WORKSPACE_ID = "testWorkspace"
 USER_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")[0,22]
 PASSWORD="pass"
 CLIENT_ID = "tester"
+CLIENT_NAME = "ROSRS testing app written in Ruby"
+CLIENT_REDIRECTION_URI = "http://localhost" # will not be used
 
 RO_NAME="ro1"
 VERSIONS={
@@ -712,7 +714,54 @@ def deleteAccessToken
 end
 
 
-if createUser == 201
+def createClient
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Creating OAuth client........"
+		req = Net::HTTP::Post.new(APP_NAME + '/clients')
+		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
+		req.body = CLIENT_ID + "
+" + CLIENT_NAME + "
+" + CLIENT_REDIRECTION_URI
+		req.add_field "Content-Type", "text/plain"
+
+		response = http.request(req)
+		printResponse(response, 201)
+		code = response.code.to_i
+    }
+end
+	
+
+def getClientList
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Getting OAuth client list........"
+		req = Net::HTTP::Get.new(APP_NAME + '/clients')
+		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
+
+		response = http.request(req)
+		printResponse(response, 200)
+		if !response.body.include?(CLIENT_ID)
+			puts "Client id missing"
+		end
+		code = response.code.to_i
+    }
+end
+
+
+def deleteClient
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Deleting OAuth client........"
+		req = Net::HTTP::Delete.new(APP_NAME + '/clients/' + CLIENT_ID)
+		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
+
+		response = http.request(req)
+		printResponse(response, 204)
+		code = response.code.to_i
+    }
+end
+
+
+if createUser == 201 && createClient == 201
+    getClientList
     if createAccessToken == 201
 	    getAccessTokenList
         if createWorkspace == 201
@@ -806,4 +855,5 @@ if createUser == 201
 	    deleteAccessToken
     end
     deleteUser
+    deleteClient
 end

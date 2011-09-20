@@ -33,6 +33,8 @@
 
 		<mapping class="pl.psnc.dl.wf4ever.auth.UserCredentials" />
 		<mapping class="pl.psnc.dl.wf4ever.auth.AccessToken" />
+		<mapping class="pl.psnc.dl.wf4ever.auth.OAuthClient" />
+
 
 	</session-factory>
 

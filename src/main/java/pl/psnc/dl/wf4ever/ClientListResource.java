@@ -12,25 +12,25 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
-import pl.psnc.dl.wf4ever.auth.AccessToken;
-import pl.psnc.dl.wf4ever.auth.AccessTokenList;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
+import pl.psnc.dl.wf4ever.auth.OAuthClient;
+import pl.psnc.dl.wf4ever.auth.OAuthClientList;
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
+import pl.psnc.dlibra.service.IdNotFoundException;
 
 /**
  * @author Piotr Hołubowicz
  * 
  */
-@Path(Constants.ACCESSTOKEN_URL_PART)
-public class AccessTokenListResource
+@Path(Constants.CLIENTS_URL_PART)
+public class ClientListResource
 {
 
 	@Context
@@ -41,19 +41,16 @@ public class AccessTokenListResource
 
 
 	/**
-	 * Returns list of access tokens as XML. The optional parameters are client_id and user.
-	 * @param workspaceId identifier of a workspace in the RO SRS
+	 * Returns list of OAuth clients as XML.
 	 * @return TBD
+	 * @throws IdNotFoundException 
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 * @throws TransformerException 
 	 */
 	@GET
 	@Produces("text/xml")
-	public AccessTokenList getAccessTokenList(
-			@QueryParam("client_id") String clientId,
-			@QueryParam("user") String user)
-		throws RemoteException, DLibraException, TransformerException
+	public OAuthClientList getClientList() throws RemoteException, IdNotFoundException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
@@ -61,26 +58,25 @@ public class AccessTokenListResource
 			throw new ForbiddenException(
 					"Only admin users can manage access tokens.");
 		}
-		List<AccessToken> list = dLibraDataSource.getOAuthManager()
-				.getAccessTokens(clientId, user);
-		return new AccessTokenList(list);
+		List<OAuthClient> list = dLibraDataSource.getOAuthManager()
+				.getClients();
+		return new OAuthClientList(list);
 	}
 
 
 	/**
-	 * Creates new access token for a given client and user. input: client_id and user.
-	 * @param data text/plain with id in first line and password
-	 * in second.
-	 * @return 201 (Created) when the access token was successfully created, 400
-	 *         (Bad Request) if the user does not exist
+	 * Creates new OAuth 2.0 client. input: client_id, name and redirection URI.
+	 * @param data text/plain with client_id in first line, name in second and URI in third.
+	 * @return 201 (Created) when the client was successfully created, 409
+	 *         (Conflict) if the client id already exists.
+	 * @throws IdNotFoundException 
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 */
 	@POST
 	@Consumes("text/plain")
 	@Produces("text/plain")
-	public Response createAccessToken(String data)
-		throws RemoteException, DLibraException
+	public Response createClient(String data) throws RemoteException, IdNotFoundException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
@@ -90,18 +86,18 @@ public class AccessTokenListResource
 					"Only admin users can manage access tokens.");
 		}
 		String lines[] = data.split("[\\r\\n]+");
-		if (lines.length < 2) {
+		if (lines.length < 3) {
 			return Response.status(Status.BAD_REQUEST)
-					.entity("Content is shorter than 2 lines")
+					.entity("Content is shorter than 3 lines")
 					.header(Constants.CONTENT_TYPE_HEADER_NAME, "text/plain")
 					.build();
 		}
 
-		String accessToken = dLibraDataSource.getOAuthManager()
-				.createAccessToken(lines[0], lines[1]).getToken();
+		OAuthClient client = new OAuthClient(lines[0], lines[1], lines[2]);
+		dLibraDataSource.getOAuthManager().storeClient(client);
 
 		return Response.created(
-			uriInfo.getAbsolutePath().resolve(Constants.ACCESSTOKEN_URL_PART)
-					.resolve(accessToken)).build();
+			uriInfo.getAbsolutePath().resolve(Constants.CLIENTS_URL_PART)
+					.resolve(lines[0])).build();
 	}
 }

@@ -12,14 +12,15 @@ import javax.ws.rs.core.UriInfo;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
+import pl.psnc.dlibra.service.IdNotFoundException;
 
 /**
  * 
  * @author Piotr Hołubowicz
  *
  */
-@Path(Constants.ACCESSTOKEN_URL_PART + "/{T_ID}")
-public class AccessTokenResource
+@Path(Constants.CLIENTS_URL_PART + "/{C_ID}")
+public class ClientResource
 {
 
 	@Context
@@ -30,14 +31,15 @@ public class AccessTokenResource
 
 
 	/**
-	 * Deletes the access token.
-	 * @param workspaceId identifier of a workspace in the RO SRS
+	 * Deletes the OAuth 2.0 client.
+	 * @param clientId client id
+	 * @throws IdNotFoundException 
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 */
 	@DELETE
-	public void deletAccessToken(@PathParam("T_ID") String token)
-		throws RemoteException, DLibraException
+	public void deletAccessToken(@PathParam("C_ID") String clientId)
+		throws RemoteException, IdNotFoundException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
@@ -47,6 +49,6 @@ public class AccessTokenResource
 					"Only admin users can manage access tokens.");
 		}
 
-		dLibraDataSource.getOAuthManager().deleteToken(token);
+		dLibraDataSource.getOAuthManager().deleteClient(clientId);
 	}
 }
