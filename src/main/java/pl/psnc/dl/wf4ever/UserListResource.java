@@ -58,7 +58,7 @@ public class UserListResource
 					.header(Constants.CONTENT_TYPE_HEADER_NAME, "text/plain")
 					.build();
 		}
-		String password = UUID.randomUUID().toString().substring(0, 20);
+		String password = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 20);
 		dLibraDataSource.getUsersHelper().createUser(userId, password);
 		dLibraDataSource.getOAuthManager().createUserCredentials(userId, password);
 
