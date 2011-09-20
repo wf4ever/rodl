@@ -4,6 +4,7 @@
 package pl.psnc.dl.wf4ever;
 
 import java.rmi.RemoteException;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -33,10 +34,9 @@ public class UserListResource
 
 
 	/**
-	 * Creates new user with given USER_ID. input: USER_ID and
-	 * password. 
+	 * Creates new user with given USER_ID. input: USER_ID (the password is generated internally).
 
-	 * @param data text/plain with id in first line and password
+	 * @param data text/plain with id in first line
 	 * in second.
 	 * @return 201 (Created) when the user was successfully created, 400
 	 *         (Bad Request) if the content is malformed 409 (Conflict) if the
@@ -46,28 +46,19 @@ public class UserListResource
 	 */
 	@POST
 	@Consumes("text/plain")
-	public Response createUser(String data)
+	public Response createUser(String userId)
 		throws RemoteException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		String lines[] = data.split("[\\r\\n]+");
-		if (lines.length < 2) {
+		if (userId == null || userId.isEmpty()) {
 			return Response.status(Status.BAD_REQUEST)
-					.entity("Content is shorter than 2 lines")
+					.entity("User id is null or empty")
 					.header(Constants.CONTENT_TYPE_HEADER_NAME, "text/plain")
 					.build();
 		}
-		String userId = lines[0];
-		String password = lines[1];
-		if (userId.isEmpty()) {
-			return Response.status(Status.BAD_REQUEST)
-					.entity("User id is empty")
-					.header(Constants.CONTENT_TYPE_HEADER_NAME, "text/plain")
-					.build();
-		}
-		// password can be empty
+		String password = UUID.randomUUID().toString().substring(0, 20);
 		dLibraDataSource.getUsersHelper().createUser(userId, password);
 		dLibraDataSource.getOAuthManager().createUserCredentials(userId, password);
 

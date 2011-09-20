@@ -22,7 +22,6 @@ end
 
 WORKSPACE_ID = "testWorkspace"
 USER_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")[0,22]
-PASSWORD="pass"
 CLIENT_NAME = "ROSRS testing app written in Ruby"
 CLIENT_REDIRECTION_URI = "http://localhost" # will not be used
 
@@ -138,8 +137,7 @@ def createUser
 		printConstantWidth "Creating user........"
 		req = Net::HTTP::Post.new(APP_NAME + '/users')
 		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
-		req.body = USER_ID + "
-" + PASSWORD
+		req.body = USER_ID
 		req.add_field "Content-Type", "text/plain"
 
 		response = http.request(req)
