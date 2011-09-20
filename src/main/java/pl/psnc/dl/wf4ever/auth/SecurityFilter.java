@@ -121,8 +121,7 @@ public class SecurityFilter
 		OAuthManager manager = new OAuthManager();
 		AccessToken token = manager.getAccessToken(accessToken);
 		if (token == null) {
-			throw new MappableContainerException(new AuthenticationException(
-					"Invalid access token\r\n", REALM));
+			return getBasicCredentials(accessToken);
 		}
 		return new String[] { token.getUser().getUsername(),
 				token.getUser().getPassword()};
