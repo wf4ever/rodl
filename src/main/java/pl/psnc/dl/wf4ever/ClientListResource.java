@@ -65,8 +65,8 @@ public class ClientListResource
 
 
 	/**
-	 * Creates new OAuth 2.0 client. input: client_id, name and redirection URI.
-	 * @param data text/plain with client_id in first line, name in second and URI in third.
+	 * Creates new OAuth 2.0 client. input: name and redirection URI.
+	 * @param data text/plain with name in first line and URI in second.
 	 * @return 201 (Created) when the client was successfully created, 409
 	 *         (Conflict) if the client id already exists.
 	 * @throws IdNotFoundException 
@@ -86,18 +86,17 @@ public class ClientListResource
 					"Only admin users can manage access tokens.");
 		}
 		String lines[] = data.split("[\\r\\n]+");
-		if (lines.length < 3) {
+		if (lines.length < 2) {
 			return Response.status(Status.BAD_REQUEST)
-					.entity("Content is shorter than 3 lines")
+					.entity("Content is shorter than 2 lines")
 					.header(Constants.CONTENT_TYPE_HEADER_NAME, "text/plain")
 					.build();
 		}
 
-		OAuthClient client = new OAuthClient(lines[0], lines[1], lines[2]);
-		dLibraDataSource.getOAuthManager().storeClient(client);
+		String clientId = dLibraDataSource.getOAuthManager().createClient(lines[0], lines[1]);
 
 		return Response.created(
 			uriInfo.getAbsolutePath().resolve(Constants.CLIENTS_URL_PART)
-					.resolve(lines[0])).build();
+					.resolve(clientId)).build();
 	}
 }

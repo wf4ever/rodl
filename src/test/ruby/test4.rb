@@ -23,7 +23,6 @@ end
 WORKSPACE_ID = "testWorkspace"
 USER_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")[0,22]
 PASSWORD="pass"
-CLIENT_ID = "tester"
 CLIENT_NAME = "ROSRS testing app written in Ruby"
 CLIENT_REDIRECTION_URI = "http://localhost" # will not be used
 
@@ -53,6 +52,7 @@ end
 
 @retrievedManifest = ""
 @accessToken = ""
+@clientId = ""
 
 def printResponse(response, expectedCode)
 	printConstantWidth2(response.code + " " + response.message)
@@ -672,7 +672,7 @@ def createAccessToken
 		printConstantWidth "Creating access token........"
 		req = Net::HTTP::Post.new(APP_NAME + '/accesstoken')
 		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
-		req.body = CLIENT_ID + "
+		req.body = @clientId + "
 " + USER_ID
 		req.add_field "Content-Type", "text/plain"
 
@@ -719,13 +719,14 @@ def createClient
 		printConstantWidth "Creating OAuth client........"
 		req = Net::HTTP::Post.new(APP_NAME + '/clients')
 		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
-		req.body = CLIENT_ID + "
-" + CLIENT_NAME + "
+		req.body = CLIENT_NAME + "
 " + CLIENT_REDIRECTION_URI
 		req.add_field "Content-Type", "text/plain"
 
 		response = http.request(req)
 		printResponse(response, 201)
+		s = response["location"]
+		@clientId = (s.include?('/') ? s[(s.rindex('/')+1)..-1] : s).chomp
 		code = response.code.to_i
     }
 end
@@ -739,7 +740,7 @@ def getClientList
 
 		response = http.request(req)
 		printResponse(response, 200)
-		if !response.body.include?(CLIENT_ID)
+		if !response.body.include?(@clientId)
 			puts "Client id missing"
 		end
 		code = response.code.to_i
@@ -750,7 +751,7 @@ end
 def deleteClient
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Deleting OAuth client........"
-		req = Net::HTTP::Delete.new(APP_NAME + '/clients/' + CLIENT_ID)
+		req = Net::HTTP::Delete.new(APP_NAME + '/clients/' + @clientId)
 		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
 
 		response = http.request(req)
@@ -765,91 +766,91 @@ if createUser == 201 && createClient == 201
     if createAccessToken == 201
 	    getAccessTokenList
         if createWorkspace == 201
-            getWorkspacesRdf
-	        if createRO == 201
-		        if createVersion == 201
-			        getManifest
-			        validateManifest1
-			        if addFile(:file1) == 200 && addFile(:file2) == 200
-				        getListRO
-				        getROrdf
-				        getVersionZip
-				        getManifest
-				        getFileMetadata(:file1)
-				        getFileMetadata(:file2)
-				        getFile(:file1)
-				        getFile(:file2)
-				        getDirectoryList(:file2)
-				        getDirectoryZipped(:file2)
-				        updateFile(:file1)
-				        updateFile(:file2)
-				        searchForROs
-				        updateManifest
-				        updateManifestMalformed
-				        updateManifestIncorrect
-				        publishEdition
-        #				wait INDEXING_TIME_INTERVAL
-        #				searchForROs(:ver1)
-				        createVersionAsCopy
-				        getManifest(:ver2)
-				        validateManifest2
-				        publishEdition(:ver2)
-        #				wait INDEXING_TIME_INTERVAL
-        #				searchForROs(:ver1, :ver2)
-				        updateManifest(1)
-        #				searchForROs(:ver2)
-				        unpublishEdition
-				        deleteFile(:file1)
-				        deleteFile(:file2)
-				        checkNoFileMetadata(:file1)
-				        checkNoFileContent(:file1)
-				        checkNoFileMetadata(:file2)
-				        checkNoFileContent(:file2)
-				        checkDeleteManifest
-			        end
-			        if addEmptyDirectory(:file2) == 200
-				        getDirectoryMetadata(:file2)
-				        addFile(:file2)
-				        getDirectoryMetadata(:file2)
-				        deleteFile(:file2)
-				        getDirectoryMetadata(:file2)
-				        deleteDirectory(:file2)
-				        checkNoDirectory(:file2)
-				        addFile(:file2)
-				        deleteDirectory(:file2)
-				        checkNoDirectory(:file2)
-			        end
-			        if addFile(:file1) == 200 && addFile(:file2) == 200 && createEdition == 201
-				        getFileEdition(:file1, 0)
-				        addFile(:file3)
-				        deleteFile(:file1)
-				        getFileMetadata(:file3)
-				        checkNoFileMetadata(:file1)
-				        checkNoFileContent(:file1)
-				        getFileEdition(:file1, 0)
-				        checkPublished -1
-				        publishEdition
-				        checkPublished 1
-				        if createEdition == 201
-					        deleteFile(:file2)
-					        checkNoFileMetadata(:file2)
-					        addFile(:file1)
-					        getFile(:file1)
-					        deleteFile(:file1)
-					        checkNoFileMetadata(:file1)
-					        checkNoFileContent(:file1)
-					        getFileEdition(:file1, 0)
-					        checkPublished 1
-					        publishEdition
-					        checkPublished 2
-					        unpublishEdition
-					        checkPublished -1
-				        end
-			        end
-			        deleteVersion
-		        end
-		        deleteRO
-	        end
+#            getWorkspacesRdf
+#	        if createRO == 201
+#		        if createVersion == 201
+#			        getManifest
+#			        validateManifest1
+#			        if addFile(:file1) == 200 && addFile(:file2) == 200
+#				        getListRO
+#				        getROrdf
+#				        getVersionZip
+#				        getManifest
+#				        getFileMetadata(:file1)
+#				        getFileMetadata(:file2)
+#				        getFile(:file1)
+#				        getFile(:file2)
+#				        getDirectoryList(:file2)
+#				        getDirectoryZipped(:file2)
+#				        updateFile(:file1)
+#				        updateFile(:file2)
+#				        searchForROs
+#				        updateManifest
+#				        updateManifestMalformed
+#				        updateManifestIncorrect
+#				        publishEdition
+#        #				wait INDEXING_TIME_INTERVAL
+#        #				searchForROs(:ver1)
+#				        createVersionAsCopy
+#				        getManifest(:ver2)
+#				        validateManifest2
+#				        publishEdition(:ver2)
+#        #				wait INDEXING_TIME_INTERVAL
+#        #				searchForROs(:ver1, :ver2)
+#				        updateManifest(1)
+#        #				searchForROs(:ver2)
+#				        unpublishEdition
+#				        deleteFile(:file1)
+#				        deleteFile(:file2)
+#				        checkNoFileMetadata(:file1)
+#				        checkNoFileContent(:file1)
+#				        checkNoFileMetadata(:file2)
+#				        checkNoFileContent(:file2)
+#				        checkDeleteManifest
+#			        end
+#			        if addEmptyDirectory(:file2) == 200
+#				        getDirectoryMetadata(:file2)
+#				        addFile(:file2)
+#				        getDirectoryMetadata(:file2)
+#				        deleteFile(:file2)
+#				        getDirectoryMetadata(:file2)
+#				        deleteDirectory(:file2)
+#				        checkNoDirectory(:file2)
+#				        addFile(:file2)
+#				        deleteDirectory(:file2)
+#				        checkNoDirectory(:file2)
+#			        end
+#			        if addFile(:file1) == 200 && addFile(:file2) == 200 && createEdition == 201
+#				        getFileEdition(:file1, 0)
+#				        addFile(:file3)
+#				        deleteFile(:file1)
+#				        getFileMetadata(:file3)
+#				        checkNoFileMetadata(:file1)
+#				        checkNoFileContent(:file1)
+#				        getFileEdition(:file1, 0)
+#				        checkPublished -1
+#				        publishEdition
+#				        checkPublished 1
+#				        if createEdition == 201
+#					        deleteFile(:file2)
+#					        checkNoFileMetadata(:file2)
+#					        addFile(:file1)
+#					        getFile(:file1)
+#					        deleteFile(:file1)
+#					        checkNoFileMetadata(:file1)
+#					        checkNoFileContent(:file1)
+#					        getFileEdition(:file1, 0)
+#					        checkPublished 1
+#					        publishEdition
+#					        checkPublished 2
+#					        unpublishEdition
+#					        checkPublished -1
+#				        end
+#			        end
+#			        deleteVersion
+#		        end
+#		        deleteRO
+#	        end
 	        deleteWorkspace
         end
 	    deleteAccessToken

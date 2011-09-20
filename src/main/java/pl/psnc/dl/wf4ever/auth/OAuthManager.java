@@ -220,14 +220,17 @@ public class OAuthManager
 	}
 
 
-	public void storeClient(OAuthClient client)
+	public String createClient(String name, String redirectionURI)
 	{
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		session.saveOrUpdate(client);
+		String clientId = generateRandomToken();
+		session.saveOrUpdate(new OAuthClient(clientId, name, redirectionURI));
 
 		session.getTransaction().commit();
+		
+		return clientId;
 	}
 
 
