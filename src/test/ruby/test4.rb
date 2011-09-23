@@ -4,7 +4,7 @@ require 'choice'
 require 'uuidtools'
 require 'base64'
 
-CALATOLA=false
+CALATOLA=true
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
@@ -21,7 +21,7 @@ end
 
 
 WORKSPACE_ID = "testWorkspace"
-USER_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")[0,22]
+USER_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")
 CLIENT_NAME = "ROSRS testing app written in Ruby"
 CLIENT_REDIRECTION_URI = "http://localhost" # will not be used
 
@@ -145,7 +145,7 @@ def createUser
 		code = response.code.to_i 
     }
 end
-	
+
 def createRO
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Creating research object........"
@@ -776,11 +776,11 @@ end
 
 
 if createUser == 201 && createClient == 201
-    getClientList
-    getClient
-    if createAccessToken == 201
-	    getAccessTokenList
-        if createWorkspace == 201
+#    getClientList
+#    getClient
+#    if createAccessToken == 201
+#	    getAccessTokenList
+#        if createWorkspace == 201
 #            getWorkspacesRdf
 #	        if createRO == 201
 #		        if createVersion == 201
@@ -866,10 +866,10 @@ if createUser == 201 && createClient == 201
 #		        end
 #		        deleteRO
 #	        end
-	        deleteWorkspace
-        end
-	    deleteAccessToken
-    end
+#	        deleteWorkspace
+#        end
+#	    deleteAccessToken
+#    end
     deleteUser
     deleteClient
 end

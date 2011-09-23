@@ -50,12 +50,18 @@ public class DlibraConnection
 		Properties properties = new Properties();
 		try {
 			properties.load(inputStream);
-			inputStream.close();
 		}
 		catch (IOException e) {
 			logger.error("Unable to read connection properties", e);
 			throw new RuntimeException("Unable to read connection properties",
 					e);
+		} finally {
+			try {
+				inputStream.close();
+			}
+			catch (IOException e) {
+				//ignore
+			}
 		}
 		this.host = properties.getProperty("host");
 		this.port = Integer.parseInt(properties.getProperty("port"));

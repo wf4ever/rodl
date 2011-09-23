@@ -15,6 +15,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.codec.binary.Base64;
+
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 
@@ -36,8 +38,7 @@ public class UserListResource
 	/**
 	 * Creates new user with given USER_ID. input: USER_ID (the password is generated internally).
 
-	 * @param data text/plain with id in first line
-	 * in second.
+	 * @param user id, base64 url-safe encoded
 	 * @return 201 (Created) when the user was successfully created, 400
 	 *         (Bad Request) if the content is malformed 409 (Conflict) if the
 	 *         USER_ID is already used
@@ -51,6 +52,8 @@ public class UserListResource
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		
+		userId = new String(Base64.decodeBase64(userId));
 
 		if (userId == null || userId.isEmpty()) {
 			return Response.status(Status.BAD_REQUEST)
