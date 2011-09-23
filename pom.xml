@@ -186,12 +186,12 @@
 				<enabled>false</enabled>
 			</snapshots>
 			<id>dlibra-releases</id>
-			<url>http://maven.man.poznan.pl/repository/dlibra-libs-releases/</url>
+			<url>http://maven.man.poznan.pl/repository/dlibra-libs-releases-public/</url>
 		</repository>
 		<repository>
 			<snapshots />
 			<id>dlibra-snapshots</id>
-			<url>http://maven.man.poznan.pl/repository/dlibra-libs-snapshots/</url>
+			<url>http://maven.man.poznan.pl/repository/dlibra-libs-snapshots-public/</url>
 		</repository>
 	</repositories>
 	<organization>
