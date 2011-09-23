@@ -119,19 +119,11 @@ public class OAuthManager
 			throw new IllegalArgumentException(
 					"Username cannot be null or empty.");
 
+		UserCredentials creds = getUserCredentials(username);
+
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
-
-		Query query = session
-				.createQuery("delete UserCredentials where username = :username");
-		query.setParameter("username", username);
-		int result = query.executeUpdate();
-
-		if (result != 1) {
-			log.warn(String.format("Deleted %d rows when deleting %s", result,
-				username));
-		}
-
+		session.delete(creds);
 		session.getTransaction().commit();
 	}
 
@@ -141,19 +133,11 @@ public class OAuthManager
 		if (token == null || token.isEmpty())
 			throw new IllegalArgumentException("Token cannot be null or empty.");
 
+		AccessToken at = getAccessToken(token);
+
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
-
-		Query query = session
-				.createQuery("delete AccessToken where token = :token");
-		query.setParameter("token", token);
-		int result = query.executeUpdate();
-
-		if (result != 1) {
-			log.warn(String.format("Deleted %d rows when deleting %s", result,
-				token));
-		}
-
+		session.delete(at);
 		session.getTransaction().commit();
 	}
 
@@ -229,7 +213,7 @@ public class OAuthManager
 		session.saveOrUpdate(new OAuthClient(clientId, name, redirectionURI));
 
 		session.getTransaction().commit();
-		
+
 		return clientId;
 	}
 
@@ -237,7 +221,8 @@ public class OAuthManager
 	public void deleteClient(String clientId)
 	{
 		if (clientId == null || clientId.isEmpty())
-			throw new IllegalArgumentException("Client id cannot be null or empty.");
+			throw new IllegalArgumentException(
+					"Client id cannot be null or empty.");
 
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();

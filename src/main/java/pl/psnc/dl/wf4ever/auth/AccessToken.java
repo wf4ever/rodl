@@ -5,7 +5,6 @@ package pl.psnc.dl.wf4ever.auth;
 
 import java.io.Serializable;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -75,8 +74,8 @@ public class AccessToken
 	/**
 	 * @return the client
 	 */
-	@ManyToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "client", nullable = false)
+	@ManyToOne
+	@JoinColumn(nullable = false)
 	@XmlElement
 	public OAuthClient getClient()
 	{
@@ -96,7 +95,7 @@ public class AccessToken
 	/**
 	 * @return the user
 	 */
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne
 	@JoinColumn(name = "username", nullable = false)
 	@XmlElement
 	public UserCredentials getUser()

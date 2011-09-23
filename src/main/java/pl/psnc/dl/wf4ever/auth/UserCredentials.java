@@ -4,10 +4,13 @@
 package pl.psnc.dl.wf4ever.auth;
 
 import java.io.Serializable;
+import java.util.List;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -23,6 +26,18 @@ import javax.xml.bind.annotation.XmlTransient;
 public class UserCredentials
 	implements Serializable
 {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7967488547563569388L;
+
+	private String username;
+
+	private String password;
+
+	private List<AccessToken> tokens;
+
 
 	/**
 	 * @param username
@@ -42,15 +57,6 @@ public class UserCredentials
 		this.username = username;
 		this.password = password;
 	}
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7967488547563569388L;
-
-	private String username;
-
-	private String password;
 
 
 	/**
@@ -90,6 +96,26 @@ public class UserCredentials
 	public void setPassword(String password)
 	{
 		this.password = password;
+	}
+
+
+	/**
+	 * @return the tokens
+	 */
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "user", orphanRemoval = true)
+	@XmlTransient
+	public List<AccessToken> getTokens()
+	{
+		return tokens;
+	}
+
+
+	/**
+	 * @param tokens the tokens to set
+	 */
+	public void setTokens(List<AccessToken> tokens)
+	{
+		this.tokens = tokens;
 	}
 
 }

@@ -146,6 +146,20 @@ def createUser
     }
 end
 
+def checkCreateUser
+	Net::HTTP.start(BASE_URI, PORT) {|http|
+		printConstantWidth "Creating user again........"
+		req = Net::HTTP::Post.new(APP_NAME + '/users')
+		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
+		req.body = USER_ID
+		req.add_field "Content-Type", "text/plain"
+
+		response = http.request(req)
+		printResponse(response, 409)
+		code = response.code.to_i 
+    }
+end
+
 def createRO
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Creating research object........"
@@ -776,6 +790,7 @@ end
 
 
 if createUser == 201 && createClient == 201
+    checkCreateUser
 #    getClientList
 #    getClient
 #    if createAccessToken == 201

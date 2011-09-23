@@ -97,11 +97,17 @@ public class AccessTokenListResource
 					.build();
 		}
 
-		String accessToken = dLibraDataSource.getOAuthManager()
-				.createAccessToken(lines[0], lines[1]).getToken();
-
-		return Response.created(
-			uriInfo.getAbsolutePath().resolve(Constants.ACCESSTOKEN_URL_PART)
-					.resolve(accessToken)).build();
+		try {
+			String accessToken = dLibraDataSource.getOAuthManager()
+					.createAccessToken(lines[0], lines[1]).getToken();
+			return Response.created(
+				uriInfo.getAbsolutePath()
+						.resolve(Constants.ACCESSTOKEN_URL_PART)
+						.resolve(accessToken)).build();
+		}
+		catch (IllegalArgumentException e) {
+			return Response.status(Status.NOT_FOUND).type("text/plain")
+					.entity(e.getMessage()).build();
+		}
 	}
 }
