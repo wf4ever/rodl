@@ -21,7 +21,7 @@ end
 
 
 WORKSPACE_ID = "testWorkspace"
-USER_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")
+USER_ID = Base64.strict_encode64("test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")).tr("+/", "-_")
 CLIENT_NAME = "ROSRS testing app written in Ruby"
 CLIENT_REDIRECTION_URI = "http://localhost" # will not be used
 
