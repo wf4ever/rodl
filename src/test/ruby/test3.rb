@@ -3,6 +3,7 @@ require 'net/http'
 require 'choice'
 require 'uuidtools'
 require 'base64'
+require 'zipruby'
 
 CALATOLA=true
 if CALATOLA then
@@ -30,6 +31,7 @@ VERSIONS={
 }
 
 FILES={
+	:manifest => { :name => "manifest.rdf", :dir => "", :path => "manifest.rdf" },
 	:file1 => { :name => "file1.txt", :dir => "", :path => "file1.txt" },
 	:file2 => { :name => "file2.txt", :dir => "dir/", :path => "dir/file2.txt" },
 	:file3 => { :name => "file3.jpg", :dir => "testdir/", :path => "testdir/file3.jpg" }
@@ -193,7 +195,7 @@ def getROrdf
 	}
 end
 		
-def getVersionZip(which = :ver1)
+def getVersionZip(which = :ver1, expectedFiles = [ FILES[:manifest][:path] ])
 	#get version zip
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Retrieving version #{VERSIONS[which]} archive........"
@@ -208,6 +210,19 @@ def getVersionZip(which = :ver1)
 		else
 			puts response.body if Choice.choices[:printErrors]
 		end
+		if response.code.to_i == 200
+    		Zip::Archive.open_buffer(response.body) do |ar|
+                # Zip::Archive includes Enumerable
+                entry_names = ar.map do |f|
+                    if expectedFiles.include?(f.name)
+                        expectedFiles.delete(f.name)
+                    else
+                        puts "                  Unexpected #{f.name}"
+                    end
+                end
+                expectedFiles.each { |e| puts "                 File #{e} not found" }
+            end
+        end
 	}	
 end
 	
@@ -637,7 +652,7 @@ if createWorkspace == 201
 			if addFile(:file1) == 200 && addFile(:file2) == 200
 				getListRO
 				getROrdf
-				getVersionZip
+		        getVersionZip :ver1, [ FILES[:manifest][:path], FILES[:file1][:path], FILES[:file2][:path] ]
 				getManifest
 				getFileMetadata(:file1)
 				getFileMetadata(:file2)
