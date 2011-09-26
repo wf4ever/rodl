@@ -3,6 +3,7 @@ require 'net/http'
 require 'choice'
 require 'uuidtools'
 require 'base64'
+require 'zipruby'
 
 CALATOLA=true
 if CALATOLA then
@@ -21,7 +22,8 @@ end
 
 
 WORKSPACE_ID = "testWorkspace"
-USER_ID = Base64.strict_encode64("test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")).tr("+/", "-_")
+USER_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")
+USER_ID_URL_SAFE = Base64.strict_encode64(USER_ID).tr("+/", "-_")
 CLIENT_NAME = "ROSRS testing app written in Ruby"
 CLIENT_REDIRECTION_URI = "http://localhost" # will not be used
 
@@ -32,9 +34,10 @@ VERSIONS={
 }
 
 FILES={
-	:file1 => { :name => "file1.txt", :dir => "", :path => "file1.txt" },
-	:file2 => { :name => "file2.txt", :dir => "dir/", :path => "dir/file2.txt" },
-	:file3 => { :name => "file3.jpg", :dir => "testdir/", :path => "testdir/file3.jpg" }
+	:manifest => { :name => "manifest.rdf", :dir => "", :path => "manifest.rdf" },
+	:file1    => { :name => "file1.txt", :dir => "", :path => "file1.txt" },
+	:file2    => { :name => "file2.txt", :dir => "dir/", :path => "dir/file2.txt" },
+	:file3    => { :name => "file3.jpg", :dir => "testdir/", :path => "testdir/file3.jpg" }
 }
 
 MESSAGE_WIDTH=50
@@ -137,7 +140,7 @@ def createUser
 		printConstantWidth "Creating user........"
 		req = Net::HTTP::Post.new(APP_NAME + '/users')
 		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
-		req.body = USER_ID
+		req.body = USER_ID_URL_SAFE
 		req.add_field "Content-Type", "text/plain"
 
 		response = http.request(req)
@@ -151,7 +154,7 @@ def checkCreateUser
 		printConstantWidth "Creating user again........"
 		req = Net::HTTP::Post.new(APP_NAME + '/users')
 		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
-		req.body = USER_ID
+		req.body = USER_ID_URL_SAFE
 		req.add_field "Content-Type", "text/plain"
 
 		response = http.request(req)
@@ -235,7 +238,7 @@ def getROrdf
 	}
 end
 		
-def getVersionZip(which = :ver1)
+def getVersionZip(which = :ver1, expectedFiles = [ FILES[:manifest][:path] ])
 	#get version zip
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Retrieving version #{VERSIONS[which]} archive........"
@@ -250,6 +253,19 @@ def getVersionZip(which = :ver1)
 		else
 			puts response.body if Choice.choices[:printErrors]
 		end
+		if response.code.to_i == 200
+    		Zip::Archive.open_buffer(response.body) do |ar|
+                # Zip::Archive includes Enumerable
+                entry_names = ar.map do |f|
+                    if expectedFiles.include?(f.name)
+                        expectedFiles.delete(f.name)
+                    else
+                        puts "                  Unexpected #{f.name}"
+                    end
+                end
+                expectedFiles.each { |e| puts "                 File #{e} not found" }
+            end
+        end
 	}	
 end
 	
@@ -505,7 +521,7 @@ end
 def deleteUser
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Deleting user........"
-		req = Net::HTTP::Delete.new(APP_NAME + '/users/' + USER_ID)
+		req = Net::HTTP::Delete.new(APP_NAME + '/users/' + USER_ID_URL_SAFE)
 		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
 		response = http.request(req)
 		printResponse(response, 204)
@@ -691,7 +707,7 @@ def createAccessToken
 		response = http.request(req)
 		printResponse(response, 201)
 		s = response["location"]
-		@accessToken = (s.include?('/') ? s[(s.rindex('/')+1)..-1] : s).chomp
+		@accessToken = (s.include?('/') ? s[(s.rindex('/')+1)..-1] : s).chomp if !s.nil?
 		code = response.code.to_i
     }
 end
@@ -791,20 +807,20 @@ end
 
 if createUser == 201 && createClient == 201
     checkCreateUser
-#    getClientList
-#    getClient
-#    if createAccessToken == 201
-#	    getAccessTokenList
-#        if createWorkspace == 201
-#            getWorkspacesRdf
-#	        if createRO == 201
-#		        if createVersion == 201
-#			        getManifest
-#			        validateManifest1
-#			        if addFile(:file1) == 200 && addFile(:file2) == 200
-#				        getListRO
-#				        getROrdf
-#				        getVersionZip
+    getClientList
+    getClient
+    if createAccessToken == 201
+	    getAccessTokenList
+        if createWorkspace == 201
+            getWorkspacesRdf
+	        if createRO == 201
+		        if createVersion == 201
+			        getManifest
+			        validateManifest1
+			        if addFile(:file1) == 200 && addFile(:file2) == 200
+				        getListRO
+				        getROrdf
+				        getVersionZip :ver1, [ FILES[:manifest][:path], FILES[:file1][:path], FILES[:file2][:path] ]
 #				        getManifest
 #				        getFileMetadata(:file1)
 #				        getFileMetadata(:file2)
@@ -876,15 +892,15 @@ if createUser == 201 && createClient == 201
 #					        unpublishEdition
 #					        checkPublished -1
 #				        end
-#			        end
-#			        deleteVersion
-#		        end
-#		        deleteRO
-#	        end
-#	        deleteWorkspace
-#        end
-#	    deleteAccessToken
-#    end
+			        end
+			        deleteVersion
+		        end
+		        deleteRO
+	        end
+	        deleteWorkspace
+        end
+	    deleteAccessToken
+    end
     deleteUser
     deleteClient
 end
