@@ -147,12 +147,14 @@ public class ResearchObjectResource
 					+ 1);
 		}
 
-		String versionUri = uriInfo.getAbsolutePath().toString() + "/"
-				+ version;
-		dLibraDataSource.getPublicationsHelper().createPublication(researchObjectId, version,
-			baseVersion, versionUri);
+		String versionUri = uriInfo.getAbsolutePath().resolve(version)
+				.toString();
+		dLibraDataSource.getPublicationsHelper().createPublication(
+			researchObjectId, version, baseVersion, versionUri);
 
-		return Response.created(URI.create(uriInfo.getAbsolutePath() + "/" + version)).build();
+		return Response.created(
+			URI.create(uriInfo.getAbsolutePath().resolve(version).toString()))
+				.build();
 	}
 
 
@@ -174,7 +176,8 @@ public class ResearchObjectResource
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		dLibraDataSource.getPublicationsHelper().deleteGroupPublication(researchObjectId);
+		dLibraDataSource.getPublicationsHelper().deleteGroupPublication(
+			researchObjectId);
 
 	}
 }
