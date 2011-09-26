@@ -148,13 +148,12 @@ public class ResearchObjectResource
 					+ 1);
 		}
 
-		String versionUri = uriInfo.getAbsolutePath().toString() + "/"
-				+ version;
+		String versionUri = uriInfo.getAbsolutePath().resolve(version).toString();
 		dLibraDataSource.getPublicationsHelper().createPublication(
 			researchObjectId, version, baseVersion, versionUri);
 
 		return Response.created(
-			URI.create(uriInfo.getAbsolutePath() + "/" + version)).build();
+			URI.create(uriInfo.getAbsolutePath().resolve(version).toString())).build();
 	}
 
 

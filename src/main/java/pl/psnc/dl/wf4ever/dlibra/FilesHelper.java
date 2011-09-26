@@ -99,7 +99,7 @@ public class FilesHelper
 		throws RemoteException, DLibraException
 	{
 		ArrayList<String> result = new ArrayList<String>();
-		for (FileInfo fileInfo : getFilesInFolder(editionId, folder).values()) {
+		for (FileInfo fileInfo : getFilesInFolder(editionId, folder, false).values()) {
 			if (EmptyFoldersUtility.isDlibraPath(fileInfo.getFullPath())) {
 				result.add(EmptyFoldersUtility.convertDlibra2Real(fileInfo
 						.getFullPath()));
@@ -122,7 +122,7 @@ public class FilesHelper
 	 * @throws DLibraException
 	 */
 	private Map<VersionId, FileInfo> getFilesInFolder(EditionId editionId,
-			String folder)
+			String folder, boolean includeManifest)
 		throws RemoteException, DLibraException
 	{
 		Map<VersionId, FileInfo> result = new HashMap<VersionId, FileInfo>();
@@ -149,7 +149,8 @@ public class FilesHelper
 				result.clear();
 				return result;
 			}
-			if (!filePath.equals("/" + Constants.MANIFEST_FILENAME)) {
+			if (includeManifest
+					|| !filePath.equals("/" + Constants.MANIFEST_FILENAME)) {
 				if (folder == null || filePath.startsWith("/" + folder)) {
 					result.put(versionId, fileInfo);
 				}
@@ -165,8 +166,7 @@ public class FilesHelper
 
 
 	/**
-	* Returns input stream for a zipped content of file in a publication that are inside a given folder.
-	* @param groupPublicationName
+	* Returns input stream for a zipped content of file in a publication that are inside a given folder. Includes manifest.rdf.
 	* @param publicationName
 	* @param folderNotStandardized
 	* @return
@@ -181,7 +181,7 @@ public class FilesHelper
 				: (folderNotStandardized.endsWith("/") ? folderNotStandardized
 						: folderNotStandardized.concat("/")));
 		final Map<VersionId, FileInfo> fileVersionsAndInfos = getFilesInFolder(
-			editionId, folder);
+			editionId, folder, true);
 
 		PipedInputStream in = new PipedInputStream();
 		final PipedOutputStream out;
