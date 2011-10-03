@@ -5,7 +5,7 @@ require 'uuidtools'
 require 'base64'
 require 'zipruby'
 
-CALATOLA=true
+CALATOLA=false
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
@@ -140,7 +140,8 @@ def createRO
 		req.add_field "Content-Type", "text/plain"
 
 		response = http.request(req)
-		printResponse(response, 201)
+        puts "Location: " + response["location"]
+  		printResponse(response, 201)
 		code = response.code.to_i 
     }
 end
@@ -154,6 +155,7 @@ def createVersion(which = :ver1)
         req.add_field "Content-Type", "text/plain"
 
 		response = http.request(req)
+        puts "Location: " + response["location"]
 		printResponse(response, 201)
 		code = response.code.to_i 
 	}
@@ -647,84 +649,84 @@ end
 if createWorkspace == 201
 	if createRO == 201
 		if createVersion == 201
-			getManifest
-			validateManifest1
-			if addFile(:file1) == 200 && addFile(:file2) == 200
-				getListRO
-				getROrdf
-		        getVersionZip :ver1, [ FILES[:manifest][:path], FILES[:file1][:path], FILES[:file2][:path] ]
-				getManifest
-				getFileMetadata(:file1)
-				getFileMetadata(:file2)
-				getFile(:file1)
-				getFile(:file2)
-				getDirectoryList(:file2)
-				getDirectoryZipped(:file2)
-				updateFile(:file1)
-				updateFile(:file2)
-				searchForROs
-				updateManifest
-				updateManifestMalformed
-				updateManifestIncorrect
-				publishEdition
-#				wait INDEXING_TIME_INTERVAL
-#				searchForROs(:ver1)
-				createVersionAsCopy
-				getManifest(:ver2)
-				validateManifest2
-				publishEdition(:ver2)
-#				wait INDEXING_TIME_INTERVAL
-#				searchForROs(:ver1, :ver2)
-				updateManifest(1)
-#				searchForROs(:ver2)
-				unpublishEdition
-				deleteFile(:file1)
-				deleteFile(:file2)
-				checkNoFileMetadata(:file1)
-				checkNoFileContent(:file1)
-				checkNoFileMetadata(:file2)
-				checkNoFileContent(:file2)
-				checkDeleteManifest
-			end
-			if addEmptyDirectory(:file2) == 200
-				getDirectoryMetadata(:file2)
-				addFile(:file2)
-				getDirectoryMetadata(:file2)
-				deleteFile(:file2)
-				getDirectoryMetadata(:file2)
-				deleteDirectory(:file2)
-				checkNoDirectory(:file2)
-				addFile(:file2)
-				deleteDirectory(:file2)
-				checkNoDirectory(:file2)
-			end
-			if addFile(:file1) == 200 && addFile(:file2) == 200 && createEdition == 201
-				getFileEdition(:file1, 0)
-				addFile(:file3)
-				deleteFile(:file1)
-				getFileMetadata(:file3)
-				checkNoFileMetadata(:file1)
-				checkNoFileContent(:file1)
-				getFileEdition(:file1, 0)
-				checkPublished -1
-				publishEdition
-				checkPublished 1
-				if createEdition == 201
-					deleteFile(:file2)
-					checkNoFileMetadata(:file2)
-					addFile(:file1)
-					getFile(:file1)
-					deleteFile(:file1)
-					checkNoFileMetadata(:file1)
-					checkNoFileContent(:file1)
-					getFileEdition(:file1, 0)
-					checkPublished 1
-					publishEdition
-					checkPublished 2
-					unpublishEdition
-					checkPublished -1
-				end
-			end
+#			getManifest
+#			validateManifest1
+#			if addFile(:file1) == 200 && addFile(:file2) == 200
+#				getListRO
+#				getROrdf
+#				getVersionZip
+#				getManifest
+#				getFileMetadata(:file1)
+#				getFileMetadata(:file2)
+#				getFile(:file1)
+#				getFile(:file2)
+#				getDirectoryList(:file2)
+#				getDirectoryZipped(:file2)
+#				updateFile(:file1)
+#				updateFile(:file2)
+#				searchForROs
+#				updateManifest
+#				updateManifestMalformed
+#				updateManifestIncorrect
+#				publishEdition
+##				wait INDEXING_TIME_INTERVAL
+##				searchForROs(:ver1)
+#				createVersionAsCopy
+#				getManifest(:ver2)
+#				validateManifest2
+#				publishEdition(:ver2)
+##				wait INDEXING_TIME_INTERVAL
+##				searchForROs(:ver1, :ver2)
+#				updateManifest(1)
+##				searchForROs(:ver2)
+#				unpublishEdition
+#				deleteFile(:file1)
+#				deleteFile(:file2)
+#				checkNoFileMetadata(:file1)
+#				checkNoFileContent(:file1)
+#				checkNoFileMetadata(:file2)
+#				checkNoFileContent(:file2)
+#				checkDeleteManifest
+#			end
+#			if addEmptyDirectory(:file2) == 200
+#				getDirectoryMetadata(:file2)
+#				addFile(:file2)
+#				getDirectoryMetadata(:file2)
+#				deleteFile(:file2)
+#				getDirectoryMetadata(:file2)
+#				deleteDirectory(:file2)
+#				checkNoDirectory(:file2)
+#				addFile(:file2)
+#				deleteDirectory(:file2)
+#				checkNoDirectory(:file2)
+#			end
+#			if addFile(:file1) == 200 && addFile(:file2) == 200 && createEdition == 201
+#				getFileEdition(:file1, 0)
+#				addFile(:file3)
+#				deleteFile(:file1)
+#				getFileMetadata(:file3)
+#				checkNoFileMetadata(:file1)
+#				checkNoFileContent(:file1)
+#				getFileEdition(:file1, 0)
+#				checkPublished -1
+#				publishEdition
+#				checkPublished 1
+#				if createEdition == 201
+#					deleteFile(:file2)
+#					checkNoFileMetadata(:file2)
+#					addFile(:file1)
+#					getFile(:file1)
+#					deleteFile(:file1)
+#					checkNoFileMetadata(:file1)
+#					checkNoFileContent(:file1)
+#					getFileEdition(:file1, 0)
+#					checkPublished 1
+#					publishEdition
+#					checkPublished 2
+#					unpublishEdition
+#					checkPublished -1
+#				end
+#			end
 			deleteVersion
 		end
 		deleteRO

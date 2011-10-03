@@ -102,9 +102,10 @@ public class ResearchObjectListResource
 		dLibraDataSource.getPublicationsHelper().createGroupPublication(
 			researchObjectId);
 
-		return Response.created(
-			URI.create(uriInfo.getAbsolutePath() + "/" + researchObjectId))
-				.build();
+		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
+				.resolve(researchObjectId);
+
+		return Response.created(resourceUri).build();
 	}
 
 }

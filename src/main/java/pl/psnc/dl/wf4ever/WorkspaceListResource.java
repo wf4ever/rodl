@@ -23,13 +23,15 @@ import pl.psnc.dlibra.service.DLibraException;
  * 
  */
 @Path(Constants.WORKSPACES_URL_PART)
-public class WorkspaceListResource {
+public class WorkspaceListResource
+{
 
 	@Context
 	HttpServletRequest request;
 
 	@Context
 	private UriInfo uriInfo;
+
 
 	/**
 	 * Creates new workspace with given WORKSPACE_ID. input: WORKSPACE_ID and
@@ -45,8 +47,9 @@ public class WorkspaceListResource {
 	 */
 	@POST
 	@Consumes("text/plain")
-	public Response createWorkspace(String data) throws RemoteException,
-			DLibraException {
+	public Response createWorkspace(String data)
+		throws RemoteException, DLibraException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
@@ -68,6 +71,9 @@ public class WorkspaceListResource {
 		// password can be empty
 		dLibraDataSource.getUsersHelper().createUser(workspaceId, password);
 
-		return Response.created(URI.create(uriInfo.getAbsolutePath() + "/" + workspaceId)).build();
+		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
+				.resolve(workspaceId);
+
+		return Response.created(resourceUri).build();
 	}
 }
