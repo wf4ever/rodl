@@ -5,7 +5,7 @@ require 'uuidtools'
 require 'base64'
 require 'zipruby'
 
-CALATOLA=true
+CALATOLA=false
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
@@ -815,12 +815,12 @@ if createUser == 201 && createClient == 201
             getWorkspacesRdf
 	        if createRO == 201
 		        if createVersion == 201
-			        getManifest
-			        validateManifest1
-			        if addFile(:file1) == 200 && addFile(:file2) == 200
-				        getListRO
-				        getROrdf
-				        getVersionZip :ver1, [ FILES[:manifest][:path], FILES[:file1][:path], FILES[:file2][:path] ]
+#			        getManifest
+#			        validateManifest1
+#			        if addFile(:file1) == 200 && addFile(:file2) == 200
+#				        getListRO
+#				        getROrdf
+#				        getVersionZip :ver1, [ FILES[:manifest][:path], FILES[:file1][:path], FILES[:file2][:path] ]
 #				        getManifest
 #				        getFileMetadata(:file1)
 #				        getFileMetadata(:file2)
@@ -892,7 +892,7 @@ if createUser == 201 && createClient == 201
 #					        unpublishEdition
 #					        checkPublished -1
 #				        end
-			        end
+#			        end
 			        deleteVersion
 		        end
 		        deleteRO

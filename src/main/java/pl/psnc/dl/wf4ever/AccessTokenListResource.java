@@ -3,6 +3,7 @@
  */
 package pl.psnc.dl.wf4ever;
 
+import java.net.URI;
 import java.rmi.RemoteException;
 import java.util.List;
 
@@ -100,10 +101,10 @@ public class AccessTokenListResource
 		try {
 			String accessToken = dLibraDataSource.getOAuthManager()
 					.createAccessToken(lines[0], lines[1]).getToken();
-			return Response.created(
-				uriInfo.getAbsolutePath()
-						.resolve(Constants.ACCESSTOKEN_URL_PART)
-						.resolve(accessToken)).build();
+			URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/")
+					.build().resolve(accessToken);
+
+			return Response.created(resourceUri).build();
 		}
 		catch (IllegalArgumentException e) {
 			return Response.status(Status.NOT_FOUND).type("text/plain")

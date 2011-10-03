@@ -3,6 +3,7 @@
  */
 package pl.psnc.dl.wf4ever;
 
+import java.net.URI;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +99,9 @@ public class WorkspaceListResource
 		dLibraDataSource.getPublicationsHelper().createGroupPublication(
 			workspaceId);
 
-		return Response.created(uriInfo.getAbsolutePath().resolve(workspaceId))
-				.build();
+		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
+				.resolve(workspaceId);
+
+		return Response.created(resourceUri).build();
 	}
 }

@@ -3,6 +3,7 @@
  */
 package pl.psnc.dl.wf4ever;
 
+import java.net.URI;
 import java.rmi.RemoteException;
 import java.util.List;
 
@@ -50,7 +51,8 @@ public class ClientListResource
 	 */
 	@GET
 	@Produces("text/xml")
-	public OAuthClientList getClientList() throws RemoteException, IdNotFoundException, DLibraException
+	public OAuthClientList getClientList()
+		throws RemoteException, IdNotFoundException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
@@ -76,7 +78,8 @@ public class ClientListResource
 	@POST
 	@Consumes("text/plain")
 	@Produces("text/plain")
-	public Response createClient(String data) throws RemoteException, IdNotFoundException, DLibraException
+	public Response createClient(String data)
+		throws RemoteException, IdNotFoundException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
@@ -93,10 +96,12 @@ public class ClientListResource
 					.build();
 		}
 
-		String clientId = dLibraDataSource.getOAuthManager().createClient(lines[0], lines[1]);
+		String clientId = dLibraDataSource.getOAuthManager().createClient(
+			lines[0], lines[1]);
 
-		return Response.created(
-			uriInfo.getAbsolutePath().resolve(Constants.CLIENTS_URL_PART)
-					.resolve(clientId)).build();
+		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
+				.resolve(clientId);
+
+		return Response.created(resourceUri).build();
 	}
 }

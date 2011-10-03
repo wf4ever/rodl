@@ -3,6 +3,7 @@
  */
 package pl.psnc.dl.wf4ever;
 
+import java.net.URI;
 import java.rmi.RemoteException;
 import java.util.UUID;
 
@@ -52,7 +53,7 @@ public class UserListResource
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
-		
+
 		userId = new String(Base64.decodeBase64(userId));
 
 		if (userId == null || userId.isEmpty()) {
@@ -61,11 +62,14 @@ public class UserListResource
 					.header(Constants.CONTENT_TYPE_HEADER_NAME, "text/plain")
 					.build();
 		}
-		String password = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 20);
+		String password = UUID.randomUUID().toString().replaceAll("-", "")
+				.substring(0, 20);
 		dLibraDataSource.getUsersHelper().createUser(userId, password);
-		dLibraDataSource.getOAuthManager().createUserCredentials(userId, password);
+		dLibraDataSource.getOAuthManager().createUserCredentials(userId,
+			password);
 
-		return Response.created(uriInfo.getAbsolutePath().resolve(userId))
-				.build();
+		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
+				.resolve(userId);
+		return Response.created(resourceUri).build();
 	}
 }
