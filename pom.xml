@@ -98,7 +98,7 @@
 			<version>2.4</version>
 			<scope>provided</scope>
 		</dependency>
- 		<dependency>
+		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.16</version>
@@ -131,6 +131,27 @@
 			<version>2.7.1</version>
 			<type>jar</type>
 			<scope>compile</scope>
+		</dependency>
+
+		<!-- JETTY DEPENDENCIES FOR TESTING -->
+
+		<dependency>
+			<groupId>org.mortbay.jetty</groupId>
+			<artifactId>jetty</artifactId>
+			<version>${jetty.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mortbay.jetty</groupId>
+			<artifactId>jetty-util</artifactId>
+			<version>${jetty.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mortbay.jetty</groupId>
+			<artifactId>jetty-management</artifactId>
+			<version>${jetty.version}</version>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 	<repositories>
@@ -239,4 +260,8 @@
 			</plugin>
 		</plugins>
 	</reporting>
+
+	<properties>
+		<jetty.version>6.1.4</jetty.version>
+	</properties>
 </project>
