@@ -23,7 +23,6 @@ import org.apache.log4j.Logger;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.RdfBuilder;
 import pl.psnc.dlibra.common.Id;
-import pl.psnc.dlibra.common.Info;
 import pl.psnc.dlibra.common.InputFilter;
 import pl.psnc.dlibra.common.OutputFilter;
 import pl.psnc.dlibra.content.ContentServer;
@@ -132,15 +131,13 @@ public class FilesHelper
 		List<Id> versionIds = (List<Id>) publicationManager.getObjects(
 			new EditionFilter(editionId), new OutputFilter(VersionId.class))
 				.getResultIds();
-		List<Info> fileInfos = (List<Info>) fileManager.getObjects(
-			new InputFilter(new ArrayList<Id>(versionIds)),
-			new OutputFilter(FileInfo.class)).getResultInfos();
-		if (versionIds.size() != fileInfos.size()) {
-			logger.error("Version ids size is not equal to file infos size");
-		}
-		for (int i = 0; i < versionIds.size(); i++) {
-			VersionId versionId = (VersionId) versionIds.get(i);
-			FileInfo fileInfo = (FileInfo) fileInfos.get(i);
+		for (Id id : versionIds) {
+			VersionId versionId = (VersionId) id;
+
+			FileInfo fileInfo = (FileInfo) fileManager.getObjects(
+				new InputFilter(versionId),
+				new OutputFilter(FileInfo.class)).getResultInfo();
+
 			String filePath = fileInfo.getFullPath();
 			if (EmptyFoldersUtility.isDlibraPath(filePath)
 					&& EmptyFoldersUtility.convertDlibra2Real(filePath).equals(
