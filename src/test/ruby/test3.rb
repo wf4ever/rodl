@@ -138,7 +138,6 @@ def createRO
 		req.add_field "Content-Type", "text/plain"
 
 		response = http.request(req)
-        puts "Location: " + response["location"]
   		printResponse(response, 201)
 		code = response.code.to_i 
     }
@@ -153,7 +152,6 @@ def createVersion(which = :ver1)
         req.add_field "Content-Type", "text/plain"
 
 		response = http.request(req)
-        puts "Location: " + response["location"]
 		printResponse(response, 201)
 		code = response.code.to_i 
 	}
@@ -206,7 +204,10 @@ def getVersionZip(which = :ver1)
 		puts response.code + " " + response.message
 		#no body printing -- binary file!
 		if response.code.to_i == 200
-			puts "Archive size: " + response["content-length"] if Choice.choices[:printBody]
+		    if Choice.choices[:printBody]
+    			puts "Archive size: " + response["content-length"] 
+    			File.open("version.zip", 'w') {|f| f.write(response.body) }
+    		end
 		else
 			puts response.body if Choice.choices[:printErrors]
 		end
@@ -634,12 +635,12 @@ end
 if createWorkspace == 201
 	if createRO == 201
 		if createVersion == 201
-#			getManifest
-#			validateManifest1
-#			if addFile(:file1) == 200 && addFile(:file2) == 200
-#				getListRO
-#				getROrdf
-#				getVersionZip
+			getManifest
+			validateManifest1
+			if addFile(:file1) == 200 && addFile(:file2) == 200
+				getListRO
+				getROrdf
+				getVersionZip
 #				getManifest
 #				getFileMetadata(:file1)
 #				getFileMetadata(:file2)
@@ -711,7 +712,7 @@ if createWorkspace == 201
 #					unpublishEdition
 #					checkPublished -1
 #				end
-#			end
+			end
 			deleteVersion
 		end
 		deleteRO
