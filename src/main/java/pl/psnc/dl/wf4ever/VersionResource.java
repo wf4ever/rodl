@@ -200,7 +200,7 @@ public class VersionResource
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		String versionUri = uriInfo.getAbsolutePath().toString();
+		URI versionUri = uriInfo.getAbsolutePath();
 
 		if (publish != null) {
 			if (!publish.equals("false")) {
@@ -261,6 +261,6 @@ public class VersionResource
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		dLibraDataSource.getPublicationsHelper().deletePublication(
-			researchObjectId, versionId, uriInfo.getAbsolutePath().toString());
+			researchObjectId, versionId, uriInfo.getAbsolutePath());
 	}
 }

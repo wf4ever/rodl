@@ -3,7 +3,10 @@ package pl.psnc.dl.wf4ever.dlibra;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -49,7 +52,7 @@ public class ManifestHelper
 	}
 
 
-	public void updateManifest(String versionUri, String groupPublicationName,
+	public void updateManifest(URI versionUri, String groupPublicationName,
 			String publicationName, InputStream manifest)
 		throws DLibraException, IOException, TransformerException,
 		JenaException, IncorrectManifestException
@@ -77,7 +80,7 @@ public class ManifestHelper
 	 * @return Serialized manifest
 	 * @throws TransformerException when serializing the manifest ends with error
 	 */
-	InputStream createInitialManifest(String uri, String identifier,
+	InputStream createInitialManifest(URI uri, String identifier,
 			String creator, String title, String description, String version,
 			Literal created)
 		throws TransformerException
@@ -87,11 +90,11 @@ public class ManifestHelper
 	}
 
 
-	private Resource createInitialManifestResource(String uri,
+	private Resource createInitialManifestResource(URI versionURI,
 			String identifier, String creator, String title,
 			String description, String version, Literal created)
 	{
-		Resource resource = RdfBuilder.createResource(uri);
+		Resource resource = RdfBuilder.createResource(versionURI.toString());
 
 		resource.addLiteral(DCTerms.identifier, identifier);
 		resource.addLiteral(DCTerms.creator, creator);
@@ -116,7 +119,7 @@ public class ManifestHelper
 	 * @throws IncorrectManifestException thrown if a property is missing
 	 */
 	public void regenerateManifest(String groupPublicationName,
-			String publicationName, String versionURI, InputStream baseManifest)
+			String publicationName, URI versionURI, InputStream baseManifest)
 		throws JenaException, DLibraException, IOException,
 		TransformerException, IncorrectManifestException
 	{
@@ -139,8 +142,8 @@ public class ManifestHelper
 	 * @throws IncorrectManifestException thrown if a property is missing
 	 */
 	void regenerateManifest(String groupPublicationName,
-			String publicationName, String versionURI, InputStream manifest,
-			String baseVersionURI)
+			String publicationName, URI versionURI, InputStream manifest,
+			URI baseVersionURI)
 		throws DLibraException, IOException, TransformerException,
 		JenaException, IncorrectManifestException
 	{
@@ -164,21 +167,21 @@ public class ManifestHelper
 	}
 
 
-	private Resource getBaseResource(String versionUri, InputStream manifest)
+	private Resource getBaseResource(URI versionUri, InputStream manifest)
 		throws IncorrectManifestException
 	{
 		Model model = ModelFactory.createDefaultModel();
 		model.read(manifest, null);
 
 		// createResource may create new or use existing one
-		Resource baseResource = model.createResource(versionUri);
+		Resource baseResource = model.createResource(versionUri.toString());
 
 		RdfBuilder.checkMandatoryProperties(baseResource);
 		return baseResource;
 	}
 
 
-	private Resource createInitialManifestResource(String versionUri,
+	private Resource createInitialManifestResource(URI versionURI,
 			String version, Resource baseResource)
 	{
 		String identifier = baseResource.getProperty(DCTerms.identifier)
@@ -190,13 +193,13 @@ public class ManifestHelper
 		Literal created = baseResource.getProperty(DCTerms.created)
 				.getLiteral();
 
-		return createInitialManifestResource(versionUri, identifier, creator,
+		return createInitialManifestResource(versionURI, identifier, creator,
 			title, description, version, created);
 	}
 
 
 	private void addOptionalROSRSProperties(Resource resource,
-			String versionUri, String groupPublicationName,
+			URI versionUri, String groupPublicationName,
 			String publicationName)
 		throws RemoteException, DLibraException
 	{
@@ -204,20 +207,25 @@ public class ManifestHelper
 			groupPublicationName, publicationName);
 		List<String> list = dLibra.getFilesHelper().getFilePathsInPublication(
 			editionId);
+		List<URI> resourceURIs = new ArrayList<URI>();
 
-		for (int i = 0; i < list.size(); i++) {
-			list.set(i, versionUri + list.get(i));
+		for (String file : list) {
+			try {
+				resourceURIs.add(new URI(versionUri.toString() + "/").resolve(new URI(file)));
+			} catch (URISyntaxException e) {
+				logger.error(String.format("%s is not a valid URI", file));
+			}
 		}
 
-		RdfBuilder.addAggregation(resource, list);
-
-		String researchObjectUri = versionUri.substring(0,
-			versionUri.lastIndexOf("/"));
+		RdfBuilder.addAggregation(resource, resourceURIs);
 
 		for (PublicationInfo info : dLibra.getPublicationsHelper()
 				.listPublicationsInGroup(groupPublicationName)) {
-			resource.addProperty(DCTerms.hasVersion, researchObjectUri + "/"
-					+ info.getLabel());
+			try {
+				resource.addProperty(DCTerms.hasVersion, versionUri.resolve(new URI(info.getLabel())).toString());
+			} catch (URISyntaxException e) {
+				logger.error(String.format("%s is not a valid URI", info.getLabel()));
+			}
 		}
 
 		Date creationDate = new Date();
@@ -255,9 +263,9 @@ public class ManifestHelper
 	 * @throws IOException
 	 * @throws TransformerException
 	 */
-	public void regerenerateManifestSafe(String versionUri,
+	public void regerenerateManifestSafe(URI versionUri,
 			String groupPublicationName, String publicationName,
-			String baseVersionURI)
+			URI baseVersionURI)
 		throws DLibraException, IOException, TransformerException
 	{
 		EditionId editionId = dLibra.getEditionHelper().getLastEditionId(
@@ -292,7 +300,7 @@ public class ManifestHelper
 	 * @throws IOException
 	 * @throws TransformerException
 	 */
-	public void regerenerateManifestSafe(String versionUri,
+	public void regerenerateManifestSafe(URI versionUri,
 			String groupPublicationName, String publicationName)
 		throws DLibraException, IOException, TransformerException
 	{

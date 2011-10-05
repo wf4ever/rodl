@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,14 +74,14 @@ public class ResearchObjectResource
 		List<PublicationInfo> list = dLibraDataSource.getPublicationsHelper()
 				.listPublicationsInGroup(researchObjectId);
 
-		List<String> links = new ArrayList<String>(list.size());
+		List<URI> links = new ArrayList<URI>(list.size());
 
 		for (PublicationInfo info : list) {
-			links.add(uriInfo.getAbsolutePath() + "/" + info.getLabel());
+			links.add(uriInfo.getAbsolutePathBuilder().path("/").build().resolve(info.getLabel()));
 		}
 
 		String responseBody = RdfBuilder.serializeResource(RdfBuilder
-				.createCollection(uriInfo.getAbsolutePath().toString(), links));
+				.createCollection(uriInfo.getAbsolutePath(), links));
 
 		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
 				.fileName(researchObjectId + ".rdf").build();
@@ -104,13 +105,14 @@ public class ResearchObjectResource
 	 * @throws DLibraException
 	 * @throws IOException
 	 * @throws TransformerException
+	 * @throws URISyntaxException 
 	 * @throws SAXException 
 	 */
 	@POST
 	@Consumes("text/plain")
 	public Response createVersion(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId, String data)
-		throws DLibraException, IOException, TransformerException
+		throws DLibraException, IOException, TransformerException, URISyntaxException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
@@ -123,35 +125,18 @@ public class ResearchObjectResource
 					.build();
 		}
 		String version = lines[0];
-		String baseVersionUri = (lines.length > 1 ? lines[1] : null);
 		String baseVersion = null;
-		if (baseVersionUri != null && !baseVersionUri.isEmpty()) {
-			// remove "/" from the end of URI
-			if (baseVersionUri.lastIndexOf("/") == baseVersionUri.length() - 1) {
-				baseVersionUri = baseVersionUri.substring(0,
-					baseVersionUri.length() - 1);
-			}
-
-			// check if this is a correct URI
-			if (!baseVersionUri.contains(uriInfo.getPath())) {
-				return Response
-						.status(Status.BAD_REQUEST)
-						.entity("Bad base version URI")
-						.header(Constants.CONTENT_TYPE_HEADER_NAME,
-							"text/plain").build();
-			}
-
-			baseVersion = baseVersionUri.substring(baseVersionUri
-					.indexOf(uriInfo.getPath())
-					+ uriInfo.getPath().length()
-					+ 1);
+		if (lines.length > 1) {
+			URI baseVersionUri = new URI(lines[1]);
+			URI roUri = baseVersionUri.resolve("..");
+			baseVersion = baseVersionUri.relativize(roUri).toString();
 		}
 
 		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
 				.resolve(version);
 
 		dLibraDataSource.getPublicationsHelper().createPublication(
-			researchObjectId, version, baseVersion, resourceUri.toString());
+			researchObjectId, version, baseVersion, resourceUri);
 		return Response.created(resourceUri).build();
 	}
 

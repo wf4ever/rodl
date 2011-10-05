@@ -6,6 +6,8 @@ package pl.psnc.dl.wf4ever.dlibra;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.rmi.RemoteException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -328,9 +330,8 @@ public class PublicationsHelper {
 	 * @throws TransformerException
 	 */
 	public void createPublication(String groupPublicationName,
-			String publicationName, String basePublicationName,
-			String versionURI) throws DLibraException, IOException,
-			TransformerException {
+			String publicationName, String basePublicationName, URI versionURI)
+			throws DLibraException, IOException, TransformerException {
 		PublicationId groupId = getGroupId(groupPublicationName);
 		try {
 			getPublicationId(groupId, publicationName);
@@ -401,10 +402,9 @@ public class PublicationsHelper {
 	}
 
 	private EditionId preparePublicationAsNew(String groupPublicationName,
-			String publicationName, String versionUri,
-			PublicationId publicationId) throws DLibraException,
-			AccessDeniedException, IdNotFoundException, RemoteException,
-			TransformerException, IOException {
+			String publicationName, URI versionUri, PublicationId publicationId)
+			throws DLibraException, AccessDeniedException, IdNotFoundException,
+			RemoteException, TransformerException, IOException {
 		Date creationDate = new Date();
 
 		File file = new File("application/rdf+xml", publicationId, "/"
@@ -450,7 +450,7 @@ public class PublicationsHelper {
 	}
 
 	private void preparePublicationAsACopy(String groupPublicationName,
-			String publicationName, String versionURI,
+			String publicationName, URI versionURI,
 			PublicationId publicationId, String basePublicationName,
 			PublicationId basePublicationId) throws RemoteException,
 			DLibraException, AccessDeniedException, IdNotFoundException,
@@ -464,9 +464,7 @@ public class PublicationsHelper {
 		EditionId baseEditionId = dLibra.getEditionHelper().getLastEditionId(
 				groupPublicationName, basePublicationName);
 
-		String baseVersionURI = versionURI.substring(0,
-				versionURI.lastIndexOf("/") + 1)
-				+ basePublicationName;
+		URI baseVersionURI = versionURI.resolve(basePublicationName);
 		dLibra.getManifestHelper().regerenerateManifestSafe(versionURI,
 				groupPublicationName, publicationName, baseVersionURI);
 		dLibra.getAttributesHelper().updateMetadataAttributes(
@@ -475,18 +473,20 @@ public class PublicationsHelper {
 	}
 
 	private void addHasVersionPropertyToAll(String groupPublicationName,
-			String versionURI) throws RemoteException, DLibraException,
+			URI versionURI) throws RemoteException, DLibraException,
 			IOException, TransformerException {
 		List<PublicationInfo> list = listPublicationsInGroup(groupPublicationName);
 		for (PublicationInfo p : list) {
-			String pubVersionURI = versionURI.substring(0,
-					versionURI.lastIndexOf("/") + 1)
-					+ p.getLabel();
-			logger.debug(String
-					.format("Will regenerate manifest and add hasVersion for version %s",
-							p.getLabel()));
-			dLibra.getManifestHelper().regerenerateManifestSafe(pubVersionURI,
-					groupPublicationName, p.getLabel());
+			try {
+				URI pubVersionURI = versionURI.resolve(new URI(p.getLabel()));
+				logger.debug(String
+						.format("Will regenerate manifest and add hasVersion for version %s",
+								p.getLabel()));
+				dLibra.getManifestHelper().regerenerateManifestSafe(
+						pubVersionURI, groupPublicationName, p.getLabel());
+			} catch (URISyntaxException e) {
+				logger.error(String.format("%s is not a valid URI", p.getLabel()));
+			}
 		}
 	}
 
@@ -502,7 +502,7 @@ public class PublicationsHelper {
 	 * @throws TransformerException
 	 */
 	public void deletePublication(String groupPublicationName,
-			String publicationName, String versionUri) throws DLibraException,
+			String publicationName, URI versionUri) throws DLibraException,
 			IOException, TransformerException {
 		PublicationId publicationId = getPublicationId(
 				getGroupId(groupPublicationName), publicationName);

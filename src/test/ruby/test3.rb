@@ -5,7 +5,7 @@ require 'uuidtools'
 require 'base64'
 require 'zipruby'
 
-CALATOLA=false
+CALATOLA=true
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
@@ -654,77 +654,77 @@ if createWorkspace == 201
 				getListRO
 				getROrdf
 				getVersionZip
-#				getManifest
-#				getFileMetadata(:file1)
-#				getFileMetadata(:file2)
-#				getFile(:file1)
-#				getFile(:file2)
-#				getDirectoryList(:file2)
-#				getDirectoryZipped(:file2)
-#				updateFile(:file1)
-#				updateFile(:file2)
-#				searchForROs
-#				updateManifest
-#				updateManifestMalformed
-#				updateManifestIncorrect
-#				publishEdition
-##				wait INDEXING_TIME_INTERVAL
-##				searchForROs(:ver1)
-#				createVersionAsCopy
-#				getManifest(:ver2)
-#				validateManifest2
-#				publishEdition(:ver2)
-##				wait INDEXING_TIME_INTERVAL
-##				searchForROs(:ver1, :ver2)
-#				updateManifest(1)
-##				searchForROs(:ver2)
-#				unpublishEdition
-#				deleteFile(:file1)
-#				deleteFile(:file2)
-#				checkNoFileMetadata(:file1)
-#				checkNoFileContent(:file1)
-#				checkNoFileMetadata(:file2)
-#				checkNoFileContent(:file2)
-#				checkDeleteManifest
-#			end
-#			if addEmptyDirectory(:file2) == 200
-#				getDirectoryMetadata(:file2)
-#				addFile(:file2)
-#				getDirectoryMetadata(:file2)
-#				deleteFile(:file2)
-#				getDirectoryMetadata(:file2)
-#				deleteDirectory(:file2)
-#				checkNoDirectory(:file2)
-#				addFile(:file2)
-#				deleteDirectory(:file2)
-#				checkNoDirectory(:file2)
-#			end
-#			if addFile(:file1) == 200 && addFile(:file2) == 200 && createEdition == 201
-#				getFileEdition(:file1, 0)
-#				addFile(:file3)
-#				deleteFile(:file1)
-#				getFileMetadata(:file3)
-#				checkNoFileMetadata(:file1)
-#				checkNoFileContent(:file1)
-#				getFileEdition(:file1, 0)
-#				checkPublished -1
-#				publishEdition
-#				checkPublished 1
-#				if createEdition == 201
-#					deleteFile(:file2)
-#					checkNoFileMetadata(:file2)
-#					addFile(:file1)
-#					getFile(:file1)
-#					deleteFile(:file1)
-#					checkNoFileMetadata(:file1)
-#					checkNoFileContent(:file1)
-#					getFileEdition(:file1, 0)
-#					checkPublished 1
-#					publishEdition
-#					checkPublished 2
-#					unpublishEdition
-#					checkPublished -1
-#				end
+				getManifest
+				getFileMetadata(:file1)
+				getFileMetadata(:file2)
+				getFile(:file1)
+				getFile(:file2)
+				getDirectoryList(:file2)
+				getDirectoryZipped(:file2)
+				updateFile(:file1)
+				updateFile(:file2)
+				searchForROs
+				updateManifest
+				updateManifestMalformed
+				updateManifestIncorrect
+				publishEdition
+#				wait INDEXING_TIME_INTERVAL
+#				searchForROs(:ver1)
+				createVersionAsCopy
+				getManifest(:ver2)
+				validateManifest2
+				publishEdition(:ver2)
+#				wait INDEXING_TIME_INTERVAL
+#				searchForROs(:ver1, :ver2)
+				updateManifest(1)
+#				searchForROs(:ver2)
+				unpublishEdition
+				deleteFile(:file1)
+				deleteFile(:file2)
+				checkNoFileMetadata(:file1)
+				checkNoFileContent(:file1)
+				checkNoFileMetadata(:file2)
+				checkNoFileContent(:file2)
+				checkDeleteManifest
+			end
+			if addEmptyDirectory(:file2) == 200
+				getDirectoryMetadata(:file2)
+				addFile(:file2)
+				getDirectoryMetadata(:file2)
+				deleteFile(:file2)
+				getDirectoryMetadata(:file2)
+				deleteDirectory(:file2)
+				checkNoDirectory(:file2)
+				addFile(:file2)
+				deleteDirectory(:file2)
+				checkNoDirectory(:file2)
+			end
+			if addFile(:file1) == 200 && addFile(:file2) == 200 && createEdition == 201
+				getFileEdition(:file1, 0)
+				addFile(:file3)
+				deleteFile(:file1)
+				getFileMetadata(:file3)
+				checkNoFileMetadata(:file1)
+				checkNoFileContent(:file1)
+				getFileEdition(:file1, 0)
+				checkPublished -1
+				publishEdition
+				checkPublished 1
+				if createEdition == 201
+					deleteFile(:file2)
+					checkNoFileMetadata(:file2)
+					addFile(:file1)
+					getFile(:file1)
+					deleteFile(:file1)
+					checkNoFileMetadata(:file1)
+					checkNoFileContent(:file1)
+					getFileEdition(:file1, 0)
+					checkPublished 1
+					publishEdition
+					checkPublished 2
+					unpublishEdition
+					checkPublished -1
+				end
 			end
 			deleteVersion
 		end
