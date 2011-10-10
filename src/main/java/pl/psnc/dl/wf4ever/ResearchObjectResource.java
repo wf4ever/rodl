@@ -125,8 +125,8 @@ public class ResearchObjectResource {
 		String baseVersion = null;
 		if (lines.length > 1) {
 			URI baseVersionUri = new URI(lines[1]);
-			URI roUri = baseVersionUri.resolve("..");
-			baseVersion = baseVersionUri.relativize(roUri).toString();
+			URI roUri = baseVersionUri.resolve(".");
+			baseVersion = roUri.relativize(baseVersionUri).toString();
 		}
 
 		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
