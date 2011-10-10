@@ -29,12 +29,11 @@ import com.sun.jersey.core.header.ContentDisposition;
 /**
  * 
  * @author nowakm
- *
+ * 
  */
 @Path(Constants.WORKSPACES_URL_PART + "/{W_ID}/"
 		+ Constants.RESEARCH_OBJECTS_URL_PART)
-public class ResearchObjectListResource
-{
+public class ResearchObjectListResource {
 
 	private final static Logger logger = Logger
 			.getLogger(ResearchObjectListResource.class);
@@ -45,20 +44,20 @@ public class ResearchObjectListResource
 	@Context
 	UriInfo uriInfo;
 
-
 	/**
 	 * Returns list of links to research objects. Output format is TBD.
-	 * @param workspaceId identifier of a workspace in the RO SRS
+	 * 
+	 * @param workspaceId
+	 *            identifier of a workspace in the RO SRS
 	 * @return TBD
 	 * @throws RemoteException
 	 * @throws DLibraException
-	 * @throws TransformerException 
+	 * @throws TransformerException
 	 */
 	@GET
 	@Produces("application/rdf+xml")
 	public Response getResearchObjectList(@PathParam("W_ID") String workspaceId)
-		throws RemoteException, DLibraException, TransformerException
-	{
+			throws RemoteException, DLibraException, TransformerException {
 
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
@@ -68,21 +67,20 @@ public class ResearchObjectListResource
 		if (uriInfo.getQueryParameters().isEmpty()) {
 			list = dLibraDataSource.getPublicationsHelper()
 					.listUserGroupPublications(Publication.PUB_GROUP_MID);
-		}
-		else {
+		} else {
 			list = dLibraDataSource.getPublicationsHelper()
 					.listUserPublications(uriInfo.getQueryParameters());
 		}
 
-		List<String> links = new ArrayList<String>(list.size());
+		List<URI> links = new ArrayList<URI>(list.size());
 
 		for (AbstractPublicationInfo info : list) {
-			links.add(uriInfo.getAbsolutePath().resolve(info.getLabel())
-					.toString());
+			links.add(uriInfo.getAbsolutePathBuilder().path("/").build()
+					.resolve(info.getLabel()));
 		}
 
 		String responseBody = RdfBuilder.serializeResource(RdfBuilder
-				.createCollection(uriInfo.getAbsolutePath().toString(), links));
+				.createCollection(uriInfo.getAbsolutePath(), links));
 
 		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
 				.fileName(workspaceId + ".rdf").build();
@@ -91,27 +89,28 @@ public class ResearchObjectListResource
 				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
 	}
 
-
 	/**
 	 * Creates new RO with given RO_ID.
-
-	 * @param workspaceId identifier of a workspace in the RO SRS
-	 * @param researchObjectId RO_ID in plain text (text/plain)
-	 * @return 201 (Created) when the RO was successfully created, 409 (Conflict) if the RO_ID is already used in the WORKSPACE_ID workspace
+	 * 
+	 * @param workspaceId
+	 *            identifier of a workspace in the RO SRS
+	 * @param researchObjectId
+	 *            RO_ID in plain text (text/plain)
+	 * @return 201 (Created) when the RO was successfully created, 409
+	 *         (Conflict) if the RO_ID is already used in the WORKSPACE_ID
+	 *         workspace
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 */
 	@POST
 	@Consumes("text/plain")
 	public Response createResearchObject(@PathParam("W_ID") String workspaceId,
-			String researchObjectId)
-		throws RemoteException, DLibraException
-	{
+			String researchObjectId) throws RemoteException, DLibraException {
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		dLibraDataSource.getPublicationsHelper().createGroupPublication(
-			workspaceId, researchObjectId);
+				workspaceId, researchObjectId);
 
 		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
 				.resolve(researchObjectId);

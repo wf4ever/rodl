@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever;
 
+import java.net.URI;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,18 +25,16 @@ import com.sun.jersey.core.header.ContentDisposition;
 /**
  * 
  * @author nowakm
- *
+ * 
  */
 @Path(Constants.WORKSPACES_URL_PART + "/{W_ID}")
-public class WorkspaceResource
-{
+public class WorkspaceResource {
 
 	@Context
 	HttpServletRequest request;
 
 	@Context
 	UriInfo uriInfo;
-
 
 	/**
 	 * Returns list of research objects in this workspace.
@@ -51,22 +50,21 @@ public class WorkspaceResource
 	@GET
 	@Produces("application/rdf+xml")
 	public Response getListOfVersions(@PathParam("W_ID") String workspaceId)
-		throws RemoteException, DLibraException, TransformerException
-	{
+			throws RemoteException, DLibraException, TransformerException {
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 		List<PublicationInfo> list = dLibraDataSource.getPublicationsHelper()
 				.listPublicationsInGroup(workspaceId);
 
-		List<String> links = new ArrayList<String>(list.size());
+		List<URI> links = new ArrayList<URI>(list.size());
 
 		for (PublicationInfo info : list) {
-			links.add(uriInfo.getAbsolutePath().resolve(info.getLabel())
-					.toString());
+			links.add(uriInfo.getAbsolutePathBuilder().path("/").build()
+					.resolve(info.getLabel()));
 		}
 
 		String responseBody = RdfBuilder.serializeResource(RdfBuilder
-				.createCollection(uriInfo.getAbsolutePath().toString(), links));
+				.createCollection(uriInfo.getAbsolutePath(), links));
 
 		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
 				.fileName(workspaceId + ".rdf").build();
@@ -75,22 +73,22 @@ public class WorkspaceResource
 				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
 	}
 
-
 	/**
 	 * Deletes the workspace.
-	 * @param workspaceId identifier of a workspace in the RO SRS
+	 * 
+	 * @param workspaceId
+	 *            identifier of a workspace in the RO SRS
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 */
 	@DELETE
 	public void deleteWorkspace(@PathParam("W_ID") String workspaceId)
-		throws RemoteException, DLibraException
-	{
+			throws RemoteException, DLibraException {
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		dLibraDataSource.getPublicationsHelper().deleteGroupPublication(
-			workspaceId);
+				workspaceId);
 
 	}
 }
