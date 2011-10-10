@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -97,11 +98,11 @@ public class RdfBuilder
 	}
 
 
-	public static Resource createCollection(String collectionUri,
-			List<String> links)
+	public static Resource createCollection(URI uri,
+			List<URI> links)
 	{
 		model.removeAll();
-		Resource collection = model.createResource(collectionUri);
+		Resource collection = model.createResource(uri.toString());
 
 		addAggregation(collection, links);
 
@@ -109,11 +110,11 @@ public class RdfBuilder
 	}
 
 
-	public static void addAggregation(Resource resource, List<String> links)
+	public static void addAggregation(Resource resource, List<URI> links)
 	{
 		resource.addProperty(RDF.type, AGGREGATION);
-		for (String uri : links) {
-			Resource object = model.createResource(uri);
+		for (URI uri : links) {
+			Resource object = model.createResource(uri.toString());
 			resource.addProperty(AGGREGATES, object);
 
 		}

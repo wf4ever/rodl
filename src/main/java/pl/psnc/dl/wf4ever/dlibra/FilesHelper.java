@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.net.URI;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -310,7 +311,7 @@ public class FilesHelper
 	}
 
 
-	public void createOrUpdateFile(String versionUri,
+	public void createOrUpdateFile(URI versionUri,
 			String groupPublicationName, String publicationName,
 			String filePath, InputStream inputStream, String mimeType)
 		throws IOException, DLibraException, TransformerException
@@ -320,7 +321,7 @@ public class FilesHelper
 	}
 
 
-	public void createOrUpdateFile(String versionUri,
+	public void createOrUpdateFile(URI versionUri,
 			String groupPublicationName, String publicationName,
 			String filePath, InputStream inputStream, String mimeType,
 			boolean generateManifest)
@@ -368,7 +369,7 @@ public class FilesHelper
 	 * @throws IOException
 	 * @throws TransformerException
 	 */
-	private void deleteUnnecessaryEmptyFolders(String versionUri,
+	private void deleteUnnecessaryEmptyFolders(URI versionUri,
 			String groupPublicationName, String publicationName, String filePath)
 		throws DLibraException, IOException, TransformerException
 	{
@@ -460,7 +461,7 @@ public class FilesHelper
 	}
 
 
-	public void deleteFile(String versionUri, String groupPublicationName,
+	public void deleteFile(URI versionUri, String groupPublicationName,
 			String publicationName, String filePath)
 		throws DLibraException, IOException, TransformerException
 	{

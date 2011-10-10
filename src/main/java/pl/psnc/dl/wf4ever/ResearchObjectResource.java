@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,8 +36,7 @@ import com.sun.jersey.core.header.ContentDisposition;
  */
 @Path(Constants.WORKSPACES_URL_PART + "/{W_ID}/"
 		+ Constants.RESEARCH_OBJECTS_URL_PART + "/{RO_ID}")
-public class ResearchObjectResource
-{
+public class ResearchObjectResource {
 
 	@SuppressWarnings("unused")
 	private final static Logger logger = Logger
@@ -47,7 +47,6 @@ public class ResearchObjectResource
 
 	@Context
 	UriInfo uriInfo;
-
 
 	/**
 	 * Returns list of versions of this research object.
@@ -66,22 +65,21 @@ public class ResearchObjectResource
 	@Produces("application/rdf+xml")
 	public Response getListOfVersions(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId)
-		throws RemoteException, DLibraException, TransformerException
-	{
+			throws RemoteException, DLibraException, TransformerException {
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 		List<PublicationInfo> list = dLibraDataSource.getPublicationsHelper()
 				.listPublicationsInGroup(researchObjectId);
 
-		List<String> links = new ArrayList<String>(list.size());
+		List<URI> links = new ArrayList<URI>(list.size());
 
 		for (PublicationInfo info : list) {
-			links.add(uriInfo.getAbsolutePath().resolve(info.getLabel())
-					.toString());
+			links.add(uriInfo.getAbsolutePathBuilder().path("/").build()
+					.resolve(info.getLabel()));
 		}
 
 		String responseBody = RdfBuilder.serializeResource(RdfBuilder
-				.createCollection(uriInfo.getAbsolutePath().toString(), links));
+				.createCollection(uriInfo.getAbsolutePath(), links));
 
 		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
 				.fileName(researchObjectId + ".rdf").build();
@@ -89,7 +87,6 @@ public class ResearchObjectResource
 		return Response.ok().entity(responseBody)
 				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
 	}
-
 
 	/**
 	 * Creates new version. Input is RO_VERSION_ID and optional URI of the base
@@ -105,14 +102,15 @@ public class ResearchObjectResource
 	 * @throws DLibraException
 	 * @throws IOException
 	 * @throws TransformerException
-	 * @throws SAXException 
+	 * @throws URISyntaxException
+	 * @throws SAXException
 	 */
 	@POST
 	@Consumes("text/plain")
 	public Response createVersion(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId, String data)
-		throws DLibraException, IOException, TransformerException
-	{
+			throws DLibraException, IOException, TransformerException,
+			URISyntaxException {
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
@@ -124,39 +122,20 @@ public class ResearchObjectResource
 					.build();
 		}
 		String version = lines[0];
-		String baseVersionUri = (lines.length > 1 ? lines[1] : null);
 		String baseVersion = null;
-		if (baseVersionUri != null && !baseVersionUri.isEmpty()) {
-			// remove "/" from the end of URI
-			if (baseVersionUri.lastIndexOf("/") == baseVersionUri.length() - 1) {
-				baseVersionUri = baseVersionUri.substring(0,
-					baseVersionUri.length() - 1);
-			}
-
-			// check if this is a correct URI
-			if (!baseVersionUri.contains(uriInfo.getPath())) {
-				return Response
-						.status(Status.BAD_REQUEST)
-						.entity("Bad base version URI")
-						.header(Constants.CONTENT_TYPE_HEADER_NAME,
-							"text/plain").build();
-			}
-
-			baseVersion = baseVersionUri.substring(baseVersionUri
-					.indexOf(uriInfo.getPath())
-					+ uriInfo.getPath().length()
-					+ 1);
+		if (lines.length > 1) {
+			URI baseVersionUri = new URI(lines[1]);
+			URI roUri = baseVersionUri.resolve("..");
+			baseVersion = baseVersionUri.relativize(roUri).toString();
 		}
 
 		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
 				.resolve(version);
 
 		dLibraDataSource.getPublicationsHelper().createPublication(
-			researchObjectId, version, baseVersion, resourceUri.toString());
-
+				researchObjectId, version, baseVersion, resourceUri);
 		return Response.created(resourceUri).build();
 	}
-
 
 	/**
 	 * Deletes the research object.
@@ -171,13 +150,12 @@ public class ResearchObjectResource
 	@DELETE
 	public void deleteResearchObject(@PathParam("W_ID") String workspaceId,
 			@PathParam("RO_ID") String researchObjectId)
-		throws RemoteException, DLibraException
-	{
+			throws RemoteException, DLibraException {
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		dLibraDataSource.getPublicationsHelper().deleteGroupPublication(
-			researchObjectId);
+				researchObjectId);
 
 	}
 }

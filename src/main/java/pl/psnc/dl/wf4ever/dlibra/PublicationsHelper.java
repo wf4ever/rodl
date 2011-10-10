@@ -6,6 +6,8 @@ package pl.psnc.dl.wf4ever.dlibra;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.rmi.RemoteException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -64,8 +66,7 @@ import pl.psnc.dlibra.user.UserManager;
  * @author piotrhol
  * 
  */
-public class PublicationsHelper
-{
+public class PublicationsHelper {
 
 	private final static Logger logger = Logger
 			.getLogger(PublicationsHelper.class);
@@ -87,12 +88,10 @@ public class PublicationsHelper
 	private static final String QP_PUBLISHED_UNTIL = "PublishedUntil";
 
 	private static final String[] NON_RDF_QUERY_PARAMS = { QP_PUBLISHED_FROM,
-			QP_PUBLISHED_UNTIL};
-
+			QP_PUBLISHED_UNTIL };
 
 	public PublicationsHelper(DLibraDataSource dLibraDataSource)
-		throws RemoteException
-	{
+			throws RemoteException {
 		this.dLibra = dLibraDataSource;
 
 		publicationManager = dLibraDataSource.getMetadataServer()
@@ -104,7 +103,6 @@ public class PublicationsHelper
 		contentServer = dLibraDataSource.getContentServer();
 	}
 
-
 	/**
 	 * Returns list of all group publications (ROs) of the current user.
 	 * 
@@ -112,17 +110,16 @@ public class PublicationsHelper
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 */
-	public List<AbstractPublicationInfo> listUserGroupPublications(byte groupState)
-		throws RemoteException, DLibraException
-	{
+	public List<AbstractPublicationInfo> listUserGroupPublications(
+			byte groupState) throws RemoteException, DLibraException {
 		DirectoryId workspaceDir = getWorkspaceDirectoryId();
 		Collection<Info> resultInfos = directoryManager
 				.getObjects(
-					new DirectoryFilter(null, workspaceDir)
-							.setGroupStatus(groupState)
-							.setState(
-								(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED)),
-					new OutputFilter(ElementInfo.class, List.class))
+						new DirectoryFilter(null, workspaceDir)
+								.setGroupStatus(groupState)
+								.setState(
+										(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED)),
+						new OutputFilter(ElementInfo.class, List.class))
 				.getResultInfos();
 
 		ArrayList<AbstractPublicationInfo> result = new ArrayList<AbstractPublicationInfo>();
@@ -133,7 +130,6 @@ public class PublicationsHelper
 		}
 		return result;
 	}
-
 
 	/**
 	 * Performs search using attributes.
@@ -149,8 +145,7 @@ public class PublicationsHelper
 	 */
 	public List<AbstractPublicationInfo> listUserPublications(
 			MultivaluedMap<String, String> queryParameters)
-		throws RemoteException, DLibraException
-	{
+			throws RemoteException, DLibraException {
 		SearchServer searchServer = dLibra.getSearchServer();
 		if (searchServer == null) {
 			logger.error("Search server is null, returning list of group publications");
@@ -166,23 +161,21 @@ public class PublicationsHelper
 			if (Arrays.asList(NON_RDF_QUERY_PARAMS).contains(attributeRdfName)) {
 				if (attributeRdfName.equals(QP_PUBLISHED_FROM)) {
 					setQueryDate(query, firstValue, false);
-				}
-				else if (attributeRdfName.equals(QP_PUBLISHED_UNTIL)) {
+				} else if (attributeRdfName.equals(QP_PUBLISHED_UNTIL)) {
 					setQueryDate(query, firstValue, true);
 				}
-			}
-			else {
+			} else {
 				AttributeInfo info = null;
 				info = dLibra.getAttributesHelper().getAttributeInfo(
-					attributeRdfName);
+						attributeRdfName);
 				if (info == null) {
 					logger.debug(String.format(
-						"Query param %s is not a valid dLibra attribute",
-						attributeRdfName));
+							"Query param %s is not a valid dLibra attribute",
+							attributeRdfName));
 					continue;
 				}
 				logger.debug(String.format("Adding query element %s=%s",
-					info.getId(), entry.getValue().get(0)));
+						info.getId(), entry.getValue().get(0)));
 				query.addQueryElement(new QueryElement(info.getId(), entry
 						.getValue().get(0)));
 			}
@@ -204,61 +197,52 @@ public class PublicationsHelper
 				try {
 					EditionId editionId = (EditionId) hit.getElementId();
 					Edition edition = dLibra.getEditionHelper().getEdition(
-						editionId);
+							editionId);
 					PublicationId publicationId = (PublicationId) edition
 							.getParentId();
 					Publication publication = getPublication(publicationId);
 					logger.debug("Found search result: "
 							+ publication.getName());
 					result.add((AbstractPublicationInfo) publication.getInfo());
-				}
-				catch (IdNotFoundException e) {
+				} catch (IdNotFoundException e) {
 					logger.error("Could not find publication: "
 							+ e.getLocalizedMessage());
 				}
 			}
-		}
-		catch (QueryParseException e) {
+		} catch (QueryParseException e) {
 			logger.error(
-				String.format("Error when parsing query %s.", query.toString()),
-				e);
+					String.format("Error when parsing query %s.",
+							query.toString()), e);
 			return listUserGroupPublications(Publication.PUB_GROUP_MID);
 		}
 		return result;
 	}
 
-
 	private void setQueryDate(AdvancedQuery query, String firstValue,
-			boolean until)
-	{
+			boolean until) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 		try {
 			Date date = sdf.parse(firstValue);
 			if (date == null) {
 				logger.error("Could not parse date " + firstValue);
-			}
-			else {
+			} else {
 				if (until)
 					query.setDateUntil(date);
 				else
 					query.setDate(date);
 			}
-		}
-		catch (ParseException e) {
+		} catch (ParseException e) {
 			logger.error(String.format("Could not parse date %s (%s)",
-				firstValue, e.getMessage()));
+					firstValue, e.getMessage()));
 		}
 	}
 
-
 	private Publication getPublication(PublicationId publicationId)
-		throws IdNotFoundException, RemoteException, DLibraException
-	{
+			throws IdNotFoundException, RemoteException, DLibraException {
 		InputFilter in = new PublicationFilter(publicationId);
 		OutputFilter out = new OutputFilter(Publication.class);
 		return (Publication) publicationManager.getObjects(in, out).getResult();
 	}
-
 
 	/**
 	 * Creates a new group publication (workspace) for the current user.
@@ -268,15 +252,13 @@ public class PublicationsHelper
 	 * @throws DLibraException
 	 */
 	public void createGroupPublication(String groupPublicationName)
-		throws RemoteException, DLibraException
-	{
+			throws RemoteException, DLibraException {
 		DirectoryId parent = getWorkspaceDirectoryId();
 		try {
 			getGroupId(groupPublicationName);
 			throw new DuplicatedValueException(null,
 					"Group publication already exists", groupPublicationName);
-		}
-		catch (IdNotFoundException e) {
+		} catch (IdNotFoundException e) {
 			// OK - group does not exist
 		}
 
@@ -287,7 +269,6 @@ public class PublicationsHelper
 		publicationManager.createPublication(publication);
 	}
 
-
 	/**
 	 * Creates a new group publication (RO) for the current user.
 	 * 
@@ -296,27 +277,24 @@ public class PublicationsHelper
 	 * @throws DLibraException
 	 */
 	public void createGroupPublication(String parentName, String publicationName)
-		throws RemoteException, DLibraException
-	{
+			throws RemoteException, DLibraException {
 		PublicationId groupId = getGroupId(parentName);
 		try {
 			getPublicationId(groupId, publicationName);
 			throw new DuplicatedValueException(null,
 					"RO Version already exists", parentName + "/"
 							+ publicationName);
-		}
-		catch (IdNotFoundException e) {
+		} catch (IdNotFoundException e) {
 			// OK - the publication does not exist
 		}
 
 		Publication publication = getNewPublication(publicationName, groupId,
-			Publication.PUB_GROUP_MID);
+				Publication.PUB_GROUP_MID);
 		PublicationId publicationId = publicationManager
 				.createPublication(publication);
 		logger.debug(String.format("Created publication %s with id %s",
-			publication.getName(), publicationId));
+				publication.getName(), publicationId));
 	}
-
 
 	/**
 	 * Deletes a group publication (workspace or RO) for the current user.
@@ -326,13 +304,11 @@ public class PublicationsHelper
 	 * @throws DLibraException
 	 */
 	public void deleteGroupPublication(String groupPublicationName)
-		throws RemoteException, DLibraException
-	{
+			throws RemoteException, DLibraException {
 		PublicationId groupId = getGroupId(groupPublicationName);
 		publicationManager.removePublication(groupId, true,
-			"Group publication removed");
+				"Group publication removed");
 	}
-
 
 	/**
 	 * Returns list of all publications (versions) for given group publication
@@ -344,15 +320,14 @@ public class PublicationsHelper
 	 * @throws DLibraException
 	 */
 	public List<PublicationInfo> listPublicationsInGroup(
-			String groupPublicationName)
-		throws RemoteException, DLibraException
-	{
+			String groupPublicationName) throws RemoteException,
+			DLibraException {
 		PublicationId groupId = getGroupId(groupPublicationName);
 
 		InputFilter in = new PublicationFilter(null, groupId)
 				.setGroupStatus(Publication.PUB_GROUP_LEAF)
 				.setPublicationState(
-					(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED));
+						(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED));
 		OutputFilter out = new OutputFilter(AbstractPublicationInfo.class,
 				List.class);
 		Collection<Info> resultInfos = publicationManager.getObjects(in, out)
@@ -364,7 +339,6 @@ public class PublicationsHelper
 		}
 		return result;
 	}
-
 
 	/**
 	 * Creates new publication (version) in a group publication (RO).
@@ -383,37 +357,33 @@ public class PublicationsHelper
 	 * @throws TransformerException
 	 */
 	public void createPublication(String groupPublicationName,
-			String publicationName, String basePublicationName,
-			String versionURI)
-		throws DLibraException, IOException, TransformerException
-	{
+			String publicationName, String basePublicationName, URI versionURI)
+			throws DLibraException, IOException, TransformerException {
 		PublicationId groupId = getGroupId(groupPublicationName);
 		try {
 			getPublicationId(groupId, publicationName);
 			throw new DuplicatedValueException(null,
 					"RO Version already exists", groupPublicationName + "/"
 							+ publicationName);
-		}
-		catch (IdNotFoundException e) {
+		} catch (IdNotFoundException e) {
 			// OK - the publication does not exist
 		}
 
 		Publication publication = getNewPublication(publicationName, groupId,
-			Publication.PUB_GROUP_LEAF);
+				Publication.PUB_GROUP_LEAF);
 		PublicationId publicationId = publicationManager
 				.createPublication(publication);
 		logger.debug(String.format("Created publication %s with id %s",
-			publication.getName(), publicationId));
+				publication.getName(), publicationId));
 		if (basePublicationName != null && !basePublicationName.isEmpty()) {
 			PublicationId basePublicationId = getPublicationId(groupId,
-				basePublicationName);
+					basePublicationName);
 			preparePublicationAsACopy(groupPublicationName, publicationName,
-				versionURI, publicationId, basePublicationName,
-				basePublicationId);
-		}
-		else {
+					versionURI, publicationId, basePublicationName,
+					basePublicationId);
+		} else {
 			preparePublicationAsNew(groupPublicationName, publicationName,
-				versionURI, publicationId);
+					versionURI, publicationId);
 		}
 
 		addHasVersionPropertyToAll(groupPublicationName, versionURI);
@@ -421,29 +391,23 @@ public class PublicationsHelper
 		dLibra.getMetadataServer()
 				.getLibCollectionManager()
 				.addToCollections(Arrays.asList(dLibra.getCollectionId()),
-					Arrays.asList((ElementId) publicationId), false);
+						Arrays.asList((ElementId) publicationId), false);
 	}
 
-
 	public void publishPublication(String groupPublicationName,
-			String publicationName)
-		throws RemoteException, DLibraException
-	{
+			String publicationName) throws RemoteException, DLibraException {
 		unpublishPublication(groupPublicationName, publicationName);
 
 		Edition edition = dLibra.getEditionHelper().getLastEdition(
-			groupPublicationName, publicationName);
+				groupPublicationName, publicationName);
 		edition.setPublished(true);
 		publicationManager.setEditionData(edition);
 	}
 
-
 	public void unpublishPublication(String groupPublicationName,
-			String publicationName)
-		throws RemoteException, DLibraException
-	{
+			String publicationName) throws RemoteException, DLibraException {
 		Set<Edition> editions = dLibra.getEditionHelper().getEditionList(
-			groupPublicationName, publicationName);
+				groupPublicationName, publicationName);
 		for (Edition edition : editions) {
 			if (edition.isPublished()) {
 				edition.setPublished(false);
@@ -452,11 +416,9 @@ public class PublicationsHelper
 		}
 	}
 
-
 	private Publication getNewPublication(String publicationName,
-			PublicationId groupId, byte groupStatus)
-		throws RemoteException, DLibraException
-	{
+			PublicationId groupId, byte groupStatus) throws RemoteException,
+			DLibraException {
 		Publication publication = new Publication(null,
 				getWorkspaceDirectoryId());
 		publication.setParentPublicationId(groupId);
@@ -468,25 +430,22 @@ public class PublicationsHelper
 		return publication;
 	}
 
-
 	private EditionId preparePublicationAsNew(String groupPublicationName,
-			String publicationName, String versionUri,
-			PublicationId publicationId)
-		throws DLibraException, AccessDeniedException, IdNotFoundException,
-		RemoteException, TransformerException, IOException
-	{
+			String publicationName, URI versionUri, PublicationId publicationId)
+			throws DLibraException, AccessDeniedException, IdNotFoundException,
+			RemoteException, TransformerException, IOException {
 		Date creationDate = new Date();
 
 		File file = new File("application/rdf+xml", publicationId, "/"
 				+ Constants.MANIFEST_FILENAME);
 
 		Version createdVersion = fileManager.createVersion(file, 0,
-			creationDate, "");
+				creationDate, "");
 
 		InputStream manifest = dLibra.getManifestHelper()
 				.createInitialManifest(versionUri, groupPublicationName, "",
-					"", "", publicationName,
-					RdfBuilder.createDateLiteral(creationDate));
+						"", "", publicationName,
+						RdfBuilder.createDateLiteral(creationDate));
 
 		OutputStream output = contentServer
 				.getVersionOutputStream(createdVersion.getId());
@@ -496,77 +455,70 @@ public class PublicationsHelper
 			while ((bytesRead = manifest.read(buffer)) > 0) {
 				output.write(buffer, 0, bytesRead);
 			}
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			logger.error("Error when saving manifest to content server", e);
-		}
-		finally {
+		} finally {
 			output.close();
 			manifest.reset();
 		}
 
 		publicationManager.setMainFile(publicationId,
-			createdVersion.getFileId());
+				createdVersion.getFileId());
 
 		EditionId editionId = dLibra.getEditionHelper().createEdition(
-			publicationName, publicationId, new VersionId[] {});
+				publicationName, publicationId, new VersionId[] {});
 
 		publicationManager.addEditionVersion(editionId, createdVersion.getId());
 
 		dLibra.getAttributesHelper().updateMetadataAttributes(
-			groupPublicationName, publicationName, manifest);
+				groupPublicationName, publicationName, manifest);
 		dLibra.getAttributesHelper().updateCreatedAttribute(
-			groupPublicationName, publicationName, creationDate.toString());
+				groupPublicationName, publicationName, creationDate.toString());
 
 		return editionId;
 	}
 
-
 	private void preparePublicationAsACopy(String groupPublicationName,
-			String publicationName, String versionURI,
+			String publicationName, URI versionURI,
 			PublicationId publicationId, String basePublicationName,
-			PublicationId basePublicationId)
-		throws RemoteException, DLibraException, AccessDeniedException,
-		IdNotFoundException, IOException, TransformerException
-	{
+			PublicationId basePublicationId) throws RemoteException,
+			DLibraException, AccessDeniedException, IdNotFoundException,
+			IOException, TransformerException {
 		VersionId[] copyVersions = dLibra.getFilesHelper().copyVersions(
-			basePublicationId, publicationId);
+				basePublicationId, publicationId);
 		Edition edition = new Edition(null, publicationId, false);
 		edition.setName(publicationName);
 		publicationManager.createEdition(edition, copyVersions);
 
 		EditionId baseEditionId = dLibra.getEditionHelper().getLastEditionId(
-			groupPublicationName, basePublicationName);
+				groupPublicationName, basePublicationName);
 
-		String baseVersionURI = versionURI.substring(0,
-			versionURI.lastIndexOf("/") + 1)
-				+ basePublicationName;
+		URI baseVersionURI = versionURI.resolve(basePublicationName);
 		dLibra.getManifestHelper().regerenerateManifestSafe(versionURI,
-			groupPublicationName, publicationName, baseVersionURI);
+				groupPublicationName, publicationName, baseVersionURI);
 		dLibra.getAttributesHelper().updateMetadataAttributes(
-			groupPublicationName, publicationName,
-			dLibra.getManifestHelper().getManifest(baseEditionId));
+				groupPublicationName, publicationName,
+				dLibra.getManifestHelper().getManifest(baseEditionId));
 	}
-
 
 	private void addHasVersionPropertyToAll(String groupPublicationName,
-			String versionURI)
-		throws RemoteException, DLibraException, IOException,
-		TransformerException
-	{
+			URI versionURI) throws RemoteException, DLibraException,
+			IOException, TransformerException {
 		List<PublicationInfo> list = listPublicationsInGroup(groupPublicationName);
 		for (PublicationInfo p : list) {
-			String pubVersionURI = versionURI.substring(0,
-				versionURI.lastIndexOf("/") + 1)
-					+ p.getLabel();
-			logger.debug(String.format(
-				"Will regenerate manifest and add hasVersion for version %s",
-				p.getLabel()));
-			dLibra.getManifestHelper().regerenerateManifestSafe(pubVersionURI,
-				groupPublicationName, p.getLabel());
+			try {
+				URI pubVersionURI = versionURI.resolve(new URI(p.getLabel()));
+				logger.debug(String
+						.format("Will regenerate manifest and add hasVersion for version %s",
+								p.getLabel()));
+				dLibra.getManifestHelper().regerenerateManifestSafe(
+						pubVersionURI, groupPublicationName, p.getLabel());
+			} catch (URISyntaxException e) {
+				logger.error(String.format("%s is not a valid URI",
+						p.getLabel()));
+			}
 		}
 	}
-
 
 	/**
 	 * Deletes publication (version) from a group publication (RO).
@@ -580,30 +532,27 @@ public class PublicationsHelper
 	 * @throws TransformerException
 	 */
 	public void deletePublication(String groupPublicationName,
-			String publicationName, String versionUri)
-		throws DLibraException, IOException, TransformerException
-	{
+			String publicationName, URI versionUri) throws DLibraException,
+			IOException, TransformerException {
 		PublicationId publicationId = getPublicationId(
-			getGroupId(groupPublicationName), publicationName);
+				getGroupId(groupPublicationName), publicationName);
 
 		publicationManager.removePublication(publicationId, true,
-			"Research Object Version removed.");
+				"Research Object Version removed.");
 
 		addHasVersionPropertyToAll(groupPublicationName, versionUri);
 	}
 
-
 	PublicationId getGroupId(String groupPublicationName)
-		throws RemoteException, DLibraException
-	{
+			throws RemoteException, DLibraException {
 		Collection<Info> resultInfos = directoryManager
 				.getObjects(
-					new DirectoryFilter(null, getWorkspaceDirectoryId())
-							.setGroupStatus(
-								(byte) (Publication.PUB_GROUP_ROOT | Publication.PUB_GROUP_MID))
-							.setState(
-								(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED)),
-					new OutputFilter(ElementInfo.class, List.class))
+						new DirectoryFilter(null, getWorkspaceDirectoryId())
+								.setGroupStatus(
+										(byte) (Publication.PUB_GROUP_ROOT | Publication.PUB_GROUP_MID))
+								.setState(
+										(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED)),
+						new OutputFilter(ElementInfo.class, List.class))
 				.getResultInfos();
 		for (Info info : resultInfos) {
 			if (info instanceof GroupPublicationInfo
@@ -614,17 +563,15 @@ public class PublicationsHelper
 		throw new IdNotFoundException(groupPublicationName);
 	}
 
-
 	PublicationId getPublicationId(PublicationId groupId, String publicationName)
-		throws RemoteException, DLibraException
-	{
+			throws RemoteException, DLibraException {
 		Collection<Info> resultInfos = publicationManager
 				.getObjects(
-					new PublicationFilter(null, groupId)
-							.setGroupStatus(Publication.PUB_GROUP_LEAF)
-							.setPublicationState(
-								(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED)),
-					new OutputFilter(AbstractPublicationInfo.class))
+						new PublicationFilter(null, groupId)
+								.setGroupStatus(Publication.PUB_GROUP_LEAF)
+								.setPublicationState(
+										(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED)),
+						new OutputFilter(AbstractPublicationInfo.class))
 				.getResultInfos();
 		for (Info info : resultInfos) {
 			if (info.getLabel().equals(publicationName)) {
@@ -634,24 +581,18 @@ public class PublicationsHelper
 		throw new IdNotFoundException(publicationName);
 	}
 
-
 	public PublicationId getPublicationId(String groupPublicationName,
-			String publicationName)
-		throws RemoteException, DLibraException
-	{
+			String publicationName) throws RemoteException, DLibraException {
 		return getPublicationId(getGroupId(groupPublicationName),
-			publicationName);
+				publicationName);
 
 	}
 
-
-	private DirectoryId getWorkspaceDirectoryId()
-		throws RemoteException, DLibraException
-	{
+	private DirectoryId getWorkspaceDirectoryId() throws RemoteException,
+			DLibraException {
 		User userData = userManager.getUserData(dLibra.getUserLogin());
 		return userData.getHomedir();
 	}
-
 
 	/**
 	 * Returns input stream for a zipped content of a publication.
@@ -663,18 +604,14 @@ public class PublicationsHelper
 	 * @throws DLibraException
 	 */
 	public InputStream getZippedPublication(String groupPublicationName,
-			String publicationName)
-		throws RemoteException, DLibraException
-	{
+			String publicationName) throws RemoteException, DLibraException {
 		return dLibra.getFilesHelper().getZippedFolder(
-			dLibra.getEditionHelper().getLastEditionId(groupPublicationName,
-				publicationName), null);
+				dLibra.getEditionHelper().getLastEditionId(
+						groupPublicationName, publicationName), null);
 	}
 
-
 	public InputStream getZippedPublication(EditionId editionId)
-		throws RemoteException, DLibraException
-	{
+			throws RemoteException, DLibraException {
 		return dLibra.getFilesHelper().getZippedFolder(editionId, null);
 	}
 

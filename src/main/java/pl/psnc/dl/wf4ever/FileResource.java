@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -117,19 +118,14 @@ public class FileResource
 					Utils.getEditionId(dLibraDataSource, researchObjectId,
 						versionId, editionId), filePath);
 
-		List<String> links = new ArrayList<String>(files.size());
+		List<URI> links = new ArrayList<URI>(files.size());
 
 		for (String path : files) {
-			String fileUri = uriInfo.getAbsolutePath().toString();
-			if (!fileUri.endsWith("/"))
-				fileUri = fileUri.concat("/");
-			fileUri = fileUri.concat(path.substring(path.indexOf(filePath)
-					+ filePath.length()));
-			links.add(fileUri);
+			links.add(uriInfo.getAbsolutePathBuilder().path("/").path(path).build());
 		}
 
 		String responseBody = RdfBuilder.serializeResource(RdfBuilder
-				.createCollection(uriInfo.getAbsolutePath().toString(), links));
+				.createCollection(uriInfo.getAbsolutePath(), links));
 
 		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
 				.fileName(researchObjectId + ".rdf").build();
@@ -206,8 +202,8 @@ public class FileResource
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		String versionUri = Utils.createVersionURI(uriInfo, workspaceId,
-			researchObjectId, versionId).toString();
+		URI versionUri = Utils.createVersionURI(uriInfo, workspaceId,
+			researchObjectId, versionId);
 		logger.debug("Version URI: " + versionUri);
 
 		dLibraDataSource.getFilesHelper().createOrUpdateFile(versionUri,
@@ -227,8 +223,8 @@ public class FileResource
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
-		String versionUri = Utils.createVersionURI(uriInfo, workspaceId,
-			researchObjectId, versionId).toString();
+		URI versionUri = Utils.createVersionURI(uriInfo, workspaceId,
+			researchObjectId, versionId);
 
 		if (filePath.equals("manifest.rdf"))
 			throw new ForbiddenException(
