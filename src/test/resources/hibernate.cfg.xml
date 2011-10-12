@@ -11,7 +11,7 @@
 		<property name="connection.driver_class">com.mysql.jdbc.Driver</property>
 		<property name="connection.url">jdbc:mysql://localhost/rosrs</property>
 		<property name="connection.username">rosrs</property>
-		<property name="connection.password">Feiw5tho</property>
+		<property name="connection.password">rosrs</property>
 
 		<!-- JDBC connection pool (use the built-in) -->
 		<property name="connection.pool_size">5</property>
