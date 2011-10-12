@@ -5,7 +5,7 @@ require 'uuidtools'
 require 'base64'
 require 'zipruby'
 
-CALATOLA=false
+CALATOLA=true
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
@@ -713,10 +713,11 @@ def createAccessToken
 end
 	
 
-def getAccessTokenList
+def getAccessTokenList (user = nil)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Getting access token list........"
-		req = Net::HTTP::Get.new(APP_NAME + '/accesstoken')
+		queryparams = "user_id=#{user}" if user != nil
+		req = Net::HTTP::Get.new(APP_NAME + '/accesstoken?#{queryparams}')
 		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
 
 		response = http.request(req)
@@ -811,10 +812,11 @@ if createUser == 201 && createClient == 201
     getClient
     if createAccessToken == 201
 	    getAccessTokenList
-        if createWorkspace == 201
-            getWorkspacesRdf
-	        if createRO == 201
-		        if createVersion == 201
+	    getAccessTokenList(USER_ID_URL_SAFE+"foobar")
+#        if createWorkspace == 201
+#            getWorkspacesRdf
+#	        if createRO == 201
+#		        if createVersion == 201
 #			        getManifest
 #			        validateManifest1
 #			        if addFile(:file1) == 200 && addFile(:file2) == 200
@@ -893,12 +895,12 @@ if createUser == 201 && createClient == 201
 #					        checkPublished -1
 #				        end
 #			        end
-			        deleteVersion
-		        end
-		        deleteRO
-	        end
-	        deleteWorkspace
-        end
+#			        deleteVersion
+#		        end
+#		        deleteRO
+#	        end
+#	        deleteWorkspace
+#        end
 	    deleteAccessToken
     end
     deleteUser

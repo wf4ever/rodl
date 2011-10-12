@@ -4,6 +4,7 @@
 package pl.psnc.dl.wf4ever.auth;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Basic;
@@ -36,7 +37,7 @@ public class UserCredentials
 
 	private String password;
 
-	private List<AccessToken> tokens;
+	private List<AccessToken> tokens = new ArrayList<AccessToken>();
 
 
 	/**

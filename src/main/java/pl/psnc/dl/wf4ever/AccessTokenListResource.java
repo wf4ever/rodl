@@ -20,6 +20,8 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
+import org.apache.commons.codec.binary.Base64;
+
 import pl.psnc.dl.wf4ever.auth.AccessToken;
 import pl.psnc.dl.wf4ever.auth.AccessTokenList;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
@@ -31,8 +33,7 @@ import pl.psnc.dlibra.service.DLibraException;
  * 
  */
 @Path(Constants.ACCESSTOKEN_URL_PART)
-public class AccessTokenListResource
-{
+public class AccessTokenListResource {
 
 	@Context
 	HttpServletRequest request;
@@ -40,38 +41,44 @@ public class AccessTokenListResource
 	@Context
 	private UriInfo uriInfo;
 
-
 	/**
-	 * Returns list of access tokens as XML. The optional parameters are client_id and user.
-	 * @param workspaceId identifier of a workspace in the RO SRS
-	 * @return TBD
+	 * Returns list of access tokens as XML. The optional parameters are
+	 * client_id and user_id.
+	 * 
+	 * @param clientId
+	 * @param userId
+	 *            Base64, url-safe encoded.
+	 * @return
 	 * @throws RemoteException
 	 * @throws DLibraException
-	 * @throws TransformerException 
+	 * @throws TransformerException
 	 */
 	@GET
 	@Produces("text/xml")
 	public AccessTokenList getAccessTokenList(
 			@QueryParam("client_id") String clientId,
-			@QueryParam("user") String user)
-		throws RemoteException, DLibraException, TransformerException
-	{
+			@QueryParam("user_id") String userId) throws RemoteException,
+			DLibraException, TransformerException {
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 		if (!dLibraDataSource.isAdmin()) {
 			throw new ForbiddenException(
 					"Only admin users can manage access tokens.");
 		}
+		if (userId != null) {
+			userId = new String(Base64.decodeBase64(userId));
+		}
 		List<AccessToken> list = dLibraDataSource.getOAuthManager()
-				.getAccessTokens(clientId, user);
+				.getAccessTokens(clientId, userId);
 		return new AccessTokenList(list);
 	}
 
-
 	/**
-	 * Creates new access token for a given client and user. input: client_id and user.
-	 * @param data text/plain with id in first line and password
-	 * in second.
+	 * Creates new access token for a given client and user. input: client_id
+	 * and user.
+	 * 
+	 * @param data
+	 *            text/plain with id in first line and password in second.
 	 * @return 201 (Created) when the access token was successfully created, 400
 	 *         (Bad Request) if the user does not exist
 	 * @throws RemoteException
@@ -80,9 +87,8 @@ public class AccessTokenListResource
 	@POST
 	@Consumes("text/plain")
 	@Produces("text/plain")
-	public Response createAccessToken(String data)
-		throws RemoteException, DLibraException
-	{
+	public Response createAccessToken(String data) throws RemoteException,
+			DLibraException {
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
@@ -105,8 +111,7 @@ public class AccessTokenListResource
 					.build().resolve(accessToken);
 
 			return Response.created(resourceUri).build();
-		}
-		catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException e) {
 			return Response.status(Status.NOT_FOUND).type("text/plain")
 					.entity(e.getMessage()).build();
 		}
