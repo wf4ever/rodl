@@ -48,8 +48,6 @@ public class AccessToken implements Serializable {
 		this.token = token;
 		this.client = client;
 		this.user = user;
-		this.created = new Date();
-		this.lastUsed = created;
 	}
 
 	/**

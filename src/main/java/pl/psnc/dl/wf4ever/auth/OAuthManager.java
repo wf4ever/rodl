@@ -70,6 +70,7 @@ public class OAuthManager {
 
 		String token = generateRandomToken();
 		AccessToken at = new AccessToken(token, client, creds);
+		at.setCreated(new Date());
 
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
