@@ -3,6 +3,7 @@
  */
 package pl.psnc.dl.wf4ever.auth;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -161,19 +162,15 @@ public class OAuthManager {
 		session.beginTransaction();
 
 		AccessToken at = (AccessToken) session.get(AccessToken.class, token);
+		
+		if (at != null) {
+			at.setLastUsed(new Date());
+			session.save(at);
+		}
 
 		session.getTransaction().commit();
 
 		return at;
-	}
-
-	public boolean isValid(String token, String userId) {
-		AccessToken at = getAccessToken(token);
-		return at != null && at.getUser().equals(userId);
-	}
-
-	public boolean clientExists(String clientId) {
-		return getClient(clientId) != null;
 	}
 
 	public String createClient(String name, String redirectionURI) {

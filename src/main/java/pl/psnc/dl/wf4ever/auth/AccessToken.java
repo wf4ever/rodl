@@ -4,7 +4,9 @@
 package pl.psnc.dl.wf4ever.auth;
 
 import java.io.Serializable;
+import java.util.Date;
 
+import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -32,6 +34,10 @@ public class AccessToken implements Serializable {
 	private OAuthClient client;
 
 	private UserCredentials user;
+	
+	private Date created;
+	
+	private Date lastUsed;
 
 	public AccessToken() {
 
@@ -42,6 +48,8 @@ public class AccessToken implements Serializable {
 		this.token = token;
 		this.client = client;
 		this.user = user;
+		this.created = new Date();
+		this.lastUsed = created;
 	}
 
 	/**
@@ -95,6 +103,32 @@ public class AccessToken implements Serializable {
 	 */
 	public void setUser(UserCredentials user) {
 		this.user = user;
+	}
+
+	@Basic
+	@XmlElement
+	public Date getCreated() {
+		return created;
+	}
+
+	public void setCreated(Date created) {
+		this.created = created;
+	}
+
+	/**
+	 * @return the lastUsed
+	 */
+	@Basic
+	@XmlElement
+	public Date getLastUsed() {
+		return lastUsed;
+	}
+
+	/**
+	 * @param lastUsed the lastUsed to set
+	 */
+	public void setLastUsed(Date lastUsed) {
+		this.lastUsed = lastUsed;
 	}
 
 }

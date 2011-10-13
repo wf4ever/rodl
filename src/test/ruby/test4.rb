@@ -806,11 +806,10 @@ def deleteClient
 end
 
 
-if createUser == 201 && createClient == 201
+if createClient == 201 && createUser == 201
     checkCreateUser
     getClientList
     getClient
-    getAccessTokenList(Base64.strict_encode64("https://www.google.com/accounts/o8/id?id=AItOawmGReu07U-mOGXHfUaiDx0A2tLDN8Svb-s").tr("+/", "-_"))
     if createAccessToken == 201
 	    getAccessTokenList
 #        if createWorkspace == 201
