@@ -5,7 +5,7 @@ require 'uuidtools'
 require 'base64'
 require 'zipruby'
 
-CALATOLA=true
+CALATOLA=false
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
@@ -717,7 +717,7 @@ def getAccessTokenList (user = nil)
 	Net::HTTP.start(BASE_URI, PORT) {|http|
 		printConstantWidth "Getting access token list........"
 		queryparams = "user_id=#{user}" if user != nil
-		req = Net::HTTP::Get.new(APP_NAME + '/accesstoken?#{queryparams}')
+		req = Net::HTTP::Get.new(APP_NAME + "/accesstoken?#{queryparams}")
 		req.basic_auth ADMIN_LOGIN, ADMIN_PASSWORD
 
 		response = http.request(req)
@@ -810,9 +810,9 @@ if createUser == 201 && createClient == 201
     checkCreateUser
     getClientList
     getClient
+    getAccessTokenList(Base64.strict_encode64("https://www.google.com/accounts/o8/id?id=AItOawmGReu07U-mOGXHfUaiDx0A2tLDN8Svb-s").tr("+/", "-_"))
     if createAccessToken == 201
 	    getAccessTokenList
-	    getAccessTokenList(USER_ID_URL_SAFE+"foobar")
 #        if createWorkspace == 201
 #            getWorkspacesRdf
 #	        if createRO == 201

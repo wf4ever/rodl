@@ -15,14 +15,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Piotr Hołubowicz
- *
+ * 
  */
 @Entity
 @Table(name = "tokens")
 @XmlRootElement(name = "access-token")
-public class AccessToken
-	implements Serializable
-{
+public class AccessToken implements Serializable {
 
 	/**
 	 * 
@@ -35,41 +33,33 @@ public class AccessToken
 
 	private UserCredentials user;
 
-
-	public AccessToken()
-	{
+	public AccessToken() {
 
 	}
 
-
-	public AccessToken(String token, OAuthClient client, UserCredentials user)
-	{
+	public AccessToken(String token, OAuthClient client, UserCredentials user) {
 		super();
 		this.token = token;
 		this.client = client;
 		this.user = user;
 	}
 
-
 	/**
 	 * @return the token
 	 */
 	@Id
 	@XmlElement
-	public String getToken()
-	{
+	public String getToken() {
 		return token;
 	}
 
-
 	/**
-	 * @param token the token to set
+	 * @param token
+	 *            the token to set
 	 */
-	public void setToken(String token)
-	{
+	public void setToken(String token) {
 		this.token = token;
 	}
-
 
 	/**
 	 * @return the client
@@ -77,38 +67,33 @@ public class AccessToken
 	@ManyToOne
 	@JoinColumn(nullable = false)
 	@XmlElement
-	public OAuthClient getClient()
-	{
+	public OAuthClient getClient() {
 		return client;
 	}
 
-
 	/**
-	 * @param client the client to set
+	 * @param client
+	 *            the client to set
 	 */
-	public void setClient(OAuthClient client)
-	{
+	public void setClient(OAuthClient client) {
 		this.client = client;
 	}
-
 
 	/**
 	 * @return the user
 	 */
 	@ManyToOne
-	@JoinColumn(name = "username", nullable = false)
+	@JoinColumn(name = "userId", nullable = false)
 	@XmlElement
-	public UserCredentials getUser()
-	{
+	public UserCredentials getUser() {
 		return user;
 	}
 
-
 	/**
-	 * @param user the user to set
+	 * @param user
+	 *            the user to set
 	 */
-	public void setUser(UserCredentials user)
-	{
+	public void setUser(UserCredentials user) {
 		this.user = user;
 	}
 

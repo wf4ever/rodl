@@ -123,7 +123,7 @@ public class SecurityFilter
 		if (token == null) {
 			return getBasicCredentials(accessToken);
 		}
-		return new String[] { token.getUser().getUsername(),
+		return new String[] { token.getUser().getUserId(),
 				token.getUser().getPassword()};
 	}
 

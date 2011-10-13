@@ -21,6 +21,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.AccessToken;
 import pl.psnc.dl.wf4ever.auth.AccessTokenList;
@@ -34,6 +35,9 @@ import pl.psnc.dlibra.service.DLibraException;
  */
 @Path(Constants.ACCESSTOKEN_URL_PART)
 public class AccessTokenListResource {
+
+	@SuppressWarnings("unused")
+	private static final Logger log = Logger.getLogger(AccessTokenListResource.class);
 
 	@Context
 	HttpServletRequest request;
