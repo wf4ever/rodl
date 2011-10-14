@@ -17,8 +17,10 @@ end
 
 #CLIENT_NAME = "Wf4Ever myExperiment import tool"
 #CLIENT_REDIRECTION_URI = "http://sandbox.wf4ever-project.org/import/home"
-CLIENT_NAME = "Wf4Ever myExperiment import tool - localhost"
-CLIENT_REDIRECTION_URI = "http://localhost:8080"
+#CLIENT_NAME = "Wf4Ever myExperiment import tool - localhost"
+#CLIENT_REDIRECTION_URI = "http://localhost:8080"
+CLIENT_NAME = "RO management tool"
+CLIENT_REDIRECTION_URI = "OOB"
 @clientId = "b3c31959-ced6-41aa-b"
 
 def createClient

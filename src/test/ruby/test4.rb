@@ -5,7 +5,7 @@ require 'uuidtools'
 require 'base64'
 require 'zipruby'
 
-CALATOLA=false
+CALATOLA=true
 if CALATOLA then
 	BASE_URI="calatola.man.poznan.pl"
 	PORT=80
@@ -25,7 +25,7 @@ WORKSPACE_ID = "testWorkspace"
 USER_ID = "test-" + Base64.strict_encode64(UUIDTools::UUID.random_create().raw).tr("+/", "-_")
 USER_ID_URL_SAFE = Base64.strict_encode64(USER_ID).tr("+/", "-_")
 CLIENT_NAME = "ROSRS testing app written in Ruby"
-CLIENT_REDIRECTION_URI = "http://localhost" # will not be used
+CLIENT_REDIRECTION_URI = "OOB" # will not be used
 
 RO_NAME="ro1"
 VERSIONS={
@@ -35,7 +35,7 @@ VERSIONS={
 
 FILES={
 	:manifest => { :name => "manifest.rdf", :dir => "", :path => "manifest.rdf" },
-	:file1    => { :name => "file1.txt", :dir => "", :path => "file1.txt" },
+	:file1    => { :name => "file1.txt", :dir => "", :path => "file1.txt?a=b#foobar" },
 	:file2    => { :name => "file2.txt", :dir => "dir/", :path => "dir/file2.txt" },
 	:file3    => { :name => "file3.jpg", :dir => "testdir/", :path => "testdir/file3.jpg" }
 }
@@ -812,13 +812,13 @@ if createClient == 201 && createUser == 201
     getClient
     if createAccessToken == 201
 	    getAccessTokenList
-#        if createWorkspace == 201
-#            getWorkspacesRdf
-#	        if createRO == 201
-#		        if createVersion == 201
-#			        getManifest
-#			        validateManifest1
-#			        if addFile(:file1) == 200 && addFile(:file2) == 200
+        if createWorkspace == 201
+            getWorkspacesRdf
+	        if createRO == 201
+		        if createVersion == 201
+			        getManifest
+			        validateManifest1
+			        if addFile(:file1) == 200 && addFile(:file2) == 200
 #				        getListRO
 #				        getROrdf
 #				        getVersionZip :ver1, [ FILES[:manifest][:path], FILES[:file1][:path], FILES[:file2][:path] ]
@@ -893,13 +893,13 @@ if createClient == 201 && createUser == 201
 #					        unpublishEdition
 #					        checkPublished -1
 #				        end
-#			        end
-#			        deleteVersion
-#		        end
-#		        deleteRO
-#	        end
-#	        deleteWorkspace
-#        end
+			        end
+			        deleteVersion
+		        end
+		        deleteRO
+	        end
+	        deleteWorkspace
+        end
 	    deleteAccessToken
     end
     deleteUser
