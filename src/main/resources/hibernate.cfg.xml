@@ -9,7 +9,7 @@
 
 		<!-- Database connection settings -->
 		<property name="connection.datasource">java:/comp/env/jdbc/rosrs</property>
-		
+
 		<!-- SQL dialect -->
 		<property name="dialect">org.hibernate.dialect.MySQLDialect</property>
 

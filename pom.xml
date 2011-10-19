@@ -132,7 +132,7 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-				<dependency>
+		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
 			<version>3.6.7.Final</version>
@@ -142,7 +142,7 @@
 			<artifactId>javassist</artifactId>
 			<version>3.12.1.GA</version>
 		</dependency>
-		
+
 		<!-- JETTY DEPENDENCIES FOR TESTING -->
 
 		<dependency>
