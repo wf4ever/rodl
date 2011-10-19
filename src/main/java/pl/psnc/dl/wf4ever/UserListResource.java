@@ -18,6 +18,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.codec.binary.Base64;
 
+import pl.psnc.dl.wf4ever.auth.OAuthManager;
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 
@@ -53,6 +54,8 @@ public class UserListResource
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		OAuthManager oauth = (OAuthManager) request
+				.getAttribute(Constants.OAUTH_MANAGER);
 
 		userId = new String(Base64.decodeBase64(userId));
 
@@ -65,8 +68,7 @@ public class UserListResource
 		String password = UUID.randomUUID().toString().replaceAll("-", "")
 				.substring(0, 20);
 		dLibraDataSource.getUsersHelper().createUser(userId, password);
-		dLibraDataSource.getOAuthManager().createUserCredentials(userId,
-			password);
+		oauth.createUserCredentials(userId, password);
 
 		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
 				.resolve(userId);

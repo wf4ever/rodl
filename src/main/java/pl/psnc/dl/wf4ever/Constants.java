@@ -43,4 +43,6 @@ public final class Constants
 
 	public static final String EDITION_QUERY_PARAM_DEFAULT_STRING = "0";
 
+	public static final String OAUTH_MANAGER = "oauthManager";
+
 }

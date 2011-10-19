@@ -13,6 +13,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.codec.binary.Base64;
 
+import pl.psnc.dl.wf4ever.auth.OAuthManager;
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 
@@ -62,10 +63,12 @@ public class UserResource
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		OAuthManager oauth = (OAuthManager) request
+				.getAttribute(Constants.OAUTH_MANAGER);
 
 		userId = new String(Base64.decodeBase64(userId));
 
 		dLibraDataSource.getUsersHelper().deleteUser(userId);
-		dLibraDataSource.getOAuthManager().deleteUserCredentials(userId);
+		oauth.deleteUserCredentials(userId);
 	}
 }

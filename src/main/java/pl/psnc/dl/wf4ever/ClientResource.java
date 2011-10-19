@@ -12,6 +12,7 @@ import javax.ws.rs.core.UriInfo;
 
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
+import pl.psnc.dl.wf4ever.auth.OAuthManager;
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
@@ -47,12 +48,14 @@ public class ClientResource
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		OAuthManager oauth = (OAuthManager) request
+				.getAttribute(Constants.OAUTH_MANAGER);
 
 		if (!dLibraDataSource.isAdmin()) {
 			throw new ForbiddenException("Only admin users can manage clients.");
 		}
 
-		return dLibraDataSource.getOAuthManager().getClient(clientId);
+		return oauth.getClient(clientId);
 	}
 
 
@@ -70,11 +73,13 @@ public class ClientResource
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		OAuthManager oauth = (OAuthManager) request
+				.getAttribute(Constants.OAUTH_MANAGER);
 
 		if (!dLibraDataSource.isAdmin()) {
 			throw new ForbiddenException("Only admin users can manage clients.");
 		}
 
-		dLibraDataSource.getOAuthManager().deleteClient(clientId);
+		oauth.deleteClient(clientId);
 	}
 }

@@ -36,12 +36,15 @@ public class SecurityFilter
 	private HttpServletRequest httpRequest;
 
 
+	@Override
 	public ContainerRequest filter(ContainerRequest request)
 	{
 		try {
 			DLibraDataSource dLibraDataSource = authenticate(request);
 			httpRequest.setAttribute(Constants.DLIBRA_DATA_SOURCE,
 				dLibraDataSource);
+			httpRequest.setAttribute(Constants.OAUTH_MANAGER,
+				new OAuthManager());
 		}
 		catch (AccessDeniedException e) {
 			throw new MappableContainerException(new AuthenticationException(

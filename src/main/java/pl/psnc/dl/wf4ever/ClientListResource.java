@@ -22,6 +22,7 @@ import javax.xml.transform.TransformerException;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
 import pl.psnc.dl.wf4ever.auth.OAuthClientList;
+import pl.psnc.dl.wf4ever.auth.OAuthManager;
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
@@ -56,12 +57,13 @@ public class ClientListResource
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		OAuthManager oauth = (OAuthManager) request
+				.getAttribute(Constants.OAUTH_MANAGER);
 		if (!dLibraDataSource.isAdmin()) {
 			throw new ForbiddenException(
 					"Only admin users can manage access tokens.");
 		}
-		List<OAuthClient> list = dLibraDataSource.getOAuthManager()
-				.getClients();
+		List<OAuthClient> list = oauth.getClients();
 		return new OAuthClientList(list);
 	}
 
@@ -83,6 +85,8 @@ public class ClientListResource
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		OAuthManager oauth = (OAuthManager) request
+				.getAttribute(Constants.OAUTH_MANAGER);
 
 		if (!dLibraDataSource.isAdmin()) {
 			throw new ForbiddenException(
@@ -96,8 +100,7 @@ public class ClientListResource
 					.build();
 		}
 
-		String clientId = dLibraDataSource.getOAuthManager().createClient(
-			lines[0], lines[1]);
+		String clientId = oauth.createClient(lines[0], lines[1]);
 
 		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
 				.resolve(clientId);

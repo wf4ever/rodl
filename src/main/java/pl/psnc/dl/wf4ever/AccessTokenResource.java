@@ -10,6 +10,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
+import pl.psnc.dl.wf4ever.auth.OAuthManager;
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 
@@ -42,12 +43,14 @@ public class AccessTokenResource
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		OAuthManager oauth = (OAuthManager) request
+				.getAttribute(Constants.OAUTH_MANAGER);
 
 		if (!dLibraDataSource.isAdmin()) {
 			throw new ForbiddenException(
 					"Only admin users can manage access tokens.");
 		}
 
-		dLibraDataSource.getOAuthManager().deleteToken(token);
+		oauth.deleteToken(token);
 	}
 }

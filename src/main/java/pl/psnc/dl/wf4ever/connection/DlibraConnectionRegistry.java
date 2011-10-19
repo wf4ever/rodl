@@ -11,6 +11,7 @@
  */
 package pl.psnc.dl.wf4ever.connection;
 
+
 /**
  * 
  * @author nowakm
@@ -21,7 +22,7 @@ public class DlibraConnectionRegistry
 
 	private static DlibraConnectionRegistry soleInstance;
 
-	private DlibraConnection connection;
+	private final DlibraConnection connection;
 
 
 	public DlibraConnectionRegistry(DlibraConnection connection)

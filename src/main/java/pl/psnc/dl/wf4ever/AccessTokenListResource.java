@@ -26,6 +26,7 @@ import org.apache.log4j.Logger;
 import pl.psnc.dl.wf4ever.auth.AccessToken;
 import pl.psnc.dl.wf4ever.auth.AccessTokenList;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
+import pl.psnc.dl.wf4ever.auth.OAuthManager;
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 
@@ -69,6 +70,8 @@ public class AccessTokenListResource
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		OAuthManager oauth = (OAuthManager) request
+				.getAttribute(Constants.OAUTH_MANAGER);
 		if (!dLibraDataSource.isAdmin()) {
 			throw new ForbiddenException(
 					"Only admin users can manage access tokens.");
@@ -76,8 +79,7 @@ public class AccessTokenListResource
 		if (userId != null) {
 			userId = new String(Base64.decodeBase64(userId));
 		}
-		List<AccessToken> list = dLibraDataSource.getOAuthManager()
-				.getAccessTokens(clientId, userId);
+		List<AccessToken> list = oauth.getAccessTokens(clientId, userId);
 		return new AccessTokenList(list);
 	}
 
@@ -101,6 +103,8 @@ public class AccessTokenListResource
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		OAuthManager oauth = (OAuthManager) request
+				.getAttribute(Constants.OAUTH_MANAGER);
 
 		if (!dLibraDataSource.isAdmin()) {
 			throw new ForbiddenException(
@@ -115,8 +119,8 @@ public class AccessTokenListResource
 		}
 
 		try {
-			String accessToken = dLibraDataSource.getOAuthManager()
-					.createAccessToken(lines[0], lines[1]).getToken();
+			String accessToken = oauth.createAccessToken(lines[0], lines[1])
+					.getToken();
 			URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/")
 					.build().resolve(accessToken);
 
