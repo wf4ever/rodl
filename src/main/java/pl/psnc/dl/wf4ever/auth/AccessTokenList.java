@@ -7,19 +7,26 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "access-tokens")
-public class AccessTokenList {
+public class AccessTokenList
+{
 
 	protected List<AccessToken> list = new ArrayList<AccessToken>();
 
-	public AccessTokenList() {
+
+	public AccessTokenList()
+	{
 	}
 
-	public AccessTokenList(List<AccessToken> list) {
+
+	public AccessTokenList(List<AccessToken> list)
+	{
 		this.list = list;
 	}
 
+
 	@XmlElement(name = "access-token")
-	public List<AccessToken> getList() {
+	public List<AccessToken> getList()
+	{
 		return list;
 	}
 }

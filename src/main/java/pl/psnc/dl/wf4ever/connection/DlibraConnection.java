@@ -29,13 +29,13 @@ public class DlibraConnection
 	private final static Logger logger = Logger
 			.getLogger(DlibraConnection.class);
 
-	private int port;
+	private final int port;
 
-	private String host;
+	private final String host;
 
-	private long workspacesDirectory;
+	private final long workspacesDirectory;
 
-	private long collectionId;
+	private final long collectionId;
 
 
 	public DlibraConnection(String configFileName)
@@ -55,7 +55,8 @@ public class DlibraConnection
 			logger.error("Unable to read connection properties", e);
 			throw new RuntimeException("Unable to read connection properties",
 					e);
-		} finally {
+		}
+		finally {
 			try {
 				inputStream.close();
 			}
@@ -71,9 +72,10 @@ public class DlibraConnection
 				.getProperty("workspacesDir"));
 		logger.debug("Workspaces directory: " + this.workspacesDirectory);
 
-		this.collectionId = Long.parseLong(properties.getProperty("collectionId"));
+		this.collectionId = Long.parseLong(properties
+				.getProperty("collectionId"));
 		logger.debug("Collection id: " + this.collectionId);
-}
+	}
 
 
 	public DLibraDataSource getDLibraDataSource(String user, String password)
@@ -87,6 +89,7 @@ public class DlibraConnection
 				new ServiceUrl(InetAddress.getByName(host),
 						UserInterface.SERVICE_TYPE, port), authorizationToken);
 
-		return new DLibraDataSource(userServiceResolver, user, workspacesDirectory, collectionId);
+		return new DLibraDataSource(userServiceResolver, user,
+				workspacesDirectory, collectionId);
 	}
 }

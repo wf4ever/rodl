@@ -28,13 +28,15 @@ import com.sun.jersey.core.header.ContentDisposition;
  * 
  */
 @Path(Constants.WORKSPACES_URL_PART + "/{W_ID}")
-public class WorkspaceResource {
+public class WorkspaceResource
+{
 
 	@Context
 	HttpServletRequest request;
 
 	@Context
 	UriInfo uriInfo;
+
 
 	/**
 	 * Returns list of research objects in this workspace.
@@ -49,8 +51,10 @@ public class WorkspaceResource {
 	 */
 	@GET
 	@Produces("application/rdf+xml")
-	public Response getListOfVersions(@PathParam("W_ID") String workspaceId)
-			throws RemoteException, DLibraException, TransformerException {
+	public Response getListOfVersions(@PathParam("W_ID")
+	String workspaceId)
+		throws RemoteException, DLibraException, TransformerException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 		List<PublicationInfo> list = dLibraDataSource.getPublicationsHelper()
@@ -73,6 +77,7 @@ public class WorkspaceResource {
 				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
 	}
 
+
 	/**
 	 * Deletes the workspace.
 	 * 
@@ -82,13 +87,15 @@ public class WorkspaceResource {
 	 * @throws DLibraException
 	 */
 	@DELETE
-	public void deleteWorkspace(@PathParam("W_ID") String workspaceId)
-			throws RemoteException, DLibraException {
+	public void deleteWorkspace(@PathParam("W_ID")
+	String workspaceId)
+		throws RemoteException, DLibraException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		dLibraDataSource.getPublicationsHelper().deleteGroupPublication(
-				workspaceId);
+			workspaceId);
 
 	}
 }

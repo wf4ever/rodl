@@ -30,7 +30,8 @@ public class UserResource
 
 
 	@GET
-	public Response getUser(@PathParam("U_ID") String userId)
+	public Response getUser(@PathParam("U_ID")
+	String userId)
 		throws RemoteException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
@@ -55,7 +56,8 @@ public class UserResource
 	 * @throws DLibraException
 	 */
 	@DELETE
-	public void deleteUser(@PathParam("U_ID") String userId)
+	public void deleteUser(@PathParam("U_ID")
+	String userId)
 		throws RemoteException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request

@@ -36,7 +36,8 @@ public class AccessTokenResource
 	 * @throws DLibraException
 	 */
 	@DELETE
-	public void deletAccessToken(@PathParam("T_ID") String token)
+	public void deletAccessToken(@PathParam("T_ID")
+	String token)
 		throws RemoteException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request

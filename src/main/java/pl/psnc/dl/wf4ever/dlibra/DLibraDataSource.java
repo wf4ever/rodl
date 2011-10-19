@@ -32,36 +32,36 @@ public class DLibraDataSource
 
 	public final static int BUFFER_SIZE = 4096;
 
-	private UserServiceResolver serviceResolver;
+	private final UserServiceResolver serviceResolver;
 
-	private String userLogin;
+	private final String userLogin;
 
-	private ContentServer contentServer;
+	private final ContentServer contentServer;
 
-	private UserManager userManager;
+	private final UserManager userManager;
 
-	private MetadataServer metadataServer;
+	private final MetadataServer metadataServer;
 
-	private UsersHelper usersHelper;
+	private final UsersHelper usersHelper;
 
-	private PublicationsHelper publicationsHelper;
+	private final PublicationsHelper publicationsHelper;
 
-	private EditionHelper editionHelper;
+	private final EditionHelper editionHelper;
 
-	private FilesHelper filesHelper;
+	private final FilesHelper filesHelper;
 
-	private ManifestHelper manifestHelper;
+	private final ManifestHelper manifestHelper;
 
-	private AttributesHelper attributesHelper;
+	private final AttributesHelper attributesHelper;
 
-	private DirectoryId workspacesContainerDirectoryId;
+	private final DirectoryId workspacesContainerDirectoryId;
 
-	private SearchServer searchServer;
+	private final SearchServer searchServer;
 
-	private LibCollectionId collectionId;
-	
+	private final LibCollectionId collectionId;
+
 	// it is not directly related to dLibra but it is convenient to store it here
-	private OAuthManager oauthManager;
+	private final OAuthManager oauthManager;
 
 
 	public DLibraDataSource(UserServiceResolver userServiceResolver,
@@ -93,12 +93,11 @@ public class DLibraDataSource
 		manifestHelper = new ManifestHelper(this);
 		attributesHelper = new AttributesHelper(this);
 		editionHelper = new EditionHelper(this);
-		
+
 		oauthManager = new OAuthManager();
 	}
 
 
-	
 	public OAuthManager getOAuthManager()
 	{
 		return oauthManager;
@@ -189,7 +188,8 @@ public class DLibraDataSource
 	}
 
 
-	public boolean isAdmin() throws RemoteException, IdNotFoundException, DLibraException
+	public boolean isAdmin()
+		throws RemoteException, IdNotFoundException, DLibraException
 	{
 		return usersHelper.isAdmin(userLogin);
 	}

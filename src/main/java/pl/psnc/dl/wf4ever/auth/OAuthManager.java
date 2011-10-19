@@ -17,7 +17,8 @@ import org.hibernate.cfg.Configuration;
  * @author Piotr Hołubowicz
  * 
  */
-public class OAuthManager {
+public class OAuthManager
+{
 
 	private static final Logger log = Logger.getLogger(OAuthManager.class);
 
@@ -25,19 +26,24 @@ public class OAuthManager {
 
 	private final SessionFactory sessionFactory;
 
-	public OAuthManager() {
+
+	public OAuthManager()
+	{
 		try {
 			// Create the SessionFactory from hibernate.cfg.xml
 			this.sessionFactory = new Configuration().configure()
 					.buildSessionFactory();
-		} catch (Throwable ex) {
+		}
+		catch (Throwable ex) {
 			// Make sure you log the exception, as it might be swallowed
 			log.error("Initial SessionFactory creation failed." + ex);
 			throw new ExceptionInInitializerError(ex);
 		}
 	}
 
-	public UserCredentials createUserCredentials(String userId, String password) {
+
+	public UserCredentials createUserCredentials(String userId, String password)
+	{
 		if (userId == null || userId.isEmpty())
 			throw new IllegalArgumentException(
 					"User ID cannot be null or empty.");
@@ -55,7 +61,9 @@ public class OAuthManager {
 		return creds;
 	}
 
-	public AccessToken createAccessToken(String clientId, String userId) {
+
+	public AccessToken createAccessToken(String clientId, String userId)
+	{
 		if (clientId == null || clientId.isEmpty())
 			throw new IllegalArgumentException(
 					"Client id cannot be null or empty.");
@@ -81,7 +89,9 @@ public class OAuthManager {
 		return at;
 	}
 
-	private UserCredentials getUserCredentials(String userId) {
+
+	private UserCredentials getUserCredentials(String userId)
+	{
 		if (userId == null || userId.isEmpty())
 			throw new IllegalArgumentException(
 					"User ID cannot be null or empty.");
@@ -90,18 +100,22 @@ public class OAuthManager {
 		session.beginTransaction();
 
 		UserCredentials user = (UserCredentials) session.get(
-				UserCredentials.class, userId);
+			UserCredentials.class, userId);
 
 		session.getTransaction().commit();
 
 		return user;
 	}
 
-	private String generateRandomToken() {
+
+	private String generateRandomToken()
+	{
 		return UUID.randomUUID().toString().substring(0, TOKEN_LENGTH);
 	}
 
-	public void deleteUserCredentials(String userId) {
+
+	public void deleteUserCredentials(String userId)
+	{
 		if (userId == null || userId.isEmpty())
 			throw new IllegalArgumentException(
 					"User ID cannot be null or empty.");
@@ -114,7 +128,9 @@ public class OAuthManager {
 		session.getTransaction().commit();
 	}
 
-	public void deleteToken(String token) {
+
+	public void deleteToken(String token)
+	{
 		if (token == null || token.isEmpty())
 			throw new IllegalArgumentException("Token cannot be null or empty.");
 
@@ -126,7 +142,9 @@ public class OAuthManager {
 		session.getTransaction().commit();
 	}
 
-	public List<AccessToken> getAccessTokens(String clientId, String userId) {
+
+	public List<AccessToken> getAccessTokens(String clientId, String userId)
+	{
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
@@ -136,15 +154,18 @@ public class OAuthManager {
 					.createQuery("from AccessToken as a where a.client.clientId = :clientId and a.user.userId = :userId");
 			query.setParameter("clientId", clientId);
 			query.setParameter("userId", userId);
-		} else if (clientId != null) {
+		}
+		else if (clientId != null) {
 			query = session
 					.createQuery("from AccessToken as a where a.client.clientId = :clientId");
 			query.setParameter("clientId", clientId);
-		} else if (userId != null) {
+		}
+		else if (userId != null) {
 			query = session
 					.createQuery("from AccessToken as a where a.user.userId = :userId");
 			query.setParameter("userId", userId);
-		} else {
+		}
+		else {
 			query = session.createQuery("from AccessToken");
 		}
 		@SuppressWarnings("unchecked")
@@ -155,7 +176,9 @@ public class OAuthManager {
 		return list;
 	}
 
-	public AccessToken getAccessToken(String token) {
+
+	public AccessToken getAccessToken(String token)
+	{
 		if (token == null || token.isEmpty())
 			throw new IllegalArgumentException("Token cannot be null or empty.");
 
@@ -163,7 +186,7 @@ public class OAuthManager {
 		session.beginTransaction();
 
 		AccessToken at = (AccessToken) session.get(AccessToken.class, token);
-		
+
 		if (at != null) {
 			at.setLastUsed(new Date());
 			session.save(at);
@@ -174,7 +197,9 @@ public class OAuthManager {
 		return at;
 	}
 
-	public String createClient(String name, String redirectionURI) {
+
+	public String createClient(String name, String redirectionURI)
+	{
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
@@ -186,7 +211,9 @@ public class OAuthManager {
 		return clientId;
 	}
 
-	public void deleteClient(String clientId) {
+
+	public void deleteClient(String clientId)
+	{
 		if (clientId == null || clientId.isEmpty())
 			throw new IllegalArgumentException(
 					"Client id cannot be null or empty.");
@@ -201,25 +228,29 @@ public class OAuthManager {
 
 		if (result != 1) {
 			log.warn(String.format("Deleted %d rows when deleting %s", result,
-					clientId));
+				clientId));
 		}
 
 		session.getTransaction().commit();
 	}
 
-	public OAuthClient getClient(String clientId) {
+
+	public OAuthClient getClient(String clientId)
+	{
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
 		OAuthClient client = (OAuthClient) session.get(OAuthClient.class,
-				clientId);
+			clientId);
 
 		session.getTransaction().commit();
 
 		return client;
 	}
 
-	public List<OAuthClient> getClients() {
+
+	public List<OAuthClient> getClients()
+	{
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 

@@ -34,16 +34,19 @@ import pl.psnc.dlibra.service.DLibraException;
  * 
  */
 @Path(Constants.ACCESSTOKEN_URL_PART)
-public class AccessTokenListResource {
+public class AccessTokenListResource
+{
 
 	@SuppressWarnings("unused")
-	private static final Logger log = Logger.getLogger(AccessTokenListResource.class);
+	private static final Logger log = Logger
+			.getLogger(AccessTokenListResource.class);
 
 	@Context
 	HttpServletRequest request;
 
 	@Context
 	private UriInfo uriInfo;
+
 
 	/**
 	 * Returns list of access tokens as XML. The optional parameters are
@@ -59,10 +62,11 @@ public class AccessTokenListResource {
 	 */
 	@GET
 	@Produces("text/xml")
-	public AccessTokenList getAccessTokenList(
-			@QueryParam("client_id") String clientId,
-			@QueryParam("user_id") String userId) throws RemoteException,
-			DLibraException, TransformerException {
+	public AccessTokenList getAccessTokenList(@QueryParam("client_id")
+	String clientId, @QueryParam("user_id")
+	String userId)
+		throws RemoteException, DLibraException, TransformerException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 		if (!dLibraDataSource.isAdmin()) {
@@ -76,6 +80,7 @@ public class AccessTokenListResource {
 				.getAccessTokens(clientId, userId);
 		return new AccessTokenList(list);
 	}
+
 
 	/**
 	 * Creates new access token for a given client and user. input: client_id
@@ -91,8 +96,9 @@ public class AccessTokenListResource {
 	@POST
 	@Consumes("text/plain")
 	@Produces("text/plain")
-	public Response createAccessToken(String data) throws RemoteException,
-			DLibraException {
+	public Response createAccessToken(String data)
+		throws RemoteException, DLibraException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
@@ -115,7 +121,8 @@ public class AccessTokenListResource {
 					.build().resolve(accessToken);
 
 			return Response.created(resourceUri).build();
-		} catch (IllegalArgumentException e) {
+		}
+		catch (IllegalArgumentException e) {
 			return Response.status(Status.NOT_FOUND).type("text/plain")
 					.entity(e.getMessage()).build();
 		}

@@ -98,8 +98,7 @@ public class RdfBuilder
 	}
 
 
-	public static Resource createCollection(URI uri,
-			List<URI> links)
+	public static Resource createCollection(URI uri, List<URI> links)
 	{
 		model.removeAll();
 		Resource collection = model.createResource(uri.toString());
@@ -120,6 +119,7 @@ public class RdfBuilder
 		}
 	}
 
+
 	/**
 	 * Returns rdf/xml serialization of specified Resource in String. 
 	 */
@@ -139,7 +139,8 @@ public class RdfBuilder
 
 		return output;
 	}
-	
+
+
 	/**
 	 * Returns rdf/xml serialization of specified Resource in String. 
 	 */
@@ -152,7 +153,6 @@ public class RdfBuilder
 
 		return new ByteArrayInputStream(out.toByteArray());
 	}
-	
 
 
 	public static Literal createDateLiteral(Date date)
@@ -200,7 +200,8 @@ public class RdfBuilder
 			if (!resource.hasProperty(property)) {
 				throw new IncorrectManifestException(
 						"Resource does not have a mandatory property: "
-								+ property + " resource: " + resource.toString());
+								+ property + " resource: "
+								+ resource.toString());
 			}
 		}
 	}

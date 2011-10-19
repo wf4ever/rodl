@@ -41,19 +41,20 @@ public class ClientResource
 	 * @throws DLibraException
 	 */
 	@GET
-	public OAuthClient getClient(@PathParam("C_ID") String clientId)
+	public OAuthClient getClient(@PathParam("C_ID")
+	String clientId)
 		throws RemoteException, IdNotFoundException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		if (!dLibraDataSource.isAdmin()) {
-			throw new ForbiddenException(
-					"Only admin users can manage clients.");
+			throw new ForbiddenException("Only admin users can manage clients.");
 		}
 
 		return dLibraDataSource.getOAuthManager().getClient(clientId);
 	}
+
 
 	/**
 	 * Deletes the OAuth 2.0 client.
@@ -63,15 +64,15 @@ public class ClientResource
 	 * @throws DLibraException
 	 */
 	@DELETE
-	public void deleteClient(@PathParam("C_ID") String clientId)
+	public void deleteClient(@PathParam("C_ID")
+	String clientId)
 		throws RemoteException, IdNotFoundException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		if (!dLibraDataSource.isAdmin()) {
-			throw new ForbiddenException(
-					"Only admin users can manage clients.");
+			throw new ForbiddenException("Only admin users can manage clients.");
 		}
 
 		dLibraDataSource.getOAuthManager().deleteClient(clientId);

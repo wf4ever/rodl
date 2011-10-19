@@ -36,7 +36,8 @@ import com.sun.jersey.core.header.ContentDisposition;
  */
 @Path(Constants.WORKSPACES_URL_PART + "/{W_ID}/"
 		+ Constants.RESEARCH_OBJECTS_URL_PART + "/{RO_ID}")
-public class ResearchObjectResource {
+public class ResearchObjectResource
+{
 
 	@SuppressWarnings("unused")
 	private final static Logger logger = Logger
@@ -47,6 +48,7 @@ public class ResearchObjectResource {
 
 	@Context
 	UriInfo uriInfo;
+
 
 	/**
 	 * Returns list of versions of this research object.
@@ -63,9 +65,11 @@ public class ResearchObjectResource {
 	 */
 	@GET
 	@Produces("application/rdf+xml")
-	public Response getListOfVersions(@PathParam("W_ID") String workspaceId,
-			@PathParam("RO_ID") String researchObjectId)
-			throws RemoteException, DLibraException, TransformerException {
+	public Response getListOfVersions(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId)
+		throws RemoteException, DLibraException, TransformerException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 		List<PublicationInfo> list = dLibraDataSource.getPublicationsHelper()
@@ -88,6 +92,7 @@ public class ResearchObjectResource {
 				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
 	}
 
+
 	/**
 	 * Creates new version. Input is RO_VERSION_ID and optional URI of the base
 	 * version that should be used to create a new version.
@@ -107,10 +112,12 @@ public class ResearchObjectResource {
 	 */
 	@POST
 	@Consumes("text/plain")
-	public Response createVersion(@PathParam("W_ID") String workspaceId,
-			@PathParam("RO_ID") String researchObjectId, String data)
-			throws DLibraException, IOException, TransformerException,
-			URISyntaxException {
+	public Response createVersion(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId, String data)
+		throws DLibraException, IOException, TransformerException,
+		URISyntaxException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
@@ -133,9 +140,10 @@ public class ResearchObjectResource {
 				.resolve(version);
 
 		dLibraDataSource.getPublicationsHelper().createPublication(
-				researchObjectId, version, baseVersion, resourceUri);
+			researchObjectId, version, baseVersion, resourceUri);
 		return Response.created(resourceUri).build();
 	}
+
 
 	/**
 	 * Deletes the research object.
@@ -148,14 +156,16 @@ public class ResearchObjectResource {
 	 * @throws DLibraException
 	 */
 	@DELETE
-	public void deleteResearchObject(@PathParam("W_ID") String workspaceId,
-			@PathParam("RO_ID") String researchObjectId)
-			throws RemoteException, DLibraException {
+	public void deleteResearchObject(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId)
+		throws RemoteException, DLibraException
+	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
 
 		dLibraDataSource.getPublicationsHelper().deleteGroupPublication(
-				researchObjectId);
+			researchObjectId);
 
 	}
 }
