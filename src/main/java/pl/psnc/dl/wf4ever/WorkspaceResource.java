@@ -28,7 +28,8 @@ public class WorkspaceResource
 
 
 	@GET
-	public Response getWorkspace(@PathParam("W_ID") String workspaceId)
+	public Response getWorkspace(@PathParam("W_ID")
+	String workspaceId)
 		throws RemoteException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
@@ -52,7 +53,8 @@ public class WorkspaceResource
 	 * @throws DLibraException
 	 */
 	@DELETE
-	public void deleteWorkspace(@PathParam("W_ID") String workspaceId)
+	public void deleteWorkspace(@PathParam("W_ID")
+	String workspaceId)
 		throws RemoteException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request

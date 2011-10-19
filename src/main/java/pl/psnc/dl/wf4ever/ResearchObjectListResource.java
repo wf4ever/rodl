@@ -50,7 +50,8 @@ public class ResearchObjectListResource
 	 */
 	@GET
 	@Produces("text/plain")
-	public String getResearchObjectList(@PathParam("W_ID") String workspaceId)
+	public String getResearchObjectList(@PathParam("W_ID")
+	String workspaceId)
 		throws RemoteException, DLibraException
 	{
 
@@ -92,8 +93,8 @@ public class ResearchObjectListResource
 	 */
 	@POST
 	@Consumes("text/plain")
-	public Response createResearchObject(@PathParam("W_ID") String workspaceId,
-			String researchObjectId)
+	public Response createResearchObject(@PathParam("W_ID")
+	String workspaceId, String researchObjectId)
 		throws RemoteException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request

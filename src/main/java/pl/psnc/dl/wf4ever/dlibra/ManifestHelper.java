@@ -35,7 +35,7 @@ public class ManifestHelper
 
 	private final static Logger logger = Logger.getLogger(ManifestHelper.class);
 
-	private DLibraDataSource dLibra;
+	private final DLibraDataSource dLibra;
 
 
 	public ManifestHelper(DLibraDataSource dLibraDataSource)
@@ -198,9 +198,8 @@ public class ManifestHelper
 	}
 
 
-	private void addOptionalROSRSProperties(Resource resource,
-			URI versionUri, String groupPublicationName,
-			String publicationName)
+	private void addOptionalROSRSProperties(Resource resource, URI versionUri,
+			String groupPublicationName, String publicationName)
 		throws RemoteException, DLibraException
 	{
 		EditionId editionId = dLibra.getEditionHelper().getLastEditionId(
@@ -211,8 +210,10 @@ public class ManifestHelper
 
 		for (String file : list) {
 			try {
-				resourceURIs.add(new URI(versionUri.toString() + "/").resolve(new URI(file)));
-			} catch (URISyntaxException e) {
+				resourceURIs.add(new URI(versionUri.toString() + "/")
+						.resolve(new URI(file)));
+			}
+			catch (URISyntaxException e) {
 				logger.error(String.format("%s is not a valid URI", file));
 			}
 		}
@@ -222,9 +223,12 @@ public class ManifestHelper
 		for (PublicationInfo info : dLibra.getPublicationsHelper()
 				.listPublicationsInGroup(groupPublicationName)) {
 			try {
-				resource.addProperty(DCTerms.hasVersion, versionUri.resolve(new URI(info.getLabel())).toString());
-			} catch (URISyntaxException e) {
-				logger.error(String.format("%s is not a valid URI", info.getLabel()));
+				resource.addProperty(DCTerms.hasVersion,
+					versionUri.resolve(new URI(info.getLabel())).toString());
+			}
+			catch (URISyntaxException e) {
+				logger.error(String.format("%s is not a valid URI",
+					info.getLabel()));
 			}
 		}
 

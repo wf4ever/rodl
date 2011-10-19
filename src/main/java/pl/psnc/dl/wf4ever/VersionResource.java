@@ -70,13 +70,14 @@ public class VersionResource
 	 */
 	@GET
 	@Produces({ "application/rdf+xml", "application/zip"})
-	public Response getManifestFile(
-			@PathParam("W_ID") String workspaceId,
-			@PathParam("RO_ID") String researchObjectId,
-			@PathParam("RO_VERSION_ID") String versionId,
-			@QueryParam("content") String isContentRequested,
-			@QueryParam("edition_id") @DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING) long editionId,
-			@QueryParam("edition_list") String isEditionListRequested)
+	public Response getManifestFile(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId, @PathParam("RO_VERSION_ID")
+	String versionId, @QueryParam("content")
+	String isContentRequested, @QueryParam("edition_id")
+	@DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING)
+	long editionId, @QueryParam("edition_list")
+	String isEditionListRequested)
 		throws IOException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
@@ -161,7 +162,8 @@ public class VersionResource
 				.getEditionList(researchObjectId, versionId);
 		StringBuilder sb = new StringBuilder();
 		for (Edition edition : editions) {
-			sb.append((edition.isPublished() ? "*" : "") + edition.getId() + "=" + edition.getCreationDate() + "\n");
+			sb.append((edition.isPublished() ? "*" : "") + edition.getId()
+					+ "=" + edition.getCreationDate() + "\n");
 		}
 		return Response.ok(sb.toString()).build();
 	}
@@ -190,10 +192,11 @@ public class VersionResource
 	 */
 	@PUT
 	@Consumes("application/rdf+xml")
-	public Response updateManifestFile(@PathParam("W_ID") String workspaceId,
-			@PathParam("RO_ID") String researchObjectId,
-			@PathParam("RO_VERSION_ID") String versionId,
-			@QueryParam("publish") String publish, String rdfAsString)
+	public Response updateManifestFile(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId, @PathParam("RO_VERSION_ID")
+	String versionId, @QueryParam("publish")
+	String publish, String rdfAsString)
 		throws DLibraException, IOException, TransformerException,
 		JenaException, IncorrectManifestException
 	{
@@ -204,9 +207,12 @@ public class VersionResource
 
 		if (publish != null) {
 			if (!publish.equals("false")) {
-				dLibraDataSource.getPublicationsHelper().publishPublication(researchObjectId, versionId);
-			} else {
-				dLibraDataSource.getPublicationsHelper().unpublishPublication(researchObjectId, versionId);
+				dLibraDataSource.getPublicationsHelper().publishPublication(
+					researchObjectId, versionId);
+			}
+			else {
+				dLibraDataSource.getPublicationsHelper().unpublishPublication(
+					researchObjectId, versionId);
 			}
 		}
 		else {
@@ -220,9 +226,10 @@ public class VersionResource
 
 
 	@POST
-	public Response createEdition(@PathParam("W_ID") String workspaceId,
-			@PathParam("RO_ID") String researchObjectId,
-			@PathParam("RO_VERSION_ID") String versionId)
+	public Response createEdition(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId, @PathParam("RO_VERSION_ID")
+	String versionId)
 		throws RemoteException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
@@ -252,9 +259,10 @@ public class VersionResource
 	 * @throws TransformerException
 	 */
 	@DELETE
-	public void deleteVersion(@PathParam("W_ID") String workspaceId,
-			@PathParam("RO_ID") String researchObjectId,
-			@PathParam("RO_VERSION_ID") String versionId)
+	public void deleteVersion(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId, @PathParam("RO_VERSION_ID")
+	String versionId)
 		throws DLibraException, IOException, TransformerException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request

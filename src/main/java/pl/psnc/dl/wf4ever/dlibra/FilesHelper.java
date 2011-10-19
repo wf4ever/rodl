@@ -54,13 +54,13 @@ public class FilesHelper
 
 	private final static Logger logger = Logger.getLogger(FilesHelper.class);
 
-	private DLibraDataSource dLibra;
+	private final DLibraDataSource dLibra;
 
-	private PublicationManager publicationManager;
+	private final PublicationManager publicationManager;
 
-	private FileManager fileManager;
+	private final FileManager fileManager;
 
-	private ContentServer contentServer;
+	private final ContentServer contentServer;
 
 
 	public FilesHelper(DLibraDataSource dLibraDataSource)
@@ -137,8 +137,8 @@ public class FilesHelper
 			VersionId versionId = (VersionId) id;
 
 			FileInfo fileInfo = (FileInfo) fileManager.getObjects(
-				new InputFilter(versionId),
-				new OutputFilter(FileInfo.class)).getResultInfo();
+				new InputFilter(versionId), new OutputFilter(FileInfo.class))
+					.getResultInfo();
 
 			String filePath = fileInfo.getFullPath();
 			if (EmptyFoldersUtility.isDlibraPath(filePath)
@@ -195,6 +195,7 @@ public class FilesHelper
 
 		new Thread("edition zip downloader (" + editionId + ")") {
 
+			@Override
 			public void run()
 			{
 				try {
@@ -312,9 +313,9 @@ public class FilesHelper
 	}
 
 
-	public void createOrUpdateFile(URI versionUri,
-			String groupPublicationName, String publicationName,
-			String filePath, InputStream inputStream, String mimeType)
+	public void createOrUpdateFile(URI versionUri, String groupPublicationName,
+			String publicationName, String filePath, InputStream inputStream,
+			String mimeType)
 		throws IOException, DLibraException, TransformerException
 	{
 		createOrUpdateFile(versionUri, groupPublicationName, publicationName,
@@ -322,10 +323,9 @@ public class FilesHelper
 	}
 
 
-	public void createOrUpdateFile(URI versionUri,
-			String groupPublicationName, String publicationName,
-			String filePath, InputStream inputStream, String mimeType,
-			boolean generateManifest)
+	public void createOrUpdateFile(URI versionUri, String groupPublicationName,
+			String publicationName, String filePath, InputStream inputStream,
+			String mimeType, boolean generateManifest)
 		throws IOException, DLibraException, TransformerException
 	{
 		PublicationId publicationId = dLibra.getPublicationsHelper()

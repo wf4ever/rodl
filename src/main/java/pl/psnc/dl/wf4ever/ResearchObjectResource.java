@@ -22,6 +22,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
+import org.xml.sax.SAXException;
 
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.metadata.PublicationInfo;
@@ -65,8 +66,9 @@ public class ResearchObjectResource
 	 */
 	@GET
 	@Produces("application/rdf+xml")
-	public Response getListOfVersions(@PathParam("W_ID") String workspaceId,
-			@PathParam("RO_ID") String researchObjectId)
+	public Response getListOfVersions(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId)
 		throws RemoteException, DLibraException, TransformerException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
@@ -77,7 +79,8 @@ public class ResearchObjectResource
 		List<URI> links = new ArrayList<URI>(list.size());
 
 		for (PublicationInfo info : list) {
-			links.add(uriInfo.getAbsolutePathBuilder().path("/").build().resolve(info.getLabel()));
+			links.add(uriInfo.getAbsolutePathBuilder().path("/").build()
+					.resolve(info.getLabel()));
 		}
 
 		String responseBody = RdfBuilder.serializeResource(RdfBuilder
@@ -110,9 +113,11 @@ public class ResearchObjectResource
 	 */
 	@POST
 	@Consumes("text/plain")
-	public Response createVersion(@PathParam("W_ID") String workspaceId,
-			@PathParam("RO_ID") String researchObjectId, String data)
-		throws DLibraException, IOException, TransformerException, URISyntaxException
+	public Response createVersion(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId, String data)
+		throws DLibraException, IOException, TransformerException,
+		URISyntaxException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
 				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
@@ -152,8 +157,9 @@ public class ResearchObjectResource
 	 * @throws DLibraException
 	 */
 	@DELETE
-	public void deleteResearchObject(@PathParam("W_ID") String workspaceId,
-			@PathParam("RO_ID") String researchObjectId)
+	public void deleteResearchObject(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId)
 		throws RemoteException, DLibraException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request

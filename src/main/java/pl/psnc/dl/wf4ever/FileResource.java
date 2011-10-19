@@ -69,13 +69,14 @@ public class FileResource
 	 * @throws TransformerException
 	 */
 	@GET
-	public Response getFile(
-			@PathParam("W_ID") String workspaceId,
-			@PathParam("RO_ID") String researchObjectId,
-			@PathParam("RO_VERSION_ID") String versionId,
-			@PathParam("FILE_PATH") String filePath,
-			@QueryParam("content") String isContentRequested,
-			@QueryParam("edition_id") @DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING) long editionId)
+	public Response getFile(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId, @PathParam("RO_VERSION_ID")
+	String versionId, @PathParam("FILE_PATH")
+	String filePath, @QueryParam("content")
+	String isContentRequested, @QueryParam("edition_id")
+	@DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING)
+	long editionId)
 		throws IOException, DLibraException, TransformerException
 	{
 
@@ -121,7 +122,8 @@ public class FileResource
 		List<URI> links = new ArrayList<URI>(files.size());
 
 		for (String path : files) {
-			links.add(uriInfo.getAbsolutePathBuilder().path("/").path(path).build());
+			links.add(uriInfo.getAbsolutePathBuilder().path("/").path(path)
+					.build());
 		}
 
 		String responseBody = RdfBuilder.serializeResource(RdfBuilder
@@ -190,12 +192,12 @@ public class FileResource
 
 
 	@PUT
-	public Response createOrUpdateFile(@PathParam("W_ID") String workspaceId,
-			@PathParam("RO_ID") String researchObjectId,
-			@PathParam("RO_VERSION_ID") String versionId,
-			@PathParam("FILE_PATH") String filePath,
-			@HeaderParam(Constants.CONTENT_TYPE_HEADER_NAME) String type,
-			InputStream inputStream)
+	public Response createOrUpdateFile(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId, @PathParam("RO_VERSION_ID")
+	String versionId, @PathParam("FILE_PATH")
+	String filePath, @HeaderParam(Constants.CONTENT_TYPE_HEADER_NAME)
+	String type, InputStream inputStream)
 		throws IOException, DLibraException, TransformerException
 	{
 
@@ -214,10 +216,11 @@ public class FileResource
 
 
 	@DELETE
-	public void deleteFile(@PathParam("W_ID") String workspaceId,
-			@PathParam("RO_ID") String researchObjectId,
-			@PathParam("RO_VERSION_ID") String versionId,
-			@PathParam("FILE_PATH") String filePath)
+	public void deleteFile(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId, @PathParam("RO_VERSION_ID")
+	String versionId, @PathParam("FILE_PATH")
+	String filePath)
 		throws DLibraException, IOException, TransformerException
 	{
 		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
