@@ -114,14 +114,15 @@ public class PublicationsHelper
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 */
-	public List<AbstractPublicationInfo> listUserGroupPublications()
+	public List<AbstractPublicationInfo> listUserGroupPublications(
+			byte groupState)
 		throws RemoteException, DLibraException
 	{
 		DirectoryId workspaceDir = getWorkspaceDirectoryId();
 		Collection<Info> resultInfos = directoryManager
 				.getObjects(
 					new DirectoryFilter(null, workspaceDir)
-							.setGroupStatus(Publication.PUB_GROUP_ROOT)
+							.setGroupStatus(groupState)
 							.setState(
 								(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED)),
 					new OutputFilter(ElementInfo.class, List.class))
@@ -156,7 +157,7 @@ public class PublicationsHelper
 		SearchServer searchServer = dLibra.getSearchServer();
 		if (searchServer == null) {
 			logger.error("Search server is null, returning list of group publications");
-			return listUserGroupPublications();
+			return listUserGroupPublications(Publication.PUB_GROUP_MID);
 		}
 
 		AdvancedQuery query = new AdvancedQuery();
@@ -224,7 +225,7 @@ public class PublicationsHelper
 			logger.error(
 				String.format("Error when parsing query %s.", query.toString()),
 				e);
-			return listUserGroupPublications();
+			return listUserGroupPublications(Publication.PUB_GROUP_MID);
 		}
 		return result;
 	}
@@ -263,7 +264,7 @@ public class PublicationsHelper
 
 
 	/**
-	 * Creates a new group publication (RO) for the current user.
+	 * Creates a new group publication (workspace) for the current user.
 	 * 
 	 * @param groupPublicationName
 	 * @throws RemoteException
@@ -275,8 +276,8 @@ public class PublicationsHelper
 		DirectoryId parent = getWorkspaceDirectoryId();
 		try {
 			getGroupId(groupPublicationName);
-			throw new DuplicatedValueException(null, "RO already exists",
-					groupPublicationName);
+			throw new DuplicatedValueException(null,
+					"Group publication already exists", groupPublicationName);
 		}
 		catch (IdNotFoundException e) {
 			// OK - group does not exist
@@ -291,7 +292,37 @@ public class PublicationsHelper
 
 
 	/**
-	 * Deletes a group publication (RO) for the current user.
+	 * Creates a new group publication (RO) for the current user.
+	 * 
+	 * @param groupPublicationName
+	 * @throws RemoteException
+	 * @throws DLibraException
+	 */
+	public void createGroupPublication(String parentName, String publicationName)
+		throws RemoteException, DLibraException
+	{
+		PublicationId groupId = getGroupId(parentName);
+		try {
+			getPublicationId(groupId, publicationName);
+			throw new DuplicatedValueException(null,
+					"RO Version already exists", parentName + "/"
+							+ publicationName);
+		}
+		catch (IdNotFoundException e) {
+			// OK - the publication does not exist
+		}
+
+		Publication publication = getNewPublication(publicationName, groupId,
+			Publication.PUB_GROUP_MID);
+		PublicationId publicationId = publicationManager
+				.createPublication(publication);
+		logger.debug(String.format("Created publication %s with id %s",
+			publication.getName(), publicationId));
+	}
+
+
+	/**
+	 * Deletes a group publication (workspace or RO) for the current user.
 	 * 
 	 * @param groupPublicationName
 	 * @throws RemoteException
@@ -302,7 +333,7 @@ public class PublicationsHelper
 	{
 		PublicationId groupId = getGroupId(groupPublicationName);
 		publicationManager.removePublication(groupId, true,
-			"Research object removed");
+			"Group publication removed");
 	}
 
 
@@ -369,7 +400,8 @@ public class PublicationsHelper
 			// OK - the publication does not exist
 		}
 
-		Publication publication = getNewPublication(publicationName, groupId);
+		Publication publication = getNewPublication(publicationName, groupId,
+			Publication.PUB_GROUP_LEAF);
 		PublicationId publicationId = publicationManager
 				.createPublication(publication);
 		logger.debug(String.format("Created publication %s with id %s",
@@ -424,7 +456,7 @@ public class PublicationsHelper
 
 
 	private Publication getNewPublication(String publicationName,
-			PublicationId groupId)
+			PublicationId groupId, byte groupStatus)
 		throws RemoteException, DLibraException
 	{
 		Publication publication = new Publication(null,
@@ -432,7 +464,7 @@ public class PublicationsHelper
 		publication.setParentPublicationId(groupId);
 		publication.setName(publicationName);
 		publication.setPosition(0);
-		publication.setGroupStatus(Publication.PUB_GROUP_LEAF);
+		publication.setGroupStatus(groupStatus);
 		publication.setSecured(false);
 		publication.setState(Publication.PUB_STATE_ACTUAL);
 		return publication;
@@ -571,7 +603,8 @@ public class PublicationsHelper
 		Collection<Info> resultInfos = directoryManager
 				.getObjects(
 					new DirectoryFilter(null, getWorkspaceDirectoryId())
-							.setGroupStatus(Publication.PUB_GROUP_ROOT)
+							.setGroupStatus(
+								(byte) (Publication.PUB_GROUP_ROOT | Publication.PUB_GROUP_MID))
 							.setState(
 								(byte) (Publication.PUB_STATE_ALL - Publication.PUB_STATE_PERMANENT_DELETED)),
 					new OutputFilter(ElementInfo.class, List.class))

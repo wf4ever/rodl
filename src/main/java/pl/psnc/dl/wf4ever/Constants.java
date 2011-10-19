@@ -16,6 +16,12 @@ public final class Constants
 		// nop
 	}
 
+	public final static String ACCESSTOKEN_URL_PART = "accesstoken";
+
+	public final static String CLIENTS_URL_PART = "clients";
+
+	public final static String USERS_URL_PART = "users";
+
 	public final static String WORKSPACES_URL_PART = "workspaces";
 
 	public final static String RESEARCH_OBJECTS_URL_PART = "ROs";

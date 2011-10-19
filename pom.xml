@@ -4,7 +4,7 @@
 	<groupId>pl.psnc.dl.wf4ever</groupId>
 	<artifactId>rosrs</artifactId>
 	<packaging>war</packaging>
-	<version>3.1.0-SNAPSHOT</version>
+	<version>4.0.0-SNAPSHOT</version>
 	<name>rosrs</name>
 	<url>http://maven.apache.org</url>
 	<inceptionYear>2010</inceptionYear>
@@ -132,6 +132,16 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>3.6.7.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>javassist</groupId>
+			<artifactId>javassist</artifactId>
+			<version>3.12.1.GA</version>
+		</dependency>
 
 		<!-- JETTY DEPENDENCIES FOR TESTING -->
 
@@ -153,6 +163,16 @@
 			<version>${jetty.version}</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.5</version>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.18</version>
+		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>
@@ -165,12 +185,12 @@
 				<enabled>false</enabled>
 			</snapshots>
 			<id>dlibra-releases</id>
-			<url>http://maven.man.poznan.pl/repository/dlibra-libs-releases/</url>
+			<url>http://maven.man.poznan.pl/repository/dlibra-libs-releases-public/</url>
 		</repository>
 		<repository>
 			<snapshots />
 			<id>dlibra-snapshots</id>
-			<url>http://maven.man.poznan.pl/repository/dlibra-libs-snapshots/</url>
+			<url>http://maven.man.poznan.pl/repository/dlibra-libs-snapshots-public/</url>
 		</repository>
 	</repositories>
 	<organization>
@@ -178,7 +198,7 @@
 		<url>http://dl.psnc.pl/</url>
 	</organization>
 	<build>
-		<finalName>rosrs3</finalName>
+		<finalName>rosrs4</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

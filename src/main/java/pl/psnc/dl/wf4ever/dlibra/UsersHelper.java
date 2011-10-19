@@ -166,4 +166,14 @@ public class UsersHelper
 		}
 	}
 
+
+	public boolean isAdmin(String login)
+		throws RemoteException, IdNotFoundException, DLibraException
+	{
+		User userData = userManager.getUserData(login);
+
+		//TODO make it independent of the username
+		return userData.getName().equals("wfadmin");
+	}
+
 }

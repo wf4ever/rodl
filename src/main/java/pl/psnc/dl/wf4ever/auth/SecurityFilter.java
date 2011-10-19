@@ -77,33 +77,25 @@ public class SecurityFilter
 		String authentication = request
 				.getHeaderValue(ContainerRequest.AUTHORIZATION);
 		if (authentication == null) {
-			// not recommended by OAuth 2.0 but the only method provided by the Scribe library
-			authentication = request.getQueryParameters().getFirst(
-				"access_token");
-			if (authentication == null) {
-				throw new MappableContainerException(
-						new AuthenticationException(
-								"Authentication credentials are required\r\n",
-								REALM));
-			}
+			throw new MappableContainerException(new AuthenticationException(
+					"Authentication credentials are required\r\n", REALM));
+		}
+		String[] values;
+		if (authentication.startsWith("Basic ")) {
+			values = getBasicCredentials(authentication.substring("Basic "
+					.length()));
+		}
+		// this is the recommended OAuth 2.0 method
+		else if (authentication.startsWith("Bearer ")) {
+			values = getBearerCredentials(authentication.substring("Bearer "
+					.length()));
 		}
 		else {
-			if (authentication.startsWith("Basic ")) {
-				authentication = authentication.substring("Basic ".length());
-			}
-			// this is the recommended OAuth 2.0 method
-			else if (authentication.startsWith("Bearer ")) {
-				authentication = authentication.substring("Bearer ".length());
-			}
-			else {
-				throw new MappableContainerException(
-						new AuthenticationException(
-								"Only HTTP Basic and OAuth 2.0 Bearer authentications are supported\r\n",
-								REALM));
-			}
+			throw new MappableContainerException(
+					new AuthenticationException(
+							"Only HTTP Basic and OAuth 2.0 Bearer authentications are supported\r\n",
+							REALM));
 		}
-		String[] values = new String(Base64.base64Decode(authentication))
-				.split(":");
 		if (values.length < 2) {
 			throw new MappableContainerException(new AuthenticationException(
 					"Invalid syntax for username and password\r\n", REALM));
@@ -118,24 +110,33 @@ public class SecurityFilter
 		logger.debug("Request from user: " + username + " | password: "
 				+ password);
 
-		// extract workspace name from uri and compare with username
-		// skip this check if we are adding or deleting workspace
-		{
-			// part of path after workspaces/
-			String a = uriInfo.getPath().substring(
-				uriInfo.getPath().indexOf("/") + 1);
-			int idx = a.indexOf("/");
-			if (idx > 0) {
-				String workspaceId = a.substring(0, idx);
-				if (!workspaceId.equals(username)) {
-					throw new MappableContainerException(
-							new ForbiddenException("Access denied\r\n"));
-				}
-			}
-		}
 		return DlibraConnectionRegistry.getConnection().getDLibraDataSource(
 			username, password);
 
+	}
+
+
+	private String[] getBearerCredentials(String accessToken)
+	{
+		OAuthManager manager = new OAuthManager();
+		AccessToken token = manager.getAccessToken(accessToken);
+		if (token == null) {
+			return getBasicCredentials(accessToken);
+		}
+		return new String[] { token.getUser().getUserId(),
+				token.getUser().getPassword()};
+	}
+
+
+	/**
+	 * @param authentication
+	 * @return
+	 */
+	private String[] getBasicCredentials(String authentication)
+	{
+		String[] values = new String(Base64.base64Decode(authentication))
+				.split(":");
+		return values;
 	}
 
 

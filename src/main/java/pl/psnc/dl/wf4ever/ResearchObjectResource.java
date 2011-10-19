@@ -108,8 +108,13 @@ public class ResearchObjectResource
 	 * @throws DLibraException
 	 * @throws IOException
 	 * @throws TransformerException
+<<<<<<< HEAD
 	 * @throws URISyntaxException 
 	 * @throws SAXException 
+=======
+	 * @throws URISyntaxException
+	 * @throws SAXException
+>>>>>>> 4.0.0
 	 */
 	@POST
 	@Consumes("text/plain")
