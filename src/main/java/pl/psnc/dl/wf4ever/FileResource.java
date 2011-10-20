@@ -80,28 +80,28 @@ public class FileResource
 		throws IOException, TransformerException, DigitalLibraryException,
 		IdNotFoundException
 	{
-
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
 		if (isContentRequested != null) { // file or folder content
 			try { // file
 				return getFileContent(workspaceId, researchObjectId, versionId,
-					filePath, dLibraDataSource, editionId);
+					filePath, dl, editionId);
 			}
 			catch (IdNotFoundException ex) { // folder
 				return getFolderContent(workspaceId, researchObjectId,
-					versionId, filePath, dLibraDataSource, editionId);
+					versionId, filePath, dl, editionId);
 			}
 		}
 		else { // metadata
 			try { // file
 				return getFileMetadata(workspaceId, researchObjectId,
-					versionId, filePath, dLibraDataSource, editionId);
+					versionId, filePath, dl, editionId);
 			}
 			catch (IdNotFoundException ex) { // folder
 				return getFolderMetadata(workspaceId, researchObjectId,
-					versionId, filePath, dLibraDataSource, editionId);
+					versionId, filePath, dl, editionId);
 			}
 		}
 
@@ -234,14 +234,15 @@ public class FileResource
 		throws IOException, TransformerException, DigitalLibraryException,
 		IdNotFoundException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
 		URI versionUri = Utils.createVersionURI(uriInfo, workspaceId,
 			researchObjectId, versionId);
 
-		dLibraDataSource.createOrUpdateFile(versionUri, workspaceId,
-			researchObjectId, versionId, filePath, inputStream, type);
+		dl.createOrUpdateFile(versionUri, workspaceId, researchObjectId,
+			versionId, filePath, inputStream, type);
 
 		return Response.ok().build();
 	}
@@ -256,8 +257,9 @@ public class FileResource
 		throws IOException, TransformerException, DigitalLibraryException,
 		IdNotFoundException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
 		URI versionUri = Utils.createVersionURI(uriInfo, workspaceId,
 			researchObjectId, versionId);
@@ -266,7 +268,7 @@ public class FileResource
 			throw new ForbiddenException(
 					"Blocked attempt to delete manifest.rdf");
 
-		dLibraDataSource.deleteFile(versionUri, workspaceId, researchObjectId,
-			versionId, filePath);
+		dl.deleteFile(versionUri, workspaceId, researchObjectId, versionId,
+			filePath);
 	}
 }

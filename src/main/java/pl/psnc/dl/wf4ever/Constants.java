@@ -38,11 +38,9 @@ public final class Constants
 
 	public static final String EDITION_QUERY_PARAM_DEFAULT_STRING = "0";
 
-	public static final String OAUTH_MANAGER = "oauthManager";
-
 	/**
 	 * Used for accessing DLibraDataSource stored in HttpRequest
 	 */
-	public static final String DLFACTORY = "dlFactory";
+	public static final String USER = "user";
 
 }

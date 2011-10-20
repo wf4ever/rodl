@@ -38,12 +38,13 @@ public class UserResource
 		throws RemoteException, MalformedURLException, UnknownHostException,
 		DigitalLibraryException, IdNotFoundException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
 		userId = new String(Base64.decodeBase64(userId));
 
-		if (dLibraDataSource.userExists(userId)) {
+		if (dl.userExists(userId)) {
 			return Response.ok(userId).build();
 		}
 		else {
@@ -68,14 +69,14 @@ public class UserResource
 		throws RemoteException, MalformedURLException, UnknownHostException,
 		DigitalLibraryException, IdNotFoundException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
-		OAuthManager oauth = (OAuthManager) request
-				.getAttribute(Constants.OAUTH_MANAGER);
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		OAuthManager oauth = new OAuthManager();
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
 		userId = new String(Base64.decodeBase64(userId));
 
-		dLibraDataSource.deleteUser(userId);
+		dl.deleteUser(userId);
 		oauth.deleteUserCredentials(userId);
 	}
 }

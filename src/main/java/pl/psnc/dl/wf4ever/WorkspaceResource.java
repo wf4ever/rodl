@@ -62,9 +62,10 @@ public class WorkspaceResource
 		throws RemoteException, DigitalLibraryException, MalformedURLException,
 		UnknownHostException, TransformerException, IdNotFoundException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
-		List<String> list = dLibraDataSource.getResearchObjectIds(workspaceId);
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
+		List<String> list = dl.getResearchObjectIds(workspaceId);
 
 		List<URI> links = new ArrayList<URI>(list.size());
 
@@ -101,10 +102,11 @@ public class WorkspaceResource
 		throws RemoteException, MalformedURLException, UnknownHostException,
 		DigitalLibraryException, IdNotFoundException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
-		dLibraDataSource.deleteWorkspace(workspaceId);
+		dl.deleteWorkspace(workspaceId);
 
 	}
 }

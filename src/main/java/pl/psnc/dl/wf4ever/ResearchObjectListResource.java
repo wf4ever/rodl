@@ -67,17 +67,17 @@ public class ResearchObjectListResource
 		MalformedURLException, UnknownHostException, DigitalLibraryException
 	{
 
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 		List<String> list;
 		logger.debug(String.format("Received %d query params", uriInfo
 				.getQueryParameters().size()));
 		if (uriInfo.getQueryParameters().isEmpty()) {
-			list = dLibraDataSource.getResearchObjectIds(workspaceId);
+			list = dl.getResearchObjectIds(workspaceId);
 		}
 		else {
-			list = dLibraDataSource.getVersionIds(workspaceId,
-				uriInfo.getQueryParameters());
+			list = dl.getVersionIds(workspaceId, uriInfo.getQueryParameters());
 		}
 
 		List<URI> links = new ArrayList<URI>(list.size());
@@ -121,10 +121,11 @@ public class ResearchObjectListResource
 		throws RemoteException, MalformedURLException, UnknownHostException,
 		DigitalLibraryException, IdNotFoundException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
-		dLibraDataSource.createResearchObject(workspaceId, researchObjectId);
+		dl.createResearchObject(workspaceId, researchObjectId);
 
 		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
 				.resolve(researchObjectId);

@@ -83,20 +83,20 @@ public class VersionResource
 	String isEditionListRequested)
 		throws IOException, DigitalLibraryException, IdNotFoundException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
 		if (isEditionListRequested != null) {
-			return getEditionList(workspaceId, researchObjectId, versionId,
-				dLibraDataSource);
+			return getEditionList(workspaceId, researchObjectId, versionId, dl);
 		}
 		else if (isContentRequested == null) {
-			return getManifest(workspaceId, researchObjectId, versionId,
-				dLibraDataSource, editionId);
+			return getManifest(workspaceId, researchObjectId, versionId, dl,
+				editionId);
 		}
 		else {
 			return getZippedPublication(workspaceId, researchObjectId,
-				versionId, dLibraDataSource, editionId);
+				versionId, dl, editionId);
 		}
 	}
 
@@ -222,24 +222,23 @@ public class VersionResource
 		IncorrectManifestException, DigitalLibraryException,
 		IdNotFoundException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
 		URI versionUri = uriInfo.getAbsolutePath();
 
 		if (publish != null) {
 			if (!publish.equals("false")) {
-				dLibraDataSource.publishVersion(workspaceId, researchObjectId,
-					versionId);
+				dl.publishVersion(workspaceId, researchObjectId, versionId);
 			}
 			else {
-				dLibraDataSource.unpublishVersion(workspaceId,
-					researchObjectId, versionId);
+				dl.unpublishVersion(workspaceId, researchObjectId, versionId);
 			}
 		}
 		else {
-			dLibraDataSource.updateManifest(versionUri, researchObjectId,
-				versionId, new ByteArrayInputStream(rdfAsString.getBytes()));
+			dl.updateManifest(versionUri, researchObjectId, versionId,
+				new ByteArrayInputStream(rdfAsString.getBytes()));
 		}
 
 		return Response.ok().build();
@@ -254,10 +253,11 @@ public class VersionResource
 		throws RemoteException, DigitalLibraryException, MalformedURLException,
 		UnknownHostException, IdNotFoundException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
-		long editionId = dLibraDataSource.createEdition(workspaceId, versionId,
+		long editionId = dl.createEdition(workspaceId, versionId,
 			researchObjectId, versionId).getId();
 
 		String uri = uriInfo.getAbsolutePath().toString() + "?edition_id="
@@ -290,10 +290,11 @@ public class VersionResource
 		throws DigitalLibraryException, RemoteException, MalformedURLException,
 		UnknownHostException, IdNotFoundException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
-		dLibraDataSource.deleteVersion(workspaceId, researchObjectId,
-			versionId, uriInfo.getAbsolutePath());
+		dl.deleteVersion(workspaceId, researchObjectId, versionId,
+			uriInfo.getAbsolutePath());
 	}
 }

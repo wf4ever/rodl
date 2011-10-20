@@ -60,10 +60,10 @@ public class UserListResource
 		throws RemoteException, DigitalLibraryException, MalformedURLException,
 		UnknownHostException, IdNotFoundException, DuplicatedValueException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
-		OAuthManager oauth = (OAuthManager) request
-				.getAttribute(Constants.OAUTH_MANAGER);
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		OAuthManager oauth = new OAuthManager();
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
 		userId = new String(Base64.decodeBase64(userId));
 
@@ -75,7 +75,7 @@ public class UserListResource
 		}
 		String password = UUID.randomUUID().toString().replaceAll("-", "")
 				.substring(0, 20);
-		dLibraDataSource.createUser(userId, password);
+		dl.createUser(userId, password);
 		oauth.createUserCredentials(userId, password);
 
 		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()

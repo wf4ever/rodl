@@ -54,7 +54,12 @@ public class UserCredentials
 	 * @param password
 	 */
 	public UserCredentials(String userId, String password)
+		throws IllegalArgumentException
 	{
+		if (userId == null)
+			throw new IllegalArgumentException("User id cannot be null");
+		if (password == null)
+			throw new IllegalArgumentException("Password cannot be null");
 		this.userId = userId;
 		this.password = password;
 	}

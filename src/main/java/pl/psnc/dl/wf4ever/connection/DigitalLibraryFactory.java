@@ -21,6 +21,7 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.DigitalLibrary;
+import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
 import pl.psnc.dlibra.service.DLibraException;
 
@@ -43,19 +44,16 @@ public class DigitalLibraryFactory
 
 	private static long collectionId;
 
-	private final String userLogin;
 
-	private final String password;
-
-
-	public DigitalLibraryFactory(String userLogin, String password)
+	public static DigitalLibrary getDigitalLibrary(UserCredentials creds)
+		throws RemoteException, MalformedURLException, UnknownHostException
 	{
-		this.userLogin = userLogin;
-		this.password = password;
+		return getDigitalLibrary(creds.getUserId(), creds.getPassword());
 	}
 
 
-	public DigitalLibrary getDigitalLibrary()
+	public static DigitalLibrary getDigitalLibrary(String userLogin,
+			String password)
 		throws RemoteException, MalformedURLException, UnknownHostException
 	{
 		try {

@@ -11,6 +11,8 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.UserProfile;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.DLibraException;
@@ -39,26 +41,18 @@ public class SecurityFilter
 	public ContainerRequest filter(ContainerRequest request)
 	{
 		try {
-			DigitalLibraryFactory digitalLibraryFactory = authenticate(request);
-			httpRequest
-					.setAttribute(Constants.DLFACTORY, digitalLibraryFactory);
-			httpRequest.setAttribute(Constants.OAUTH_MANAGER,
-				new OAuthManager());
+			UserCredentials creds = authenticate(request);
+			UserProfile user = DigitalLibraryFactory.getDigitalLibrary(creds)
+					.getUserProfile();
+			//TODO in here should go access rights control
+			httpRequest.setAttribute(Constants.USER, user);
 		}
-		catch (AccessDeniedException e) {
+		catch (AccessDeniedException | DigitalLibraryException e) {
 			throw new MappableContainerException(new AuthenticationException(
 					"Incorrect login/password\r\n", REALM));
 		}
-		catch (MalformedURLException e) {
-			throw new RuntimeException(e);
-		}
-		catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
-		catch (UnknownHostException e) {
-			throw new RuntimeException(e);
-		}
-		catch (DLibraException e) {
+		catch (MalformedURLException | RemoteException | UnknownHostException
+				| DLibraException e) {
 			throw new RuntimeException(e);
 		}
 
@@ -66,7 +60,7 @@ public class SecurityFilter
 	}
 
 
-	private DigitalLibraryFactory authenticate(ContainerRequest request)
+	private UserCredentials authenticate(ContainerRequest request)
 		throws MalformedURLException, RemoteException, AccessDeniedException,
 		UnknownHostException, DLibraException
 	{
@@ -82,50 +76,38 @@ public class SecurityFilter
 			throw new MappableContainerException(new AuthenticationException(
 					"Authentication credentials are required\r\n", REALM));
 		}
-		String[] values;
-		if (authentication.startsWith("Basic ")) {
-			values = getBasicCredentials(authentication.substring("Basic "
-					.length()));
+		try {
+			if (authentication.startsWith("Basic ")) {
+				return getBasicCredentials(authentication.substring("Basic "
+						.length()));
+			}
+			// this is the recommended OAuth 2.0 method
+			else if (authentication.startsWith("Bearer ")) {
+				return getBearerCredentials(authentication.substring("Bearer "
+						.length()));
+			}
+			else {
+				throw new MappableContainerException(
+						new AuthenticationException(
+								"Only HTTP Basic and OAuth 2.0 Bearer authentications are supported\r\n",
+								REALM));
+			}
 		}
-		// this is the recommended OAuth 2.0 method
-		else if (authentication.startsWith("Bearer ")) {
-			values = getBearerCredentials(authentication.substring("Bearer "
-					.length()));
-		}
-		else {
-			throw new MappableContainerException(
-					new AuthenticationException(
-							"Only HTTP Basic and OAuth 2.0 Bearer authentications are supported\r\n",
-							REALM));
-		}
-		if (values.length < 2) {
+		catch (IllegalArgumentException e) {
 			throw new MappableContainerException(new AuthenticationException(
-					"Invalid syntax for username and password\r\n", REALM));
+					e.getMessage(), REALM));
 		}
-		String username = values[0];
-		String password = values[1];
-		if ((username == null) || (password == null)) {
-			throw new MappableContainerException(new AuthenticationException(
-					"Missing username or password\r\n", REALM));
-		}
-
-		logger.debug("Request from user: " + username + " | password: "
-				+ password);
-
-		return new DigitalLibraryFactory(username, password);
-
 	}
 
 
-	private String[] getBearerCredentials(String accessToken)
+	private UserCredentials getBearerCredentials(String accessToken)
 	{
 		OAuthManager manager = new OAuthManager();
 		AccessToken token = manager.getAccessToken(accessToken);
 		if (token == null) {
 			return getBasicCredentials(accessToken);
 		}
-		return new String[] { token.getUser().getUserId(),
-				token.getUser().getPassword()};
+		return token.getUser();
 	}
 
 
@@ -133,11 +115,11 @@ public class SecurityFilter
 	 * @param authentication
 	 * @return
 	 */
-	private String[] getBasicCredentials(String authentication)
+	private UserCredentials getBasicCredentials(String authentication)
 	{
 		String[] values = new String(Base64.base64Decode(authentication))
 				.split(":");
-		return values;
+		return new UserCredentials(values[0], values[1]);
 	}
 
 

@@ -77,10 +77,10 @@ public class ResearchObjectResource
 		throws RemoteException, DLibraException, TransformerException,
 		MalformedURLException, UnknownHostException, DigitalLibraryException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
-		List<String> list = dLibraDataSource.getVersionIds(workspaceId,
-			researchObjectId);
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
+		List<String> list = dl.getVersionIds(workspaceId, researchObjectId);
 
 		List<URI> links = new ArrayList<URI>(list.size());
 
@@ -126,8 +126,9 @@ public class ResearchObjectResource
 		throws IOException, TransformerException, URISyntaxException,
 		DigitalLibraryException, IdNotFoundException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
 		String lines[] = data.split("[\\r\\n]+");
 		if (lines.length < 1) {
@@ -148,12 +149,12 @@ public class ResearchObjectResource
 				.resolve(version);
 
 		if (baseVersion == null) {
-			dLibraDataSource.createVersion(workspaceId, researchObjectId,
-				version, resourceUri);
+			dl.createVersion(workspaceId, researchObjectId, version,
+				resourceUri);
 		}
 		else {
-			dLibraDataSource.createVersion(workspaceId, researchObjectId,
-				version, baseVersion, resourceUri);
+			dl.createVersion(workspaceId, researchObjectId, version,
+				baseVersion, resourceUri);
 		}
 		return Response.created(resourceUri).build();
 	}
@@ -179,10 +180,11 @@ public class ResearchObjectResource
 		throws RemoteException, MalformedURLException, UnknownHostException,
 		DigitalLibraryException, IdNotFoundException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
-		dLibraDataSource.deleteResearchObject(workspaceId, researchObjectId);
+		dl.deleteResearchObject(workspaceId, researchObjectId);
 
 	}
 }

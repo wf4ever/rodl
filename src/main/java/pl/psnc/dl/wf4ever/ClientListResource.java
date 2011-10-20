@@ -25,7 +25,6 @@ import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
 import pl.psnc.dl.wf4ever.auth.OAuthClientList;
 import pl.psnc.dl.wf4ever.auth.OAuthManager;
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
@@ -61,11 +60,10 @@ public class ClientListResource
 		throws RemoteException, IdNotFoundException, MalformedURLException,
 		UnknownHostException, DigitalLibraryException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
-		OAuthManager oauth = (OAuthManager) request
-				.getAttribute(Constants.OAUTH_MANAGER);
-		if (!dLibraDataSource.getUserProfile().isAdmin()) {
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		OAuthManager oauth = new OAuthManager();
+
+		if (!user.isAdmin()) {
 			throw new ForbiddenException(
 					"Only admin users can manage access tokens.");
 		}
@@ -93,12 +91,10 @@ public class ClientListResource
 		throws RemoteException, IdNotFoundException, MalformedURLException,
 		UnknownHostException, DigitalLibraryException
 	{
-		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
-				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
-		OAuthManager oauth = (OAuthManager) request
-				.getAttribute(Constants.OAUTH_MANAGER);
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		OAuthManager oauth = new OAuthManager();
 
-		if (!dLibraDataSource.getUserProfile().isAdmin()) {
+		if (!user.isAdmin()) {
 			throw new ForbiddenException(
 					"Only admin users can manage access tokens.");
 		}
