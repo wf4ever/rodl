@@ -26,17 +26,18 @@ public class DlibraConnectionConfigurationListener
 	private static final String CONNECTION_PROPERTIES_FILENAME = "connection.properties.filename";
 
 
+	@Override
 	public void contextInitialized(ServletContextEvent sce)
 	{
 		ServletContext servletContext = sce.getServletContext();
 
 		String fileName = servletContext
 				.getInitParameter(CONNECTION_PROPERTIES_FILENAME);
-		DlibraConnectionRegistry.loadRegistry(new DlibraConnectionRegistry(
-				new DlibraConnection(fileName)));
+		DigitalLibraryFactory.loadDigitalLibraryConfiguration(fileName);
 	}
 
 
+	@Override
 	public void contextDestroyed(ServletContextEvent sce)
 	{
 		// nothing to do

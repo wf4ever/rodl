@@ -3,7 +3,9 @@
  */
 package pl.psnc.dl.wf4ever;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.util.List;
 
@@ -23,7 +25,7 @@ import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
 import pl.psnc.dl.wf4ever.auth.OAuthClientList;
 import pl.psnc.dl.wf4ever.auth.OAuthManager;
-import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
@@ -47,19 +49,23 @@ public class ClientListResource
 	 * @return TBD
 	 * @throws IdNotFoundException 
 	 * @throws RemoteException
+	 * @throws UnknownHostException 
+	 * @throws MalformedURLException 
+	 * @throws DigitalLibraryException 
 	 * @throws DLibraException
 	 * @throws TransformerException 
 	 */
 	@GET
 	@Produces("text/xml")
 	public OAuthClientList getClientList()
-		throws RemoteException, IdNotFoundException, DLibraException
+		throws RemoteException, IdNotFoundException, MalformedURLException,
+		UnknownHostException, DigitalLibraryException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 		OAuthManager oauth = (OAuthManager) request
 				.getAttribute(Constants.OAUTH_MANAGER);
-		if (!dLibraDataSource.isAdmin()) {
+		if (!dLibraDataSource.getUserProfile().isAdmin()) {
 			throw new ForbiddenException(
 					"Only admin users can manage access tokens.");
 		}
@@ -75,20 +81,24 @@ public class ClientListResource
 	 *         (Conflict) if the client id already exists.
 	 * @throws IdNotFoundException 
 	 * @throws RemoteException
+	 * @throws UnknownHostException 
+	 * @throws MalformedURLException 
+	 * @throws DigitalLibraryException 
 	 * @throws DLibraException
 	 */
 	@POST
 	@Consumes("text/plain")
 	@Produces("text/plain")
 	public Response createClient(String data)
-		throws RemoteException, IdNotFoundException, DLibraException
+		throws RemoteException, IdNotFoundException, MalformedURLException,
+		UnknownHostException, DigitalLibraryException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 		OAuthManager oauth = (OAuthManager) request
 				.getAttribute(Constants.OAUTH_MANAGER);
 
-		if (!dLibraDataSource.isAdmin()) {
+		if (!dLibraDataSource.getUserProfile().isAdmin()) {
 			throw new ForbiddenException(
 					"Only admin users can manage access tokens.");
 		}

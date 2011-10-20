@@ -1,6 +1,8 @@
 package pl.psnc.dl.wf4ever;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,10 +21,9 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
-import pl.psnc.dlibra.metadata.AbstractPublicationInfo;
-import pl.psnc.dlibra.metadata.Publication;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dlibra.service.DLibraException;
+import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -53,35 +54,37 @@ public class ResearchObjectListResource
 	 *            identifier of a workspace in the RO SRS
 	 * @return TBD
 	 * @throws RemoteException
-	 * @throws DLibraException
 	 * @throws TransformerException
+	 * @throws UnknownHostException 
+	 * @throws MalformedURLException 
+	 * @throws DigitalLibraryException 
 	 */
 	@GET
 	@Produces("application/rdf+xml")
 	public Response getResearchObjectList(@PathParam("W_ID")
 	String workspaceId)
-		throws RemoteException, DLibraException, TransformerException
+		throws RemoteException, DLibraException, TransformerException,
+		MalformedURLException, UnknownHostException, DigitalLibraryException
 	{
 
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
-		List<AbstractPublicationInfo> list;
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		List<String> list;
 		logger.debug(String.format("Received %d query params", uriInfo
 				.getQueryParameters().size()));
 		if (uriInfo.getQueryParameters().isEmpty()) {
-			list = dLibraDataSource.getPublicationsHelper()
-					.listUserGroupPublications(Publication.PUB_GROUP_MID);
+			list = dLibraDataSource.getResearchObjectIds(workspaceId);
 		}
 		else {
-			list = dLibraDataSource.getPublicationsHelper()
-					.listUserPublications(uriInfo.getQueryParameters());
+			list = dLibraDataSource.getVersionIds(workspaceId,
+				uriInfo.getQueryParameters());
 		}
 
 		List<URI> links = new ArrayList<URI>(list.size());
 
-		for (AbstractPublicationInfo info : list) {
+		for (String id : list) {
 			links.add(uriInfo.getAbsolutePathBuilder().path("/").build()
-					.resolve(info.getLabel()));
+					.resolve(id));
 		}
 
 		String responseBody = RdfBuilder.serializeResource(RdfBuilder
@@ -106,19 +109,22 @@ public class ResearchObjectListResource
 	 *         (Conflict) if the RO_ID is already used in the WORKSPACE_ID
 	 *         workspace
 	 * @throws RemoteException
-	 * @throws DLibraException
+	 * @throws UnknownHostException 
+	 * @throws MalformedURLException 
+	 * @throws DigitalLibraryException 
+	 * @throws IdNotFoundException 
 	 */
 	@POST
 	@Consumes("text/plain")
 	public Response createResearchObject(@PathParam("W_ID")
 	String workspaceId, String researchObjectId)
-		throws RemoteException, DLibraException
+		throws RemoteException, MalformedURLException, UnknownHostException,
+		DigitalLibraryException, IdNotFoundException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 
-		dLibraDataSource.getPublicationsHelper().createGroupPublication(
-			workspaceId, researchObjectId);
+		dLibraDataSource.createResearchObject(workspaceId, researchObjectId);
 
 		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
 				.resolve(researchObjectId);

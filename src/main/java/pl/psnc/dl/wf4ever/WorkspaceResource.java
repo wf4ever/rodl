@@ -1,6 +1,8 @@
 package pl.psnc.dl.wf4ever;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,9 +18,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
-import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
-import pl.psnc.dlibra.metadata.PublicationInfo;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dlibra.service.DLibraException;
+import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -48,23 +50,27 @@ public class WorkspaceResource
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 * @throws TransformerException
+	 * @throws DigitalLibraryException 
+	 * @throws UnknownHostException 
+	 * @throws MalformedURLException 
+	 * @throws IdNotFoundException 
 	 */
 	@GET
 	@Produces("application/rdf+xml")
 	public Response getWorkspace(@PathParam("W_ID")
 	String workspaceId)
-		throws RemoteException, DLibraException, TransformerException
+		throws RemoteException, DigitalLibraryException, MalformedURLException,
+		UnknownHostException, TransformerException, IdNotFoundException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
-		List<PublicationInfo> list = dLibraDataSource.getPublicationsHelper()
-				.listPublicationsInGroup(workspaceId);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
+		List<String> list = dLibraDataSource.getResearchObjectIds(workspaceId);
 
 		List<URI> links = new ArrayList<URI>(list.size());
 
-		for (PublicationInfo info : list) {
+		for (String id : list) {
 			links.add(uriInfo.getAbsolutePathBuilder().path("/").build()
-					.resolve(info.getLabel()));
+					.resolve(id));
 		}
 
 		String responseBody = RdfBuilder.serializeResource(RdfBuilder
@@ -84,18 +90,21 @@ public class WorkspaceResource
 	 * @param workspaceId
 	 *            identifier of a workspace in the RO SRS
 	 * @throws RemoteException
-	 * @throws DLibraException
+	 * @throws UnknownHostException 
+	 * @throws MalformedURLException 
+	 * @throws DigitalLibraryException 
+	 * @throws IdNotFoundException 
 	 */
 	@DELETE
 	public void deleteWorkspace(@PathParam("W_ID")
 	String workspaceId)
-		throws RemoteException, DLibraException
+		throws RemoteException, MalformedURLException, UnknownHostException,
+		DigitalLibraryException, IdNotFoundException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 
-		dLibraDataSource.getPublicationsHelper().deleteGroupPublication(
-			workspaceId);
+		dLibraDataSource.deleteWorkspace(workspaceId);
 
 	}
 }

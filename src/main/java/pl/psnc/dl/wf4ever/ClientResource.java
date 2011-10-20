@@ -1,5 +1,7 @@
 package pl.psnc.dl.wf4ever;
 
+import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,7 +15,7 @@ import javax.ws.rs.core.UriInfo;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
 import pl.psnc.dl.wf4ever.auth.OAuthManager;
-import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
@@ -39,19 +41,23 @@ public class ClientResource
 	 * @return 
 	 * @throws IdNotFoundException 
 	 * @throws RemoteException
+	 * @throws UnknownHostException 
+	 * @throws MalformedURLException 
+	 * @throws DigitalLibraryException 
 	 * @throws DLibraException
 	 */
 	@GET
 	public OAuthClient getClient(@PathParam("C_ID")
 	String clientId)
-		throws RemoteException, IdNotFoundException, DLibraException
+		throws RemoteException, IdNotFoundException, MalformedURLException,
+		UnknownHostException, DigitalLibraryException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 		OAuthManager oauth = (OAuthManager) request
 				.getAttribute(Constants.OAUTH_MANAGER);
 
-		if (!dLibraDataSource.isAdmin()) {
+		if (!dLibraDataSource.getUserProfile().isAdmin()) {
 			throw new ForbiddenException("Only admin users can manage clients.");
 		}
 
@@ -64,19 +70,23 @@ public class ClientResource
 	 * @param clientId client id
 	 * @throws IdNotFoundException 
 	 * @throws RemoteException
+	 * @throws UnknownHostException 
+	 * @throws MalformedURLException 
+	 * @throws DigitalLibraryException 
 	 * @throws DLibraException
 	 */
 	@DELETE
 	public void deleteClient(@PathParam("C_ID")
 	String clientId)
-		throws RemoteException, IdNotFoundException, DLibraException
+		throws RemoteException, IdNotFoundException, MalformedURLException,
+		UnknownHostException, DigitalLibraryException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 		OAuthManager oauth = (OAuthManager) request
 				.getAttribute(Constants.OAUTH_MANAGER);
 
-		if (!dLibraDataSource.isAdmin()) {
+		if (!dLibraDataSource.getUserProfile().isAdmin()) {
 			throw new ForbiddenException("Only admin users can manage clients.");
 		}
 

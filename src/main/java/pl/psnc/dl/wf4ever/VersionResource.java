@@ -3,7 +3,9 @@ package pl.psnc.dl.wf4ever;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.util.Set;
 
@@ -25,10 +27,10 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dlibra.IncorrectManifestException;
 import pl.psnc.dlibra.metadata.Edition;
-import pl.psnc.dlibra.service.DLibraException;
+import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.hp.hpl.jena.shared.JenaException;
 import com.sun.jersey.core.header.ContentDisposition;
@@ -66,7 +68,8 @@ public class VersionResource
 	 *            identifier of version of RO - defined by the user
 	 * @return
 	 * @throws IOException
-	 * @throws DLibraException
+	 * @throws DigitalLibraryException 
+	 * @throws IdNotFoundException 
 	 */
 	@GET
 	@Produces({ "application/rdf+xml", "application/zip"})
@@ -78,21 +81,22 @@ public class VersionResource
 	@DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING)
 	long editionId, @QueryParam("edition_list")
 	String isEditionListRequested)
-		throws IOException, DLibraException
+		throws IOException, DigitalLibraryException, IdNotFoundException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 
 		if (isEditionListRequested != null) {
-			return getEditionList(researchObjectId, versionId, dLibraDataSource);
+			return getEditionList(workspaceId, researchObjectId, versionId,
+				dLibraDataSource);
 		}
 		else if (isContentRequested == null) {
-			return getManifest(researchObjectId, versionId, dLibraDataSource,
-				editionId);
+			return getManifest(workspaceId, researchObjectId, versionId,
+				dLibraDataSource, editionId);
 		}
 		else {
-			return getZippedPublication(researchObjectId, versionId,
-				dLibraDataSource, editionId);
+			return getZippedPublication(workspaceId, researchObjectId,
+				versionId, dLibraDataSource, editionId);
 		}
 	}
 
@@ -104,16 +108,23 @@ public class VersionResource
 	 * @param editionId 
 	 * @return
 	 * @throws RemoteException
-	 * @throws DLibraException
+	 * @throws DigitalLibraryException 
+	 * @throws IdNotFoundException 
 	 */
-	private Response getZippedPublication(String researchObjectId,
-			String versionId, DLibraDataSource dLibraDataSource, long editionId)
-		throws RemoteException, DLibraException
+	private Response getZippedPublication(String workspaceId,
+			String researchObjectId, String versionId,
+			DigitalLibrary dLibraDataSource, long editionId)
+		throws RemoteException, DigitalLibraryException, IdNotFoundException
 	{
-		InputStream body = dLibraDataSource.getPublicationsHelper()
-				.getZippedPublication(
-					Utils.getEditionId(dLibraDataSource, researchObjectId,
-						versionId, editionId));
+		InputStream body;
+		if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
+			body = dLibraDataSource.getZippedVersion(workspaceId,
+				researchObjectId, versionId);
+		}
+		else {
+			body = dLibraDataSource.getZippedVersion(workspaceId,
+				researchObjectId, versionId, editionId);
+		}
 		ContentDisposition cd = ContentDisposition.type("application/zip")
 				.fileName(versionId + ".zip").build();
 		return Response.ok(body)
@@ -124,20 +135,27 @@ public class VersionResource
 	/**
 	 * @param researchObjectId
 	 * @param versionId
+	 * @param versionId2 
 	 * @param dLibraDataSource
 	 * @param editionId 
 	 * @return
 	 * @throws IOException
-	 * @throws DLibraException
+	 * @throws DigitalLibraryException 
+	 * @throws IdNotFoundException 
 	 */
-	private Response getManifest(String researchObjectId, String versionId,
-			DLibraDataSource dLibraDataSource, Long editionId)
-		throws IOException, DLibraException
+	private Response getManifest(String workspaceId, String researchObjectId,
+			String versionId, DigitalLibrary dLibraDataSource, Long editionId)
+		throws IOException, DigitalLibraryException, IdNotFoundException
 	{
-		InputStream manifest = dLibraDataSource.getManifestHelper()
-				.getManifest(
-					Utils.getEditionId(dLibraDataSource, researchObjectId,
-						versionId, editionId));
+		InputStream manifest;
+		if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
+			manifest = dLibraDataSource.getManifest(workspaceId,
+				researchObjectId, versionId);
+		}
+		else {
+			manifest = dLibraDataSource.getManifest(workspaceId,
+				researchObjectId, versionId, editionId);
+		}
 		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
 				.fileName(Constants.MANIFEST_FILENAME).build();
 		return Response.ok(manifest)
@@ -151,15 +169,17 @@ public class VersionResource
 	 * @param dLibraDataSource
 	 * @return
 	 * @throws RemoteException
-	 * @throws DLibraException
+	 * @throws DigitalLibraryException 
+	 * @throws IdNotFoundException 
 	 */
-	private Response getEditionList(String researchObjectId, String versionId,
-			DLibraDataSource dLibraDataSource)
-		throws RemoteException, DLibraException
+	private Response getEditionList(String workspaceId,
+			String researchObjectId, String versionId,
+			DigitalLibrary dLibraDataSource)
+		throws RemoteException, DigitalLibraryException, IdNotFoundException
 	{
 		logger.debug("Getting edition list");
-		Set<Edition> editions = dLibraDataSource.getEditionHelper()
-				.getEditionList(researchObjectId, versionId);
+		Set<Edition> editions = dLibraDataSource.getEditionList(workspaceId,
+			researchObjectId, versionId);
 		StringBuilder sb = new StringBuilder();
 		for (Edition edition : editions) {
 			sb.append((edition.isPublished() ? "*" : "") + edition.getId()
@@ -184,11 +204,12 @@ public class VersionResource
 	 *         successfully updated, 400 (Bad Request) if manifest.rdf is not
 	 *         well-formed, 409 (Conflict) if manifest.rdf contains incorrect
 	 *         data (for example, one of required tags is missing).
-	 * @throws DLibraException
 	 * @throws IOException
 	 * @throws TransformerException
 	 * @throws JenaException if the manifest is malformed
 	 * @throws IncorrectManifestException if the manifest is missing a property
+	 * @throws DigitalLibraryException 
+	 * @throws IdNotFoundException 
 	 */
 	@PUT
 	@Consumes("application/rdf+xml")
@@ -197,28 +218,28 @@ public class VersionResource
 	String researchObjectId, @PathParam("RO_VERSION_ID")
 	String versionId, @QueryParam("publish")
 	String publish, String rdfAsString)
-		throws DLibraException, IOException, TransformerException,
-		JenaException, IncorrectManifestException
+		throws IOException, TransformerException, JenaException,
+		IncorrectManifestException, DigitalLibraryException,
+		IdNotFoundException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 
 		URI versionUri = uriInfo.getAbsolutePath();
 
 		if (publish != null) {
 			if (!publish.equals("false")) {
-				dLibraDataSource.getPublicationsHelper().publishPublication(
-					researchObjectId, versionId);
+				dLibraDataSource.publishVersion(workspaceId, researchObjectId,
+					versionId);
 			}
 			else {
-				dLibraDataSource.getPublicationsHelper().unpublishPublication(
+				dLibraDataSource.unpublishVersion(workspaceId,
 					researchObjectId, versionId);
 			}
 		}
 		else {
-			dLibraDataSource.getManifestHelper().updateManifest(versionUri,
-				researchObjectId, versionId,
-				new ByteArrayInputStream(rdfAsString.getBytes()));
+			dLibraDataSource.updateManifest(versionUri, researchObjectId,
+				versionId, new ByteArrayInputStream(rdfAsString.getBytes()));
 		}
 
 		return Response.ok().build();
@@ -230,13 +251,14 @@ public class VersionResource
 	String workspaceId, @PathParam("RO_ID")
 	String researchObjectId, @PathParam("RO_VERSION_ID")
 	String versionId)
-		throws RemoteException, DLibraException
+		throws RemoteException, DigitalLibraryException, MalformedURLException,
+		UnknownHostException, IdNotFoundException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 
-		long editionId = dLibraDataSource.getEditionHelper()
-				.createEdition(versionId, researchObjectId, versionId).getId();
+		long editionId = dLibraDataSource.createEdition(workspaceId, versionId,
+			researchObjectId, versionId).getId();
 
 		String uri = uriInfo.getAbsolutePath().toString() + "?edition_id="
 				+ editionId;
@@ -254,21 +276,24 @@ public class VersionResource
 	 *            RO identifier - defined by the user
 	 * @param versionId
 	 *            identifier of version of RO - defined by the user
-	 * @throws DLibraException
-	 * @throws IOException
-	 * @throws TransformerException
+	 * @throws DigitalLibraryException 
+	 * @throws UnknownHostException 
+	 * @throws MalformedURLException 
+	 * @throws RemoteException 
+	 * @throws IdNotFoundException 
 	 */
 	@DELETE
 	public void deleteVersion(@PathParam("W_ID")
 	String workspaceId, @PathParam("RO_ID")
 	String researchObjectId, @PathParam("RO_VERSION_ID")
 	String versionId)
-		throws DLibraException, IOException, TransformerException
+		throws DigitalLibraryException, RemoteException, MalformedURLException,
+		UnknownHostException, IdNotFoundException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 
-		dLibraDataSource.getPublicationsHelper().deletePublication(
-			researchObjectId, versionId, uriInfo.getAbsolutePath());
+		dLibraDataSource.deleteVersion(workspaceId, researchObjectId,
+			versionId, uriInfo.getAbsolutePath());
 	}
 }

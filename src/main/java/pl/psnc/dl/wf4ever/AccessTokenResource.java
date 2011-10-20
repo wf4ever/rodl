@@ -1,5 +1,7 @@
 package pl.psnc.dl.wf4ever;
 
+import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -11,8 +13,9 @@ import javax.ws.rs.core.UriInfo;
 
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthManager;
-import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dlibra.service.DLibraException;
+import pl.psnc.dlibra.service.IdNotFoundException;
 
 /**
  * 
@@ -34,19 +37,24 @@ public class AccessTokenResource
 	 * Deletes the access token.
 	 * @param workspaceId identifier of a workspace in the RO SRS
 	 * @throws RemoteException
+	 * @throws DigitalLibraryException 
+	 * @throws UnknownHostException 
+	 * @throws MalformedURLException 
+	 * @throws IdNotFoundException 
 	 * @throws DLibraException
 	 */
 	@DELETE
 	public void deletAccessToken(@PathParam("T_ID")
 	String token)
-		throws RemoteException, DLibraException
+		throws RemoteException, DigitalLibraryException, MalformedURLException,
+		UnknownHostException, IdNotFoundException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 		OAuthManager oauth = (OAuthManager) request
 				.getAttribute(Constants.OAUTH_MANAGER);
 
-		if (!dLibraDataSource.isAdmin()) {
+		if (!dLibraDataSource.getUserProfile().isAdmin()) {
 			throw new ForbiddenException(
 					"Only admin users can manage access tokens.");
 		}

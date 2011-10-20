@@ -1,5 +1,7 @@
 package pl.psnc.dl.wf4ever;
 
+import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -14,8 +16,8 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.commons.codec.binary.Base64;
 
 import pl.psnc.dl.wf4ever.auth.OAuthManager;
-import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
-import pl.psnc.dlibra.service.DLibraException;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dlibra.service.IdNotFoundException;
 
 /**
  * 
@@ -33,14 +35,15 @@ public class UserResource
 	@GET
 	public Response getUser(@PathParam("U_ID")
 	String userId)
-		throws RemoteException, DLibraException
+		throws RemoteException, MalformedURLException, UnknownHostException,
+		DigitalLibraryException, IdNotFoundException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 
 		userId = new String(Base64.decodeBase64(userId));
 
-		if (dLibraDataSource.getUsersHelper().userExists(userId)) {
+		if (dLibraDataSource.userExists(userId)) {
 			return Response.ok(userId).build();
 		}
 		else {
@@ -54,21 +57,25 @@ public class UserResource
 	 * Deletes the workspace.
 	 * @param userId identifier of a workspace in the RO SRS
 	 * @throws RemoteException
-	 * @throws DLibraException
+	 * @throws UnknownHostException 
+	 * @throws MalformedURLException 
+	 * @throws DigitalLibraryException 
+	 * @throws IdNotFoundException 
 	 */
 	@DELETE
 	public void deleteUser(@PathParam("U_ID")
 	String userId)
-		throws RemoteException, DLibraException
+		throws RemoteException, MalformedURLException, UnknownHostException,
+		DigitalLibraryException, IdNotFoundException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 		OAuthManager oauth = (OAuthManager) request
 				.getAttribute(Constants.OAUTH_MANAGER);
 
 		userId = new String(Base64.decodeBase64(userId));
 
-		dLibraDataSource.getUsersHelper().deleteUser(userId);
+		dLibraDataSource.deleteUser(userId);
 		oauth.deleteUserCredentials(userId);
 	}
 }

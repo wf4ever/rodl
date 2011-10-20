@@ -3,7 +3,9 @@
  */
 package pl.psnc.dl.wf4ever;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.util.UUID;
 
@@ -19,8 +21,9 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.codec.binary.Base64;
 
 import pl.psnc.dl.wf4ever.auth.OAuthManager;
-import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
-import pl.psnc.dlibra.service.DLibraException;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dlibra.service.DuplicatedValueException;
+import pl.psnc.dlibra.service.IdNotFoundException;
 
 /**
  * @author Piotr Hołubowicz
@@ -45,15 +48,20 @@ public class UserListResource
 	 *         (Bad Request) if the content is malformed 409 (Conflict) if the
 	 *         USER_ID is already used
 	 * @throws RemoteException
-	 * @throws DLibraException
+	 * @throws DigitalLibraryException 
+	 * @throws UnknownHostException 
+	 * @throws MalformedURLException 
+	 * @throws IdNotFoundException 
+	 * @throws DuplicatedValueException 
 	 */
 	@POST
 	@Consumes("text/plain")
 	public Response createUser(String userId)
-		throws RemoteException, DLibraException
+		throws RemoteException, DigitalLibraryException, MalformedURLException,
+		UnknownHostException, IdNotFoundException, DuplicatedValueException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 		OAuthManager oauth = (OAuthManager) request
 				.getAttribute(Constants.OAUTH_MANAGER);
 
@@ -67,7 +75,7 @@ public class UserListResource
 		}
 		String password = UUID.randomUUID().toString().replaceAll("-", "")
 				.substring(0, 20);
-		dLibraDataSource.getUsersHelper().createUser(userId, password);
+		dLibraDataSource.createUser(userId, password);
 		oauth.createUserCredentials(userId, password);
 
 		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()

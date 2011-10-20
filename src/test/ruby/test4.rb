@@ -35,7 +35,7 @@ VERSIONS={
 
 FILES={
 	:manifest => { :name => "manifest.rdf", :dir => "", :path => "manifest.rdf" },
-	:file1    => { :name => "file1.txt", :dir => "", :path => "file1.txt?a=b#foobar" },
+	:file1    => { :name => "file1.txt", :dir => "", :path => "file1.txt" },
 	:file2    => { :name => "file2.txt", :dir => "dir/", :path => "dir/file2.txt" },
 	:file3    => { :name => "file3.jpg", :dir => "testdir/", :path => "testdir/file3.jpg" }
 }
@@ -818,7 +818,7 @@ if createClient == 201 && createUser == 201
 		        if createVersion == 201
 			        getManifest
 			        validateManifest1
-			        if addFile(:file1) == 200 && addFile(:file2) == 200
+#			        if addFile(:file1) == 200 && addFile(:file2) == 200
 #				        getListRO
 #				        getROrdf
 #				        getVersionZip :ver1, [ FILES[:manifest][:path], FILES[:file1][:path], FILES[:file2][:path] ]
@@ -855,44 +855,44 @@ if createClient == 201 && createUser == 201
 #				        checkNoFileContent(:file2)
 #				        checkDeleteManifest
 #			        end
-#			        if addEmptyDirectory(:file2) == 200
-#				        getDirectoryMetadata(:file2)
-#				        addFile(:file2)
-#				        getDirectoryMetadata(:file2)
-#				        deleteFile(:file2)
-#				        getDirectoryMetadata(:file2)
-#				        deleteDirectory(:file2)
-#				        checkNoDirectory(:file2)
-#				        addFile(:file2)
-#				        deleteDirectory(:file2)
-#				        checkNoDirectory(:file2)
-#			        end
-#			        if addFile(:file1) == 200 && addFile(:file2) == 200 && createEdition == 201
-#				        getFileEdition(:file1, 0)
-#				        addFile(:file3)
-#				        deleteFile(:file1)
-#				        getFileMetadata(:file3)
-#				        checkNoFileMetadata(:file1)
-#				        checkNoFileContent(:file1)
-#				        getFileEdition(:file1, 0)
-#				        checkPublished -1
-#				        publishEdition
-#				        checkPublished 1
-#				        if createEdition == 201
-#					        deleteFile(:file2)
-#					        checkNoFileMetadata(:file2)
-#					        addFile(:file1)
-#					        getFile(:file1)
-#					        deleteFile(:file1)
-#					        checkNoFileMetadata(:file1)
-#					        checkNoFileContent(:file1)
-#					        getFileEdition(:file1, 0)
-#					        checkPublished 1
-#					        publishEdition
-#					        checkPublished 2
-#					        unpublishEdition
-#					        checkPublished -1
-#				        end
+			        if addEmptyDirectory(:file2) == 200
+				        getDirectoryMetadata(:file2)
+				        addFile(:file2)
+				        getDirectoryMetadata(:file2)
+				        deleteFile(:file2)
+				        getDirectoryMetadata(:file2)
+				        deleteDirectory(:file2)
+				        checkNoDirectory(:file2)
+				        addFile(:file2)
+				        deleteDirectory(:file2)
+				        checkNoDirectory(:file2)
+			        end
+			        if addFile(:file1) == 200 && addFile(:file2) == 200 && createEdition == 201
+				        getFileEdition(:file1, 0)
+				        addFile(:file3)
+				        deleteFile(:file1)
+				        getFileMetadata(:file3)
+				        checkNoFileMetadata(:file1)
+				        checkNoFileContent(:file1)
+				        getFileEdition(:file1, 0)
+				        checkPublished -1
+				        publishEdition
+				        checkPublished 1
+				        if createEdition == 201
+					        deleteFile(:file2)
+					        checkNoFileMetadata(:file2)
+					        addFile(:file1)
+					        getFile(:file1)
+					        deleteFile(:file1)
+					        checkNoFileMetadata(:file1)
+					        checkNoFileContent(:file1)
+					        getFileEdition(:file1, 0)
+					        checkPublished 1
+					        publishEdition
+					        checkPublished 2
+					        unpublishEdition
+					        checkPublished -1
+				        end
 			        end
 			        deleteVersion
 		        end

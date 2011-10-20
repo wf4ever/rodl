@@ -11,8 +11,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.connection.DlibraConnectionRegistry;
-import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.DLibraException;
 
@@ -40,9 +39,9 @@ public class SecurityFilter
 	public ContainerRequest filter(ContainerRequest request)
 	{
 		try {
-			DLibraDataSource dLibraDataSource = authenticate(request);
-			httpRequest.setAttribute(Constants.DLIBRA_DATA_SOURCE,
-				dLibraDataSource);
+			DigitalLibraryFactory digitalLibraryFactory = authenticate(request);
+			httpRequest
+					.setAttribute(Constants.DLFACTORY, digitalLibraryFactory);
 			httpRequest.setAttribute(Constants.OAUTH_MANAGER,
 				new OAuthManager());
 		}
@@ -67,7 +66,7 @@ public class SecurityFilter
 	}
 
 
-	private DLibraDataSource authenticate(ContainerRequest request)
+	private DigitalLibraryFactory authenticate(ContainerRequest request)
 		throws MalformedURLException, RemoteException, AccessDeniedException,
 		UnknownHostException, DLibraException
 	{
@@ -113,8 +112,7 @@ public class SecurityFilter
 		logger.debug("Request from user: " + username + " | password: "
 				+ password);
 
-		return DlibraConnectionRegistry.getConnection().getDLibraDataSource(
-			username, password);
+		return new DigitalLibraryFactory(username, password);
 
 	}
 

@@ -24,8 +24,7 @@ import javax.xml.transform.TransformerException;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
-import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
-import pl.psnc.dlibra.service.DLibraException;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.sun.jersey.core.header.ContentDisposition;
@@ -65,8 +64,9 @@ public class FileResource
 	 * @param isContentRequested
 	 * @return
 	 * @throws IOException
-	 * @throws DLibraException
 	 * @throws TransformerException
+	 * @throws DigitalLibraryException 
+	 * @throws IdNotFoundException 
 	 */
 	@GET
 	public Response getFile(@PathParam("W_ID")
@@ -77,47 +77,54 @@ public class FileResource
 	String isContentRequested, @QueryParam("edition_id")
 	@DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING)
 	long editionId)
-		throws IOException, DLibraException, TransformerException
+		throws IOException, TransformerException, DigitalLibraryException,
+		IdNotFoundException
 	{
 
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 
 		if (isContentRequested != null) { // file or folder content
 			try { // file
-				return getFileContent(researchObjectId, versionId, filePath,
-					dLibraDataSource, editionId);
+				return getFileContent(workspaceId, researchObjectId, versionId,
+					filePath, dLibraDataSource, editionId);
 			}
 			catch (IdNotFoundException ex) { // folder
-				return getFolderContent(researchObjectId, versionId, filePath,
-					dLibraDataSource, editionId);
+				return getFolderContent(workspaceId, researchObjectId,
+					versionId, filePath, dLibraDataSource, editionId);
 			}
 		}
 		else { // metadata
 			try { // file
-				return getFileMetadata(researchObjectId, versionId, filePath,
-					dLibraDataSource, editionId);
+				return getFileMetadata(workspaceId, researchObjectId,
+					versionId, filePath, dLibraDataSource, editionId);
 			}
 			catch (IdNotFoundException ex) { // folder
-				return getFolderMetadata(researchObjectId, versionId, filePath,
-					dLibraDataSource, editionId);
+				return getFolderMetadata(workspaceId, researchObjectId,
+					versionId, filePath, dLibraDataSource, editionId);
 			}
 		}
 
 	}
 
 
-	private Response getFolderMetadata(String researchObjectId,
-			String versionId, String filePath,
-			DLibraDataSource dLibraDataSource, Long editionId)
-		throws RemoteException, DLibraException, TransformerException
+	private Response getFolderMetadata(String workspaceId,
+			String researchObjectId, String versionId, String filePath,
+			DigitalLibrary dLibraDataSource, Long editionId)
+		throws RemoteException, TransformerException, DigitalLibraryException,
+		IdNotFoundException
 	{
 		if (!filePath.endsWith("/"))
 			filePath = filePath.concat("/");
-		List<String> files = dLibraDataSource.getFilesHelper()
-				.getFilePathsInFolder(
-					Utils.getEditionId(dLibraDataSource, researchObjectId,
-						versionId, editionId), filePath);
+		List<String> files;
+		if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
+			files = dLibraDataSource.getResourcePaths(workspaceId,
+				researchObjectId, versionId, filePath);
+		}
+		else {
+			files = dLibraDataSource.getResourcePaths(workspaceId,
+				researchObjectId, versionId, filePath, editionId);
+		}
 
 		List<URI> links = new ArrayList<URI>(files.size());
 
@@ -137,13 +144,23 @@ public class FileResource
 	}
 
 
-	private Response getFileMetadata(String researchObjectId, String versionId,
-			String filePath, DLibraDataSource dLibraDataSource, Long editionId)
-		throws RemoteException, DLibraException, TransformerException
+	private Response getFileMetadata(String workspaceId,
+			String researchObjectId, String versionId, String filePath,
+			DigitalLibrary dLibraDataSource, Long editionId)
+		throws RemoteException, TransformerException, DigitalLibraryException,
+		IdNotFoundException
 	{
-		String metadata = dLibraDataSource.getFilesHelper().getFileMetadata(
-			Utils.getEditionId(dLibraDataSource, researchObjectId, versionId,
-				editionId), filePath, uriInfo.getAbsolutePath().toString());
+		String metadata;
+		if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
+			metadata = dLibraDataSource.getFileMetadata(workspaceId,
+				researchObjectId, versionId, filePath,
+				uriInfo.getAbsolutePath());
+		}
+		else {
+			metadata = dLibraDataSource.getFileMetadata(workspaceId,
+				researchObjectId, versionId, filePath, editionId,
+				uriInfo.getAbsolutePath());
+		}
 		ContentDisposition cd = ContentDisposition.type(
 			Constants.RDF_XML_MIME_TYPE).build();
 		return Response
@@ -154,15 +171,21 @@ public class FileResource
 	}
 
 
-	private Response getFolderContent(String researchObjectId,
-			String versionId, String filePath,
-			DLibraDataSource dLibraDataSource, Long editionId)
-		throws RemoteException, DLibraException
+	private Response getFolderContent(String workspaceId,
+			String researchObjectId, String versionId, String filePath,
+			DigitalLibrary dLibraDataSource, Long editionId)
+		throws RemoteException, DigitalLibraryException, IdNotFoundException
 	{
 		logger.debug("Detected query for a folder: " + filePath);
-		InputStream body = dLibraDataSource.getFilesHelper().getZippedFolder(
-			Utils.getEditionId(dLibraDataSource, researchObjectId, versionId,
-				editionId), filePath);
+		InputStream body;
+		if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
+			body = dLibraDataSource.getZippedFolder(workspaceId,
+				researchObjectId, versionId, filePath);
+		}
+		else {
+			body = dLibraDataSource.getZippedFolder(workspaceId,
+				researchObjectId, versionId, filePath, editionId);
+		}
 		ContentDisposition cd = ContentDisposition.type("application/zip")
 				.fileName(versionId + ".zip").build();
 		return Response.ok(body)
@@ -170,16 +193,26 @@ public class FileResource
 	}
 
 
-	private Response getFileContent(String researchObjectId, String versionId,
-			String filePath, DLibraDataSource dLibraDataSource, Long editionId)
-		throws IOException, DLibraException, RemoteException
+	private Response getFileContent(String workspaceId,
+			String researchObjectId, String versionId, String filePath,
+			DigitalLibrary dLibraDataSource, Long editionId)
+		throws IOException, RemoteException, DigitalLibraryException,
+		IdNotFoundException
 	{
-		InputStream body = dLibraDataSource.getFilesHelper().getFileContents(
-			Utils.getEditionId(dLibraDataSource, researchObjectId, versionId,
-				editionId), filePath);
-		String mimeType = dLibraDataSource.getFilesHelper().getFileMimeType(
-			Utils.getEditionId(dLibraDataSource, researchObjectId, versionId,
-				editionId), filePath);
+		InputStream body;
+		String mimeType;
+		if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
+			body = dLibraDataSource.getFileContents(workspaceId,
+				researchObjectId, versionId, filePath);
+			mimeType = dLibraDataSource.getFileMimeType(workspaceId,
+				researchObjectId, versionId, filePath);
+		}
+		else {
+			body = dLibraDataSource.getFileContents(workspaceId,
+				researchObjectId, versionId, filePath, editionId);
+			mimeType = dLibraDataSource.getFileMimeType(workspaceId,
+				researchObjectId, versionId, filePath, editionId);
+		}
 
 		String fileName = uriInfo.getPath().substring(
 			1 + uriInfo.getPath().lastIndexOf("/"));
@@ -198,17 +231,16 @@ public class FileResource
 	String versionId, @PathParam("FILE_PATH")
 	String filePath, @HeaderParam(Constants.CONTENT_TYPE_HEADER_NAME)
 	String type, InputStream inputStream)
-		throws IOException, DLibraException, TransformerException
+		throws IOException, TransformerException, DigitalLibraryException,
+		IdNotFoundException
 	{
-
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 
 		URI versionUri = Utils.createVersionURI(uriInfo, workspaceId,
 			researchObjectId, versionId);
-		logger.debug("Version URI: " + versionUri);
 
-		dLibraDataSource.getFilesHelper().createOrUpdateFile(versionUri,
+		dLibraDataSource.createOrUpdateFile(versionUri, workspaceId,
 			researchObjectId, versionId, filePath, inputStream, type);
 
 		return Response.ok().build();
@@ -221,10 +253,11 @@ public class FileResource
 	String researchObjectId, @PathParam("RO_VERSION_ID")
 	String versionId, @PathParam("FILE_PATH")
 	String filePath)
-		throws DLibraException, IOException, TransformerException
+		throws IOException, TransformerException, DigitalLibraryException,
+		IdNotFoundException
 	{
-		DLibraDataSource dLibraDataSource = (DLibraDataSource) request
-				.getAttribute(Constants.DLIBRA_DATA_SOURCE);
+		DigitalLibrary dLibraDataSource = ((DigitalLibraryFactory) request
+				.getAttribute(Constants.DLFACTORY)).getDigitalLibrary();
 
 		URI versionUri = Utils.createVersionURI(uriInfo, workspaceId,
 			researchObjectId, versionId);
@@ -233,7 +266,7 @@ public class FileResource
 			throw new ForbiddenException(
 					"Blocked attempt to delete manifest.rdf");
 
-		dLibraDataSource.getFilesHelper().deleteFile(versionUri,
-			researchObjectId, versionId, filePath);
+		dLibraDataSource.deleteFile(versionUri, workspaceId, researchObjectId,
+			versionId, filePath);
 	}
 }
