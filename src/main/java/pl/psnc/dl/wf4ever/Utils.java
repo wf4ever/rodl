@@ -10,7 +10,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.dlibra.DLibraDataSource;
+import pl.psnc.dl.wf4ever.dlibra.helpers.DLibraDataSource;
 import pl.psnc.dlibra.metadata.EditionId;
 import pl.psnc.dlibra.service.DLibraException;
 

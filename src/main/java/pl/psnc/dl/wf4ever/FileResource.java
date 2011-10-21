@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -25,13 +23,20 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
+import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
+import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.ResourceInfo;
+import pl.psnc.dl.wf4ever.dlibra.UserProfile;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataService.Notation;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
 /**
  * 
- * @author nowakm
+ * @author Piotr Hołubowicz
  * 
  */
 @Path(Constants.WORKSPACES_URL_PART
@@ -81,10 +86,10 @@ public class FileResource
 		IdNotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
 
 		if (isContentRequested != null) { // file or folder content
+			DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+				user.getLogin(), user.getPassword());
 			try { // file
 				return getFileContent(workspaceId, researchObjectId, versionId,
 					filePath, dl, editionId);
@@ -95,79 +100,26 @@ public class FileResource
 			}
 		}
 		else { // metadata
-			try { // file
-				return getFileMetadata(workspaceId, researchObjectId,
-					versionId, filePath, dl, editionId);
+			SemanticMetadataService sms = SemanticMetadataServiceFactory
+					.getService(user);
+			String contentType = request.getContentType();
+			SemanticMetadataService.Notation notation;
+			if ("application/x+trig".equals(contentType)) {
+				notation = Notation.TRIG;
 			}
-			catch (IdNotFoundException ex) { // folder
-				return getFolderMetadata(workspaceId, researchObjectId,
-					versionId, filePath, dl, editionId);
+			else {
+				contentType = "application/rdf+xml";
+				notation = Notation.RDF_XML;
 			}
+			InputStream body = sms.getResource(uriInfo.getAbsolutePath(),
+				notation);
+			ContentDisposition cd = ContentDisposition.type(contentType)
+					.fileName(Constants.MANIFEST_FILENAME).build();
+			return Response.ok(body)
+					.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
+					.build();
 		}
 
-	}
-
-
-	private Response getFolderMetadata(String workspaceId,
-			String researchObjectId, String versionId, String filePath,
-			DigitalLibrary dLibraDataSource, Long editionId)
-		throws RemoteException, TransformerException, DigitalLibraryException,
-		IdNotFoundException
-	{
-		if (!filePath.endsWith("/"))
-			filePath = filePath.concat("/");
-		List<String> files;
-		if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
-			files = dLibraDataSource.getResourcePaths(workspaceId,
-				researchObjectId, versionId, filePath);
-		}
-		else {
-			files = dLibraDataSource.getResourcePaths(workspaceId,
-				researchObjectId, versionId, filePath, editionId);
-		}
-
-		List<URI> links = new ArrayList<URI>(files.size());
-
-		for (String path : files) {
-			links.add(uriInfo.getAbsolutePathBuilder().path("/").path(path)
-					.build());
-		}
-
-		String responseBody = RdfBuilder.serializeResource(RdfBuilder
-				.createCollection(uriInfo.getAbsolutePath(), links));
-
-		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
-				.fileName(researchObjectId + ".rdf").build();
-
-		return Response.ok().entity(responseBody)
-				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
-	}
-
-
-	private Response getFileMetadata(String workspaceId,
-			String researchObjectId, String versionId, String filePath,
-			DigitalLibrary dLibraDataSource, Long editionId)
-		throws RemoteException, TransformerException, DigitalLibraryException,
-		IdNotFoundException
-	{
-		String metadata;
-		if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
-			metadata = dLibraDataSource.getFileMetadata(workspaceId,
-				researchObjectId, versionId, filePath,
-				uriInfo.getAbsolutePath());
-		}
-		else {
-			metadata = dLibraDataSource.getFileMetadata(workspaceId,
-				researchObjectId, versionId, filePath, editionId,
-				uriInfo.getAbsolutePath());
-		}
-		ContentDisposition cd = ContentDisposition.type(
-			Constants.RDF_XML_MIME_TYPE).build();
-		return Response
-				.ok(metadata)
-				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd)
-				.header(Constants.CONTENT_TYPE_HEADER_NAME,
-					Constants.RDF_XML_MIME_TYPE).build();
 	}
 
 
@@ -237,12 +189,16 @@ public class FileResource
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
 
 		URI versionUri = Utils.createVersionURI(uriInfo, workspaceId,
 			researchObjectId, versionId);
 
-		dl.createOrUpdateFile(versionUri, workspaceId, researchObjectId,
-			versionId, filePath, inputStream, type);
+		ResourceInfo resourceInfo = dl.createOrUpdateFile(versionUri,
+			workspaceId, researchObjectId, versionId, filePath, inputStream,
+			type);
+		sms.addResource(uriInfo.getAbsolutePath(), resourceInfo);
 
 		return Response.ok().build();
 	}
@@ -260,6 +216,8 @@ public class FileResource
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
 
 		URI versionUri = Utils.createVersionURI(uriInfo, workspaceId,
 			researchObjectId, versionId);
@@ -270,5 +228,6 @@ public class FileResource
 
 		dl.deleteFile(versionUri, workspaceId, researchObjectId, versionId,
 			filePath);
+		sms.removeResource(uriInfo.getAbsolutePath());
 	}
 }

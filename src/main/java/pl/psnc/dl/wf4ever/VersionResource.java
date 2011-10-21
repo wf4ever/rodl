@@ -1,6 +1,5 @@
 package pl.psnc.dl.wf4ever;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -9,6 +8,7 @@ import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.util.Set;
 
+import javax.naming.OperationNotSupportedException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -28,7 +28,13 @@ import javax.xml.transform.TransformerException;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
-import pl.psnc.dl.wf4ever.dlibra.IncorrectManifestException;
+import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
+import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
+import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.UserProfile;
+import pl.psnc.dl.wf4ever.dlibra.helpers.IncorrectManifestException;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataService.Notation;
 import pl.psnc.dlibra.metadata.Edition;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
@@ -70,6 +76,7 @@ public class VersionResource
 	 * @throws IOException
 	 * @throws DigitalLibraryException 
 	 * @throws IdNotFoundException 
+	 * @throws OperationNotSupportedException 
 	 */
 	@GET
 	@Produces({ "application/rdf+xml", "application/zip"})
@@ -81,18 +88,27 @@ public class VersionResource
 	@DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING)
 	long editionId, @QueryParam("edition_list")
 	String isEditionListRequested)
-		throws IOException, DigitalLibraryException, IdNotFoundException
+		throws IOException, DigitalLibraryException, IdNotFoundException,
+		OperationNotSupportedException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
 
 		if (isEditionListRequested != null) {
 			return getEditionList(workspaceId, researchObjectId, versionId, dl);
 		}
 		else if (isContentRequested == null) {
-			return getManifest(workspaceId, researchObjectId, versionId, dl,
-				editionId);
+			if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
+				return getManifest(sms, uriInfo.getAbsolutePath(),
+					request.getContentType());
+			}
+			else {
+				throw new OperationNotSupportedException(
+						"Editions are not supported when handling metadata");
+			}
 		}
 		else {
 			return getZippedPublication(workspaceId, researchObjectId,
@@ -137,26 +153,26 @@ public class VersionResource
 	 * @param versionId
 	 * @param versionId2 
 	 * @param dLibraDataSource
-	 * @param editionId 
+	 * @param uri 
+	 * @param string 
 	 * @return
 	 * @throws IOException
 	 * @throws DigitalLibraryException 
 	 * @throws IdNotFoundException 
 	 */
-	private Response getManifest(String workspaceId, String researchObjectId,
-			String versionId, DigitalLibrary dLibraDataSource, Long editionId)
-		throws IOException, DigitalLibraryException, IdNotFoundException
+	private Response getManifest(SemanticMetadataService sms, URI uri,
+			String contentType)
 	{
-		InputStream manifest;
-		if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
-			manifest = dLibraDataSource.getManifest(workspaceId,
-				researchObjectId, versionId);
+		SemanticMetadataService.Notation notation;
+		if ("application/x+trig".equals(contentType)) {
+			notation = Notation.TRIG;
 		}
 		else {
-			manifest = dLibraDataSource.getManifest(workspaceId,
-				researchObjectId, versionId, editionId);
+			contentType = "application/rdf+xml";
+			notation = Notation.RDF_XML;
 		}
-		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
+		InputStream manifest = sms.getManifest(uri, notation);
+		ContentDisposition cd = ContentDisposition.type(contentType)
 				.fileName(Constants.MANIFEST_FILENAME).build();
 		return Response.ok(manifest)
 				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
@@ -213,11 +229,11 @@ public class VersionResource
 	 */
 	@PUT
 	@Consumes("application/rdf+xml")
-	public Response updateManifestFile(@PathParam("W_ID")
+	public Response publish(@PathParam("W_ID")
 	String workspaceId, @PathParam("RO_ID")
 	String researchObjectId, @PathParam("RO_VERSION_ID")
-	String versionId, @QueryParam("publish")
-	String publish, String rdfAsString)
+	String versionId, @QueryParam("unpublish")
+	String unpublish)
 		throws IOException, TransformerException, JenaException,
 		IncorrectManifestException, DigitalLibraryException,
 		IdNotFoundException
@@ -226,19 +242,11 @@ public class VersionResource
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
 
-		URI versionUri = uriInfo.getAbsolutePath();
-
-		if (publish != null) {
-			if (!publish.equals("false")) {
-				dl.publishVersion(workspaceId, researchObjectId, versionId);
-			}
-			else {
-				dl.unpublishVersion(workspaceId, researchObjectId, versionId);
-			}
+		if (unpublish == null) {
+			dl.publishVersion(workspaceId, researchObjectId, versionId);
 		}
 		else {
-			dl.updateManifest(versionUri, researchObjectId, versionId,
-				new ByteArrayInputStream(rdfAsString.getBytes()));
+			dl.unpublishVersion(workspaceId, researchObjectId, versionId);
 		}
 
 		return Response.ok().build();
@@ -293,8 +301,11 @@ public class VersionResource
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
 
 		dl.deleteVersion(workspaceId, researchObjectId, versionId,
 			uriInfo.getAbsolutePath());
+		sms.removeResearchObject(uriInfo.getAbsolutePath());
 	}
 }

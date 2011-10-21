@@ -18,6 +18,8 @@ public final class Constants
 
 	public final static String ACCESSTOKEN_URL_PART = "accesstoken";
 
+	public final static String ANNOTATIONS_URL_PART = "annotations";
+
 	public final static String CLIENTS_URL_PART = "clients";
 
 	public final static String USERS_URL_PART = "users";

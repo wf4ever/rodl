@@ -6,7 +6,7 @@ package pl.psnc.dl.wf4ever;
 import org.junit.Assert;
 import org.junit.Test;
 
-import pl.psnc.dl.wf4ever.dlibra.EmptyFoldersUtility;
+import pl.psnc.dl.wf4ever.dlibra.helpers.EmptyFoldersUtility;
 
 /**
  * @author piotrhol
@@ -23,7 +23,7 @@ public class EmptyFolderUtilityTest
 
 
 	/**
-	 * Metoda testu dla {@link pl.psnc.dl.wf4ever.dlibra.EmptyFoldersUtility#isDlibraPath(java.lang.String)}.
+	 * Metoda testu dla {@link pl.psnc.dl.wf4ever.dlibra.helpers.EmptyFoldersUtility#isDlibraPath(java.lang.String)}.
 	 */
 	@Test
 	public void testIsDlibraPath()
@@ -38,7 +38,7 @@ public class EmptyFolderUtilityTest
 
 
 	/**
-	 * Metoda testu dla {@link pl.psnc.dl.wf4ever.dlibra.EmptyFoldersUtility#convertDlibra2Real(java.lang.String)}.
+	 * Metoda testu dla {@link pl.psnc.dl.wf4ever.dlibra.helpers.EmptyFoldersUtility#convertDlibra2Real(java.lang.String)}.
 	 */
 	@Test
 	public void testConvertDlibra2Real()
@@ -55,7 +55,7 @@ public class EmptyFolderUtilityTest
 
 
 	/**
-	 * Metoda testu dla {@link pl.psnc.dl.wf4ever.dlibra.EmptyFoldersUtility#convertReal2Dlibra(java.lang.String)}.
+	 * Metoda testu dla {@link pl.psnc.dl.wf4ever.dlibra.helpers.EmptyFoldersUtility#convertReal2Dlibra(java.lang.String)}.
 	 */
 	@Test
 	public void testConvertReal2Dlibra()

@@ -29,6 +29,8 @@ import pl.psnc.dl.wf4ever.auth.AccessToken;
 import pl.psnc.dl.wf4ever.auth.AccessTokenList;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthManager;
+import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 

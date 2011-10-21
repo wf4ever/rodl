@@ -19,7 +19,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import pl.psnc.dl.wf4ever.dlibra.IncorrectManifestException;
+import pl.psnc.dl.wf4ever.dlibra.helpers.IncorrectManifestException;
 
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;

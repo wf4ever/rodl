@@ -19,6 +19,11 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
+import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
+import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.UserProfile;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
@@ -105,8 +110,10 @@ public class WorkspaceResource
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
 
 		dl.deleteWorkspace(workspaceId);
-
+		sms.removeResearchObject(uriInfo.getAbsolutePath());
 	}
 }

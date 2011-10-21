@@ -27,6 +27,11 @@ import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
+import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
+import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.UserProfile;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dlibra.service.DLibraException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
@@ -129,6 +134,8 @@ public class ResearchObjectResource
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
 
 		String lines[] = data.split("[\\r\\n]+");
 		if (lines.length < 1) {
@@ -139,24 +146,27 @@ public class ResearchObjectResource
 		}
 		String version = lines[0];
 		String baseVersion = null;
+		URI baseVersionURI = null;
 		if (lines.length > 1) {
-			URI baseVersionUri = new URI(lines[1]);
-			URI roUri = baseVersionUri.resolve(".");
-			baseVersion = roUri.relativize(baseVersionUri).toString();
+			baseVersionURI = new URI(lines[1]);
+			URI roUri = baseVersionURI.resolve(".");
+			baseVersion = roUri.relativize(baseVersionURI).toString();
 		}
 
-		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
+		URI resourceURI = uriInfo.getAbsolutePathBuilder().path("/").build()
 				.resolve(version);
 
 		if (baseVersion == null) {
 			dl.createVersion(workspaceId, researchObjectId, version,
-				resourceUri);
+				resourceURI);
+			sms.createResearchObject(resourceURI);
 		}
 		else {
 			dl.createVersion(workspaceId, researchObjectId, version,
-				baseVersion, resourceUri);
+				baseVersion, resourceURI);
+			sms.createResearchObjectAsCopy(resourceURI, baseVersionURI);
 		}
-		return Response.created(resourceUri).build();
+		return Response.created(resourceURI).build();
 	}
 
 
@@ -183,8 +193,10 @@ public class ResearchObjectResource
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
 
 		dl.deleteResearchObject(workspaceId, researchObjectId);
-
+		sms.removeResearchObject(uriInfo.getAbsolutePath());
 	}
 }
