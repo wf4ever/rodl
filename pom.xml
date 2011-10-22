@@ -100,13 +100,6 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.hp.hpl.jena</groupId>
-			<artifactId>arq-extra</artifactId>
-			<version>2.7.0</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>xalan</groupId>
 			<artifactId>xalan</artifactId>
 			<version>2.7.1</version>
