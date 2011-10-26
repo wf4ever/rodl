@@ -8,21 +8,21 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import pl.psnc.dlibra.service.DuplicatedValueException;
+import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 
 /**
- * Maps <code>DuplicatedValueException</code> to <code>409 (Conflict)</code> HTTP response.
+ * Maps <code>ConflictException</code> to <code>409 (Conflict)</code> HTTP response.
  * @author nowakm
  *
  */
 @Provider
-public class DuplicateValueExceptionMapper
-	implements ExceptionMapper<DuplicatedValueException>
+public class ConflictExceptionMapper
+	implements ExceptionMapper<ConflictException>
 
 {
 
 	@Override
-	public Response toResponse(DuplicatedValueException e)
+	public Response toResponse(ConflictException e)
 	{
 		{
 			return Response.status(Status.CONFLICT).type("text/plain")
