@@ -23,11 +23,10 @@ import pl.psnc.dlibra.service.IdNotFoundException;
 /**
  * 
  * @author Piotr Hołubowicz
- *
+ * 
  */
-@Path(Constants.CLIENTS_URL_PART + "/{C_ID}")
-public class ClientResource
-{
+@Path(URIs.CLIENT_ID)
+public class ClientResource {
 
 	@Context
 	HttpServletRequest request;
@@ -35,24 +34,22 @@ public class ClientResource
 	@Context
 	UriInfo uriInfo;
 
-
 	/**
 	 * Deletes the OAuth 2.0 client.
-	 * @param clientId client id
-	 * @return 
-	 * @throws IdNotFoundException 
+	 * 
+	 * @param clientId
+	 *            client id
+	 * @return
+	 * @throws IdNotFoundException
 	 * @throws RemoteException
-	 * @throws UnknownHostException 
-	 * @throws MalformedURLException 
-	 * @throws DigitalLibraryException 
+	 * @throws UnknownHostException
+	 * @throws MalformedURLException
+	 * @throws DigitalLibraryException
 	 * @throws DLibraException
 	 */
 	@GET
-	public OAuthClient getClient(@PathParam("C_ID")
-	String clientId)
-		throws RemoteException, IdNotFoundException, MalformedURLException,
-		UnknownHostException, DigitalLibraryException
-	{
+	public OAuthClient getClient(@PathParam("C_ID") String clientId) throws RemoteException, IdNotFoundException,
+			MalformedURLException, UnknownHostException, DigitalLibraryException {
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		OAuthManager oauth = new OAuthManager();
 
@@ -63,23 +60,21 @@ public class ClientResource
 		return oauth.getClient(clientId);
 	}
 
-
 	/**
 	 * Deletes the OAuth 2.0 client.
-	 * @param clientId client id
-	 * @throws IdNotFoundException 
+	 * 
+	 * @param clientId
+	 *            client id
+	 * @throws IdNotFoundException
 	 * @throws RemoteException
-	 * @throws UnknownHostException 
-	 * @throws MalformedURLException 
-	 * @throws DigitalLibraryException 
+	 * @throws UnknownHostException
+	 * @throws MalformedURLException
+	 * @throws DigitalLibraryException
 	 * @throws DLibraException
 	 */
 	@DELETE
-	public void deleteClient(@PathParam("C_ID")
-	String clientId)
-		throws RemoteException, IdNotFoundException, MalformedURLException,
-		UnknownHostException, DigitalLibraryException
-	{
+	public void deleteClient(@PathParam("C_ID") String clientId) throws RemoteException, IdNotFoundException,
+			MalformedURLException, UnknownHostException, DigitalLibraryException {
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		OAuthManager oauth = new OAuthManager();
 

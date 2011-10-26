@@ -32,9 +32,8 @@ import pl.psnc.dl.wf4ever.dlibra.UserProfile;
  * @author Piotr Hołubowicz
  * 
  */
-@Path(Constants.USERS_URL_PART)
-public class UserListResource
-{
+@Path(URIs.USERS)
+public class UserListResource {
 
 	@Context
 	HttpServletRequest request;
@@ -42,47 +41,41 @@ public class UserListResource
 	@Context
 	private UriInfo uriInfo;
 
-
 	/**
-	 * Creates new user with given USER_ID. input: USER_ID (the password is generated internally).
-
-	 * @param user id, base64 url-safe encoded
-	 * @return 201 (Created) when the user was successfully created, 400
-	 *         (Bad Request) if the content is malformed 409 (Conflict) if the
+	 * Creates new user with given USER_ID. input: USER_ID (the password is
+	 * generated internally).
+	 * 
+	 * @param user
+	 *            id, base64 url-safe encoded
+	 * @return 201 (Created) when the user was successfully created, 400 (Bad
+	 *         Request) if the content is malformed 409 (Conflict) if the
 	 *         USER_ID is already used
 	 * @throws RemoteException
-	 * @throws DigitalLibraryException 
-	 * @throws UnknownHostException 
-	 * @throws MalformedURLException 
-	 * @throws ConflictException 
-	 * @throws NotFoundException 
+	 * @throws DigitalLibraryException
+	 * @throws UnknownHostException
+	 * @throws MalformedURLException
+	 * @throws ConflictException
+	 * @throws NotFoundException
 	 */
 	@POST
 	@Consumes("text/plain")
-	public Response createUser(String userId)
-		throws RemoteException, DigitalLibraryException, MalformedURLException,
-		UnknownHostException, NotFoundException, ConflictException
-	{
+	public Response createUser(String userId) throws RemoteException, DigitalLibraryException, MalformedURLException,
+			UnknownHostException, NotFoundException, ConflictException {
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		OAuthManager oauth = new OAuthManager();
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
 		userId = new String(Base64.decodeBase64(userId));
 
 		if (userId == null || userId.isEmpty()) {
-			return Response.status(Status.BAD_REQUEST)
-					.entity("User id is null or empty")
-					.header(Constants.CONTENT_TYPE_HEADER_NAME, "text/plain")
-					.build();
+			return Response.status(Status.BAD_REQUEST).entity("User id is null or empty")
+					.header("Content-type", "text/plain").build();
 		}
-		String password = UUID.randomUUID().toString().replaceAll("-", "")
-				.substring(0, 20);
+		String password = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 20);
 		dl.createUser(userId, password);
 		oauth.createUserCredentials(userId, password);
 
-		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
-				.resolve(userId);
+		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build().resolve(userId);
 		return Response.created(resourceUri).build();
 	}
 }

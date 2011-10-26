@@ -27,7 +27,7 @@ import pl.psnc.dl.wf4ever.dlibra.UserProfile;
  * @author Piotr Hołubowicz
  *
  */
-@Path(Constants.USERS_URL_PART + "/{U_ID}")
+@Path(URIs.USER_ID)
 public class UserResource
 {
 

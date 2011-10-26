@@ -23,7 +23,7 @@ import pl.psnc.dlibra.service.IdNotFoundException;
  * @author Piotr Hołubowicz
  *
  */
-@Path(Constants.ACCESSTOKEN_URL_PART + "/{T_ID}")
+@Path(URIs.ACCESSTOKEN_ID)
 public class AccessTokenResource
 {
 

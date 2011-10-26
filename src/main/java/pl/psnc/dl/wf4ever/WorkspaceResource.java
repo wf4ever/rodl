@@ -33,16 +33,14 @@ import com.sun.jersey.core.header.ContentDisposition;
  * @author nowakm
  * 
  */
-@Path(Constants.WORKSPACES_URL_PART + "/{W_ID}")
-public class WorkspaceResource
-{
+@Path(URIs.WORKSPACE_ID)
+public class WorkspaceResource {
 
 	@Context
 	HttpServletRequest request;
 
 	@Context
 	UriInfo uriInfo;
-
 
 	/**
 	 * Returns list of research objects in this workspace.
@@ -54,40 +52,33 @@ public class WorkspaceResource
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 * @throws TransformerException
-	 * @throws DigitalLibraryException 
-	 * @throws UnknownHostException 
-	 * @throws MalformedURLException 
-	 * @throws NotFoundException 
+	 * @throws DigitalLibraryException
+	 * @throws UnknownHostException
+	 * @throws MalformedURLException
+	 * @throws NotFoundException
 	 */
 	@GET
 	@Produces("application/rdf+xml")
-	public Response getWorkspace(@PathParam("W_ID")
-	String workspaceId)
-		throws RemoteException, DigitalLibraryException, MalformedURLException,
-		UnknownHostException, TransformerException, NotFoundException
-	{
+	public Response getWorkspace(@PathParam("W_ID") String workspaceId) throws RemoteException,
+			DigitalLibraryException, MalformedURLException, UnknownHostException, TransformerException,
+			NotFoundException {
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 		List<String> list = dl.getResearchObjectIds(workspaceId);
 
 		List<URI> links = new ArrayList<URI>(list.size());
 
 		for (String id : list) {
-			links.add(uriInfo.getAbsolutePathBuilder().path("/").build()
-					.resolve(id));
+			links.add(uriInfo.getAbsolutePathBuilder().path("/").build().resolve(id));
 		}
 
-		String responseBody = RdfBuilder.serializeResource(RdfBuilder
-				.createCollection(uriInfo.getAbsolutePath(), links));
+		String responseBody = RdfBuilder
+				.serializeResource(RdfBuilder.createCollection(uriInfo.getAbsolutePath(), links));
 
-		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
-				.fileName(workspaceId + ".rdf").build();
+		ContentDisposition cd = ContentDisposition.type("application/rdf+xml").fileName(workspaceId + ".rdf").build();
 
-		return Response.ok().entity(responseBody)
-				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
+		return Response.ok().entity(responseBody).header("Content-disposition", cd).build();
 	}
-
 
 	/**
 	 * Deletes the workspace.
@@ -95,22 +86,17 @@ public class WorkspaceResource
 	 * @param workspaceId
 	 *            identifier of a workspace in the RO SRS
 	 * @throws RemoteException
-	 * @throws UnknownHostException 
-	 * @throws MalformedURLException 
-	 * @throws DigitalLibraryException 
-	 * @throws NotFoundException 
+	 * @throws UnknownHostException
+	 * @throws MalformedURLException
+	 * @throws DigitalLibraryException
+	 * @throws NotFoundException
 	 */
 	@DELETE
-	public void deleteWorkspace(@PathParam("W_ID")
-	String workspaceId)
-		throws RemoteException, MalformedURLException, UnknownHostException,
-		DigitalLibraryException, NotFoundException
-	{
+	public void deleteWorkspace(@PathParam("W_ID") String workspaceId) throws RemoteException, MalformedURLException,
+			UnknownHostException, DigitalLibraryException, NotFoundException {
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
 
 		dl.deleteWorkspace(workspaceId);
 		sms.removeResearchObject(uriInfo.getAbsolutePath());

@@ -37,20 +37,16 @@ import com.sun.jersey.core.header.ContentDisposition;
  * @author nowakm
  * 
  */
-@Path(Constants.WORKSPACES_URL_PART + "/{W_ID}/"
-		+ Constants.RESEARCH_OBJECTS_URL_PART)
-public class ResearchObjectListResource
-{
+@Path(URIs.ROS)
+public class ResearchObjectListResource {
 
-	private final static Logger logger = Logger
-			.getLogger(ResearchObjectListResource.class);
+	private final static Logger logger = Logger.getLogger(ResearchObjectListResource.class);
 
 	@Context
 	HttpServletRequest request;
 
 	@Context
 	UriInfo uriInfo;
-
 
 	/**
 	 * Returns list of links to research objects. Output format is TBD.
@@ -60,51 +56,39 @@ public class ResearchObjectListResource
 	 * @return TBD
 	 * @throws RemoteException
 	 * @throws TransformerException
-	 * @throws UnknownHostException 
-	 * @throws MalformedURLException 
-	 * @throws DigitalLibraryException 
-	 * @throws NotFoundException 
+	 * @throws UnknownHostException
+	 * @throws MalformedURLException
+	 * @throws DigitalLibraryException
+	 * @throws NotFoundException
 	 */
 	@GET
 	@Produces("application/rdf+xml")
-	public Response getResearchObjectList(@PathParam("W_ID")
-	String workspaceId)
-		throws RemoteException, DLibraException, TransformerException,
-		MalformedURLException, UnknownHostException, DigitalLibraryException, NotFoundException
-	{
+	public Response getResearchObjectList(@PathParam("W_ID") String workspaceId) throws RemoteException,
+			DLibraException, TransformerException, MalformedURLException, UnknownHostException,
+			DigitalLibraryException, NotFoundException {
 
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 		List<URI> links;
-		logger.debug(String.format("Received %d query params", uriInfo
-				.getQueryParameters().size()));
+		logger.debug(String.format("Received %d query params", uriInfo.getQueryParameters().size()));
 		if (uriInfo.getQueryParameters().isEmpty()) {
 			List<String> list = dl.getResearchObjectIds(workspaceId);
 			links = new ArrayList<URI>(list.size());
 			for (String id : list) {
-				links.add(uriInfo.getAbsolutePathBuilder().path("/").build()
-						.resolve(id));
+				links.add(uriInfo.getAbsolutePathBuilder().path("/").build().resolve(id));
 			}
-		}
-		else {
-			SemanticMetadataService sms = SemanticMetadataServiceFactory
-					.getService(user);
+		} else {
+			SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
 			links = sms.findResearchObjects(workspaceId, uriInfo.getQueryParameters());
 		}
 
+		String responseBody = RdfBuilder
+				.serializeResource(RdfBuilder.createCollection(uriInfo.getAbsolutePath(), links));
 
+		ContentDisposition cd = ContentDisposition.type("application/rdf+xml").fileName(workspaceId + ".rdf").build();
 
-		String responseBody = RdfBuilder.serializeResource(RdfBuilder
-				.createCollection(uriInfo.getAbsolutePath(), links));
-
-		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
-				.fileName(workspaceId + ".rdf").build();
-
-		return Response.ok().entity(responseBody)
-				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
+		return Response.ok().entity(responseBody).header("Content-disposition", cd).build();
 	}
-
 
 	/**
 	 * Creates new RO with given RO_ID.
@@ -117,27 +101,23 @@ public class ResearchObjectListResource
 	 *         (Conflict) if the RO_ID is already used in the WORKSPACE_ID
 	 *         workspace
 	 * @throws RemoteException
-	 * @throws UnknownHostException 
-	 * @throws MalformedURLException 
-	 * @throws DigitalLibraryException 
-	 * @throws NotFoundException 
-	 * @throws IdNotFoundException 
+	 * @throws UnknownHostException
+	 * @throws MalformedURLException
+	 * @throws DigitalLibraryException
+	 * @throws NotFoundException
+	 * @throws IdNotFoundException
 	 */
 	@POST
 	@Consumes("text/plain")
-	public Response createResearchObject(@PathParam("W_ID")
-	String workspaceId, String researchObjectId)
-		throws RemoteException, MalformedURLException, UnknownHostException,
-		DigitalLibraryException, NotFoundException
-	{
+	public Response createResearchObject(@PathParam("W_ID") String workspaceId, String researchObjectId)
+			throws RemoteException, MalformedURLException, UnknownHostException, DigitalLibraryException,
+			NotFoundException {
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
 		dl.createResearchObject(workspaceId, researchObjectId);
 
-		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
-				.resolve(researchObjectId);
+		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build().resolve(researchObjectId);
 
 		return Response.created(resourceUri).build();
 	}

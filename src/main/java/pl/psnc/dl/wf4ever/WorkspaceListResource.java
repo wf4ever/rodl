@@ -33,16 +33,14 @@ import com.sun.jersey.core.header.ContentDisposition;
  * @author Piotr Hołubowicz
  * 
  */
-@Path(Constants.WORKSPACES_URL_PART)
-public class WorkspaceListResource
-{
+@Path(URIs.WORKSPACES)
+public class WorkspaceListResource {
 
 	@Context
 	HttpServletRequest request;
 
 	@Context
 	private UriInfo uriInfo;
-
 
 	/**
 	 * Returns list of links to workspaces. Output format is RDF.
@@ -53,39 +51,32 @@ public class WorkspaceListResource
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 * @throws TransformerException
-	 * @throws DigitalLibraryException 
-	 * @throws UnknownHostException 
-	 * @throws MalformedURLException 
-	 * @throws NotFoundException 
+	 * @throws DigitalLibraryException
+	 * @throws UnknownHostException
+	 * @throws MalformedURLException
+	 * @throws NotFoundException
 	 */
 	@GET
 	@Produces("application/rdf+xml")
-	public Response getWorkspaceList()
-		throws DigitalLibraryException, TransformerException, RemoteException,
-		MalformedURLException, UnknownHostException, NotFoundException
-	{
+	public Response getWorkspaceList() throws DigitalLibraryException, TransformerException, RemoteException,
+			MalformedURLException, UnknownHostException, NotFoundException {
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 		List<String> list = dl.getWorkspaceIds();
 
 		List<URI> links = new ArrayList<URI>(list.size());
 
 		for (String id : list) {
-			links.add(uriInfo.getAbsolutePathBuilder().path("/").build()
-					.resolve(id));
+			links.add(uriInfo.getAbsolutePathBuilder().path("/").build().resolve(id));
 		}
 
-		String responseBody = RdfBuilder.serializeResource(RdfBuilder
-				.createCollection(uriInfo.getAbsolutePath(), links));
+		String responseBody = RdfBuilder
+				.serializeResource(RdfBuilder.createCollection(uriInfo.getAbsolutePath(), links));
 
-		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
-				.fileName("workspaces.rdf").build();
+		ContentDisposition cd = ContentDisposition.type("application/rdf+xml").fileName("workspaces.rdf").build();
 
-		return Response.ok().entity(responseBody)
-				.header(Constants.CONTENT_DISPOSITION_HEADER_NAME, cd).build();
+		return Response.ok().entity(responseBody).header("Content-disposition", cd).build();
 	}
-
 
 	/**
 	 * Creates new workspace with given WORKSPACE_ID. input: WORKSPACE_ID
@@ -95,26 +86,22 @@ public class WorkspaceListResource
 	 * @return 201 (Created) when the workspace was successfully created, 400
 	 *         (Bad Request) if the content is malformed 409 (Conflict) if the
 	 *         WORKSPACE_ID is already used
-	 * @throws DigitalLibraryException 
-	 * @throws UnknownHostException 
-	 * @throws MalformedURLException 
+	 * @throws DigitalLibraryException
+	 * @throws UnknownHostException
+	 * @throws MalformedURLException
 	 * @throws RemoteException
-	 * @throws NotFoundException 
+	 * @throws NotFoundException
 	 */
 	@POST
 	@Consumes("text/plain")
-	public Response createWorkspace(String workspaceId)
-		throws DigitalLibraryException, RemoteException, MalformedURLException,
-		UnknownHostException, NotFoundException
-	{
+	public Response createWorkspace(String workspaceId) throws DigitalLibraryException, RemoteException,
+			MalformedURLException, UnknownHostException, NotFoundException {
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
 		dl.createWorkspace(workspaceId);
 
-		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
-				.resolve(workspaceId);
+		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build().resolve(workspaceId);
 
 		return Response.created(resourceUri).build();
 	}

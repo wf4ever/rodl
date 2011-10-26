@@ -38,7 +38,7 @@ import pl.psnc.dlibra.service.IdNotFoundException;
  * @author Piotr Hołubowicz
  * 
  */
-@Path(Constants.ACCESSTOKEN_URL_PART)
+@Path(URIs.ACCESSTOKENS)
 public class AccessTokenListResource
 {
 
@@ -125,7 +125,7 @@ public class AccessTokenListResource
 		if (lines.length < 2) {
 			return Response.status(Status.BAD_REQUEST)
 					.entity("Content is shorter than 2 lines")
-					.header(Constants.CONTENT_TYPE_HEADER_NAME, "text/plain")
+					.header("Content-type", "text/plain")
 					.build();
 		}
 
