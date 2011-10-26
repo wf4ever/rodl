@@ -2,7 +2,6 @@ package pl.psnc.dl.wf4ever;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.rmi.RemoteException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,16 +20,15 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.ResourceInfo;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService.Notation;
-import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -71,7 +69,7 @@ public class FileResource
 	 * @throws IOException
 	 * @throws TransformerException
 	 * @throws DigitalLibraryException 
-	 * @throws IdNotFoundException 
+	 * @throws NotFoundException 
 	 */
 	@GET
 	public Response getFile(@PathParam("W_ID")
@@ -82,8 +80,7 @@ public class FileResource
 	String isContentRequested, @QueryParam("edition_id")
 	@DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING)
 	long editionId)
-		throws IOException, TransformerException, DigitalLibraryException,
-		IdNotFoundException
+		throws IOException, TransformerException, DigitalLibraryException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 
@@ -94,7 +91,7 @@ public class FileResource
 				return getFileContent(workspaceId, researchObjectId, versionId,
 					filePath, dl, editionId);
 			}
-			catch (IdNotFoundException ex) { // folder
+			catch (NotFoundException ex) { // folder
 				return getFolderContent(workspaceId, researchObjectId,
 					versionId, filePath, dl, editionId);
 			}
@@ -126,7 +123,7 @@ public class FileResource
 	private Response getFolderContent(String workspaceId,
 			String researchObjectId, String versionId, String filePath,
 			DigitalLibrary dLibraDataSource, Long editionId)
-		throws RemoteException, DigitalLibraryException, IdNotFoundException
+		throws RemoteException, DigitalLibraryException, NotFoundException
 	{
 		logger.debug("Detected query for a folder: " + filePath);
 		InputStream body;
@@ -148,8 +145,7 @@ public class FileResource
 	private Response getFileContent(String workspaceId,
 			String researchObjectId, String versionId, String filePath,
 			DigitalLibrary dLibraDataSource, Long editionId)
-		throws IOException, RemoteException, DigitalLibraryException,
-		IdNotFoundException
+		throws IOException, RemoteException, DigitalLibraryException, NotFoundException
 	{
 		InputStream body;
 		String mimeType;
@@ -183,8 +179,7 @@ public class FileResource
 	String versionId, @PathParam("FILE_PATH")
 	String filePath, @HeaderParam(Constants.CONTENT_TYPE_HEADER_NAME)
 	String type, InputStream inputStream)
-		throws IOException, TransformerException, DigitalLibraryException,
-		IdNotFoundException
+		throws IOException, TransformerException, DigitalLibraryException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
@@ -192,11 +187,7 @@ public class FileResource
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 
-		URI versionUri = Utils.createVersionURI(uriInfo, workspaceId,
-			researchObjectId, versionId);
-
-		ResourceInfo resourceInfo = dl.createOrUpdateFile(versionUri,
-			workspaceId, researchObjectId, versionId, filePath, inputStream,
+		ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, inputStream,
 			type);
 		sms.addResource(uriInfo.getAbsolutePath(), resourceInfo);
 
@@ -210,8 +201,7 @@ public class FileResource
 	String researchObjectId, @PathParam("RO_VERSION_ID")
 	String versionId, @PathParam("FILE_PATH")
 	String filePath)
-		throws IOException, TransformerException, DigitalLibraryException,
-		IdNotFoundException
+		throws IOException, TransformerException, DigitalLibraryException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
@@ -219,14 +209,7 @@ public class FileResource
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 
-		URI versionUri = Utils.createVersionURI(uriInfo, workspaceId,
-			researchObjectId, versionId);
-
-		if (filePath.equals("manifest.rdf"))
-			throw new ForbiddenException(
-					"Blocked attempt to delete manifest.rdf");
-
-		dl.deleteFile(versionUri, workspaceId, researchObjectId, versionId,
+		dl.deleteFile(workspaceId, researchObjectId, versionId,
 			filePath);
 		sms.removeResource(uriInfo.getAbsolutePath());
 	}

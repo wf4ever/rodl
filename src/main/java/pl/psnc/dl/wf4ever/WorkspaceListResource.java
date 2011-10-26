@@ -24,9 +24,8 @@ import javax.xml.transform.TransformerException;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
-import pl.psnc.dlibra.service.DLibraException;
-import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -57,13 +56,13 @@ public class WorkspaceListResource
 	 * @throws DigitalLibraryException 
 	 * @throws UnknownHostException 
 	 * @throws MalformedURLException 
-	 * @throws IdNotFoundException 
+	 * @throws NotFoundException 
 	 */
 	@GET
 	@Produces("application/rdf+xml")
 	public Response getWorkspaceList()
 		throws DigitalLibraryException, TransformerException, RemoteException,
-		MalformedURLException, UnknownHostException, IdNotFoundException
+		MalformedURLException, UnknownHostException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
@@ -100,14 +99,13 @@ public class WorkspaceListResource
 	 * @throws UnknownHostException 
 	 * @throws MalformedURLException 
 	 * @throws RemoteException
-	 * @throws IdNotFoundException 
-	 * @throws DLibraException
+	 * @throws NotFoundException 
 	 */
 	@POST
 	@Consumes("text/plain")
 	public Response createWorkspace(String workspaceId)
 		throws DigitalLibraryException, RemoteException, MalformedURLException,
-		UnknownHostException, IdNotFoundException
+		UnknownHostException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(

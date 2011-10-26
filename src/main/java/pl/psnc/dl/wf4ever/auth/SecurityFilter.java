@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.DLibraException;
@@ -52,7 +53,7 @@ public class SecurityFilter
 					"Incorrect login/password\r\n", REALM));
 		}
 		catch (MalformedURLException | RemoteException | UnknownHostException
-				| DLibraException e) {
+				| NotFoundException | DLibraException e) {
 			throw new RuntimeException(e);
 		}
 

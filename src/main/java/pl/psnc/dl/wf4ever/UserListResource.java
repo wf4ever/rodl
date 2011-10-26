@@ -22,11 +22,11 @@ import org.apache.commons.codec.binary.Base64;
 
 import pl.psnc.dl.wf4ever.auth.OAuthManager;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
-import pl.psnc.dlibra.service.DuplicatedValueException;
-import pl.psnc.dlibra.service.IdNotFoundException;
 
 /**
  * @author Piotr Hołubowicz
@@ -54,14 +54,14 @@ public class UserListResource
 	 * @throws DigitalLibraryException 
 	 * @throws UnknownHostException 
 	 * @throws MalformedURLException 
-	 * @throws IdNotFoundException 
-	 * @throws DuplicatedValueException 
+	 * @throws ConflictException 
+	 * @throws NotFoundException 
 	 */
 	@POST
 	@Consumes("text/plain")
 	public Response createUser(String userId)
 		throws RemoteException, DigitalLibraryException, MalformedURLException,
-		UnknownHostException, IdNotFoundException, DuplicatedValueException
+		UnknownHostException, NotFoundException, ConflictException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		OAuthManager oauth = new OAuthManager();

@@ -22,10 +22,9 @@ import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
-import pl.psnc.dlibra.service.DLibraException;
-import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -58,14 +57,14 @@ public class WorkspaceResource
 	 * @throws DigitalLibraryException 
 	 * @throws UnknownHostException 
 	 * @throws MalformedURLException 
-	 * @throws IdNotFoundException 
+	 * @throws NotFoundException 
 	 */
 	@GET
 	@Produces("application/rdf+xml")
 	public Response getWorkspace(@PathParam("W_ID")
 	String workspaceId)
 		throws RemoteException, DigitalLibraryException, MalformedURLException,
-		UnknownHostException, TransformerException, IdNotFoundException
+		UnknownHostException, TransformerException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
@@ -99,13 +98,13 @@ public class WorkspaceResource
 	 * @throws UnknownHostException 
 	 * @throws MalformedURLException 
 	 * @throws DigitalLibraryException 
-	 * @throws IdNotFoundException 
+	 * @throws NotFoundException 
 	 */
 	@DELETE
 	public void deleteWorkspace(@PathParam("W_ID")
 	String workspaceId)
 		throws RemoteException, MalformedURLException, UnknownHostException,
-		DigitalLibraryException, IdNotFoundException
+		DigitalLibraryException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(

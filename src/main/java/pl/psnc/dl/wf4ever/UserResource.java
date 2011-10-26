@@ -19,8 +19,8 @@ import pl.psnc.dl.wf4ever.auth.OAuthManager;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
-import pl.psnc.dlibra.service.IdNotFoundException;
 
 /**
  * 
@@ -39,7 +39,7 @@ public class UserResource
 	public Response getUser(@PathParam("U_ID")
 	String userId)
 		throws RemoteException, MalformedURLException, UnknownHostException,
-		DigitalLibraryException, IdNotFoundException
+		DigitalLibraryException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
@@ -64,13 +64,13 @@ public class UserResource
 	 * @throws UnknownHostException 
 	 * @throws MalformedURLException 
 	 * @throws DigitalLibraryException 
-	 * @throws IdNotFoundException 
+	 * @throws NotFoundException 
 	 */
 	@DELETE
 	public void deleteUser(@PathParam("U_ID")
 	String userId)
 		throws RemoteException, MalformedURLException, UnknownHostException,
-		DigitalLibraryException, IdNotFoundException
+		DigitalLibraryException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		OAuthManager oauth = new OAuthManager();

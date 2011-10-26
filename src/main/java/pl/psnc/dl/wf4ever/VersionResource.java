@@ -31,12 +31,12 @@ import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
+import pl.psnc.dl.wf4ever.dlibra.Snapshot;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.dlibra.helpers.IncorrectManifestException;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService.Notation;
-import pl.psnc.dlibra.metadata.Edition;
-import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.hp.hpl.jena.shared.JenaException;
 import com.sun.jersey.core.header.ContentDisposition;
@@ -77,6 +77,7 @@ public class VersionResource
 	 * @throws DigitalLibraryException 
 	 * @throws IdNotFoundException 
 	 * @throws OperationNotSupportedException 
+	 * @throws NotFoundException 
 	 */
 	@GET
 	@Produces({ "application/rdf+xml", "application/zip"})
@@ -88,8 +89,8 @@ public class VersionResource
 	@DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING)
 	long editionId, @QueryParam("edition_list")
 	String isEditionListRequested)
-		throws IOException, DigitalLibraryException, IdNotFoundException,
-		OperationNotSupportedException
+		throws IOException, DigitalLibraryException,
+		OperationNotSupportedException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
@@ -125,12 +126,12 @@ public class VersionResource
 	 * @return
 	 * @throws RemoteException
 	 * @throws DigitalLibraryException 
-	 * @throws IdNotFoundException 
+	 * @throws NotFoundException 
 	 */
 	private Response getZippedPublication(String workspaceId,
 			String researchObjectId, String versionId,
 			DigitalLibrary dLibraDataSource, long editionId)
-		throws RemoteException, DigitalLibraryException, IdNotFoundException
+		throws RemoteException, DigitalLibraryException, NotFoundException
 	{
 		InputStream body;
 		if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
@@ -186,20 +187,21 @@ public class VersionResource
 	 * @return
 	 * @throws RemoteException
 	 * @throws DigitalLibraryException 
+	 * @throws NotFoundException 
 	 * @throws IdNotFoundException 
 	 */
 	private Response getEditionList(String workspaceId,
 			String researchObjectId, String versionId,
 			DigitalLibrary dLibraDataSource)
-		throws RemoteException, DigitalLibraryException, IdNotFoundException
+		throws RemoteException, DigitalLibraryException, NotFoundException
 	{
 		logger.debug("Getting edition list");
-		Set<Edition> editions = dLibraDataSource.getEditionList(workspaceId,
+		Set<Snapshot> snapshots = dLibraDataSource.getEditionList(workspaceId,
 			researchObjectId, versionId);
 		StringBuilder sb = new StringBuilder();
-		for (Edition edition : editions) {
-			sb.append((edition.isPublished() ? "*" : "") + edition.getId()
-					+ "=" + edition.getCreationDate() + "\n");
+		for (Snapshot snapshot : snapshots) {
+			sb.append((snapshot.isPublished() ? "*" : "") + snapshot.getId()
+					+ "=" + snapshot.getCreationDate() + "\n");
 		}
 		return Response.ok(sb.toString()).build();
 	}
@@ -225,6 +227,7 @@ public class VersionResource
 	 * @throws JenaException if the manifest is malformed
 	 * @throws IncorrectManifestException if the manifest is missing a property
 	 * @throws DigitalLibraryException 
+	 * @throws NotFoundException 
 	 * @throws IdNotFoundException 
 	 */
 	@PUT
@@ -235,8 +238,7 @@ public class VersionResource
 	String versionId, @QueryParam("unpublish")
 	String unpublish)
 		throws IOException, TransformerException, JenaException,
-		IncorrectManifestException, DigitalLibraryException,
-		IdNotFoundException
+		IncorrectManifestException, DigitalLibraryException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
@@ -259,7 +261,7 @@ public class VersionResource
 	String researchObjectId, @PathParam("RO_VERSION_ID")
 	String versionId)
 		throws RemoteException, DigitalLibraryException, MalformedURLException,
-		UnknownHostException, IdNotFoundException
+		UnknownHostException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
@@ -288,6 +290,7 @@ public class VersionResource
 	 * @throws UnknownHostException 
 	 * @throws MalformedURLException 
 	 * @throws RemoteException 
+	 * @throws NotFoundException 
 	 * @throws IdNotFoundException 
 	 */
 	@DELETE
@@ -296,7 +299,7 @@ public class VersionResource
 	String researchObjectId, @PathParam("RO_VERSION_ID")
 	String versionId)
 		throws DigitalLibraryException, RemoteException, MalformedURLException,
-		UnknownHostException, IdNotFoundException
+		UnknownHostException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
@@ -304,8 +307,7 @@ public class VersionResource
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 
-		dl.deleteVersion(workspaceId, researchObjectId, versionId,
-			uriInfo.getAbsolutePath());
+		dl.deleteVersion(workspaceId, researchObjectId, versionId);
 		sms.removeResearchObject(uriInfo.getAbsolutePath());
 	}
 }

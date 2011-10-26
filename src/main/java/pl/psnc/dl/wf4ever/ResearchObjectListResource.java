@@ -22,11 +22,13 @@ import javax.xml.transform.TransformerException;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dlibra.service.DLibraException;
-import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -61,34 +63,37 @@ public class ResearchObjectListResource
 	 * @throws UnknownHostException 
 	 * @throws MalformedURLException 
 	 * @throws DigitalLibraryException 
+	 * @throws NotFoundException 
 	 */
 	@GET
 	@Produces("application/rdf+xml")
 	public Response getResearchObjectList(@PathParam("W_ID")
 	String workspaceId)
 		throws RemoteException, DLibraException, TransformerException,
-		MalformedURLException, UnknownHostException, DigitalLibraryException
+		MalformedURLException, UnknownHostException, DigitalLibraryException, NotFoundException
 	{
 
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
-		List<String> list;
+		List<URI> links;
 		logger.debug(String.format("Received %d query params", uriInfo
 				.getQueryParameters().size()));
 		if (uriInfo.getQueryParameters().isEmpty()) {
-			list = dl.getResearchObjectIds(workspaceId);
+			List<String> list = dl.getResearchObjectIds(workspaceId);
+			links = new ArrayList<URI>(list.size());
+			for (String id : list) {
+				links.add(uriInfo.getAbsolutePathBuilder().path("/").build()
+						.resolve(id));
+			}
 		}
 		else {
-			list = dl.getVersionIds(workspaceId, uriInfo.getQueryParameters());
+			SemanticMetadataService sms = SemanticMetadataServiceFactory
+					.getService(user);
+			links = sms.findResearchObjects(workspaceId, uriInfo.getQueryParameters());
 		}
 
-		List<URI> links = new ArrayList<URI>(list.size());
 
-		for (String id : list) {
-			links.add(uriInfo.getAbsolutePathBuilder().path("/").build()
-					.resolve(id));
-		}
 
 		String responseBody = RdfBuilder.serializeResource(RdfBuilder
 				.createCollection(uriInfo.getAbsolutePath(), links));
@@ -115,6 +120,7 @@ public class ResearchObjectListResource
 	 * @throws UnknownHostException 
 	 * @throws MalformedURLException 
 	 * @throws DigitalLibraryException 
+	 * @throws NotFoundException 
 	 * @throws IdNotFoundException 
 	 */
 	@POST
@@ -122,7 +128,7 @@ public class ResearchObjectListResource
 	public Response createResearchObject(@PathParam("W_ID")
 	String workspaceId, String researchObjectId)
 		throws RemoteException, MalformedURLException, UnknownHostException,
-		DigitalLibraryException, IdNotFoundException
+		DigitalLibraryException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
