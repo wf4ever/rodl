@@ -34,8 +34,8 @@ import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.Snapshot;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
-import pl.psnc.dl.wf4ever.dlibra.helpers.IncorrectManifestException;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
+import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.hp.hpl.jena.shared.JenaException;
 import com.sun.jersey.core.header.ContentDisposition;
@@ -46,15 +46,18 @@ import com.sun.jersey.core.header.ContentDisposition;
  * 
  */
 @Path(URIs.VERSION_ID)
-public class VersionResource {
+public class VersionResource
+{
 
-	private final static Logger logger = Logger.getLogger(VersionResource.class);
+	private final static Logger logger = Logger
+			.getLogger(VersionResource.class);
 
 	@Context
 	private HttpServletRequest request;
 
 	@Context
 	private UriInfo uriInfo;
+
 
 	/**
 	 * Returns zip archive with contents of RO version.
@@ -74,20 +77,29 @@ public class VersionResource {
 	 */
 	@GET
 	@Produces("application/zip")
-	public Response getZippedRO(@PathParam("W_ID") String workspaceId, @PathParam("RO_ID") String researchObjectId,
-			@PathParam("RO_VERSION_ID") String versionId,
-			@QueryParam("edition_id") @DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING) long editionId,
-			@QueryParam("edition_list") String isEditionListRequested) throws IOException, DigitalLibraryException,
-			OperationNotSupportedException, NotFoundException {
+	public Response getZippedRO(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId, @PathParam("RO_VERSION_ID")
+	String versionId, @QueryParam("edition_id")
+	@DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING)
+	long editionId, @QueryParam("edition_list")
+	String isEditionListRequested)
+		throws IOException, DigitalLibraryException,
+		OperationNotSupportedException, NotFoundException
+	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
 		if (isEditionListRequested != null) {
 			return getEditionList(workspaceId, researchObjectId, versionId, dl);
-		} else {
-			return getZippedPublication(workspaceId, researchObjectId, versionId, dl, editionId);
+		}
+		else {
+			return getZippedPublication(workspaceId, researchObjectId,
+				versionId, dl, editionId);
 		}
 	}
+
 
 	/**
 	 * @param researchObjectId
@@ -99,18 +111,25 @@ public class VersionResource {
 	 * @throws DigitalLibraryException
 	 * @throws NotFoundException
 	 */
-	private Response getZippedPublication(String workspaceId, String researchObjectId, String versionId,
-			DigitalLibrary dLibraDataSource, long editionId) throws RemoteException, DigitalLibraryException,
-			NotFoundException {
+	private Response getZippedPublication(String workspaceId,
+			String researchObjectId, String versionId,
+			DigitalLibrary dLibraDataSource, long editionId)
+		throws RemoteException, DigitalLibraryException, NotFoundException
+	{
 		InputStream body;
 		if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
-			body = dLibraDataSource.getZippedVersion(workspaceId, researchObjectId, versionId);
-		} else {
-			body = dLibraDataSource.getZippedVersion(workspaceId, researchObjectId, versionId, editionId);
+			body = dLibraDataSource.getZippedVersion(workspaceId,
+				researchObjectId, versionId);
 		}
-		ContentDisposition cd = ContentDisposition.type("application/zip").fileName(versionId + ".zip").build();
+		else {
+			body = dLibraDataSource.getZippedVersion(workspaceId,
+				researchObjectId, versionId, editionId);
+		}
+		ContentDisposition cd = ContentDisposition.type("application/zip")
+				.fileName(versionId + ".zip").build();
 		return Response.ok(body).header("Content-disposition", cd).build();
 	}
+
 
 	/**
 	 * @param researchObjectId
@@ -122,16 +141,22 @@ public class VersionResource {
 	 * @throws NotFoundException
 	 * @throws IdNotFoundException
 	 */
-	private Response getEditionList(String workspaceId, String researchObjectId, String versionId,
-			DigitalLibrary dLibraDataSource) throws RemoteException, DigitalLibraryException, NotFoundException {
+	private Response getEditionList(String workspaceId,
+			String researchObjectId, String versionId,
+			DigitalLibrary dLibraDataSource)
+		throws RemoteException, DigitalLibraryException, NotFoundException
+	{
 		logger.debug("Getting edition list");
-		Set<Snapshot> snapshots = dLibraDataSource.getEditionList(workspaceId, researchObjectId, versionId);
+		Set<Snapshot> snapshots = dLibraDataSource.getEditionList(workspaceId,
+			researchObjectId, versionId);
 		StringBuilder sb = new StringBuilder();
 		for (Snapshot snapshot : snapshots) {
-			sb.append((snapshot.isPublished() ? "*" : "") + snapshot.getId() + "=" + snapshot.getCreationDate() + "\n");
+			sb.append((snapshot.isPublished() ? "*" : "") + snapshot.getId()
+					+ "=" + snapshot.getCreationDate() + "\n");
 		}
 		return Response.ok(sb.toString()).build();
 	}
+
 
 	/**
 	 * Used for updating metadata of version of RO (manifest.rdf file).
@@ -160,35 +185,50 @@ public class VersionResource {
 	 */
 	@PUT
 	@Consumes("application/rdf+xml")
-	public Response publish(@PathParam("W_ID") String workspaceId, @PathParam("RO_ID") String researchObjectId,
-			@PathParam("RO_VERSION_ID") String versionId, @QueryParam("unpublish") String unpublish)
-			throws IOException, TransformerException, JenaException, IncorrectManifestException,
-			DigitalLibraryException, NotFoundException {
+	public Response publish(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId, @PathParam("RO_VERSION_ID")
+	String versionId, @QueryParam("unpublish")
+	String unpublish)
+		throws IOException, TransformerException, JenaException,
+		DigitalLibraryException, NotFoundException
+	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
 		if (unpublish == null) {
 			dl.publishVersion(workspaceId, researchObjectId, versionId);
-		} else {
+		}
+		else {
 			dl.unpublishVersion(workspaceId, researchObjectId, versionId);
 		}
 
 		return Response.ok().build();
 	}
 
+
 	@POST
-	public Response createEdition(@PathParam("W_ID") String workspaceId, @PathParam("RO_ID") String researchObjectId,
-			@PathParam("RO_VERSION_ID") String versionId) throws RemoteException, DigitalLibraryException,
-			MalformedURLException, UnknownHostException, NotFoundException {
+	public Response createEdition(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId, @PathParam("RO_VERSION_ID")
+	String versionId)
+		throws RemoteException, DigitalLibraryException, MalformedURLException,
+		UnknownHostException, NotFoundException
+	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
-		long editionId = dl.createEdition(workspaceId, versionId, researchObjectId, versionId).getId();
+		long editionId = dl.createEdition(workspaceId, versionId,
+			researchObjectId, versionId).getId();
 
-		String uri = uriInfo.getAbsolutePath().toString() + "?edition_id=" + editionId;
+		String uri = uriInfo.getAbsolutePath().toString() + "?edition_id="
+				+ editionId;
 
 		return Response.created(URI.create(uri)).build();
 	}
+
 
 	/**
 	 * Deletes this version of research object.
@@ -207,14 +247,20 @@ public class VersionResource {
 	 * @throws IdNotFoundException
 	 */
 	@DELETE
-	public void deleteVersion(@PathParam("W_ID") String workspaceId, @PathParam("RO_ID") String researchObjectId,
-			@PathParam("RO_VERSION_ID") String versionId) throws DigitalLibraryException, RemoteException,
-			MalformedURLException, UnknownHostException, NotFoundException {
+	public void deleteVersion(@PathParam("W_ID")
+	String workspaceId, @PathParam("RO_ID")
+	String researchObjectId, @PathParam("RO_VERSION_ID")
+	String versionId)
+		throws DigitalLibraryException, RemoteException, MalformedURLException,
+		UnknownHostException, NotFoundException
+	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
-		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
 
 		dl.deleteVersion(workspaceId, researchObjectId, versionId);
-		sms.removeResearchObject(uriInfo.getAbsolutePath());
+		sms.removeManifest(uriInfo.getAbsolutePath());
 	}
 }

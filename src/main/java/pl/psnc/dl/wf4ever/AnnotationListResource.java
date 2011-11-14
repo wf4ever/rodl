@@ -3,12 +3,13 @@
  */
 package pl.psnc.dl.wf4ever;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -19,10 +20,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
@@ -35,10 +37,12 @@ import com.sun.jersey.core.header.ContentDisposition;
  * 
  */
 @Path(URIs.ANNOTATIONS)
-public class AnnotationListResource {
+public class AnnotationListResource
+{
 
 	@SuppressWarnings("unused")
-	private static final Logger log = Logger.getLogger(AnnotationListResource.class);
+	private static final Logger log = Logger
+			.getLogger(AnnotationListResource.class);
 
 	@Context
 	HttpServletRequest request;
@@ -46,59 +50,98 @@ public class AnnotationListResource {
 	@Context
 	private UriInfo uriInfo;
 
-	@GET
-	@Produces({ "text/xml", "application/rdf+xml", "application/x+trig" })
-	public Response getAnnotations() {
-		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
 
-		SemanticMetadataService.Notation notation = URIs.recognizeNotation(request.getContentType());
-		InputStream manifest = sms.getAnnotations(uriInfo.getAbsolutePath(), notation);
-		ContentDisposition cd = URIs.generateContentDisposition(notation, "annotations");
-		return Response.ok(manifest).header("Content-disposition", cd).build();
+	@GET
+	@Produces({ "application/rdf+xml", "text/plain", "text/turtle",
+			"application/x-turtle", "text/rdf+n3", "application/trix",
+			"application/x-trig"})
+	public Response getAnnotations()
+	{
+		String contentType = request.getContentType() != null ? request
+				.getContentType() : "application/rdf+xml";
+		RDFFormat rdfFormat = RDFFormat.forMIMEType(contentType);
+
+		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
+		InputStream annotations;
+		if (rdfFormat.supportsContexts()) {
+			annotations = sms.getAllAnnotationsWithBodies(
+				uriInfo.getAbsolutePath(), rdfFormat);
+		}
+		else {
+			annotations = sms.getAllAnnotations(uriInfo.getAbsolutePath(),
+				rdfFormat);
+		}
+
+		ContentDisposition cd = ContentDisposition.type(contentType)
+				.fileName("annotations." + rdfFormat.getDefaultFileExtension())
+				.build();
+		return Response.ok(annotations).header("Content-disposition", cd)
+				.build();
 	}
 
+
 	@POST
-	@Consumes("text/plain")
-	public Response createAnnotation(String data) throws URISyntaxException {
+	@Consumes({ "application/rdf+xml", "text/plain", "text/turtle",
+			"application/x-turtle", "text/rdf+n3", "application/trix",
+			"application/x-trig"})
+	public Response createAnnotation(InputStream data)
+		throws URISyntaxException, IOException
+	{
+		String contentType = request.getContentType() != null ? request
+				.getContentType() : "application/rdf+xml";
+		String characterEncoding = request.getCharacterEncoding() != null ? request
+				.getCharacterEncoding() : "UTF-8";
+		RDFFormat rdfFormat = RDFFormat.forMIMEType(contentType);
+
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
 
-		String lines[] = data.split("[\\r\\n]+");
-		if (lines.length < 2) {
-			return Response.status(Status.BAD_REQUEST).entity("Content is shorter than 2 lines")
-					.header("Content-type", "text/plain").build();
-		}
-		URI annotatedResourceURI = new URI(lines[0]);
-		Map<String, String> attributes = new HashMap<String, String>();
-		for (int i = 1; i < lines.length; i++) {
-			String[] values = lines[i].split("[\\s]+", 2);
-			if (values.length == 2) {
-				attributes.put(values[0], values[1]);
+		String annotationId = UUID.randomUUID().toString();
+		URI annotationURI = uriInfo.getAbsolutePathBuilder()
+				.fragment(annotationId).build();
+		URI annotationBodyURI = uriInfo.getAbsolutePathBuilder()
+				.path(annotationId).build();
+
+		if (contentType.equals("text/plain")) {
+			// FIXME: this could also mean NTriples
+			String lines[] = IOUtils.toString(data, characterEncoding).split(
+				"[\\r\\n]+");
+			Map<URI, Map<URI, String>> triples = new HashMap<URI, Map<URI, String>>();
+			for (String line : lines) {
+				String[] values = line.split("[\\s]+", 3);
+				if (values.length >= 3) {
+					URI annotatedResourceURI = new URI(values[0]);
+					if (!triples.containsKey(annotatedResourceURI)) {
+						triples.put(annotatedResourceURI,
+							new HashMap<URI, String>());
+					}
+					triples.get(annotatedResourceURI).put(new URI(values[1]),
+						values[2]);
+				}
 			}
-		}
-		String annotationId = generateAnnotationId(annotatedResourceURI);
-		URI annotationURI = uriInfo.getAbsolutePathBuilder().fragment(annotationId).build();
-		URI annotationBodyURI = uriInfo.getAbsolutePathBuilder().path(annotationId).build();
 
-		sms.addAnnotation(annotationURI, annotationBodyURI, annotatedResourceURI, attributes);
+			sms.addAnnotation(annotationURI, annotationBodyURI, triples, user);
+		}
+		else {
+			sms.addAnnotation(annotationURI, annotationBodyURI, data,
+				rdfFormat, user);
+		}
 
 		return Response.created(annotationBodyURI).build();
 	}
 
+
 	@DELETE
-	public void deleteAnnotations() {
+	public void deleteAnnotations()
+	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
 
-		sms.deleteAnnotationsWithBodies(uriInfo.getAbsolutePath());
+		sms.deleteAllAnnotationsWithBodies(uriInfo.getAbsolutePath());
 	}
 
-	private String generateAnnotationId(URI annotatedResourceURI) {
-		String a = annotatedResourceURI.getRawPath();
-		while (a.endsWith("/"))
-			a = a.substring(0, a.length() - 1);
-		a = a.substring(a.lastIndexOf('/') + 1);
-		return a + "-" + new Date().getTime();
-	}
 }

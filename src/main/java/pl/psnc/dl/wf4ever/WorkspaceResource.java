@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -25,6 +26,7 @@ import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
+import pl.psnc.dlibra.service.DLibraException;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -34,13 +36,15 @@ import com.sun.jersey.core.header.ContentDisposition;
  * 
  */
 @Path(URIs.WORKSPACE_ID)
-public class WorkspaceResource {
+public class WorkspaceResource
+{
 
 	@Context
 	HttpServletRequest request;
 
 	@Context
 	UriInfo uriInfo;
+
 
 	/**
 	 * Returns list of research objects in this workspace.
@@ -59,26 +63,33 @@ public class WorkspaceResource {
 	 */
 	@GET
 	@Produces("application/rdf+xml")
-	public Response getWorkspace(@PathParam("W_ID") String workspaceId) throws RemoteException,
-			DigitalLibraryException, MalformedURLException, UnknownHostException, TransformerException,
-			NotFoundException {
+	public Response getWorkspace(@PathParam("W_ID")
+	String workspaceId)
+		throws RemoteException, DigitalLibraryException, MalformedURLException,
+		UnknownHostException, TransformerException, NotFoundException
+	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 		List<String> list = dl.getResearchObjectIds(workspaceId);
 
 		List<URI> links = new ArrayList<URI>(list.size());
 
 		for (String id : list) {
-			links.add(uriInfo.getAbsolutePathBuilder().path("/").build().resolve(id));
+			links.add(uriInfo.getAbsolutePathBuilder().path("/").build()
+					.resolve(id));
 		}
 
-		String responseBody = RdfBuilder
-				.serializeResource(RdfBuilder.createCollection(uriInfo.getAbsolutePath(), links));
+		String responseBody = RdfBuilder.serializeResource(RdfBuilder
+				.createCollection(uriInfo.getAbsolutePath(), links));
 
-		ContentDisposition cd = ContentDisposition.type("application/rdf+xml").fileName(workspaceId + ".rdf").build();
+		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
+				.fileName(workspaceId + ".rdf").build();
 
-		return Response.ok().entity(responseBody).header("Content-disposition", cd).build();
+		return Response.ok().entity(responseBody)
+				.header("Content-disposition", cd).build();
 	}
+
 
 	/**
 	 * Deletes the workspace.
@@ -92,13 +103,21 @@ public class WorkspaceResource {
 	 * @throws NotFoundException
 	 */
 	@DELETE
-	public void deleteWorkspace(@PathParam("W_ID") String workspaceId) throws RemoteException, MalformedURLException,
-			UnknownHostException, DigitalLibraryException, NotFoundException {
+	public void deleteWorkspace(@PathParam("W_ID")
+	String workspaceId)
+		throws RemoteException, MalformedURLException, UnknownHostException,
+		DigitalLibraryException, NotFoundException
+	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
-		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
 
 		dl.deleteWorkspace(workspaceId);
-		sms.removeResearchObject(uriInfo.getAbsolutePath());
+		Set<URI> versions = sms.findManifests(uriInfo.getAbsolutePath());
+		for (URI uri : versions) {
+			sms.removeManifest(uri);
+		}
 	}
 }
