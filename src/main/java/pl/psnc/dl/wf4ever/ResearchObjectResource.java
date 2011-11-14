@@ -6,7 +6,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -76,7 +75,7 @@ public class ResearchObjectResource
 	 * @throws NotFoundException
 	 */
 	@GET
-	@Produces("application/rdf+xml")
+	@Produces("text/plain")
 	public Response getListOfVersions(@PathParam("W_ID")
 	String workspaceId, @PathParam("RO_ID")
 	String researchObjectId)
@@ -88,20 +87,17 @@ public class ResearchObjectResource
 			user.getLogin(), user.getPassword());
 		List<String> list = dl.getVersionIds(workspaceId, researchObjectId);
 
-		List<URI> links = new ArrayList<URI>(list.size());
-
+		StringBuilder sb = new StringBuilder();
 		for (String id : list) {
-			links.add(uriInfo.getAbsolutePathBuilder().path("/").path(id)
-					.build());
+			sb.append(uriInfo.getAbsolutePathBuilder().path("/").build()
+					.resolve(id).toString());
+			sb.append("\r\n");
 		}
 
-		String responseBody = RdfBuilder.serializeResource(RdfBuilder
-				.createCollection(uriInfo.getAbsolutePath(), links));
-
-		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
+		ContentDisposition cd = ContentDisposition.type("text/plain")
 				.fileName(researchObjectId + ".rdf").build();
 
-		return Response.ok().entity(responseBody)
+		return Response.ok().entity(sb.toString())
 				.header("Content-disposition", cd).build();
 	}
 

@@ -7,7 +7,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -26,6 +25,7 @@ import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
+import pl.psnc.dlibra.service.DLibraException;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -34,13 +34,15 @@ import com.sun.jersey.core.header.ContentDisposition;
  * 
  */
 @Path(URIs.WORKSPACES)
-public class WorkspaceListResource {
+public class WorkspaceListResource
+{
 
 	@Context
 	HttpServletRequest request;
 
 	@Context
 	private UriInfo uriInfo;
+
 
 	/**
 	 * Returns list of links to workspaces. Output format is RDF.
@@ -57,26 +59,30 @@ public class WorkspaceListResource {
 	 * @throws NotFoundException
 	 */
 	@GET
-	@Produces("application/rdf+xml")
-	public Response getWorkspaceList() throws DigitalLibraryException, TransformerException, RemoteException,
-			MalformedURLException, UnknownHostException, NotFoundException {
+	@Produces("text/plain")
+	public Response getWorkspaceList()
+		throws DigitalLibraryException, TransformerException, RemoteException,
+		MalformedURLException, UnknownHostException, NotFoundException
+	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 		List<String> list = dl.getWorkspaceIds();
 
-		List<URI> links = new ArrayList<URI>(list.size());
-
+		StringBuilder sb = new StringBuilder();
 		for (String id : list) {
-			links.add(uriInfo.getAbsolutePathBuilder().path("/").build().resolve(id));
+			sb.append(uriInfo.getAbsolutePathBuilder().path("/").build()
+					.resolve(id).toString());
+			sb.append("\r\n");
 		}
 
-		String responseBody = RdfBuilder
-				.serializeResource(RdfBuilder.createCollection(uriInfo.getAbsolutePath(), links));
+		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
+				.fileName("workspaces.txt").build();
 
-		ContentDisposition cd = ContentDisposition.type("application/rdf+xml").fileName("workspaces.rdf").build();
-
-		return Response.ok().entity(responseBody).header("Content-disposition", cd).build();
+		return Response.ok().entity(sb.toString())
+				.header("Content-disposition", cd).build();
 	}
+
 
 	/**
 	 * Creates new workspace with given WORKSPACE_ID. input: WORKSPACE_ID
@@ -94,14 +100,18 @@ public class WorkspaceListResource {
 	 */
 	@POST
 	@Consumes("text/plain")
-	public Response createWorkspace(String workspaceId) throws DigitalLibraryException, RemoteException,
-			MalformedURLException, UnknownHostException, NotFoundException {
+	public Response createWorkspace(String workspaceId)
+		throws DigitalLibraryException, RemoteException, MalformedURLException,
+		UnknownHostException, NotFoundException
+	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+			user.getLogin(), user.getPassword());
 
 		dl.createWorkspace(workspaceId);
 
-		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build().resolve(workspaceId);
+		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
+				.resolve(workspaceId);
 
 		return Response.created(resourceUri).build();
 	}

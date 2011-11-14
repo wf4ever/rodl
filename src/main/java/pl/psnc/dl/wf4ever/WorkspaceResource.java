@@ -4,7 +4,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -62,7 +61,7 @@ public class WorkspaceResource
 	 * @throws NotFoundException
 	 */
 	@GET
-	@Produces("application/rdf+xml")
+	@Produces("text/plain")
 	public Response getWorkspace(@PathParam("W_ID")
 	String workspaceId)
 		throws RemoteException, DigitalLibraryException, MalformedURLException,
@@ -73,20 +72,17 @@ public class WorkspaceResource
 			user.getLogin(), user.getPassword());
 		List<String> list = dl.getResearchObjectIds(workspaceId);
 
-		List<URI> links = new ArrayList<URI>(list.size());
-
+		StringBuilder sb = new StringBuilder();
 		for (String id : list) {
-			links.add(uriInfo.getAbsolutePathBuilder().path("/").build()
-					.resolve(id));
+			sb.append(uriInfo.getAbsolutePathBuilder().path("/").build()
+					.resolve(id).toString());
+			sb.append("\r\n");
 		}
 
-		String responseBody = RdfBuilder.serializeResource(RdfBuilder
-				.createCollection(uriInfo.getAbsolutePath(), links));
+		ContentDisposition cd = ContentDisposition.type("text/plain")
+				.fileName(workspaceId + ".txt").build();
 
-		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
-				.fileName(workspaceId + ".rdf").build();
-
-		return Response.ok().entity(responseBody)
+		return Response.ok().entity(sb.toString())
 				.header("Content-disposition", cd).build();
 	}
 
