@@ -11,10 +11,16 @@
  */
 package pl.psnc.dl.wf4ever.connection;
 
+import java.io.IOException;
+import java.sql.SQLException;
+
+import javax.naming.NamingException;
+
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
 
 /**
  * 
@@ -30,8 +36,10 @@ public class SemanticMetadataServiceFactory
 
 
 	public static SemanticMetadataService getService(UserProfile userProfile)
+		throws ClassNotFoundException, IOException, NamingException,
+		SQLException
 	{
-		return null;
+		return new SemanticMetadataServiceImpl();
 	}
 
 }

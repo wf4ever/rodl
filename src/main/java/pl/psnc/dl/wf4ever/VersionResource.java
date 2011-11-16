@@ -6,8 +6,10 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
+import java.sql.SQLException;
 import java.util.Set;
 
+import javax.naming.NamingException;
 import javax.naming.OperationNotSupportedException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -240,10 +242,11 @@ public class VersionResource
 	 * @param versionId
 	 *            identifier of version of RO - defined by the user
 	 * @throws DigitalLibraryException
-	 * @throws UnknownHostException
-	 * @throws MalformedURLException
-	 * @throws RemoteException
 	 * @throws NotFoundException
+	 * @throws SQLException 
+	 * @throws NamingException 
+	 * @throws IOException 
+	 * @throws ClassNotFoundException 
 	 * @throws IdNotFoundException
 	 */
 	@DELETE
@@ -251,16 +254,24 @@ public class VersionResource
 	String workspaceId, @PathParam("RO_ID")
 	String researchObjectId, @PathParam("RO_VERSION_ID")
 	String versionId)
-		throws DigitalLibraryException, RemoteException, MalformedURLException,
-		UnknownHostException, NotFoundException
+		throws DigitalLibraryException, NotFoundException,
+		ClassNotFoundException, IOException, NamingException, SQLException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
 
 		dl.deleteVersion(workspaceId, researchObjectId, versionId);
-		sms.removeManifest(uriInfo.getAbsolutePath());
+
+		URI manifestURI = uriInfo.getAbsolutePathBuilder()
+				.path(".ro_metadata/manifest").build();
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
+		try {
+			sms.removeManifest(manifestURI);
+		}
+		finally {
+			sms.close();
+		}
 	}
 }

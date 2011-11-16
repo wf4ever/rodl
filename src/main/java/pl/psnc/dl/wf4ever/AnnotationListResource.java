@@ -7,10 +7,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -56,6 +58,8 @@ public class AnnotationListResource
 			"application/x-turtle", "text/rdf+n3", "application/trix",
 			"application/x-trig"})
 	public Response getAnnotations()
+		throws ClassNotFoundException, IOException, NamingException,
+		SQLException
 	{
 		String contentType = request.getContentType() != null ? request
 				.getContentType() : "application/rdf+xml";
@@ -65,13 +69,18 @@ public class AnnotationListResource
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 		InputStream annotations;
-		if (rdfFormat.supportsContexts()) {
-			annotations = sms.getAllAnnotationsWithBodies(
-				uriInfo.getAbsolutePath(), rdfFormat);
+		try {
+			if (rdfFormat.supportsContexts()) {
+				annotations = sms.getAllAnnotationsWithBodies(
+					uriInfo.getAbsolutePath(), rdfFormat);
+			}
+			else {
+				annotations = sms.getAllAnnotations(uriInfo.getAbsolutePath(),
+					rdfFormat);
+			}
 		}
-		else {
-			annotations = sms.getAllAnnotations(uriInfo.getAbsolutePath(),
-				rdfFormat);
+		finally {
+			sms.close();
 		}
 
 		ContentDisposition cd = ContentDisposition.type(contentType)
@@ -87,7 +96,8 @@ public class AnnotationListResource
 			"application/x-turtle", "text/rdf+n3", "application/trix",
 			"application/x-trig"})
 	public Response createAnnotation(InputStream data)
-		throws URISyntaxException, IOException
+		throws URISyntaxException, IOException, ClassNotFoundException,
+		NamingException, SQLException
 	{
 		String contentType = request.getContentType() != null ? request
 				.getContentType() : "application/rdf+xml";
@@ -96,8 +106,6 @@ public class AnnotationListResource
 		RDFFormat rdfFormat = RDFFormat.forMIMEType(contentType);
 
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
 
 		String annotationId = UUID.randomUUID().toString();
 		URI annotationURI = uriInfo.getAbsolutePathBuilder()
@@ -105,29 +113,38 @@ public class AnnotationListResource
 		URI annotationBodyURI = uriInfo.getAbsolutePathBuilder()
 				.path(annotationId).build();
 
-		if (contentType.equals("text/plain")) {
-			// FIXME: this could also mean NTriples
-			String lines[] = IOUtils.toString(data, characterEncoding).split(
-				"[\\r\\n]+");
-			Map<URI, Map<URI, String>> triples = new HashMap<URI, Map<URI, String>>();
-			for (String line : lines) {
-				String[] values = line.split("[\\s]+", 3);
-				if (values.length >= 3) {
-					URI annotatedResourceURI = new URI(values[0]);
-					if (!triples.containsKey(annotatedResourceURI)) {
-						triples.put(annotatedResourceURI,
-							new HashMap<URI, String>());
-					}
-					triples.get(annotatedResourceURI).put(new URI(values[1]),
-						values[2]);
-				}
-			}
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
+		try {
 
-			sms.addAnnotation(annotationURI, annotationBodyURI, triples, user);
+			if (contentType.equals("text/plain")) {
+				// FIXME: this could also mean NTriples
+				String lines[] = IOUtils.toString(data, characterEncoding)
+						.split("[\\r\\n]+");
+				Map<URI, Map<URI, String>> triples = new HashMap<URI, Map<URI, String>>();
+				for (String line : lines) {
+					String[] values = line.split("[\\s]+", 3);
+					if (values.length >= 3) {
+						URI annotatedResourceURI = new URI(values[0]);
+						if (!triples.containsKey(annotatedResourceURI)) {
+							triples.put(annotatedResourceURI,
+								new HashMap<URI, String>());
+						}
+						triples.get(annotatedResourceURI).put(
+							new URI(values[1]), values[2]);
+					}
+				}
+
+				sms.addAnnotation(annotationURI, annotationBodyURI, triples,
+					user);
+			}
+			else {
+				sms.addAnnotation(annotationURI, annotationBodyURI, data,
+					rdfFormat, user);
+			}
 		}
-		else {
-			sms.addAnnotation(annotationURI, annotationBodyURI, data,
-				rdfFormat, user);
+		finally {
+			sms.close();
 		}
 
 		return Response.created(annotationBodyURI).build();
@@ -136,12 +153,19 @@ public class AnnotationListResource
 
 	@DELETE
 	public void deleteAnnotations()
+		throws ClassNotFoundException, IOException, NamingException,
+		SQLException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 
-		sms.deleteAllAnnotationsWithBodies(uriInfo.getAbsolutePath());
+		try {
+			sms.deleteAllAnnotationsWithBodies(uriInfo.getAbsolutePath());
+		}
+		finally {
+			sms.close();
+		}
 	}
 
 }

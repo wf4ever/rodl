@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.rmi.RemoteException;
+import java.sql.SQLException;
 
+import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -67,6 +69,9 @@ public class FileResource
 	 * @throws TransformerException
 	 * @throws DigitalLibraryException
 	 * @throws NotFoundException
+	 * @throws SQLException 
+	 * @throws NamingException 
+	 * @throws ClassNotFoundException 
 	 */
 	@GET
 	public Response getFile(@PathParam("W_ID")
@@ -78,7 +83,8 @@ public class FileResource
 	@DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING)
 	long editionId)
 		throws IOException, TransformerException, DigitalLibraryException,
-		NotFoundException
+		NotFoundException, ClassNotFoundException, NamingException,
+		SQLException
 	{
 		String contentType = request.getContentType() != null ? request
 				.getContentType() : "application/rdf+xml";
@@ -101,8 +107,13 @@ public class FileResource
 		else { // metadata
 			SemanticMetadataService sms = SemanticMetadataServiceFactory
 					.getService(user);
-			InputStream body = sms.getResource(uriInfo.getAbsolutePath(),
-				rdfFormat);
+			InputStream body;
+			try {
+				body = sms.getResource(uriInfo.getAbsolutePath(), rdfFormat);
+			}
+			finally {
+				sms.close();
+			}
 			String filename = uriInfo.getAbsolutePath().resolve(".")
 					.relativize(uriInfo.getAbsolutePath()).toString();
 
@@ -175,21 +186,29 @@ public class FileResource
 	String versionId, @PathParam("FILE_PATH")
 	String filePath, InputStream inputStream)
 		throws IOException, TransformerException, DigitalLibraryException,
-		NotFoundException
+		NotFoundException, ClassNotFoundException, NamingException,
+		SQLException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
 
 		ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId,
 			researchObjectId, versionId, filePath, inputStream,
 			request.getContentType());
 		URI manifestURI = uriInfo.getBaseUriBuilder().path("workspaces")
 				.path(workspaceId).path("ROs").path(researchObjectId)
-				.path(versionId).path("manifest").build();
-		sms.addResource(manifestURI, uriInfo.getAbsolutePath(), resourceInfo);
+				.path(versionId).path(".ro_metadata/manifest").build();
+
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
+		try {
+			sms.addResource(manifestURI, uriInfo.getAbsolutePath(),
+				resourceInfo);
+		}
+		finally {
+			sms.close();
+		}
 
 		return Response.ok().build();
 	}
@@ -202,18 +221,24 @@ public class FileResource
 	String versionId, @PathParam("FILE_PATH")
 	String filePath)
 		throws IOException, TransformerException, DigitalLibraryException,
-		NotFoundException
+		NotFoundException, ClassNotFoundException, NamingException,
+		SQLException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
 
 		dl.deleteFile(workspaceId, researchObjectId, versionId, filePath);
 		URI manifestURI = uriInfo.getBaseUriBuilder().path("workspaces")
 				.path(workspaceId).path("ROs").path(researchObjectId)
-				.path(versionId).path("manifest").build();
-		sms.removeResource(manifestURI, uriInfo.getAbsolutePath());
+				.path(versionId).path(".ro_metadata/manifest").build();
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
+		try {
+			sms.removeResource(manifestURI, uriInfo.getAbsolutePath());
+		}
+		finally {
+			sms.close();
+		}
 	}
 }

@@ -6,9 +6,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
+import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -118,6 +120,9 @@ public class ResearchObjectResource
 	 * @throws URISyntaxException
 	 * @throws DigitalLibraryException
 	 * @throws NotFoundException
+	 * @throws SQLException 
+	 * @throws NamingException 
+	 * @throws ClassNotFoundException 
 	 * @throws SAXException
 	 */
 	@POST
@@ -126,13 +131,12 @@ public class ResearchObjectResource
 	String workspaceId, @PathParam("RO_ID")
 	String researchObjectId, String data)
 		throws IOException, TransformerException, URISyntaxException,
-		DigitalLibraryException, NotFoundException
+		DigitalLibraryException, NotFoundException, ClassNotFoundException,
+		NamingException, SQLException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
 
 		String lines[] = data.split("[\\r\\n]+");
 		if (lines.length < 1) {
@@ -149,17 +153,26 @@ public class ResearchObjectResource
 			baseVersion = roUri.relativize(baseVersionURI).toString();
 		}
 
-		URI resourceURI = uriInfo.getAbsolutePathBuilder().path("/").build()
-				.resolve(version);
+		URI resourceURI = uriInfo.getAbsolutePathBuilder().path(version)
+				.build();
+		URI manifestURI = uriInfo.getAbsolutePathBuilder().path(version)
+				.path(".ro_metadata/manifest").build();
 
-		if (baseVersion == null) {
-			dl.createVersion(workspaceId, researchObjectId, version);
-			sms.createManifest(resourceURI, user);
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
+		try {
+			if (baseVersion == null) {
+				dl.createVersion(workspaceId, researchObjectId, version);
+				sms.createManifest(manifestURI, user);
+			}
+			else {
+				dl.createVersion(workspaceId, researchObjectId, version,
+					baseVersion);
+				sms.createResearchObjectAsCopy(resourceURI, baseVersionURI);
+			}
 		}
-		else {
-			dl.createVersion(workspaceId, researchObjectId, version,
-				baseVersion);
-			sms.createResearchObjectAsCopy(resourceURI, baseVersionURI);
+		finally {
+			sms.close();
 		}
 		return Response.created(resourceURI).build();
 	}
@@ -172,30 +185,36 @@ public class ResearchObjectResource
 	 *            identifier of a workspace in the RO SRS
 	 * @param researchObjectId
 	 *            RO identifier - defined by the user
-	 * @throws RemoteException
-	 * @throws UnknownHostException
-	 * @throws MalformedURLException
 	 * @throws DigitalLibraryException
 	 * @throws NotFoundException
+	 * @throws SQLException 
+	 * @throws NamingException 
+	 * @throws IOException 
+	 * @throws ClassNotFoundException 
 	 */
 	@DELETE
 	public void deleteResearchObject(@PathParam("W_ID")
 	String workspaceId, @PathParam("RO_ID")
 	String researchObjectId)
-		throws RemoteException, MalformedURLException, UnknownHostException,
-		DigitalLibraryException, NotFoundException
+		throws DigitalLibraryException, NotFoundException,
+		ClassNotFoundException, IOException, NamingException, SQLException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
 
 		dl.deleteResearchObject(workspaceId, researchObjectId);
 
-		Set<URI> versions = sms.findManifests(uriInfo.getAbsolutePath());
-		for (URI uri : versions) {
-			sms.removeManifest(uri);
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
+		try {
+			Set<URI> versions = sms.findManifests(uriInfo.getAbsolutePath());
+			for (URI uri : versions) {
+				sms.removeManifest(uri);
+			}
+		}
+		finally {
+			sms.close();
 		}
 	}
 }

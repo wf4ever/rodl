@@ -1,6 +1,5 @@
 package pl.psnc.dl.wf4ever;
 
-
 /**
  * 
  * @author Piotr Hołubowicz
@@ -27,8 +26,7 @@ public final class URIs
 
 	public final static String VERSION_ID = RO_ID + "/{RO_VERSION_ID}";
 
-	public final static String FILE = VERSION_ID
-			+ "/{FILE_PATH : [\\\\w\\\\d:#%/;$()~_?\\\\-=\\\\\\\\.&]+}";
+	public final static String FILE = VERSION_ID + "/{FILE_PATH : [^\\.].+}";
 
 	public final static String METADATA = VERSION_ID + "/.ro_metadata";
 
@@ -42,7 +40,7 @@ public final class URIs
 
 	public final static String USER_ID = USERS + "/{U_ID}";
 
-	public final static String ACCESSTOKENS = "accesstoken";
+	public final static String ACCESSTOKENS = "accesstokens";
 
 	public final static String ACCESSTOKEN_ID = ACCESSTOKENS + "/{T_ID}";
 

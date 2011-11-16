@@ -42,7 +42,7 @@
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
 			<artifactId>rosrs-dlibra</artifactId>
-			<version>1.0.1</version>
+			<version>1.0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
@@ -145,6 +145,17 @@
 			<artifactId>commons-io</artifactId>
 			<version>2.1</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey.jersey-test-framework</groupId>
+			<artifactId>jersey-test-framework-external</artifactId>
+			<version>1.10</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>
@@ -177,8 +188,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.7</source>
+					<target>1.7</target>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -247,7 +258,7 @@
 				<artifactId>maven-pmd-plugin</artifactId>
 				<version>2.3</version>
 				<configuration>
-					<targetJdk>1.6</targetJdk>
+					<targetJdk>1.7</targetJdk>
 				</configuration>
 			</plugin>
 		</plugins>

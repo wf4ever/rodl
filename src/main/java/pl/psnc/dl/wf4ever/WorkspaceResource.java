@@ -1,12 +1,15 @@
 package pl.psnc.dl.wf4ever;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
+import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -92,28 +95,35 @@ public class WorkspaceResource
 	 * 
 	 * @param workspaceId
 	 *            identifier of a workspace in the RO SRS
-	 * @throws RemoteException
-	 * @throws UnknownHostException
-	 * @throws MalformedURLException
 	 * @throws DigitalLibraryException
 	 * @throws NotFoundException
+	 * @throws SQLException 
+	 * @throws NamingException 
+	 * @throws IOException 
+	 * @throws ClassNotFoundException 
 	 */
 	@DELETE
 	public void deleteWorkspace(@PathParam("W_ID")
 	String workspaceId)
-		throws RemoteException, MalformedURLException, UnknownHostException,
-		DigitalLibraryException, NotFoundException
+		throws DigitalLibraryException, NotFoundException,
+		ClassNotFoundException, IOException, NamingException, SQLException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
 
 		dl.deleteWorkspace(workspaceId);
-		Set<URI> versions = sms.findManifests(uriInfo.getAbsolutePath());
-		for (URI uri : versions) {
-			sms.removeManifest(uri);
+
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
+		try {
+			Set<URI> versions = sms.findManifests(uriInfo.getAbsolutePath());
+			for (URI uri : versions) {
+				sms.removeManifest(uri);
+			}
+		}
+		finally {
+			sms.close();
 		}
 	}
 }
