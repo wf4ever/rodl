@@ -126,7 +126,12 @@ public class ResourcesTest
 	@Test
 	public final void test()
 	{
-		webResource = resource();
+		if (resource().getURI().getHost().equals("localhost")) {
+			webResource = resource();
+		}
+		else {
+			webResource = resource().path("rosrs4/");
+		}
 		createClient();
 		try {
 			getClientsList();
@@ -306,8 +311,10 @@ public class ResourcesTest
 
 	private void addAnnotation()
 	{
-		String resourceURI = getBaseURI().toString() + "workspaces/" + w
-				+ "/ROs/" + r + "/" + v + "/" + filePath;
+		String resourceURI = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/" + filePath)
+				.toString().replaceFirst(":80", "");
 		String dcTitle = "http://dublincore.org/documents/dcmi-terms/title";
 		ClientResponse response = webResource
 				.path(
@@ -326,9 +333,7 @@ public class ResourcesTest
 
 	private void getAnnotationBody()
 	{
-		String annotationBodyPath = getBaseURI().relativize(annotationBodyURI)
-				.toString();
-		String body = webResource.path(annotationBodyPath)
+		String body = client().resource(annotationBodyURI)
 				.header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
 		assertTrue("Annotation body should contain file path: " + filePath,
