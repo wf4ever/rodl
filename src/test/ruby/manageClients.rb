@@ -19,9 +19,13 @@ end
 #CLIENT_REDIRECTION_URI = "http://sandbox.wf4ever-project.org/import/home"
 #CLIENT_NAME = "Wf4Ever myExperiment import tool - localhost"
 #CLIENT_REDIRECTION_URI = "http://localhost:8080"
-CLIENT_NAME = "RO management tool"
-CLIENT_REDIRECTION_URI = "OOB"
-@clientId = "b3c31959-ced6-41aa-b"
+#CLIENT_NAME = "RO management tool"
+#CLIENT_REDIRECTION_URI = "OOB"
+CLIENT_NAME = "RODL portal - localhost"
+CLIENT_REDIRECTION_URI = "http://localhost:8080/oauth"
+#CLIENT_NAME = "RODL portal"
+#CLIENT_REDIRECTION_URI = "http://sandbox.wf4ever-project.org/portal/oauth"
+@clientId = "88ba791c-7581-4d40-a"
 
 def createClient
 	Net::HTTP.start(BASE_URI, PORT) {|http|
