@@ -4,7 +4,6 @@
 	<groupId>pl.psnc.dl.wf4ever</groupId>
 	<artifactId>rosrs</artifactId>
 	<packaging>war</packaging>
-	<version>4.1.0</version>
 	<name>rosrs</name>
 	<url>http://maven.apache.org</url>
 	<inceptionYear>2010</inceptionYear>
@@ -267,4 +266,5 @@
 	<properties>
 		<jetty.version>6.1.4</jetty.version>
 	</properties>
+	<version>5.0.0-SNAPSHOT</version>
 </project>
