@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever;
+package pl.psnc.dl.wf4ever.rosrsfull;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
+import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
@@ -37,7 +38,7 @@ import com.sun.jersey.core.header.ContentDisposition;
  * @author nowakm
  * 
  */
-@Path(URIs.WORKSPACE_ID)
+@Path(("workspaces" + "/{W_ID}"))
 public class WorkspaceResource
 {
 

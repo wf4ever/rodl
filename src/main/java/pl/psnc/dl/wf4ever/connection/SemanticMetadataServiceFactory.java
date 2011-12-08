@@ -35,11 +35,11 @@ public class SemanticMetadataServiceFactory
 			.getLogger(SemanticMetadataServiceFactory.class);
 
 
-	public static SemanticMetadataService getService(UserProfile userProfile)
+	public static SemanticMetadataService getService(UserProfile user)
 		throws ClassNotFoundException, IOException, NamingException,
 		SQLException
 	{
-		return new SemanticMetadataServiceImpl();
+		return new SemanticMetadataServiceImpl(user);
 	}
 
 }

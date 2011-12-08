@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever;
+package pl.psnc.dl.wf4ever.oauth;
 
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
@@ -12,6 +12,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
+import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
 import pl.psnc.dl.wf4ever.auth.OAuthManager;
@@ -25,7 +26,7 @@ import pl.psnc.dlibra.service.IdNotFoundException;
  * @author Piotr Hołubowicz
  * 
  */
-@Path(URIs.CLIENT_ID)
+@Path(("clients" + "/{C_ID}"))
 public class ClientResource {
 
 	@Context

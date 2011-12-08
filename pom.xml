@@ -180,7 +180,7 @@
 		<url>http://dl.psnc.pl/</url>
 	</organization>
 	<build>
-		<finalName>rosrs4</finalName>
+		<finalName>rosrs5</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

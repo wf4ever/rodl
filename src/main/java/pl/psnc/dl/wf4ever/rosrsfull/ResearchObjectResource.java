@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever;
+package pl.psnc.dl.wf4ever.rosrsfull;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -28,6 +28,7 @@ import javax.xml.transform.TransformerException;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
+import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
@@ -44,7 +45,7 @@ import com.sun.jersey.core.header.ContentDisposition;
  * @author nowakm
  * 
  */
-@Path(URIs.RO_ID)
+@Path(("workspaces" + "/{W_ID}" + "/ROs" + "/{RO_ID}"))
 public class ResearchObjectResource
 {
 

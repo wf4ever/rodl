@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever;
+package pl.psnc.dl.wf4ever.oauth;
 
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
@@ -11,6 +11,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
+import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthManager;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
@@ -23,7 +24,7 @@ import pl.psnc.dlibra.service.IdNotFoundException;
  * @author Piotr Hołubowicz
  *
  */
-@Path(URIs.ACCESSTOKEN_ID)
+@Path(("accesstokens" + "/{T_ID}"))
 public class AccessTokenResource
 {
 

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package pl.psnc.dl.wf4ever;
+package pl.psnc.dl.wf4ever.oauth;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
+import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
 import pl.psnc.dl.wf4ever.auth.OAuthClientList;
@@ -34,7 +35,7 @@ import pl.psnc.dlibra.service.IdNotFoundException;
  * @author Piotr Hołubowicz
  * 
  */
-@Path(URIs.CLIENTS)
+@Path("clients")
 public class ClientListResource {
 
 	@Context

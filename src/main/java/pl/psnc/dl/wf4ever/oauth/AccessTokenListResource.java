@@ -1,7 +1,7 @@
 /**
  * 
  */
-package pl.psnc.dl.wf4ever;
+package pl.psnc.dl.wf4ever.oauth;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -25,6 +25,7 @@ import javax.xml.transform.TransformerException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.AccessToken;
 import pl.psnc.dl.wf4ever.auth.AccessTokenList;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
@@ -38,7 +39,7 @@ import pl.psnc.dlibra.service.IdNotFoundException;
  * @author Piotr Hołubowicz
  * 
  */
-@Path(URIs.ACCESSTOKENS)
+@Path("accesstokens")
 public class AccessTokenListResource
 {
 
