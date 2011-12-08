@@ -164,12 +164,12 @@ public class ResearchObjectResource
 		try {
 			if (baseVersion == null) {
 				dl.createVersion(workspaceId, researchObjectId, version);
-				sms.createManifest(manifestURI, user);
+				sms.createManifest(manifestURI);
 			}
 			else {
 				dl.createVersion(workspaceId, researchObjectId, version,
 					baseVersion);
-				sms.createResearchObjectAsCopy(resourceURI, baseVersionURI);
+				//				sms.createResearchObjectAsCopy(resourceURI, baseVersionURI);
 			}
 		}
 		finally {
@@ -211,7 +211,7 @@ public class ResearchObjectResource
 		try {
 			Set<URI> versions = sms.findManifests(uriInfo.getAbsolutePath());
 			for (URI uri : versions) {
-				sms.removeManifest(uri);
+				sms.removeManifest(uri, uri.resolve("./.."));
 			}
 		}
 		finally {

@@ -120,7 +120,7 @@ public class WorkspaceResource
 		try {
 			Set<URI> versions = sms.findManifests(uriInfo.getAbsolutePath());
 			for (URI uri : versions) {
-				sms.removeManifest(uri);
+				sms.removeManifest(uri, uri.resolve("./.."));
 			}
 		}
 		finally {

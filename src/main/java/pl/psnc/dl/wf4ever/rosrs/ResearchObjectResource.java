@@ -120,7 +120,7 @@ public class ResearchObjectResource
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 		try {
-			sms.removeManifest(manifestURI);
+			sms.removeManifest(manifestURI, manifestURI.resolve("./.."));
 		}
 		finally {
 			sms.close();

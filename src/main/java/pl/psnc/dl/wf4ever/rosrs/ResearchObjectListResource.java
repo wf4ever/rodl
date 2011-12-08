@@ -141,7 +141,7 @@ public class ResearchObjectListResource
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 		try {
-			sms.createManifest(manifestURI, user);
+			sms.createManifest(manifestURI);
 		}
 		finally {
 			sms.close();

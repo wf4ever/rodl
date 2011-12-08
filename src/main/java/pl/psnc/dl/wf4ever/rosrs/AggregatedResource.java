@@ -222,12 +222,11 @@ public class AggregatedResource
 					.getService(user);
 			try {
 				if (manifestURI.equals(uriInfo.getAbsolutePath())) {
-					sms.createManifest(manifestURI, inputStream, rdfFormat,
-						user);
+					sms.createManifest(manifestURI, inputStream, rdfFormat);
 				}
 				else {
-					sms.addNamedGraphResource(manifestURI,
-						uriInfo.getAbsolutePath(), inputStream, rdfFormat, user);
+					sms.addNamedGraph(uriInfo.getAbsolutePath(), inputStream,
+						rdfFormat);
 				}
 			}
 			finally {
@@ -287,6 +286,10 @@ public class AggregatedResource
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 		try {
+			if (sms.isNamedGraph(uriInfo.getAbsolutePath())) {
+				sms.removeNamedGraph(uriInfo.getAbsolutePath(),
+					manifestURI.resolve("./.."));
+			}
 			sms.removeResource(manifestURI, uriInfo.getAbsolutePath());
 		}
 		finally {
