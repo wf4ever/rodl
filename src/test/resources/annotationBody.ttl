@@ -1,0 +1,5 @@
+@prefix dc: <http://purl.org/dc/terms/> .
+
+<../a_workflow.t2flow> dc:title "A test" .
+<../a_workflow.t2flow> dc:licence "GPL" .
+

@@ -135,13 +135,13 @@ public class ResearchObjectListResource
 
 		URI resourceURI = uriInfo.getAbsolutePathBuilder()
 				.path(researchObjectId).build();
-		URI roURI = uriInfo.getAbsolutePathBuilder().path(researchObjectId)
+		URI researchObjectURI = uriInfo.getAbsolutePathBuilder().path(researchObjectId)
 				.build();
 
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 		try {
-			sms.createResearchObject(roURI);
+			sms.createResearchObject(researchObjectURI);
 		}
 		finally {
 			sms.close();

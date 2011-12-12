@@ -4,9 +4,9 @@
 package pl.psnc.dl.wf4ever;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.InputStream;
 import java.net.URI;
 import java.util.UUID;
 
@@ -14,6 +14,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -29,7 +30,7 @@ import com.sun.jersey.test.framework.spi.container.external.ExternalTestContaine
  * @author piotrhol
  *
  */
-public class ResourcesTest
+public class ResourcesFullURIsTest
 	extends JerseyTest
 {
 
@@ -51,11 +52,15 @@ public class ResourcesTest
 
 	private String accessToken;
 
+	private final String w = "w";
+
 	private final String r = "r";
+
+	private final String v = "v1";
 
 	private final String filePath = "foo/bar.txt";
 
-	private final String annotationBodyURI = "ann1";
+	private URI annotationBodyURI;
 
 	private final String username = "John Doe";
 
@@ -104,7 +109,7 @@ public class ResourcesTest
 	}
 
 
-	public ResourcesTest()
+	public ResourcesFullURIsTest()
 	{
 		super("pl.psnc.dl.wf4ever");
 	}
@@ -119,7 +124,7 @@ public class ResourcesTest
 
 
 	@Test
-	public final void test()
+	public final void testFullURIs()
 	{
 		if (resource().getURI().getHost().equals("localhost")) {
 			webResource = resource();
@@ -136,23 +141,26 @@ public class ResourcesTest
 				createAccessToken();
 				try {
 					getAccessTokensList();
-					createRO();
+					createWorkspace();
 					try {
-						getROsList();
+						getWorkspacesList();
+						createRO();
+						createVersion();
 						getInitialManifest();
-						updateManifest();
 						addFile();
 						getFileMetadata();
 						getFileContent();
 						getManifest();
-						addAnnotationBody();
+						//						addAnnotationBody();
 						getAnnotationBody();
-						getManifestWithAnnotationBody();
+						//						getManifestWithAnnotationBody();
 						deleteFile();
 						getInitialManifest();
+						deleteVersion();
+						deleteRO();
 					}
 					finally {
-						deleteRO();
+						deleteWorkspace();
 					}
 				}
 				finally {
@@ -230,39 +238,48 @@ public class ResourcesTest
 	}
 
 
+	private void createWorkspace()
+	{
+		ClientResponse response = webResource.path("workspaces/")
+				.header("Authorization", "Bearer " + accessToken)
+				.post(ClientResponse.class, w);
+		assertEquals(201, response.getStatus());
+	}
+
+
+	private void getWorkspacesList()
+	{
+		String list = webResource.path("workspaces/")
+				.header("Authorization", "Bearer " + accessToken)
+				.get(String.class);
+		assertTrue(list.contains(w));
+	}
+
+
 	private void createRO()
 	{
-		ClientResponse response = webResource.path("ROs/")
+		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/")
 				.header("Authorization", "Bearer " + accessToken)
 				.post(ClientResponse.class, r);
 		assertEquals(201, response.getStatus());
 	}
 
 
-	private void getROsList()
+	private void createVersion()
 	{
-		String list = webResource.path("ROs")
+		ClientResponse response = webResource
+				.path("workspaces/" + w + "/ROs/" + r)
 				.header("Authorization", "Bearer " + accessToken)
-				.get(String.class);
-		assertTrue(list.contains(r));
-	}
-
-
-	private void updateManifest()
-	{
-		InputStream is = getClass().getClassLoader().getResourceAsStream(
-			"manifest.ttl");
-		ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
-				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "application/x-turtle")
-				.put(ClientResponse.class, is);
-		assertEquals(200, response.getStatus());
+				.post(ClientResponse.class, v);
+		assertEquals(201, response.getStatus());
 	}
 
 
 	private void addFile()
 	{
-		ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
+		ClientResponse response = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/" + filePath)
 				.header("Authorization", "Bearer " + accessToken)
 				.header("Content-Type", "text/plain")
 				.put(ClientResponse.class, "lorem ipsum");
@@ -278,6 +295,7 @@ public class ResourcesTest
 		assertTrue(metadata.contains(username));
 		assertTrue(metadata.contains(filePath));
 		assertTrue(metadata.contains("checksum"));
+
 	}
 
 
@@ -294,44 +312,45 @@ public class ResourcesTest
 
 	private void getManifest()
 	{
-		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest")
+		String manifest = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v
+							+ "/.ro_metadata/manifest")
 				.header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(manifest.contains(filePath));
 
-		manifest = webResource.path("/ROs/" + r + "/.ro/manifest")
+		manifest = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v
+							+ "/.ro_metadata/manifest")
 				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "application/x-turtle")
-				.get(String.class);
+				.header("Content-Type", "text/turtle").get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(manifest.contains(filePath));
 	}
 
 
-	private void getManifestWithAnnotationBody()
+	private void addAnnotation()
 	{
-		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest")
-				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "application/x-trig").get(String.class);
-		assertTrue(manifest.contains(username));
-		assertTrue(manifest.contains(filePath));
-		assertTrue("Annotation body should contain file path: " + filePath,
-			manifest.contains("a_workflow.t2flow"));
-		assertTrue(manifest.contains("A test"));
-	}
-
-
-	private void addAnnotationBody()
-	{
-		InputStream is = getClass().getClassLoader().getResourceAsStream(
-			"annotationBody.ttl");
+		String resourceURI = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/" + filePath)
+				.toString().replaceFirst(":80", "");
+		String dcTitle = "http://dublincore.org/documents/dcmi-terms/title";
 		ClientResponse response = webResource
-				.path("ROs/" + r + "/" + annotationBodyURI)
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v
+							+ "/.ro_metadata/annotations")
 				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "application/x-turtle")
-				.put(ClientResponse.class, is);
-		assertEquals(200, response.getStatus());
+				.header("Content-Type", "text/plain")
+				.post(
+					ClientResponse.class,
+					String.format("%s %s \"%s\"", resourceURI, dcTitle,
+						"My title"));
+		assertEquals(201, response.getStatus());
+		annotationBodyURI = response.getLocation();
 	}
 
 
@@ -341,14 +360,38 @@ public class ResourcesTest
 				.header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
 		assertTrue("Annotation body should contain file path: " + filePath,
-			body.contains("a_workflow.t2flow"));
-		assertTrue(body.contains("A test"));
+			body.contains(filePath));
+		assertTrue(body.contains("My title"));
+	}
+
+
+	private void getAnnotations()
+	{
+		String annotations = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v
+							+ "/.ro_metadata/annotations")
+				.header("Authorization", "Bearer " + accessToken)
+				.get(String.class);
+		assertTrue(annotations.contains(annotationBodyURI.toString()));
+
+		annotations = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v
+							+ "/.ro_metadata/annotations")
+				.header("Authorization", "Bearer " + accessToken)
+				.header("Content-Type", "text/plain")
+
+				.get(String.class);
+		assertTrue(annotations.contains(annotationBodyURI.toString()));
 	}
 
 
 	private void deleteFile()
 	{
-		ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
+		ClientResponse response = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/" + filePath)
 				.header("Authorization", "Bearer " + accessToken)
 				.header("Content-Type", "text/plain")
 				.delete(ClientResponse.class);
@@ -358,24 +401,75 @@ public class ResourcesTest
 
 	private void getInitialManifest()
 	{
-		String manifest = webResource.path("ROs/" + r + "/.ro/manifest")
+		String manifest = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v
+							+ "/.ro_metadata/manifest")
 				.header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(!manifest.contains(filePath));
 
-		manifest = webResource.path("ROs/" + r + "/.ro/manifest")
+		manifest = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v
+							+ "/.ro_metadata/manifest")
 				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "application/x-turtle")
-				.get(String.class);
+				.header("Content-Type", "text/turtle").get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(!manifest.contains(filePath));
 	}
 
 
+	private void getInitialAnnotations()
+	{
+		String annotations = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v
+							+ "/.ro_metadata/annotations")
+				.header("Authorization", "Bearer " + accessToken)
+				.get(String.class);
+		assertNotNull("Annotations cannot be null", annotations);
+		Assert.assertNotSame("Annotations cannot be empty", "", annotations);
+		if (annotationBodyURI != null)
+			assertTrue(!annotations.contains(annotationBodyURI.toString()));
+
+		annotations = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v
+							+ "/.ro_metadata/annotations")
+				.header("Authorization", "Bearer " + accessToken)
+				.header("Content-Type", "text/plain").get(String.class);
+		assertNotNull("Annotations cannot be null", annotations);
+		Assert.assertNotSame("Annotations cannot be empty", "", annotations);
+		if (annotationBodyURI != null)
+			assertTrue(!annotations.contains(annotationBodyURI.toString()));
+	}
+
+
+	private void deleteVersion()
+	{
+		ClientResponse response = webResource
+				.path("workspaces/" + w + "/ROs/" + r + "/" + v)
+				.header("Authorization", "Bearer " + accessToken)
+				.delete(ClientResponse.class);
+		assertEquals(204, response.getStatus());
+	}
+
+
 	private void deleteRO()
 	{
-		ClientResponse response = webResource.path("ROs/" + r)
+		ClientResponse response = webResource
+				.path("workspaces/" + w + "/ROs/" + r)
+				.header("Authorization", "Bearer " + accessToken)
+				.delete(ClientResponse.class);
+		assertEquals(204, response.getStatus());
+	}
+
+
+	private void deleteWorkspace()
+	{
+		ClientResponse response = webResource.path("workspaces/" + w)
 				.header("Authorization", "Bearer " + accessToken)
 				.delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
