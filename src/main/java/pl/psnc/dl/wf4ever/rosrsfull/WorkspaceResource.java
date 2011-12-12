@@ -118,9 +118,10 @@ public class WorkspaceResource
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 		try {
-			Set<URI> versions = sms.findManifests(uriInfo.getAbsolutePath());
+			Set<URI> versions = sms.findResearchObjects(uriInfo
+					.getAbsolutePath());
 			for (URI uri : versions) {
-				sms.removeManifest(uri, uri.resolve("./.."));
+				sms.removeResearchObject(uri);
 			}
 		}
 		finally {

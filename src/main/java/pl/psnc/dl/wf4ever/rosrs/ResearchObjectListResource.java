@@ -74,7 +74,7 @@ public class ResearchObjectListResource
 				.getService(user);
 		StringBuilder sb = new StringBuilder();
 		try {
-			Set<URI> list = sms.findManifests(uriInfo.getAbsolutePath());
+			Set<URI> list = sms.findResearchObjects(uriInfo.getAbsolutePath());
 
 			for (URI id : list) {
 				sb.append(id.toString());
@@ -135,13 +135,13 @@ public class ResearchObjectListResource
 
 		URI resourceURI = uriInfo.getAbsolutePathBuilder()
 				.path(researchObjectId).build();
-		URI manifestURI = uriInfo.getAbsolutePathBuilder()
-				.path(researchObjectId).path(".ro_metadata/manifest").build();
+		URI roURI = uriInfo.getAbsolutePathBuilder().path(researchObjectId)
+				.build();
 
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 		try {
-			sms.createManifest(manifestURI);
+			sms.createResearchObject(roURI);
 		}
 		finally {
 			sms.close();

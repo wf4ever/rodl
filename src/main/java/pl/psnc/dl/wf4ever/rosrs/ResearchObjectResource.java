@@ -3,7 +3,6 @@ package pl.psnc.dl.wf4ever.rosrs;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
@@ -36,10 +35,10 @@ import com.sun.jersey.core.header.ContentDisposition;
 
 /**
  * 
- * @author nowakm
+ * @author Piotr Hołubowicz
  * 
  */
-@Path("ROs/{id}")
+@Path("ROs/{ro_id}")
 public class ResearchObjectResource
 {
 
@@ -79,7 +78,7 @@ public class ResearchObjectResource
 	 */
 	@GET
 	@Produces("application/zip")
-	public Response getZippedRO(@PathParam("id")
+	public Response getZippedRO(@PathParam("ro_id")
 	String researchObjectId)
 		throws RemoteException, MalformedURLException, UnknownHostException,
 		DigitalLibraryException, NotFoundException
@@ -98,7 +97,7 @@ public class ResearchObjectResource
 
 
 	@DELETE
-	public void deleteVersion(@PathParam("id")
+	public void deleteVersion(@PathParam("ro_id")
 	String researchObjectId)
 		throws DigitalLibraryException, NotFoundException,
 		ClassNotFoundException, IOException, NamingException, SQLException
@@ -115,12 +114,10 @@ public class ResearchObjectResource
 			}
 		}
 
-		URI manifestURI = uriInfo.getAbsolutePathBuilder()
-				.path(".ro_metadata/manifest").build();
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 		try {
-			sms.removeManifest(manifestURI, manifestURI.resolve("./.."));
+			sms.removeResearchObject(uriInfo.getAbsolutePath());
 		}
 		finally {
 			sms.close();

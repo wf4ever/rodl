@@ -264,12 +264,11 @@ public class VersionResource
 
 		dl.deleteVersion(workspaceId, researchObjectId, versionId);
 
-		URI manifestURI = uriInfo.getAbsolutePathBuilder()
-				.path(".ro_metadata/manifest").build();
+		URI researchObjectURI = uriInfo.getAbsolutePathBuilder().build();
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 		try {
-			sms.removeManifest(manifestURI, manifestURI.resolve("./.."));
+			sms.removeResearchObject(researchObjectURI);
 		}
 		finally {
 			sms.close();

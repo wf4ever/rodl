@@ -156,15 +156,14 @@ public class ResearchObjectResource
 
 		URI resourceURI = uriInfo.getAbsolutePathBuilder().path(version)
 				.build();
-		URI manifestURI = uriInfo.getAbsolutePathBuilder().path(version)
-				.path(".ro_metadata/manifest").build();
+		URI roURI = uriInfo.getAbsolutePathBuilder().path(version).build();
 
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 		try {
 			if (baseVersion == null) {
 				dl.createVersion(workspaceId, researchObjectId, version);
-				sms.createManifest(manifestURI);
+				sms.createResearchObject(roURI);
 			}
 			else {
 				dl.createVersion(workspaceId, researchObjectId, version,
@@ -209,9 +208,10 @@ public class ResearchObjectResource
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 		try {
-			Set<URI> versions = sms.findManifests(uriInfo.getAbsolutePath());
+			Set<URI> versions = sms.findResearchObjects(uriInfo
+					.getAbsolutePath());
 			for (URI uri : versions) {
-				sms.removeManifest(uri, uri.resolve("./.."));
+				sms.removeResearchObject(uri);
 			}
 		}
 		finally {
