@@ -135,8 +135,8 @@ public class ResearchObjectListResource
 
 		URI resourceURI = uriInfo.getAbsolutePathBuilder()
 				.path(researchObjectId).build();
-		URI researchObjectURI = uriInfo.getAbsolutePathBuilder().path(researchObjectId)
-				.build();
+		URI researchObjectURI = uriInfo.getAbsolutePathBuilder()
+				.path(researchObjectId).path("/").build();
 
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);

@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -42,7 +43,7 @@ import com.sun.jersey.core.header.ContentDisposition;
  * @author Piotr Hołubowicz
  * 
  */
-@Path("ROs/{ro_id}/{filePath: [^\\.].+}")
+@Path("ROs/{ro_id}/{filePath: .+}")
 public class AggregatedResource
 {
 
@@ -75,11 +76,12 @@ public class AggregatedResource
 				.getService(user);
 
 		URI researchObjectURI = uriInfo.getBaseUriBuilder().path("ROs")
-				.path(researchObjectId).build();
+				.path(researchObjectId).path("/").build();
 
 		try {
-			if (sms.isROMetadataNamedGraph(researchObjectURI,
-				uriInfo.getAbsolutePath())) {
+			if (sms.containsNamedGraph(uriInfo.getAbsolutePath())
+					&& sms.isROMetadataNamedGraph(researchObjectURI,
+						uriInfo.getAbsolutePath())) {
 				return getNamedGraph(sms);
 			}
 			else {
@@ -185,7 +187,7 @@ public class AggregatedResource
 	@PUT
 	public Response createOrUpdateFile(@PathParam("ro_id")
 	String researchObjectId, @PathParam("filePath")
-	String filePath, InputStream inputStream)
+	String filePath, String data)
 		throws ClassNotFoundException, IOException, NamingException,
 		SQLException, DigitalLibraryException, NotFoundException
 	{
@@ -194,7 +196,7 @@ public class AggregatedResource
 				.getContentType() : "application/rdf+xml";
 		RDFFormat rdfFormat = RDFFormat.forMIMEType(contentType);
 		URI researchObjectURI = uriInfo.getBaseUriBuilder().path("ROs")
-				.path(researchObjectId).build();
+				.path(researchObjectId).path("/").build();
 		URI manifestURI = uriInfo.getBaseUriBuilder().path("ROs")
 				.path(researchObjectId).path(".ro/manifest").build();
 
@@ -202,8 +204,8 @@ public class AggregatedResource
 			user.getLogin(), user.getPassword());
 
 		ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId,
-			researchObjectId, versionId, filePath, inputStream,
-			request.getContentType());
+			researchObjectId, versionId, filePath, new ByteArrayInputStream(
+					data.getBytes("UTF-8")), request.getContentType());
 
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
@@ -211,10 +213,12 @@ public class AggregatedResource
 			if (sms.isROMetadataNamedGraph(researchObjectURI,
 				uriInfo.getAbsolutePath())) {
 				if (manifestURI.equals(uriInfo.getAbsolutePath())) {
-					sms.updateManifest(manifestURI, inputStream, rdfFormat);
+					sms.updateManifest(manifestURI, new ByteArrayInputStream(
+							data.getBytes("UTF-8")), rdfFormat);
 				}
 				else {
-					sms.addNamedGraph(uriInfo.getAbsolutePath(), inputStream,
+					sms.addNamedGraph(uriInfo.getAbsolutePath(),
+						new ByteArrayInputStream(data.getBytes("UTF-8")),
 						rdfFormat);
 				}
 			}
@@ -243,7 +247,7 @@ public class AggregatedResource
 			user.getLogin(), user.getPassword());
 
 		URI researchObjectURI = uriInfo.getBaseUriBuilder().path("ROs")
-				.path(researchObjectId).build();
+				.path(researchObjectId).path("/").build();
 		URI manifestURI = uriInfo.getBaseUriBuilder().path("ROs")
 				.path(researchObjectId).path(".ro/manifest").build();
 

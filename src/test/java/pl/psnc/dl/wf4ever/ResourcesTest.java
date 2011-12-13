@@ -55,7 +55,7 @@ public class ResourcesTest
 
 	private final String filePath = "foo/bar.txt";
 
-	private final String annotationBodyURI = "ann1";
+	private final String annotationBodyURI = ".ro/ann1";
 
 	private final String username = "John Doe";
 
@@ -136,6 +136,9 @@ public class ResourcesTest
 				createAccessToken();
 				try {
 					getAccessTokensList();
+					webResource.path("ROs/" + r + "/")
+							.header("Authorization", "Bearer " + accessToken)
+							.delete(ClientResponse.class);
 					createRO();
 					try {
 						getROsList();
@@ -252,7 +255,8 @@ public class ResourcesTest
 	{
 		InputStream is = getClass().getClassLoader().getResourceAsStream(
 			"manifest.ttl");
-		ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
+		ClientResponse response = webResource
+				.path("ROs/" + r + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken)
 				.header("Content-Type", "application/x-turtle")
 				.put(ClientResponse.class, is);
@@ -283,8 +287,8 @@ public class ResourcesTest
 
 	private void getFileContent()
 	{
-		String metadata = webResource
-				.path("ROs/" + r + "/" + filePath + "?content=true")
+		String metadata = webResource.path("ROs/" + r + "/" + filePath)
+				.queryParam("content", "true")
 				.header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
 		assertTrue(metadata.contains("lorem ipsum"));
@@ -337,10 +341,11 @@ public class ResourcesTest
 
 	private void getAnnotationBody()
 	{
-		String body = client().resource(annotationBodyURI)
+		String body = webResource.path("ROs/" + r + "/" + annotationBodyURI)
 				.header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
-		assertTrue("Annotation body should contain file path: " + filePath,
+		assertTrue(
+			"Annotation body should contain file path: a_workflow.t2flow",
 			body.contains("a_workflow.t2flow"));
 		assertTrue(body.contains("A test"));
 	}
@@ -375,7 +380,7 @@ public class ResourcesTest
 
 	private void deleteRO()
 	{
-		ClientResponse response = webResource.path("ROs/" + r)
+		ClientResponse response = webResource.path("ROs/" + r + "/")
 				.header("Authorization", "Bearer " + accessToken)
 				.delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());

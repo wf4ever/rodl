@@ -38,7 +38,7 @@ import com.sun.jersey.core.header.ContentDisposition;
  * @author Piotr Hołubowicz
  * 
  */
-@Path("ROs/{ro_id}")
+@Path("ROs/{ro_id}/")
 public class ResearchObjectResource
 {
 
@@ -106,21 +106,25 @@ public class ResearchObjectResource
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
 
-		dl.deleteVersion(workspaceId, researchObjectId, versionId);
-		if (dl.getVersionIds(workspaceId, researchObjectId).isEmpty()) {
-			dl.deleteResearchObject(workspaceId, researchObjectId);
-			if (dl.getResearchObjectIds(workspaceId).isEmpty()) {
-				dl.deleteWorkspace(workspaceId);
+		try {
+			dl.deleteVersion(workspaceId, researchObjectId, versionId);
+			if (dl.getVersionIds(workspaceId, researchObjectId).isEmpty()) {
+				dl.deleteResearchObject(workspaceId, researchObjectId);
+				if (dl.getResearchObjectIds(workspaceId).isEmpty()) {
+					dl.deleteWorkspace(workspaceId);
+				}
 			}
 		}
-
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
-		try {
-			sms.removeResearchObject(uriInfo.getAbsolutePath());
-		}
 		finally {
-			sms.close();
+
+			SemanticMetadataService sms = SemanticMetadataServiceFactory
+					.getService(user);
+			try {
+				sms.removeResearchObject(uriInfo.getAbsolutePath());
+			}
+			finally {
+				sms.close();
+			}
 		}
 	}
 }
