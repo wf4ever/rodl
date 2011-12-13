@@ -264,7 +264,8 @@ public class VersionResource
 
 		dl.deleteVersion(workspaceId, researchObjectId, versionId);
 
-		URI researchObjectURI = uriInfo.getAbsolutePathBuilder().build();
+		URI researchObjectURI = uriInfo.getAbsolutePathBuilder().path("/")
+				.build();
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
 		try {

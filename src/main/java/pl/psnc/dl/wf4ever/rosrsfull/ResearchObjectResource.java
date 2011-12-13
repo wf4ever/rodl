@@ -45,7 +45,7 @@ import com.sun.jersey.core.header.ContentDisposition;
  * @author nowakm
  * 
  */
-@Path(("workspaces" + "/{W_ID}" + "/ROs" + "/{RO_ID}"))
+@Path(("workspaces" + "/{W_ID}" + "/ROs" + "/{RO_ID}/"))
 public class ResearchObjectResource
 {
 
@@ -154,9 +154,8 @@ public class ResearchObjectResource
 			baseVersion = roUri.relativize(baseVersionURI).toString();
 		}
 
-		URI resourceURI = uriInfo.getAbsolutePathBuilder().path(version)
+		URI roURI = uriInfo.getAbsolutePathBuilder().path(version).path("/")
 				.build();
-		URI roURI = uriInfo.getAbsolutePathBuilder().path(version).build();
 
 		SemanticMetadataService sms = SemanticMetadataServiceFactory
 				.getService(user);
@@ -174,7 +173,7 @@ public class ResearchObjectResource
 		finally {
 			sms.close();
 		}
-		return Response.created(resourceURI).build();
+		return Response.created(roURI).build();
 	}
 
 

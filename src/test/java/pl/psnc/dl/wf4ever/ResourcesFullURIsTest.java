@@ -4,9 +4,9 @@
 package pl.psnc.dl.wf4ever;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.util.UUID;
 
@@ -14,10 +14,8 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -61,7 +59,7 @@ public class ResourcesFullURIsTest
 
 	private final String filePath = "foo/bar.txt";
 
-	private URI annotationBodyURI;
+	private final String annotationBodyURI = ".ro/ann1";
 
 	private final String username = "John Doe";
 
@@ -125,7 +123,6 @@ public class ResourcesFullURIsTest
 
 
 	@Test
-	@Ignore
 	public final void testFullURIs()
 	{
 		if (resource().getURI().getHost().equals("localhost")) {
@@ -149,13 +146,14 @@ public class ResourcesFullURIsTest
 						createRO();
 						createVersion();
 						getInitialManifest();
+						updateManifest();
 						addFile();
 						getFileMetadata();
 						getFileContent();
 						getManifest();
-						//						addAnnotationBody();
+						addAnnotationBody();
 						getAnnotationBody();
-						//						getManifestWithAnnotationBody();
+						getManifestWithAnnotationBody();
 						deleteFile();
 						getInitialManifest();
 						deleteVersion();
@@ -176,6 +174,20 @@ public class ResourcesFullURIsTest
 		finally {
 			deleteClient();
 		}
+	}
+
+
+	private void updateManifest()
+	{
+		InputStream is = getClass().getClassLoader().getResourceAsStream(
+			"manifest.ttl");
+		ClientResponse response = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
+				.header("Authorization", "Bearer " + accessToken)
+				.header("Content-Type", "application/x-turtle")
+				.put(ClientResponse.class, is);
+		assertEquals(200, response.getStatus());
 	}
 
 
@@ -291,7 +303,9 @@ public class ResourcesFullURIsTest
 
 	private void getFileMetadata()
 	{
-		String metadata = webResource.path("ROs/" + r + "/" + filePath)
+		String metadata = webResource
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/" + filePath)
 				.header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
 		assertTrue(metadata.contains(username));
@@ -304,7 +318,9 @@ public class ResourcesFullURIsTest
 	private void getFileContent()
 	{
 		String metadata = webResource
-				.path("ROs/" + r + "/" + filePath + "?content=true")
+				.path(
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/" + filePath)
+				.queryParam("content", "true")
 				.header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
 		assertTrue(metadata.contains("lorem ipsum"));
@@ -316,8 +332,7 @@ public class ResourcesFullURIsTest
 	{
 		String manifest = webResource
 				.path(
-					"workspaces/" + w + "/ROs/" + r + "/" + v
-							+ "/.ro_metadata/manifest")
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
 		assertTrue(manifest.contains(username));
@@ -325,8 +340,7 @@ public class ResourcesFullURIsTest
 
 		manifest = webResource
 				.path(
-					"workspaces/" + w + "/ROs/" + r + "/" + v
-							+ "/.ro_metadata/manifest")
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken)
 				.header("Content-Type", "text/turtle").get(String.class);
 		assertTrue(manifest.contains(username));
@@ -334,58 +348,48 @@ public class ResourcesFullURIsTest
 	}
 
 
-	private void addAnnotation()
+	private void getManifestWithAnnotationBody()
 	{
-		String resourceURI = webResource
+		String manifest = webResource
 				.path(
-					"workspaces/" + w + "/ROs/" + r + "/" + v + "/" + filePath)
-				.toString().replaceFirst(":80", "");
-		String dcTitle = "http://dublincore.org/documents/dcmi-terms/title";
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
+				.header("Authorization", "Bearer " + accessToken)
+				.header("Content-Type", "application/x-trig").get(String.class);
+		assertTrue(manifest.contains(username));
+		assertTrue(manifest.contains(filePath));
+		assertTrue("Annotation body should contain file path: " + filePath,
+			manifest.contains("a_workflow.t2flow"));
+		assertTrue(manifest.contains("A test"));
+	}
+
+
+	private void addAnnotationBody()
+	{
+		InputStream is = getClass().getClassLoader().getResourceAsStream(
+			"annotationBody.ttl");
 		ClientResponse response = webResource
 				.path(
-					"workspaces/" + w + "/ROs/" + r + "/" + v
-							+ "/.ro_metadata/annotations")
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/"
+							+ annotationBodyURI)
 				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "text/plain")
-				.post(
-					ClientResponse.class,
-					String.format("%s %s \"%s\"", resourceURI, dcTitle,
-						"My title"));
-		assertEquals(201, response.getStatus());
-		annotationBodyURI = response.getLocation();
+				.header("Content-Type", "application/x-turtle")
+				.put(ClientResponse.class, is);
+		assertEquals(200, response.getStatus());
 	}
 
 
 	private void getAnnotationBody()
 	{
-		String body = client().resource(annotationBodyURI)
-				.header("Authorization", "Bearer " + accessToken)
-				.get(String.class);
-		assertTrue("Annotation body should contain file path: " + filePath,
-			body.contains(filePath));
-		assertTrue(body.contains("My title"));
-	}
-
-
-	private void getAnnotations()
-	{
-		String annotations = webResource
+		String body = webResource
 				.path(
-					"workspaces/" + w + "/ROs/" + r + "/" + v
-							+ "/.ro_metadata/annotations")
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/"
+							+ annotationBodyURI)
 				.header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
-		assertTrue(annotations.contains(annotationBodyURI.toString()));
-
-		annotations = webResource
-				.path(
-					"workspaces/" + w + "/ROs/" + r + "/" + v
-							+ "/.ro_metadata/annotations")
-				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "text/plain")
-
-				.get(String.class);
-		assertTrue(annotations.contains(annotationBodyURI.toString()));
+		assertTrue(
+			"Annotation body should contain file path: a_workflow.t2flow",
+			body.contains("a_workflow.t2flow"));
+		assertTrue(body.contains("A test"));
 	}
 
 
@@ -405,8 +409,7 @@ public class ResourcesFullURIsTest
 	{
 		String manifest = webResource
 				.path(
-					"workspaces/" + w + "/ROs/" + r + "/" + v
-							+ "/.ro_metadata/manifest")
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
 		assertTrue(manifest.contains(username));
@@ -414,38 +417,11 @@ public class ResourcesFullURIsTest
 
 		manifest = webResource
 				.path(
-					"workspaces/" + w + "/ROs/" + r + "/" + v
-							+ "/.ro_metadata/manifest")
+					"workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken)
 				.header("Content-Type", "text/turtle").get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(!manifest.contains(filePath));
-	}
-
-
-	private void getInitialAnnotations()
-	{
-		String annotations = webResource
-				.path(
-					"workspaces/" + w + "/ROs/" + r + "/" + v
-							+ "/.ro_metadata/annotations")
-				.header("Authorization", "Bearer " + accessToken)
-				.get(String.class);
-		assertNotNull("Annotations cannot be null", annotations);
-		Assert.assertNotSame("Annotations cannot be empty", "", annotations);
-		if (annotationBodyURI != null)
-			assertTrue(!annotations.contains(annotationBodyURI.toString()));
-
-		annotations = webResource
-				.path(
-					"workspaces/" + w + "/ROs/" + r + "/" + v
-							+ "/.ro_metadata/annotations")
-				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "text/plain").get(String.class);
-		assertNotNull("Annotations cannot be null", annotations);
-		Assert.assertNotSame("Annotations cannot be empty", "", annotations);
-		if (annotationBodyURI != null)
-			assertTrue(!annotations.contains(annotationBodyURI.toString()));
 	}
 
 
