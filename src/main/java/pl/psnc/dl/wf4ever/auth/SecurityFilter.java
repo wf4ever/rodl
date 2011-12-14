@@ -29,7 +29,7 @@ public class SecurityFilter
 
 	private final static Logger logger = Logger.getLogger(SecurityFilter.class);
 
-	private static final String REALM = "RO SRS";
+	public static final String REALM = "ROSRS";
 
 	@Context
 	private UriInfo uriInfo;
@@ -74,8 +74,7 @@ public class SecurityFilter
 		String authentication = request
 				.getHeaderValue(ContainerRequest.AUTHORIZATION);
 		if (authentication == null) {
-			throw new MappableContainerException(new AuthenticationException(
-					"Authentication credentials are required\r\n", REALM));
+			return UserCredentials.PUBLIC_USER;
 		}
 		try {
 			if (authentication.startsWith("Basic ")) {

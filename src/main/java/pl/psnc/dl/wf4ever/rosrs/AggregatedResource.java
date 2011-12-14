@@ -192,6 +192,10 @@ public class AggregatedResource
 		SQLException, DigitalLibraryException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		if (user.getRole() == UserProfile.Role.PUBLIC) {
+			throw new ForbiddenException(
+					"Only authenticated users can do that.");
+		}
 		String contentType = request.getContentType() != null ? request
 				.getContentType() : "application/rdf+xml";
 		RDFFormat rdfFormat = RDFFormat.forMIMEType(contentType);
@@ -243,6 +247,10 @@ public class AggregatedResource
 		ClassNotFoundException, IOException, NamingException, SQLException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		if (user.getRole() == UserProfile.Role.PUBLIC) {
+			throw new ForbiddenException(
+					"Only authenticated users can do that.");
+		}
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
 

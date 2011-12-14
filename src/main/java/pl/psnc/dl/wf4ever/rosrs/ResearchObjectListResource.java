@@ -19,6 +19,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
@@ -120,6 +121,10 @@ public class ResearchObjectListResource
 		ConflictException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+		if (user.getRole() == UserProfile.Role.PUBLIC) {
+			throw new ForbiddenException(
+					"Only authenticated users can do that.");
+		}
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
 

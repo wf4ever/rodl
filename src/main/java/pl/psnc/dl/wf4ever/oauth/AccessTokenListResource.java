@@ -81,7 +81,7 @@ public class AccessTokenListResource
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		OAuthManager oauth = new OAuthManager();
 
-		if (!user.isAdmin()) {
+		if (user.getRole() != UserProfile.Role.ADMIN) {
 			throw new ForbiddenException(
 					"Only admin users can manage access tokens.");
 		}
@@ -118,7 +118,7 @@ public class AccessTokenListResource
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		OAuthManager oauth = new OAuthManager();
 
-		if (!user.isAdmin()) {
+		if (user.getRole() != UserProfile.Role.ADMIN) {
 			throw new ForbiddenException(
 					"Only admin users can manage access tokens.");
 		}
@@ -126,8 +126,7 @@ public class AccessTokenListResource
 		if (lines.length < 2) {
 			return Response.status(Status.BAD_REQUEST)
 					.entity("Content is shorter than 2 lines")
-					.header("Content-type", "text/plain")
-					.build();
+					.header("Content-type", "text/plain").build();
 		}
 
 		try {

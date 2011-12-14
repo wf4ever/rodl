@@ -33,6 +33,9 @@ public class UserCredentials
 	 */
 	private static final long serialVersionUID = 7967488547563569388L;
 
+	public static final UserCredentials PUBLIC_USER = new UserCredentials(
+			"wf4ever_reader", "wf4ever_reader!!!");
+
 	private String userId;
 
 	private String password;

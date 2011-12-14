@@ -54,7 +54,7 @@ public class AccessTokenResource
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		OAuthManager oauth = new OAuthManager();
 
-		if (!user.isAdmin()) {
+		if (user.getRole() != UserProfile.Role.ADMIN) {
 			throw new ForbiddenException(
 					"Only admin users can manage access tokens.");
 		}

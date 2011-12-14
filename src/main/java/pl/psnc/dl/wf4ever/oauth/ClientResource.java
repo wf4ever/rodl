@@ -27,13 +27,15 @@ import pl.psnc.dlibra.service.IdNotFoundException;
  * 
  */
 @Path(("clients" + "/{C_ID}"))
-public class ClientResource {
+public class ClientResource
+{
 
 	@Context
 	HttpServletRequest request;
 
 	@Context
 	UriInfo uriInfo;
+
 
 	/**
 	 * Deletes the OAuth 2.0 client.
@@ -49,17 +51,21 @@ public class ClientResource {
 	 * @throws DLibraException
 	 */
 	@GET
-	public OAuthClient getClient(@PathParam("C_ID") String clientId) throws RemoteException, IdNotFoundException,
-			MalformedURLException, UnknownHostException, DigitalLibraryException {
+	public OAuthClient getClient(@PathParam("C_ID")
+	String clientId)
+		throws RemoteException, IdNotFoundException, MalformedURLException,
+		UnknownHostException, DigitalLibraryException
+	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		OAuthManager oauth = new OAuthManager();
 
-		if (!user.isAdmin()) {
+		if (user.getRole() != UserProfile.Role.ADMIN) {
 			throw new ForbiddenException("Only admin users can manage clients.");
 		}
 
 		return oauth.getClient(clientId);
 	}
+
 
 	/**
 	 * Deletes the OAuth 2.0 client.
@@ -74,12 +80,15 @@ public class ClientResource {
 	 * @throws DLibraException
 	 */
 	@DELETE
-	public void deleteClient(@PathParam("C_ID") String clientId) throws RemoteException, IdNotFoundException,
-			MalformedURLException, UnknownHostException, DigitalLibraryException {
+	public void deleteClient(@PathParam("C_ID")
+	String clientId)
+		throws RemoteException, IdNotFoundException, MalformedURLException,
+		UnknownHostException, DigitalLibraryException
+	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		OAuthManager oauth = new OAuthManager();
 
-		if (!user.isAdmin()) {
+		if (user.getRole() != UserProfile.Role.ADMIN) {
 			throw new ForbiddenException("Only admin users can manage clients.");
 		}
 

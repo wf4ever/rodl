@@ -36,13 +36,15 @@ import pl.psnc.dlibra.service.IdNotFoundException;
  * 
  */
 @Path("clients")
-public class ClientListResource {
+public class ClientListResource
+{
 
 	@Context
 	HttpServletRequest request;
 
 	@Context
 	private UriInfo uriInfo;
+
 
 	/**
 	 * Returns list of OAuth clients as XML.
@@ -58,17 +60,21 @@ public class ClientListResource {
 	 */
 	@GET
 	@Produces("text/xml")
-	public OAuthClientList getClientList() throws RemoteException, IdNotFoundException, MalformedURLException,
-			UnknownHostException, DigitalLibraryException {
+	public OAuthClientList getClientList()
+		throws RemoteException, IdNotFoundException, MalformedURLException,
+		UnknownHostException, DigitalLibraryException
+	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		OAuthManager oauth = new OAuthManager();
 
-		if (!user.isAdmin()) {
-			throw new ForbiddenException("Only admin users can manage access tokens.");
+		if (user.getRole() != UserProfile.Role.ADMIN) {
+			throw new ForbiddenException(
+					"Only admin users can manage access tokens.");
 		}
 		List<OAuthClient> list = oauth.getClients();
 		return new OAuthClientList(list);
 	}
+
 
 	/**
 	 * Creates new OAuth 2.0 client. input: name and redirection URI.
@@ -87,23 +93,28 @@ public class ClientListResource {
 	@POST
 	@Consumes("text/plain")
 	@Produces("text/plain")
-	public Response createClient(String data) throws RemoteException, IdNotFoundException, MalformedURLException,
-			UnknownHostException, DigitalLibraryException {
+	public Response createClient(String data)
+		throws RemoteException, IdNotFoundException, MalformedURLException,
+		UnknownHostException, DigitalLibraryException
+	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		OAuthManager oauth = new OAuthManager();
 
-		if (!user.isAdmin()) {
-			throw new ForbiddenException("Only admin users can manage access tokens.");
+		if (user.getRole() != UserProfile.Role.ADMIN) {
+			throw new ForbiddenException(
+					"Only admin users can manage access tokens.");
 		}
 		String lines[] = data.split("[\\r\\n]+");
 		if (lines.length < 2) {
-			return Response.status(Status.BAD_REQUEST).entity("Content is shorter than 2 lines")
+			return Response.status(Status.BAD_REQUEST)
+					.entity("Content is shorter than 2 lines")
 					.header("Content-type", "text/plain").build();
 		}
 
 		String clientId = oauth.createClient(lines[0], lines[1]);
 
-		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build().resolve(clientId);
+		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
+				.resolve(clientId);
 
 		return Response.created(resourceUri).build();
 	}
