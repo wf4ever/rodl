@@ -126,13 +126,13 @@ public class ResearchObjectListResource
 		try {
 			dl.createWorkspace(workspaceId);
 		}
-		catch (DigitalLibraryException e) {
+		catch (ConflictException e) {
 			// nothing
 		}
 		try {
 			dl.createResearchObject(workspaceId, researchObjectId);
 		}
-		catch (DigitalLibraryException e) {
+		catch (ConflictException e) {
 			// nothing
 		}
 		dl.createVersion(workspaceId, researchObjectId, versionId);
