@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
@@ -108,6 +109,7 @@ public class ResearchObjectListResource
 	 * @throws MalformedURLException
 	 * @throws DigitalLibraryException
 	 * @throws NotFoundException
+	 * @throws ConflictException 
 	 * @throws IdNotFoundException
 	 */
 	@POST
@@ -115,7 +117,7 @@ public class ResearchObjectListResource
 	public Response createResearchObject(@PathParam("W_ID")
 	String workspaceId, String researchObjectId)
 		throws RemoteException, MalformedURLException, UnknownHostException,
-		DigitalLibraryException, NotFoundException
+		DigitalLibraryException, NotFoundException, ConflictException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(

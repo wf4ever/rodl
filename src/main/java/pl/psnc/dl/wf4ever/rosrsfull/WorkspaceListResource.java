@@ -22,6 +22,7 @@ import javax.xml.transform.TransformerException;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
@@ -98,12 +99,13 @@ public class WorkspaceListResource
 	 * @throws MalformedURLException
 	 * @throws RemoteException
 	 * @throws NotFoundException
+	 * @throws ConflictException 
 	 */
 	@POST
 	@Consumes("text/plain")
 	public Response createWorkspace(String workspaceId)
 		throws DigitalLibraryException, RemoteException, MalformedURLException,
-		UnknownHostException, NotFoundException
+		UnknownHostException, NotFoundException, ConflictException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(

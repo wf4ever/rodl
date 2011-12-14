@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
+import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
@@ -74,6 +75,7 @@ public class ResearchObjectListResource
 				.getService(user);
 		StringBuilder sb = new StringBuilder();
 		try {
+			//TODO this will not include ROs with workspaces in URIs.
 			Set<URI> list = sms.findResearchObjects(uriInfo.getAbsolutePath());
 
 			for (URI id : list) {
@@ -107,13 +109,15 @@ public class ResearchObjectListResource
 	 * @throws NamingException 
 	 * @throws IOException 
 	 * @throws ClassNotFoundException 
+	 * @throws ConflictException 
 	 * @throws IdNotFoundException
 	 */
 	@POST
 	@Consumes("text/plain")
 	public Response createResearchObject(String researchObjectId)
 		throws NotFoundException, DigitalLibraryException,
-		ClassNotFoundException, IOException, NamingException, SQLException
+		ClassNotFoundException, IOException, NamingException, SQLException,
+		ConflictException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(

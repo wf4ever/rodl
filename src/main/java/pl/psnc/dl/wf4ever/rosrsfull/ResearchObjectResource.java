@@ -31,6 +31,7 @@ import org.xml.sax.SAXException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
+import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
@@ -124,6 +125,7 @@ public class ResearchObjectResource
 	 * @throws SQLException 
 	 * @throws NamingException 
 	 * @throws ClassNotFoundException 
+	 * @throws ConflictException 
 	 * @throws SAXException
 	 */
 	@POST
@@ -133,7 +135,7 @@ public class ResearchObjectResource
 	String researchObjectId, String data)
 		throws IOException, TransformerException, URISyntaxException,
 		DigitalLibraryException, NotFoundException, ClassNotFoundException,
-		NamingException, SQLException
+		NamingException, SQLException, ConflictException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
