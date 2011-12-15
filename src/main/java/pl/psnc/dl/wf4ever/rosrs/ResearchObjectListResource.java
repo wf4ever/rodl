@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.rosrs;
 import java.io.IOException;
 import java.net.URI;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.naming.NamingException;
@@ -27,6 +28,7 @@ import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
+import pl.psnc.dl.wf4ever.dlibra.UserProfile.Role;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
@@ -64,28 +66,53 @@ public class ResearchObjectListResource
 	 * @throws NamingException 
 	 * @throws IOException 
 	 * @throws ClassNotFoundException 
+	 * @throws NotFoundException 
+	 * @throws DigitalLibraryException 
 	 */
 	@GET
 	@Produces("text/plain")
 	public Response getResearchObjectList()
 		throws ClassNotFoundException, IOException, NamingException,
-		SQLException
+		SQLException, DigitalLibraryException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
-		StringBuilder sb = new StringBuilder();
-		try {
-			//TODO this will not include ROs with workspaces in URIs.
-			Set<URI> list = sms.findResearchObjects(uriInfo.getAbsolutePath());
 
-			for (URI id : list) {
-				sb.append(id.toString());
-				sb.append("\r\n");
+		Set<URI> list;
+		if (user.getRole() == Role.PUBLIC) {
+			SemanticMetadataService sms = SemanticMetadataServiceFactory
+					.getService(user);
+			try {
+				//TODO this will not include ROs with workspaces in URIs.
+				list = sms.findResearchObjects(uriInfo.getAbsolutePath());
+			}
+			finally {
+				sms.close();
 			}
 		}
-		finally {
-			sms.close();
+		else {
+			DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
+				user.getLogin(), user.getPassword());
+			list = new HashSet<URI>();
+			for (String wId : dl.getWorkspaceIds()) {
+				for (String rId : dl.getResearchObjectIds(wId)) {
+					for (String vId : dl.getVersionIds(wId, rId)) {
+						if (wId == workspaceId && vId == versionId) {
+							list.add(uriInfo.getAbsolutePathBuilder()
+									.path("ROs").path(rId).path("/").build());
+						}
+						else {
+							list.add(uriInfo.getAbsolutePathBuilder()
+									.path("workspaces").path(wId).path("ROs")
+									.path(rId).path(vId).path("/").build());
+						}
+					}
+				}
+			}
+		}
+		StringBuilder sb = new StringBuilder();
+		for (URI id : list) {
+			sb.append(id.toString());
+			sb.append("\r\n");
 		}
 
 		ContentDisposition cd = ContentDisposition.type("text/plain")

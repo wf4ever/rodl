@@ -47,17 +47,28 @@ public class ResourcesTest
 	private final String userIdUrlSafe = StringUtils.trim(Base64
 			.encodeBase64URLSafeString(userId.getBytes()));
 
+	private final String userId2 = UUID.randomUUID().toString();
+
+	private final String userId2UrlSafe = StringUtils.trim(Base64
+			.encodeBase64URLSafeString(userId2.getBytes()));
+
 	private WebResource webResource;
 
 	private String accessToken;
 
+	private String accessToken2;
+
 	private final String r = "r";
+
+	private final String r2 = "r2";
 
 	private final String filePath = "foo/bar.txt";
 
 	private final String annotationBodyURI = ".ro/ann1";
 
 	private final String username = "John Doe";
+
+	private final String username2 = "May Gray";
 
 
 	/**
@@ -131,15 +142,15 @@ public class ResourcesTest
 		try {
 			getClientsList();
 			getClient();
-			createUser();
+			createUsers();
 			try {
-				createAccessToken();
+				createAccessTokens();
 				try {
 					getAccessTokensList();
 					webResource.path("ROs/" + r + "/")
 							.header("Authorization", "Bearer " + accessToken)
 							.delete(ClientResponse.class);
-					createRO();
+					createROs();
 					try {
 						getROsList();
 						getInitialManifest();
@@ -155,15 +166,15 @@ public class ResourcesTest
 						getInitialManifest();
 					}
 					finally {
-						deleteRO();
+						deleteROs();
 					}
 				}
 				finally {
-					deleteAccessToken();
+					deleteAccessTokens();
 				}
 			}
 			finally {
-				deleteUser();
+				deleteUsers();
 			}
 		}
 		finally {
@@ -203,16 +214,21 @@ public class ResourcesTest
 	}
 
 
-	private void createUser()
+	private void createUsers()
 	{
 		ClientResponse response = webResource.path("users/" + userIdUrlSafe)
 				.header("Authorization", "Bearer " + adminCreds)
 				.put(ClientResponse.class, username);
 		assertEquals(200, response.getStatus());
+
+		response = webResource.path("users/" + userId2UrlSafe)
+				.header("Authorization", "Bearer " + adminCreds)
+				.put(ClientResponse.class, username2);
+		assertEquals(200, response.getStatus());
 	}
 
 
-	private void createAccessToken()
+	private void createAccessTokens()
 	{
 		ClientResponse response = webResource.path("accesstokens/")
 				.header("Authorization", "Bearer " + adminCreds)
@@ -220,6 +236,14 @@ public class ResourcesTest
 		assertEquals(201, response.getStatus());
 		URI accessTokenURI = response.getLocation();
 		accessToken = accessTokenURI.resolve(".").relativize(accessTokenURI)
+				.toString();
+
+		response = webResource.path("accesstokens/")
+				.header("Authorization", "Bearer " + adminCreds)
+				.post(ClientResponse.class, clientId + "\r\n" + userId2);
+		assertEquals(201, response.getStatus());
+		accessTokenURI = response.getLocation();
+		accessToken2 = accessTokenURI.resolve(".").relativize(accessTokenURI)
 				.toString();
 	}
 
@@ -233,11 +257,16 @@ public class ResourcesTest
 	}
 
 
-	private void createRO()
+	private void createROs()
 	{
 		ClientResponse response = webResource.path("ROs/")
 				.header("Authorization", "Bearer " + accessToken)
 				.post(ClientResponse.class, r);
+		assertEquals(201, response.getStatus());
+
+		response = webResource.path("ROs/")
+				.header("Authorization", "Bearer " + accessToken2)
+				.post(ClientResponse.class, r2);
 		assertEquals(201, response.getStatus());
 	}
 
@@ -248,6 +277,11 @@ public class ResourcesTest
 				.header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
 		assertTrue(list.contains(r));
+		assertTrue(!list.contains(r2));
+
+		list = webResource.path("ROs").get(String.class);
+		assertTrue(list.contains(r));
+		assertTrue(list.contains(r2));
 	}
 
 
@@ -378,28 +412,43 @@ public class ResourcesTest
 	}
 
 
-	private void deleteRO()
+	private void deleteROs()
 	{
 		ClientResponse response = webResource.path("ROs/" + r + "/")
 				.header("Authorization", "Bearer " + accessToken)
 				.delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
+
+		response = webResource.path("ROs/" + r2 + "/")
+				.header("Authorization", "Bearer " + accessToken2)
+				.delete(ClientResponse.class);
+		assertEquals(204, response.getStatus());
 	}
 
 
-	private void deleteAccessToken()
+	private void deleteAccessTokens()
 	{
 		ClientResponse response = webResource
 				.path("accesstokens/" + accessToken)
 				.header("Authorization", "Bearer " + adminCreds)
 				.delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
+
+		response = webResource.path("accesstokens/" + accessToken2)
+				.header("Authorization", "Bearer " + adminCreds)
+				.delete(ClientResponse.class);
+		assertEquals(204, response.getStatus());
 	}
 
 
-	private void deleteUser()
+	private void deleteUsers()
 	{
 		ClientResponse response = webResource.path("users/" + userIdUrlSafe)
+				.header("Authorization", "Bearer " + adminCreds)
+				.delete(ClientResponse.class);
+		assertEquals(204, response.getStatus());
+
+		response = webResource.path("users/" + userId2UrlSafe)
 				.header("Authorization", "Bearer " + adminCreds)
 				.delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
