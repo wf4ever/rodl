@@ -97,13 +97,14 @@ public class ResearchObjectListResource
 				for (String rId : dl.getResearchObjectIds(wId)) {
 					for (String vId : dl.getVersionIds(wId, rId)) {
 						if (wId.equals(workspaceId) && vId.equals(versionId)) {
-							list.add(uriInfo.getAbsolutePathBuilder()
-									.path("ROs").path(rId).path("/").build());
+							list.add(uriInfo.getAbsolutePathBuilder().path(rId)
+									.path("/").build());
 						}
 						else {
 							list.add(uriInfo.getAbsolutePathBuilder()
-									.path("workspaces").path(wId).path("ROs")
-									.path(rId).path(vId).path("/").build());
+									.path("..").path("workspaces").path(wId)
+									.path("ROs").path(rId).path(vId).path("/")
+									.build());
 						}
 					}
 				}
