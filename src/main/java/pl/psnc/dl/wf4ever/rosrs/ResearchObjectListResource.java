@@ -96,7 +96,7 @@ public class ResearchObjectListResource
 			for (String wId : dl.getWorkspaceIds()) {
 				for (String rId : dl.getResearchObjectIds(wId)) {
 					for (String vId : dl.getVersionIds(wId, rId)) {
-						if (wId == workspaceId && vId == versionId) {
+						if (wId.equals(workspaceId) && vId.equals(versionId)) {
 							list.add(uriInfo.getAbsolutePathBuilder()
 									.path("ROs").path(rId).path("/").build());
 						}
