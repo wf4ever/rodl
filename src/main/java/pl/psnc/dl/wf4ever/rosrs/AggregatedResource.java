@@ -157,8 +157,8 @@ public class AggregatedResource
 		String mimeType = dl.getFileMimeType(workspaceId, researchObjectId,
 			versionId, filePath);
 
-		String fileName = uriInfo.getPath().substring(
-			1 + uriInfo.getPath().lastIndexOf("/"));
+		String fileName = uriInfo.getAbsolutePath().resolve(".")
+				.relativize(uriInfo.getAbsolutePath()).toString();
 		ContentDisposition cd = ContentDisposition.type(mimeType)
 				.fileName(fileName).build();
 		return Response.ok(body).header("Content-disposition", cd)
@@ -177,8 +177,10 @@ public class AggregatedResource
 		InputStream manifest = sms.getNamedGraph(uriInfo.getAbsolutePath(),
 			rdfFormat);
 
+		String fileName = uriInfo.getAbsolutePath().resolve(".")
+				.relativize(uriInfo.getAbsolutePath()).toString();
 		ContentDisposition cd = ContentDisposition.type(contentType)
-				.fileName("annotation." + rdfFormat.getDefaultFileExtension())
+				.fileName(fileName + "." + rdfFormat.getDefaultFileExtension())
 				.build();
 		return Response.ok(manifest).header("Content-disposition", cd).build();
 	}
