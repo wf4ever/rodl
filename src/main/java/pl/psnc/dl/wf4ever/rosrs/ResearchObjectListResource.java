@@ -170,8 +170,6 @@ public class ResearchObjectListResource
 		}
 		dl.createVersion(workspaceId, researchObjectId, versionId);
 
-		URI resourceURI = uriInfo.getAbsolutePathBuilder()
-				.path(researchObjectId).build();
 		URI researchObjectURI = uriInfo.getAbsolutePathBuilder()
 				.path(researchObjectId).path("/").build();
 
@@ -184,7 +182,7 @@ public class ResearchObjectListResource
 			sms.close();
 		}
 
-		return Response.created(resourceURI).build();
+		return Response.created(researchObjectURI).build();
 	}
 
 }
