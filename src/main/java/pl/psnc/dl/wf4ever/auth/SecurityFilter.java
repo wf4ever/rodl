@@ -119,6 +119,9 @@ public class SecurityFilter
 	{
 		String[] values = new String(Base64.base64Decode(authentication))
 				.split(":");
+		if (values.length != 2)
+			throw new MappableContainerException(new AuthenticationException(
+					"Incorrect login/password\r\n", REALM));
 		return new UserCredentials(values[0], values[1]);
 	}
 
