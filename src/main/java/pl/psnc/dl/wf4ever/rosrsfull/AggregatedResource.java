@@ -35,6 +35,7 @@ import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.ResourceInfo;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
+import pl.psnc.dlibra.service.AccessDeniedException;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -196,7 +197,8 @@ public class AggregatedResource
 	String versionId, @PathParam("filePath")
 	String filePath, String data)
 		throws ClassNotFoundException, IOException, NamingException,
-		SQLException, DigitalLibraryException, NotFoundException
+		SQLException, DigitalLibraryException, NotFoundException,
+		AccessDeniedException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		if (user.getRole() == UserProfile.Role.PUBLIC) {
