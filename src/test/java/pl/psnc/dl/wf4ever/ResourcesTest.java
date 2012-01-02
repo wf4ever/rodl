@@ -5,10 +5,13 @@ package pl.psnc.dl.wf4ever;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.InputStream;
 import java.net.URI;
 import java.util.UUID;
+
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
@@ -19,6 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.spi.container.TestContainerException;
@@ -147,9 +151,10 @@ public class ResourcesTest
 				createAccessTokens();
 				try {
 					getAccessTokensList();
-					webResource.path("ROs/" + r + "/")
-							.header("Authorization", "Bearer " + accessToken)
-							.delete(ClientResponse.class);
+					checkWhoAmI();
+					//					webResource.path("ROs/" + r + "/")
+					//							.header("Authorization", "Bearer " + accessToken)
+					//							.delete(ClientResponse.class);
 					createROs();
 					try {
 						getROsList();
@@ -254,6 +259,31 @@ public class ResourcesTest
 				.header("Authorization", "Bearer " + adminCreds)
 				.get(String.class);
 		assertTrue(list.contains(accessToken));
+	}
+
+
+	private void checkWhoAmI()
+	{
+		String whoami = webResource.path("whoami/")
+				.header("Authorization", "Bearer " + accessToken)
+				.get(String.class);
+		assertTrue((userId + "\r\n" + username).equals(whoami));
+
+		whoami = webResource.path("whoami/")
+				.header("Authorization", "Bearer " + accessToken2)
+				.get(String.class);
+		assertTrue((userId2 + "\r\n" + username2).equals(whoami));
+
+		try {
+			webResource.path("whoami/").get(Response.class);
+			fail("WhoAmI requests without access tokens should throw 401 Unauthorized");
+		}
+		catch (UniformInterfaceException e) {
+			assertEquals(
+				"WhoAmI requests without access tokens should throw 401 Unauthorized",
+				401, e.getResponse().getStatus());
+
+		}
 	}
 
 
