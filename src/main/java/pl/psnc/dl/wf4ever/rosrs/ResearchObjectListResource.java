@@ -82,7 +82,7 @@ public class ResearchObjectListResource
 			SemanticMetadataService sms = SemanticMetadataServiceFactory
 					.getService(user);
 			try {
-				//TODO this will not include ROs with workspaces in URIs.
+				//FIXME this will not include ROs with workspaces in URIs.
 				list = sms.findResearchObjects(uriInfo.getAbsolutePath());
 			}
 			finally {
@@ -153,6 +153,23 @@ public class ResearchObjectListResource
 			throw new ForbiddenException(
 					"Only authenticated users can do that.");
 		}
+		URI researchObjectURI = uriInfo.getAbsolutePathBuilder()
+				.path(researchObjectId).path("/").build();
+
+		SemanticMetadataService sms = SemanticMetadataServiceFactory
+				.getService(user);
+		try {
+			sms.createResearchObject(researchObjectURI);
+		}
+		catch (IllegalArgumentException e) {
+			// RO already existed in sms, maybe created by someone else
+			throw new ConflictException("The RO with identifier "
+					+ researchObjectId + " already exists");
+		}
+		finally {
+			sms.close();
+		}
+
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
 			user.getLogin(), user.getPassword());
 
@@ -169,18 +186,6 @@ public class ResearchObjectListResource
 			// nothing
 		}
 		dl.createVersion(workspaceId, researchObjectId, versionId);
-
-		URI researchObjectURI = uriInfo.getAbsolutePathBuilder()
-				.path(researchObjectId).path("/").build();
-
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
-		try {
-			sms.createResearchObject(researchObjectURI);
-		}
-		finally {
-			sms.close();
-		}
 
 		return Response.created(researchObjectURI).build();
 	}
