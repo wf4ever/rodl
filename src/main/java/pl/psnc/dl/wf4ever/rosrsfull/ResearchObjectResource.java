@@ -168,14 +168,19 @@ public class ResearchObjectResource
 				.getService(user);
 		try {
 			if (baseVersion == null) {
-				dl.createVersion(workspaceId, researchObjectId, version);
 				sms.createResearchObject(roURI);
+				dl.createVersion(workspaceId, researchObjectId, version);
 			}
 			else {
 				dl.createVersion(workspaceId, researchObjectId, version,
 					baseVersion);
 				//				sms.createResearchObjectAsCopy(resourceURI, baseVersionURI);
 			}
+		}
+		catch (IllegalArgumentException e) {
+			// RO already existed in sms, maybe created by someone else
+			throw new ConflictException("The RO with identifier "
+					+ researchObjectId + " already exists");
 		}
 		finally {
 			sms.close();
