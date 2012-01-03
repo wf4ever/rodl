@@ -12,6 +12,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.openrdf.rio.RDFFormat;
@@ -49,7 +50,7 @@ public class SparqlResource
 
 
 	@GET
-	public Response executeSparql(@QueryParam("content")
+	public Response executeSparql(@QueryParam("query")
 	String query)
 		throws DigitalLibraryException, NotFoundException,
 		ClassNotFoundException, IOException, NamingException, SQLException
@@ -69,7 +70,10 @@ public class SparqlResource
 		try {
 			InputStream is = sms.executeSparql(query, rdfFormat);
 			return Response.ok(is).header("Content-disposition", cd).build();
-			//TODO react to bad query syntax
+		}
+		catch (NullPointerException | IllegalArgumentException e) {
+			return Response.status(Status.BAD_REQUEST).type("text/plain")
+					.entity(e.getMessage()).build();
 		}
 		finally {
 			sms.close();
