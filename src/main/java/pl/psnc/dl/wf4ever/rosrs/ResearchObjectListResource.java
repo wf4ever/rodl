@@ -188,6 +188,7 @@ public class ResearchObjectListResource
 			// nothing
 		}
 		dl.createVersion(workspaceId, researchObjectId, versionId);
+		dl.publishVersion(workspaceId, researchObjectId, versionId);
 
 		return Response.created(researchObjectURI).build();
 	}

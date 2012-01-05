@@ -172,6 +172,7 @@ public class ResearchObjectResource
 			if (baseVersion == null) {
 				sms.createResearchObject(roURI);
 				dl.createVersion(workspaceId, researchObjectId, version);
+				dl.publishVersion(workspaceId, researchObjectId, version);
 			}
 			else {
 				dl.createVersion(workspaceId, researchObjectId, version,
