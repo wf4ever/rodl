@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
+import java.util.Map.Entry;
 
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
@@ -23,6 +24,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
+import org.mortbay.log.Log;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
@@ -235,8 +237,11 @@ public class AggregatedResource
 				}
 				Multimap<URI, Object> roAttributes = sms
 						.getAllAttributes(researchObjectURI);
-				dl.storeAttributes(workspaceId, researchObjectId, versionId,
-					roAttributes);
+				for (Entry<URI, Object> x : roAttributes.entries()) {
+					Log.debug("Attribute: " + x.getKey() + "-> " + x.getValue().toString());
+				}
+//				dl.storeAttributes(workspaceId, researchObjectId, versionId,
+//					roAttributes);
 			}
 			else {
 				sms.addResource(researchObjectURI, uriInfo.getAbsolutePath(),
