@@ -342,7 +342,7 @@ public class ResourcesFullURIsTest
 				.path(
 					"workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "text/turtle").get(String.class);
+				.accept("text/turtle").get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(manifest.contains(filePath));
 	}
@@ -354,7 +354,7 @@ public class ResourcesFullURIsTest
 				.path(
 					"workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "application/x-trig").get(String.class);
+				.accept("application/x-trig").get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(manifest.contains(filePath));
 		assertTrue("Annotation body should contain file path: " + filePath,
@@ -399,7 +399,6 @@ public class ResourcesFullURIsTest
 				.path(
 					"workspaces/" + w + "/ROs/" + r + "/" + v + "/" + filePath)
 				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "text/plain")
 				.delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
 	}
@@ -419,7 +418,7 @@ public class ResourcesFullURIsTest
 				.path(
 					"workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "text/turtle").get(String.class);
+				.accept("text/turtle").get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(!manifest.contains(filePath));
 	}

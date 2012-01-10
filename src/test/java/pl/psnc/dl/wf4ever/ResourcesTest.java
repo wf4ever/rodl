@@ -370,8 +370,7 @@ public class ResourcesTest
 
 		manifest = webResource.path("/ROs/" + r + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "application/x-turtle")
-				.get(String.class);
+				.accept("application/x-turtle").get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(manifest.contains(filePath));
 	}
@@ -381,7 +380,7 @@ public class ResourcesTest
 	{
 		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "application/x-trig").get(String.class);
+				.accept("application/x-trig").get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(manifest.contains(filePath));
 		assertTrue("Annotation body should contain file path: " + filePath,
@@ -419,7 +418,6 @@ public class ResourcesTest
 	{
 		ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
 				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "text/plain")
 				.delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
 	}
@@ -435,8 +433,7 @@ public class ResourcesTest
 
 		manifest = webResource.path("ROs/" + r + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "application/x-turtle")
-				.get(String.class);
+				.accept("application/x-turtle").get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(!manifest.contains(filePath));
 	}

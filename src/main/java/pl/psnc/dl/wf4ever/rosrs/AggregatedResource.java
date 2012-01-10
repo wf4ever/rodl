@@ -17,6 +17,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
@@ -69,10 +70,83 @@ public class AggregatedResource
 
 
 	@GET
-	public Response getResource(@PathParam("ro_id")
+	@Produces({ "application/x-turtle", "text/turtle"})
+	public Response getResourceTurtle(@PathParam("ro_id")
 	String researchObjectId, @PathParam("filePath")
 	String filePath, @QueryParam("content")
 	String isContentRequested)
+		throws ClassNotFoundException, IOException, TransformerException,
+		DigitalLibraryException, NotFoundException, NamingException,
+		SQLException
+	{
+		return getResource(researchObjectId, filePath, isContentRequested,
+			RDFFormat.TURTLE);
+	}
+
+
+	@GET
+	@Produces("application/x-trig")
+	public Response getResourceTrig(@PathParam("ro_id")
+	String researchObjectId, @PathParam("filePath")
+	String filePath, @QueryParam("content")
+	String isContentRequested)
+		throws ClassNotFoundException, IOException, TransformerException,
+		DigitalLibraryException, NotFoundException, NamingException,
+		SQLException
+	{
+		return getResource(researchObjectId, filePath, isContentRequested,
+			RDFFormat.TRIG);
+	}
+
+
+	@GET
+	@Produces("application/trix")
+	public Response getResourceTrix(@PathParam("ro_id")
+	String researchObjectId, @PathParam("filePath")
+	String filePath, @QueryParam("content")
+	String isContentRequested)
+		throws ClassNotFoundException, IOException, TransformerException,
+		DigitalLibraryException, NotFoundException, NamingException,
+		SQLException
+	{
+		return getResource(researchObjectId, filePath, isContentRequested,
+			RDFFormat.TRIX);
+	}
+
+
+	@GET
+	@Produces("text/rdf+n3")
+	public Response getResourceN3(@PathParam("ro_id")
+	String researchObjectId, @PathParam("filePath")
+	String filePath, @QueryParam("content")
+	String isContentRequested)
+		throws ClassNotFoundException, IOException, TransformerException,
+		DigitalLibraryException, NotFoundException, NamingException,
+		SQLException
+	{
+		return getResource(researchObjectId, filePath, isContentRequested,
+			RDFFormat.N3);
+	}
+
+
+	@GET
+	public Response getResourceAny(@PathParam("ro_id")
+	String researchObjectId, @PathParam("filePath")
+	String filePath, @QueryParam("content")
+	String isContentRequested)
+		throws ClassNotFoundException, IOException, TransformerException,
+		DigitalLibraryException, NotFoundException, NamingException,
+		SQLException
+	{
+		return getResource(researchObjectId, filePath, isContentRequested,
+			RDFFormat.RDFXML);
+	}
+
+
+	private Response getResource(@PathParam("ro_id")
+	String researchObjectId, @PathParam("filePath")
+	String filePath, @QueryParam("content")
+	String isContentRequested, RDFFormat format)
 		throws IOException, TransformerException, DigitalLibraryException,
 		NotFoundException, ClassNotFoundException, NamingException,
 		SQLException
@@ -88,11 +162,11 @@ public class AggregatedResource
 			if (sms.containsNamedGraph(uriInfo.getAbsolutePath())
 					&& sms.isROMetadataNamedGraph(researchObjectURI,
 						uriInfo.getAbsolutePath())) {
-				return getNamedGraph(sms);
+				return getNamedGraph(sms, format);
 			}
 			else {
 				if (isContentRequested == null) {
-					return getResourceMetadata(sms, researchObjectURI);
+					return getResourceMetadata(sms, researchObjectURI, format);
 				}
 				else {
 					if (!sms.isRoFolder(researchObjectURI,
@@ -114,21 +188,18 @@ public class AggregatedResource
 
 
 	private Response getResourceMetadata(SemanticMetadataService sms,
-			URI researchObjectURI)
+			URI researchObjectURI, RDFFormat format)
 		throws ClassNotFoundException, IOException, NamingException,
 		SQLException
 	{
-		String contentType = request.getContentType() != null ? request
-				.getContentType() : "application/rdf+xml";
-		RDFFormat rdfFormat = RDFFormat.forMIMEType(contentType);
-
 		InputStream body = sms.getResource(researchObjectURI,
-			uriInfo.getAbsolutePath(), rdfFormat);
+			uriInfo.getAbsolutePath(), format);
 		String filename = uriInfo.getAbsolutePath().resolve(".")
 				.relativize(uriInfo.getAbsolutePath()).toString();
 
-		ContentDisposition cd = ContentDisposition.type(contentType)
-				.fileName(filename + "." + rdfFormat.getDefaultFileExtension())
+		ContentDisposition cd = ContentDisposition
+				.type(format.getDefaultMIMEType())
+				.fileName(filename + "." + format.getDefaultFileExtension())
 				.build();
 		return Response.ok(body).header("Content-disposition", cd).build();
 	}
@@ -172,21 +243,18 @@ public class AggregatedResource
 	}
 
 
-	private Response getNamedGraph(SemanticMetadataService sms)
+	private Response getNamedGraph(SemanticMetadataService sms, RDFFormat format)
 		throws ClassNotFoundException, IOException, NamingException,
 		SQLException
 	{
-		String contentType = request.getContentType() != null ? request
-				.getContentType() : "application/rdf+xml";
-		RDFFormat rdfFormat = RDFFormat.forMIMEType(contentType);
-
 		InputStream manifest = sms.getNamedGraph(uriInfo.getAbsolutePath(),
-			rdfFormat);
+			format);
 
 		String fileName = uriInfo.getAbsolutePath().resolve(".")
 				.relativize(uriInfo.getAbsolutePath()).toString();
-		ContentDisposition cd = ContentDisposition.type(contentType)
-				.fileName(fileName + "." + rdfFormat.getDefaultFileExtension())
+		ContentDisposition cd = ContentDisposition
+				.type(format.getDefaultMIMEType())
+				.fileName(fileName + "." + format.getDefaultFileExtension())
 				.build();
 		return Response.ok(manifest).header("Content-disposition", cd).build();
 	}
@@ -238,10 +306,11 @@ public class AggregatedResource
 				Multimap<URI, Object> roAttributes = sms
 						.getAllAttributes(researchObjectURI);
 				for (Entry<URI, Object> x : roAttributes.entries()) {
-					Log.debug("Attribute: " + x.getKey() + "-> " + x.getValue().toString());
+					Log.debug("Attribute: " + x.getKey() + "-> "
+							+ x.getValue().toString());
 				}
-//				dl.storeAttributes(workspaceId, researchObjectId, versionId,
-//					roAttributes);
+				//				dl.storeAttributes(workspaceId, researchObjectId, versionId,
+				//					roAttributes);
 			}
 			else {
 				sms.addResource(researchObjectURI, uriInfo.getAbsolutePath(),
