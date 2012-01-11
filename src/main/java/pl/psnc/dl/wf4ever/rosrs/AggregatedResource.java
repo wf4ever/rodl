@@ -25,7 +25,6 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
-import org.mortbay.log.Log;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
@@ -54,7 +53,6 @@ import com.sun.jersey.core.header.ContentDisposition;
 public class AggregatedResource
 {
 
-	@SuppressWarnings("unused")
 	private final static Logger logger = Logger
 			.getLogger(AggregatedResource.class);
 
@@ -306,7 +304,7 @@ public class AggregatedResource
 				Multimap<URI, Object> roAttributes = sms
 						.getAllAttributes(researchObjectURI);
 				for (Entry<URI, Object> x : roAttributes.entries()) {
-					Log.debug("Attribute: " + x.getKey() + "-> "
+					logger.warn("Attribute: " + x.getKey() + "-> "
 							+ x.getValue().toString());
 				}
 				//				dl.storeAttributes(workspaceId, researchObjectId, versionId,
