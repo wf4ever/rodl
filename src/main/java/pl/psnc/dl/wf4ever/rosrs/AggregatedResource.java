@@ -307,8 +307,8 @@ public class AggregatedResource
 					logger.warn("Attribute: " + x.getKey() + "-> "
 							+ x.getValue().toString());
 				}
-				//				dl.storeAttributes(workspaceId, researchObjectId, versionId,
-				//					roAttributes);
+				dl.storeAttributes(workspaceId, researchObjectId, versionId,
+					roAttributes);
 			}
 			else {
 				sms.addResource(researchObjectURI, uriInfo.getAbsolutePath(),

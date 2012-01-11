@@ -40,6 +40,7 @@ import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dlibra.service.AccessDeniedException;
 
+import com.google.common.collect.Multimap;
 import com.sun.jersey.core.header.ContentDisposition;
 
 /**
@@ -317,10 +318,10 @@ public class AggregatedResource
 						new ByteArrayInputStream(data.getBytes("UTF-8")),
 						rdfFormat);
 				}
-				//				Multimap<URI, Object> roAttributes = sms
-				//						.getAllAttributes(researchObjectURI);
-				//				dl.storeAttributes(workspaceId, researchObjectId, versionId,
-				//					roAttributes);
+				Multimap<URI, Object> roAttributes = sms
+						.getAllAttributes(researchObjectURI);
+				dl.storeAttributes(workspaceId, researchObjectId, versionId,
+					roAttributes);
 			}
 			else {
 				sms.addResource(researchObjectURI, uriInfo.getAbsolutePath(),
