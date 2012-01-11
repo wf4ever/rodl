@@ -373,6 +373,12 @@ public class ResourcesTest
 				.accept("application/x-turtle").get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(manifest.contains(filePath));
+
+		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.n3")
+				.header("Authorization", "Bearer " + accessToken)
+				.get(String.class);
+		assertTrue(manifest.contains(username));
+		assertTrue(manifest.contains(filePath));
 	}
 
 
@@ -381,6 +387,15 @@ public class ResourcesTest
 		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken)
 				.accept("application/x-trig").get(String.class);
+		assertTrue(manifest.contains(username));
+		assertTrue(manifest.contains(filePath));
+		assertTrue("Annotation body should contain file path: " + filePath,
+			manifest.contains("a_workflow.t2flow"));
+		assertTrue(manifest.contains("A test"));
+
+		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.trig")
+				.header("Authorization", "Bearer " + accessToken)
+				.get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(manifest.contains(filePath));
 		assertTrue("Annotation body should contain file path: " + filePath,
