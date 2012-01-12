@@ -53,8 +53,7 @@ import com.sun.jersey.core.header.ContentDisposition;
 public class AggregatedResource
 {
 
-	private final static Logger logger = Logger
-			.getLogger(AggregatedResource.class);
+	private final static Logger logger = Logger.getLogger(AggregatedResource.class);
 
 	@Context
 	private HttpServletRequest request;
@@ -73,12 +72,10 @@ public class AggregatedResource
 	String researchObjectId, @PathParam("filePath")
 	String filePath, @QueryParam("content")
 	String isContentRequested)
-		throws ClassNotFoundException, IOException, TransformerException,
-		DigitalLibraryException, NotFoundException, NamingException,
-		SQLException
+		throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException, NotFoundException,
+		NamingException, SQLException
 	{
-		return getResource(researchObjectId, filePath, isContentRequested,
-			RDFFormat.TURTLE);
+		return getResource(researchObjectId, filePath, isContentRequested, RDFFormat.TURTLE);
 	}
 
 
@@ -88,12 +85,10 @@ public class AggregatedResource
 	String researchObjectId, @PathParam("filePath")
 	String filePath, @QueryParam("content")
 	String isContentRequested)
-		throws ClassNotFoundException, IOException, TransformerException,
-		DigitalLibraryException, NotFoundException, NamingException,
-		SQLException
+		throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException, NotFoundException,
+		NamingException, SQLException
 	{
-		return getResource(researchObjectId, filePath, isContentRequested,
-			RDFFormat.TRIG);
+		return getResource(researchObjectId, filePath, isContentRequested, RDFFormat.TRIG);
 	}
 
 
@@ -103,12 +98,10 @@ public class AggregatedResource
 	String researchObjectId, @PathParam("filePath")
 	String filePath, @QueryParam("content")
 	String isContentRequested)
-		throws ClassNotFoundException, IOException, TransformerException,
-		DigitalLibraryException, NotFoundException, NamingException,
-		SQLException
+		throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException, NotFoundException,
+		NamingException, SQLException
 	{
-		return getResource(researchObjectId, filePath, isContentRequested,
-			RDFFormat.TRIX);
+		return getResource(researchObjectId, filePath, isContentRequested, RDFFormat.TRIX);
 	}
 
 
@@ -118,12 +111,10 @@ public class AggregatedResource
 	String researchObjectId, @PathParam("filePath")
 	String filePath, @QueryParam("content")
 	String isContentRequested)
-		throws ClassNotFoundException, IOException, TransformerException,
-		DigitalLibraryException, NotFoundException, NamingException,
-		SQLException
+		throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException, NotFoundException,
+		NamingException, SQLException
 	{
-		return getResource(researchObjectId, filePath, isContentRequested,
-			RDFFormat.N3);
+		return getResource(researchObjectId, filePath, isContentRequested, RDFFormat.N3);
 	}
 
 
@@ -132,12 +123,10 @@ public class AggregatedResource
 	String researchObjectId, @PathParam("filePath")
 	String filePath, @QueryParam("content")
 	String isContentRequested)
-		throws ClassNotFoundException, IOException, TransformerException,
-		DigitalLibraryException, NotFoundException, NamingException,
-		SQLException
+		throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException, NotFoundException,
+		NamingException, SQLException
 	{
-		return getResource(researchObjectId, filePath, isContentRequested,
-			RDFFormat.RDFXML);
+		return getResource(researchObjectId, filePath, isContentRequested, RDFFormat.RDFXML);
 	}
 
 
@@ -145,21 +134,17 @@ public class AggregatedResource
 	String researchObjectId, @PathParam("filePath")
 	String filePath, @QueryParam("content")
 	String isContentRequested, RDFFormat format)
-		throws IOException, TransformerException, DigitalLibraryException,
-		NotFoundException, ClassNotFoundException, NamingException,
-		SQLException
+		throws IOException, TransformerException, DigitalLibraryException, NotFoundException, ClassNotFoundException,
+		NamingException, SQLException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
+		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
 
-		URI researchObjectURI = uriInfo.getBaseUriBuilder().path("ROs")
-				.path(researchObjectId).path("/").build();
+		URI researchObjectURI = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
 
 		try {
 			if (sms.containsNamedGraph(uriInfo.getAbsolutePath())
-					&& sms.isROMetadataNamedGraph(researchObjectURI,
-						uriInfo.getAbsolutePath())) {
+					&& sms.isROMetadataNamedGraph(researchObjectURI, uriInfo.getAbsolutePath())) {
 				return getNamedGraph(sms, format);
 			}
 			else {
@@ -167,14 +152,11 @@ public class AggregatedResource
 					return getResourceMetadata(sms, researchObjectURI, format);
 				}
 				else {
-					if (!sms.isRoFolder(researchObjectURI,
-						uriInfo.getAbsolutePath())) {
-						return getFileContent(workspaceId, researchObjectId,
-							versionId, filePath, user);
+					if (!sms.isRoFolder(researchObjectURI, uriInfo.getAbsolutePath())) {
+						return getFileContent(workspaceId, researchObjectId, versionId, filePath, user);
 					}
 					else {
-						return getFolderContent(workspaceId, researchObjectId,
-							versionId, filePath, user);
+						return getFolderContent(workspaceId, researchObjectId, versionId, filePath, user);
 					}
 				}
 			}
@@ -185,75 +167,51 @@ public class AggregatedResource
 	}
 
 
-	private Response getResourceMetadata(SemanticMetadataService sms,
-			URI researchObjectURI, RDFFormat format)
-		throws ClassNotFoundException, IOException, NamingException,
-		SQLException
+	private Response getResourceMetadata(SemanticMetadataService sms, URI researchObjectURI, RDFFormat format)
+		throws ClassNotFoundException, IOException, NamingException, SQLException
 	{
-		InputStream body = sms.getResource(researchObjectURI,
-			uriInfo.getAbsolutePath(), format);
-		String filename = uriInfo.getAbsolutePath().resolve(".")
-				.relativize(uriInfo.getAbsolutePath()).toString();
+		InputStream body = sms.getResource(researchObjectURI, uriInfo.getAbsolutePath(), format);
+		String filename = uriInfo.getAbsolutePath().resolve(".").relativize(uriInfo.getAbsolutePath()).toString();
 
-		ContentDisposition cd = ContentDisposition
-				.type(format.getDefaultMIMEType())
-				.fileName(filename + "." + format.getDefaultFileExtension())
-				.build();
+		ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType())
+				.fileName(filename + "." + format.getDefaultFileExtension()).build();
 		return Response.ok(body).header("Content-disposition", cd).build();
 	}
 
 
-	private Response getFolderContent(String workspaceId,
-			String researchObjectId, String versionId, String filePath,
+	private Response getFolderContent(String workspaceId, String researchObjectId, String versionId, String filePath,
 			UserProfile user)
-		throws RemoteException, DigitalLibraryException, NotFoundException,
-		MalformedURLException, UnknownHostException
+		throws RemoteException, DigitalLibraryException, NotFoundException, MalformedURLException, UnknownHostException
 	{
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
-		InputStream body = dl.getZippedFolder(workspaceId, researchObjectId,
-			versionId, filePath);
-		ContentDisposition cd = ContentDisposition.type("application/zip")
-				.fileName(versionId + ".zip").build();
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+		InputStream body = dl.getZippedFolder(workspaceId, researchObjectId, versionId, filePath);
+		ContentDisposition cd = ContentDisposition.type("application/zip").fileName(versionId + ".zip").build();
 		return Response.ok(body).header("Content-disposition", cd).build();
 	}
 
 
-	private Response getFileContent(String workspaceId,
-			String researchObjectId, String versionId, String filePath,
+	private Response getFileContent(String workspaceId, String researchObjectId, String versionId, String filePath,
 			UserProfile user)
-		throws IOException, RemoteException, DigitalLibraryException,
-		NotFoundException
+		throws IOException, RemoteException, DigitalLibraryException, NotFoundException
 	{
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
-		InputStream body = dl.getFileContents(workspaceId, researchObjectId,
-			versionId, filePath);
-		String mimeType = dl.getFileMimeType(workspaceId, researchObjectId,
-			versionId, filePath);
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+		InputStream body = dl.getFileContents(workspaceId, researchObjectId, versionId, filePath);
+		String mimeType = dl.getFileMimeType(workspaceId, researchObjectId, versionId, filePath);
 
-		String fileName = uriInfo.getAbsolutePath().resolve(".")
-				.relativize(uriInfo.getAbsolutePath()).toString();
-		ContentDisposition cd = ContentDisposition.type(mimeType)
-				.fileName(fileName).build();
-		return Response.ok(body).header("Content-disposition", cd)
-				.header("Content-type", mimeType).build();
+		String fileName = uriInfo.getAbsolutePath().resolve(".").relativize(uriInfo.getAbsolutePath()).toString();
+		ContentDisposition cd = ContentDisposition.type(mimeType).fileName(fileName).build();
+		return Response.ok(body).header("Content-disposition", cd).header("Content-type", mimeType).build();
 	}
 
 
 	private Response getNamedGraph(SemanticMetadataService sms, RDFFormat format)
-		throws ClassNotFoundException, IOException, NamingException,
-		SQLException
+		throws ClassNotFoundException, IOException, NamingException, SQLException
 	{
-		InputStream manifest = sms.getNamedGraph(uriInfo.getAbsolutePath(),
-			format);
+		InputStream manifest = sms.getNamedGraph(uriInfo.getAbsolutePath(), format);
 
-		String fileName = uriInfo.getAbsolutePath().resolve(".")
-				.relativize(uriInfo.getAbsolutePath()).toString();
-		ContentDisposition cd = ContentDisposition
-				.type(format.getDefaultMIMEType())
-				.fileName(fileName + "." + format.getDefaultFileExtension())
-				.build();
+		String fileName = uriInfo.getAbsolutePath().resolve(".").relativize(uriInfo.getAbsolutePath()).toString();
+		ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType())
+				.fileName(fileName + "." + format.getDefaultFileExtension()).build();
 		return Response.ok(manifest).header("Content-disposition", cd).build();
 	}
 
@@ -262,57 +220,41 @@ public class AggregatedResource
 	public Response createOrUpdateFile(@PathParam("ro_id")
 	String researchObjectId, @PathParam("filePath")
 	String filePath, String data)
-		throws ClassNotFoundException, IOException, NamingException,
-		SQLException, DigitalLibraryException, NotFoundException,
-		AccessDeniedException
+		throws ClassNotFoundException, IOException, NamingException, SQLException, DigitalLibraryException,
+		NotFoundException, AccessDeniedException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		if (user.getRole() == UserProfile.Role.PUBLIC) {
-			throw new AuthenticationException(
-					"Only authenticated users can do that.",
-					SecurityFilter.REALM);
+			throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
 		}
-		String contentType = request.getContentType() != null ? request
-				.getContentType() : "application/rdf+xml";
+		String contentType = request.getContentType() != null ? request.getContentType() : "application/rdf+xml";
 		RDFFormat rdfFormat = RDFFormat.forMIMEType(contentType);
-		URI researchObjectURI = uriInfo.getBaseUriBuilder().path("ROs")
-				.path(researchObjectId).path("/").build();
-		URI manifestURI = uriInfo.getBaseUriBuilder().path("ROs")
-				.path(researchObjectId).path(".ro/manifest").build();
+		URI researchObjectURI = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+		URI manifestURI = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path(".ro/manifest").build();
 
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
-		ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId,
-			researchObjectId, versionId, filePath, new ByteArrayInputStream(
-					data.getBytes("UTF-8")), request.getContentType());
+		ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath,
+			new ByteArrayInputStream(data.getBytes("UTF-8")), request.getContentType());
 
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
+		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
 		try {
-			if (sms.isROMetadataNamedGraph(researchObjectURI,
-				uriInfo.getAbsolutePath())) {
+			if (sms.isROMetadataNamedGraph(researchObjectURI, uriInfo.getAbsolutePath())) {
 				if (manifestURI.equals(uriInfo.getAbsolutePath())) {
-					sms.updateManifest(manifestURI, new ByteArrayInputStream(
-							data.getBytes("UTF-8")), rdfFormat);
+					sms.updateManifest(manifestURI, new ByteArrayInputStream(data.getBytes("UTF-8")), rdfFormat);
 				}
 				else {
-					sms.addNamedGraph(uriInfo.getAbsolutePath(),
-						new ByteArrayInputStream(data.getBytes("UTF-8")),
+					sms.addNamedGraph(uriInfo.getAbsolutePath(), new ByteArrayInputStream(data.getBytes("UTF-8")),
 						rdfFormat);
 				}
-				Multimap<URI, Object> roAttributes = sms
-						.getAllAttributes(researchObjectURI);
+				Multimap<URI, Object> roAttributes = sms.getAllAttributes(researchObjectURI);
 				for (Entry<URI, Object> x : roAttributes.entries()) {
-					logger.warn("Attribute: " + x.getKey() + "-> "
-							+ x.getValue().toString());
+					logger.warn("Attribute: " + x.getKey() + "-> " + x.getValue().toString());
 				}
-				dl.storeAttributes(workspaceId, researchObjectId, versionId,
-					roAttributes);
+				dl.storeAttributes(workspaceId, researchObjectId, versionId, roAttributes);
 			}
 			else {
-				sms.addResource(researchObjectURI, uriInfo.getAbsolutePath(),
-					resourceInfo);
+				sms.addResource(researchObjectURI, uriInfo.getAbsolutePath(), resourceInfo);
 			}
 		}
 		finally {
@@ -327,35 +269,27 @@ public class AggregatedResource
 	public void deleteFile(@PathParam("ro_id")
 	String researchObjectId, @PathParam("filePath")
 	String filePath)
-		throws DigitalLibraryException, NotFoundException,
-		ClassNotFoundException, IOException, NamingException, SQLException
+		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
+		SQLException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		if (user.getRole() == UserProfile.Role.PUBLIC) {
-			throw new AuthenticationException(
-					"Only authenticated users can do that.",
-					SecurityFilter.REALM);
+			throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
 		}
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
-		URI researchObjectURI = uriInfo.getBaseUriBuilder().path("ROs")
-				.path(researchObjectId).path("/").build();
-		URI manifestURI = uriInfo.getBaseUriBuilder().path("ROs")
-				.path(researchObjectId).path(".ro/manifest").build();
+		URI researchObjectURI = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+		URI manifestURI = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path(".ro/manifest").build();
 
 		if (manifestURI.equals(uriInfo.getAbsolutePath())) {
 			throw new ForbiddenException("Can't delete the manifest");
 		}
 
 		dl.deleteFile(workspaceId, researchObjectId, versionId, filePath);
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
+		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
 		try {
-			if (sms.isROMetadataNamedGraph(researchObjectURI,
-				uriInfo.getAbsolutePath())) {
-				sms.removeNamedGraph(researchObjectURI,
-					uriInfo.getAbsolutePath());
+			if (sms.isROMetadataNamedGraph(researchObjectURI, uriInfo.getAbsolutePath())) {
+				sms.removeNamedGraph(researchObjectURI, uriInfo.getAbsolutePath());
 			}
 			else {
 				sms.removeResource(researchObjectURI, uriInfo.getAbsolutePath());
