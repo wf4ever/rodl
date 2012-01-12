@@ -336,7 +336,7 @@ public class AggregatedResource
 					dataStream = sms.getNamedGraph(uriInfo.getAbsolutePath(), RDFFormat.RDFXML);
 				}
 				dl.createOrUpdateFile(workspaceId, researchObjectId, versionId,
-					filePath + RDFFormat.RDFXML.getDefaultFileExtension(), dataStream, contentType);
+					filePath + "." + RDFFormat.RDFXML.getDefaultFileExtension(), dataStream, contentType);
 				Multimap<URI, Object> roAttributes = sms.getAllAttributes(researchObjectURI);
 				for (Entry<URI, Object> x : roAttributes.entries()) {
 					logger.warn("Attribute: " + x.getKey() + "-> " + x.getValue().toString());
