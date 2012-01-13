@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.rosrsfull;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,6 +27,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.Logger;
+import org.openrdf.rio.RDFFormat;
 import org.xml.sax.SAXException;
 
 import pl.psnc.dl.wf4ever.Constants;
@@ -53,8 +55,7 @@ public class ResearchObjectResource
 {
 
 	@SuppressWarnings("unused")
-	private final static Logger logger = Logger
-			.getLogger(ResearchObjectResource.class);
+	private final static Logger logger = Logger.getLogger(ResearchObjectResource.class);
 
 	@Context
 	HttpServletRequest request;
@@ -70,8 +71,8 @@ public class ResearchObjectResource
 	 *            identifier of a workspace in the RO SRS
 	 * @param researchObjectId
 	 *            RO identifier - defined by the user
-	 * @return 200 (OK) response code with a rdf file in response body
-	 *         containing OAI-ORE aggreagates tags.
+	 * @return 200 (OK) response code with a rdf file in response body containing OAI-ORE
+	 *         aggreagates tags.
 	 * @throws RemoteException
 	 * @throws DLibraException
 	 * @throws TransformerException
@@ -85,49 +86,45 @@ public class ResearchObjectResource
 	public Response getListOfVersions(@PathParam("W_ID")
 	String workspaceId, @PathParam("RO_ID")
 	String researchObjectId)
-		throws RemoteException, TransformerException, MalformedURLException,
-		UnknownHostException, DigitalLibraryException, NotFoundException
+		throws RemoteException, TransformerException, MalformedURLException, UnknownHostException,
+		DigitalLibraryException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 		List<String> list = dl.getVersionIds(workspaceId, researchObjectId);
 
 		StringBuilder sb = new StringBuilder();
 		for (String id : list) {
-			sb.append(uriInfo.getAbsolutePathBuilder().path("/").build()
-					.resolve(id).toString());
+			sb.append(uriInfo.getAbsolutePathBuilder().path("/").build().resolve(id).toString());
 			sb.append("\r\n");
 		}
 
-		ContentDisposition cd = ContentDisposition.type("text/plain")
-				.fileName(researchObjectId + ".rdf").build();
+		ContentDisposition cd = ContentDisposition.type("text/plain").fileName(researchObjectId + ".rdf").build();
 
-		return Response.ok().entity(sb.toString())
-				.header("Content-disposition", cd).build();
+		return Response.ok().entity(sb.toString()).header("Content-disposition", cd).build();
 	}
 
 
 	/**
-	 * Creates new version. Input is RO_VERSION_ID and optional URI of the base
-	 * version that should be used to create a new version.
+	 * Creates new version. Input is RO_VERSION_ID and optional URI of the base version
+	 * that should be used to create a new version.
 	 * 
 	 * @param workspaceId
 	 * @param researchObjectId
 	 * @param data
-	 *            Input format is text/plain with RO_VERSION_ID in first line
-	 *            and base version URI in second (optional).
-	 * @return 201 (Created) if the version was created, 409 (Conflict) if
-	 *         version with given RO_VERSION_ID already exists
+	 *            Input format is text/plain with RO_VERSION_ID in first line and base
+	 *            version URI in second (optional).
+	 * @return 201 (Created) if the version was created, 409 (Conflict) if version with
+	 *         given RO_VERSION_ID already exists
 	 * @throws IOException
 	 * @throws TransformerException
 	 * @throws URISyntaxException
 	 * @throws DigitalLibraryException
 	 * @throws NotFoundException
-	 * @throws SQLException 
-	 * @throws NamingException 
-	 * @throws ClassNotFoundException 
-	 * @throws ConflictException 
+	 * @throws SQLException
+	 * @throws NamingException
+	 * @throws ClassNotFoundException
+	 * @throws ConflictException
 	 * @throws SAXException
 	 */
 	@POST
@@ -135,23 +132,18 @@ public class ResearchObjectResource
 	public Response createVersion(@PathParam("W_ID")
 	String workspaceId, @PathParam("RO_ID")
 	String researchObjectId, String data)
-		throws IOException, TransformerException, URISyntaxException,
-		DigitalLibraryException, NotFoundException, ClassNotFoundException,
-		NamingException, SQLException, ConflictException
+		throws IOException, TransformerException, URISyntaxException, DigitalLibraryException, NotFoundException,
+		ClassNotFoundException, NamingException, SQLException, ConflictException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		if (user.getRole() == UserProfile.Role.PUBLIC) {
-			throw new AuthenticationException(
-					"Only authenticated users can do that.",
-					SecurityFilter.REALM);
+			throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
 		}
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
 		String lines[] = data.split("[\\r\\n]+");
 		if (lines.length < 1) {
-			return Response.status(Status.BAD_REQUEST)
-					.entity("Content is shorter than 2 lines")
+			return Response.status(Status.BAD_REQUEST).entity("Content is shorter than 2 lines")
 					.header("Content-type", "text/plain").build();
 		}
 		String version = lines[0];
@@ -163,27 +155,25 @@ public class ResearchObjectResource
 			baseVersion = roUri.relativize(baseVersionURI).toString();
 		}
 
-		URI roURI = uriInfo.getAbsolutePathBuilder().path(version).path("/")
-				.build();
+		URI roURI = uriInfo.getAbsolutePathBuilder().path(version).path("/").build();
 
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
+		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
 		try {
 			if (baseVersion == null) {
 				sms.createResearchObject(roURI);
-				dl.createVersion(workspaceId, researchObjectId, version);
+				InputStream manifest = sms.getManifest(roURI.resolve(".ro/manifest"), RDFFormat.RDFXML);
+				dl.createVersion(workspaceId, researchObjectId, version, manifest, "/.ro/manifest.rdf",
+					RDFFormat.RDFXML.getDefaultMIMEType());
 				dl.publishVersion(workspaceId, researchObjectId, version);
 			}
 			else {
-				dl.createVersion(workspaceId, researchObjectId, version,
-					baseVersion);
-				//				sms.createResearchObjectAsCopy(resourceURI, baseVersionURI);
+				dl.createVersion(workspaceId, researchObjectId, version, baseVersion);
+				// sms.createResearchObjectAsCopy(resourceURI, baseVersionURI);
 			}
 		}
 		catch (IllegalArgumentException e) {
 			// RO already existed in sms, maybe created by someone else
-			throw new ConflictException("The RO with identifier "
-					+ researchObjectId + " already exists");
+			throw new ConflictException("The RO with identifier " + researchObjectId + " already exists");
 		}
 		finally {
 			sms.close();
@@ -201,34 +191,29 @@ public class ResearchObjectResource
 	 *            RO identifier - defined by the user
 	 * @throws DigitalLibraryException
 	 * @throws NotFoundException
-	 * @throws SQLException 
-	 * @throws NamingException 
-	 * @throws IOException 
-	 * @throws ClassNotFoundException 
+	 * @throws SQLException
+	 * @throws NamingException
+	 * @throws IOException
+	 * @throws ClassNotFoundException
 	 */
 	@DELETE
 	public void deleteResearchObject(@PathParam("W_ID")
 	String workspaceId, @PathParam("RO_ID")
 	String researchObjectId)
-		throws DigitalLibraryException, NotFoundException,
-		ClassNotFoundException, IOException, NamingException, SQLException
+		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
+		SQLException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		if (user.getRole() == UserProfile.Role.PUBLIC) {
-			throw new AuthenticationException(
-					"Only authenticated users can do that.",
-					SecurityFilter.REALM);
+			throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
 		}
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
 		dl.deleteResearchObject(workspaceId, researchObjectId);
 
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
+		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
 		try {
-			Set<URI> versions = sms.findResearchObjects(uriInfo
-					.getAbsolutePath());
+			Set<URI> versions = sms.findResearchObjects(uriInfo.getAbsolutePath());
 			for (URI uri : versions) {
 				sms.removeResearchObject(uri);
 			}
