@@ -68,6 +68,18 @@ public class AggregatedResource
 
 
 	@GET
+	public Response getResourceAny(@PathParam("ro_id")
+	String researchObjectId, @PathParam("filePath")
+	String filePath, @QueryParam("content")
+	String isContentRequested)
+		throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException, NotFoundException,
+		NamingException, SQLException
+	{
+		return getResource(researchObjectId, filePath, isContentRequested, null);
+	}
+
+
+	@GET
 	@Produces({ "application/x-turtle", "text/turtle"})
 	public Response getResourceTurtle(@PathParam("ro_id")
 	String researchObjectId, @PathParam("filePath")
@@ -129,18 +141,6 @@ public class AggregatedResource
 		NamingException, SQLException
 	{
 		return getResource(researchObjectId, filePath, isContentRequested, RDFFormat.RDFXML);
-	}
-
-
-	@GET
-	public Response getResourceAny(@PathParam("ro_id")
-	String researchObjectId, @PathParam("filePath")
-	String filePath, @QueryParam("content")
-	String isContentRequested)
-		throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException, NotFoundException,
-		NamingException, SQLException
-	{
-		return getResource(researchObjectId, filePath, isContentRequested, null);
 	}
 
 

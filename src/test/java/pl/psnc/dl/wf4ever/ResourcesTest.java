@@ -31,7 +31,7 @@ import com.sun.jersey.test.framework.spi.container.external.ExternalTestContaine
 
 /**
  * @author piotrhol
- *
+ * 
  */
 public class ResourcesTest
 	extends JerseyTest
@@ -39,22 +39,19 @@ public class ResourcesTest
 
 	private final String clientName = "ROSRS testing app written in Ruby";
 
-	private final String clientRedirectionURI = "OOB"; //will not be used
+	private final String clientRedirectionURI = "OOB"; // will not be used
 
 	private String clientId;
 
-	private final String adminCreds = StringUtils.trim(Base64
-			.encodeBase64String("wfadmin:wfadmin!!!".getBytes()));
+	private final String adminCreds = StringUtils.trim(Base64.encodeBase64String("wfadmin:wfadmin!!!".getBytes()));
 
 	private final String userId = UUID.randomUUID().toString();
 
-	private final String userIdUrlSafe = StringUtils.trim(Base64
-			.encodeBase64URLSafeString(userId.getBytes()));
+	private final String userIdUrlSafe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId.getBytes()));
 
 	private final String userId2 = UUID.randomUUID().toString();
 
-	private final String userId2UrlSafe = StringUtils.trim(Base64
-			.encodeBase64URLSafeString(userId2.getBytes()));
+	private final String userId2UrlSafe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId2.getBytes()));
 
 	private WebResource webResource;
 
@@ -95,7 +92,9 @@ public class ResourcesTest
 	}
 
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.sun.jersey.test.framework.JerseyTest#setUp()
 	 */
 	@Override
@@ -107,7 +106,9 @@ public class ResourcesTest
 	}
 
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.sun.jersey.test.framework.JerseyTest#tearDown()
 	 */
 	@Override
@@ -152,9 +153,9 @@ public class ResourcesTest
 				try {
 					getAccessTokensList();
 					checkWhoAmI();
-					//					webResource.path("ROs/" + r + "/")
-					//							.header("Authorization", "Bearer " + accessToken)
-					//							.delete(ClientResponse.class);
+					// webResource.path("ROs/" + r + "/")
+					// .header("Authorization", "Bearer " + accessToken)
+					// .delete(ClientResponse.class);
 					createROs();
 					try {
 						getROsList();
@@ -190,11 +191,8 @@ public class ResourcesTest
 
 	private void createClient()
 	{
-		ClientResponse response = webResource
-				.path("clients/")
-				.header("Authorization", "Bearer " + adminCreds)
-				.post(ClientResponse.class,
-					clientName + "\r\n" + clientRedirectionURI);
+		ClientResponse response = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
+				.post(ClientResponse.class, clientName + "\r\n" + clientRedirectionURI);
 		assertEquals(201, response.getStatus());
 		URI clientURI = response.getLocation();
 		clientId = clientURI.resolve(".").relativize(clientURI).toString();
@@ -203,17 +201,14 @@ public class ResourcesTest
 
 	private void getClientsList()
 	{
-		String list = webResource.path("clients/")
-				.header("Authorization", "Bearer " + adminCreds)
-				.get(String.class);
+		String list = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds).get(String.class);
 		assertTrue(list.contains(clientId));
 	}
 
 
 	private void getClient()
 	{
-		String client = webResource.path("clients/" + clientId)
-				.header("Authorization", "Bearer " + adminCreds)
+		String client = webResource.path("clients/" + clientId).header("Authorization", "Bearer " + adminCreds)
 				.get(String.class);
 		assertTrue(client.contains(clientId));
 	}
@@ -222,12 +217,10 @@ public class ResourcesTest
 	private void createUsers()
 	{
 		ClientResponse response = webResource.path("users/" + userIdUrlSafe)
-				.header("Authorization", "Bearer " + adminCreds)
-				.put(ClientResponse.class, username);
+				.header("Authorization", "Bearer " + adminCreds).put(ClientResponse.class, username);
 		assertEquals(200, response.getStatus());
 
-		response = webResource.path("users/" + userId2UrlSafe)
-				.header("Authorization", "Bearer " + adminCreds)
+		response = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
 				.put(ClientResponse.class, username2);
 		assertEquals(200, response.getStatus());
 	}
@@ -235,28 +228,23 @@ public class ResourcesTest
 
 	private void createAccessTokens()
 	{
-		ClientResponse response = webResource.path("accesstokens/")
-				.header("Authorization", "Bearer " + adminCreds)
+		ClientResponse response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
 				.post(ClientResponse.class, clientId + "\r\n" + userId);
 		assertEquals(201, response.getStatus());
 		URI accessTokenURI = response.getLocation();
-		accessToken = accessTokenURI.resolve(".").relativize(accessTokenURI)
-				.toString();
+		accessToken = accessTokenURI.resolve(".").relativize(accessTokenURI).toString();
 
-		response = webResource.path("accesstokens/")
-				.header("Authorization", "Bearer " + adminCreds)
+		response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
 				.post(ClientResponse.class, clientId + "\r\n" + userId2);
 		assertEquals(201, response.getStatus());
 		accessTokenURI = response.getLocation();
-		accessToken2 = accessTokenURI.resolve(".").relativize(accessTokenURI)
-				.toString();
+		accessToken2 = accessTokenURI.resolve(".").relativize(accessTokenURI).toString();
 	}
 
 
 	private void getAccessTokensList()
 	{
-		String list = webResource.path("accesstokens/")
-				.header("Authorization", "Bearer " + adminCreds)
+		String list = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
 				.get(String.class);
 		assertTrue(list.contains(accessToken));
 	}
@@ -264,14 +252,10 @@ public class ResourcesTest
 
 	private void checkWhoAmI()
 	{
-		String whoami = webResource.path("whoami/")
-				.header("Authorization", "Bearer " + accessToken)
-				.get(String.class);
+		String whoami = webResource.path("whoami/").header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue((userId + "\r\n" + username).equals(whoami));
 
-		whoami = webResource.path("whoami/")
-				.header("Authorization", "Bearer " + accessToken2)
-				.get(String.class);
+		whoami = webResource.path("whoami/").header("Authorization", "Bearer " + accessToken2).get(String.class);
 		assertTrue((userId2 + "\r\n" + username2).equals(whoami));
 
 		try {
@@ -279,9 +263,8 @@ public class ResourcesTest
 			fail("WhoAmI requests without access tokens should throw 401 Unauthorized");
 		}
 		catch (UniformInterfaceException e) {
-			assertEquals(
-				"WhoAmI requests without access tokens should throw 401 Unauthorized",
-				401, e.getResponse().getStatus());
+			assertEquals("WhoAmI requests without access tokens should throw 401 Unauthorized", 401, e.getResponse()
+					.getStatus());
 
 		}
 	}
@@ -289,13 +272,11 @@ public class ResourcesTest
 
 	private void createROs()
 	{
-		ClientResponse response = webResource.path("ROs/")
-				.header("Authorization", "Bearer " + accessToken)
+		ClientResponse response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken)
 				.post(ClientResponse.class, r);
 		assertEquals(201, response.getStatus());
 
-		response = webResource.path("ROs/")
-				.header("Authorization", "Bearer " + accessToken2)
+		response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken2)
 				.post(ClientResponse.class, r2);
 		assertEquals(201, response.getStatus());
 	}
@@ -303,9 +284,7 @@ public class ResourcesTest
 
 	private void getROsList()
 	{
-		String list = webResource.path("ROs")
-				.header("Authorization", "Bearer " + accessToken)
-				.get(String.class);
+		String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(list.contains(r));
 		assertTrue(!list.contains(r2));
 
@@ -317,12 +296,9 @@ public class ResourcesTest
 
 	private void updateManifest()
 	{
-		InputStream is = getClass().getClassLoader().getResourceAsStream(
-			"manifest.ttl");
-		ClientResponse response = webResource
-				.path("ROs/" + r + "/.ro/manifest")
-				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "application/x-turtle")
+		InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
+		ClientResponse response = webResource.path("ROs/" + r + "/.ro/manifest")
+				.header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
 				.put(ClientResponse.class, is);
 		assertEquals(200, response.getStatus());
 	}
@@ -331,8 +307,7 @@ public class ResourcesTest
 	private void addFile()
 	{
 		ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
-				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "text/plain")
+				.header("Authorization", "Bearer " + accessToken).type("text/plain")
 				.put(ClientResponse.class, "lorem ipsum");
 		assertEquals(200, response.getStatus());
 	}
@@ -341,8 +316,7 @@ public class ResourcesTest
 	private void getFileMetadata()
 	{
 		String metadata = webResource.path("ROs/" + r + "/" + filePath)
-				.header("Authorization", "Bearer " + accessToken)
-				.get(String.class);
+				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(metadata.contains(username));
 		assertTrue(metadata.contains(filePath));
 		assertTrue(metadata.contains("checksum"));
@@ -351,10 +325,8 @@ public class ResourcesTest
 
 	private void getFileContent()
 	{
-		String metadata = webResource.path("ROs/" + r + "/" + filePath)
-				.queryParam("content", "true")
-				.header("Authorization", "Bearer " + accessToken)
-				.get(String.class);
+		String metadata = webResource.path("ROs/" + r + "/" + filePath).queryParam("content", "true")
+				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(metadata.contains("lorem ipsum"));
 
 	}
@@ -363,19 +335,16 @@ public class ResourcesTest
 	private void getManifest()
 	{
 		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest")
-				.header("Authorization", "Bearer " + accessToken)
-				.get(String.class);
+				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(manifest.contains(filePath));
 
-		manifest = webResource.path("/ROs/" + r + "/.ro/manifest")
-				.header("Authorization", "Bearer " + accessToken)
+		manifest = webResource.path("/ROs/" + r + "/.ro/manifest").header("Authorization", "Bearer " + accessToken)
 				.accept("application/x-turtle").get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(manifest.contains(filePath));
 
-		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.n3")
-				.header("Authorization", "Bearer " + accessToken)
+		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.n3").header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(manifest.contains(filePath));
@@ -385,33 +354,26 @@ public class ResourcesTest
 	private void getManifestWithAnnotationBody()
 	{
 		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest")
-				.header("Authorization", "Bearer " + accessToken)
-				.accept("application/x-trig").get(String.class);
+				.header("Authorization", "Bearer " + accessToken).accept("application/x-trig").get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(manifest.contains(filePath));
-		assertTrue("Annotation body should contain file path: " + filePath,
-			manifest.contains("a_workflow.t2flow"));
+		assertTrue("Annotation body should contain file path: " + filePath, manifest.contains("a_workflow.t2flow"));
 		assertTrue(manifest.contains("A test"));
 
 		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.trig")
-				.header("Authorization", "Bearer " + accessToken)
-				.get(String.class);
+				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(manifest.contains(filePath));
-		assertTrue("Annotation body should contain file path: " + filePath,
-			manifest.contains("a_workflow.t2flow"));
+		assertTrue("Annotation body should contain file path: " + filePath, manifest.contains("a_workflow.t2flow"));
 		assertTrue(manifest.contains("A test"));
 	}
 
 
 	private void addAnnotationBody()
 	{
-		InputStream is = getClass().getClassLoader().getResourceAsStream(
-			"annotationBody.ttl");
-		ClientResponse response = webResource
-				.path("ROs/" + r + "/" + annotationBodyURI)
-				.header("Authorization", "Bearer " + accessToken)
-				.header("Content-Type", "application/x-turtle")
+		InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
+		ClientResponse response = webResource.path("ROs/" + r + "/" + annotationBodyURI)
+				.header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
 				.put(ClientResponse.class, is);
 		assertEquals(200, response.getStatus());
 	}
@@ -420,11 +382,8 @@ public class ResourcesTest
 	private void getAnnotationBody()
 	{
 		String body = webResource.path("ROs/" + r + "/" + annotationBodyURI)
-				.header("Authorization", "Bearer " + accessToken)
-				.get(String.class);
-		assertTrue(
-			"Annotation body should contain file path: a_workflow.t2flow",
-			body.contains("a_workflow.t2flow"));
+				.header("Authorization", "Bearer " + accessToken).get(String.class);
+		assertTrue("Annotation body should contain file path: a_workflow.t2flow", body.contains("a_workflow.t2flow"));
 		assertTrue(body.contains("A test"));
 	}
 
@@ -432,8 +391,7 @@ public class ResourcesTest
 	private void deleteFile()
 	{
 		ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
-				.header("Authorization", "Bearer " + accessToken)
-				.delete(ClientResponse.class);
+				.header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
 	}
 
@@ -441,13 +399,11 @@ public class ResourcesTest
 	private void getInitialManifest()
 	{
 		String manifest = webResource.path("ROs/" + r + "/.ro/manifest")
-				.header("Authorization", "Bearer " + accessToken)
-				.get(String.class);
+				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(!manifest.contains(filePath));
 
-		manifest = webResource.path("ROs/" + r + "/.ro/manifest")
-				.header("Authorization", "Bearer " + accessToken)
+		manifest = webResource.path("ROs/" + r + "/.ro/manifest").header("Authorization", "Bearer " + accessToken)
 				.accept("application/x-turtle").get(String.class);
 		assertTrue(manifest.contains(username));
 		assertTrue(!manifest.contains(filePath));
@@ -456,13 +412,11 @@ public class ResourcesTest
 
 	private void deleteROs()
 	{
-		ClientResponse response = webResource.path("ROs/" + r + "/")
-				.header("Authorization", "Bearer " + accessToken)
+		ClientResponse response = webResource.path("ROs/" + r + "/").header("Authorization", "Bearer " + accessToken)
 				.delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
 
-		response = webResource.path("ROs/" + r2 + "/")
-				.header("Authorization", "Bearer " + accessToken2)
+		response = webResource.path("ROs/" + r2 + "/").header("Authorization", "Bearer " + accessToken2)
 				.delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
 	}
@@ -470,14 +424,11 @@ public class ResourcesTest
 
 	private void deleteAccessTokens()
 	{
-		ClientResponse response = webResource
-				.path("accesstokens/" + accessToken)
-				.header("Authorization", "Bearer " + adminCreds)
-				.delete(ClientResponse.class);
+		ClientResponse response = webResource.path("accesstokens/" + accessToken)
+				.header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
 
-		response = webResource.path("accesstokens/" + accessToken2)
-				.header("Authorization", "Bearer " + adminCreds)
+		response = webResource.path("accesstokens/" + accessToken2).header("Authorization", "Bearer " + adminCreds)
 				.delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
 	}
@@ -486,12 +437,10 @@ public class ResourcesTest
 	private void deleteUsers()
 	{
 		ClientResponse response = webResource.path("users/" + userIdUrlSafe)
-				.header("Authorization", "Bearer " + adminCreds)
-				.delete(ClientResponse.class);
+				.header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
 
-		response = webResource.path("users/" + userId2UrlSafe)
-				.header("Authorization", "Bearer " + adminCreds)
+		response = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
 				.delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
 	}
@@ -500,8 +449,7 @@ public class ResourcesTest
 	private void deleteClient()
 	{
 		ClientResponse response = webResource.path("clients/" + clientId)
-				.header("Authorization", "Bearer " + adminCreds)
-				.delete(ClientResponse.class);
+				.header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
 		assertEquals(204, response.getStatus());
 	}
 }
