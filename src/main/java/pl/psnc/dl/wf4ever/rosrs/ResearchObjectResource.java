@@ -93,7 +93,7 @@ public class ResearchObjectResource
 			versionId);
 		//TODO add all named graphs from SMS that start with the base URI
 		ContentDisposition cd = ContentDisposition.type("application/zip")
-				.fileName(versionId + ".zip").build();
+				.fileName(researchObjectId + "-" + versionId + ".zip").build();
 		return Response.ok(body).header("Content-disposition", cd).build();
 	}
 

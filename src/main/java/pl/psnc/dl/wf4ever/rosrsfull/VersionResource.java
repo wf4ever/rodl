@@ -131,7 +131,7 @@ public class VersionResource
 				researchObjectId, versionId, editionId);
 		}
 		ContentDisposition cd = ContentDisposition.type("application/zip")
-				.fileName(versionId + ".zip").build();
+				.fileName(researchObjectId + "-" + versionId + ".zip").build();
 		return Response.ok(body).header("Content-disposition", cd).build();
 	}
 
