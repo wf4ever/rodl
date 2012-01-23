@@ -343,6 +343,7 @@ public class AggregatedResource
 				dl.createOrUpdateFile(workspaceId, researchObjectId, versionId,
 					filePath + "." + RDFFormat.RDFXML.getDefaultFileExtension(), dataStream, contentType);
 				Multimap<URI, Object> roAttributes = sms.getAllAttributes(researchObjectURI);
+				roAttributes.put(URI.create("Identifier"), researchObjectURI);
 				dl.storeAttributes(workspaceId, researchObjectId, versionId, roAttributes);
 			}
 			else {
