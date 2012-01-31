@@ -44,9 +44,7 @@ import com.sun.jersey.core.header.ContentDisposition;
 public class ResearchObjectResource
 {
 
-	@SuppressWarnings("unused")
-	private final static Logger logger = Logger
-			.getLogger(ResearchObjectResource.class);
+	private final static Logger logger = Logger.getLogger(ResearchObjectResource.class);
 
 	@Context
 	HttpServletRequest request;
@@ -69,9 +67,9 @@ public class ResearchObjectResource
 	 * @param versionId
 	 *            identifier of version of RO - defined by the user
 	 * @return
-	 * @throws UnknownHostException 
-	 * @throws MalformedURLException 
-	 * @throws RemoteException 
+	 * @throws UnknownHostException
+	 * @throws MalformedURLException
+	 * @throws RemoteException
 	 * @throws IOException
 	 * @throws DigitalLibraryException
 	 * @throws IdNotFoundException
@@ -82,15 +80,12 @@ public class ResearchObjectResource
 	@Produces("application/zip")
 	public Response getZippedRO(@PathParam("ro_id")
 	String researchObjectId)
-		throws RemoteException, MalformedURLException, UnknownHostException,
-		DigitalLibraryException, NotFoundException
+		throws RemoteException, MalformedURLException, UnknownHostException, DigitalLibraryException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
-		InputStream body = dl.getZippedVersion(workspaceId, researchObjectId,
-			versionId);
+		InputStream body = dl.getZippedVersion(workspaceId, researchObjectId, versionId);
 		//TODO add all named graphs from SMS that start with the base URI
 		ContentDisposition cd = ContentDisposition.type("application/zip")
 				.fileName(researchObjectId + "-" + versionId + ".zip").build();
@@ -101,17 +96,13 @@ public class ResearchObjectResource
 	@DELETE
 	public void deleteVersion(@PathParam("ro_id")
 	String researchObjectId)
-		throws DigitalLibraryException, NotFoundException,
-		ClassNotFoundException, IOException, NamingException, SQLException
+		throws DigitalLibraryException, ClassNotFoundException, IOException, NamingException, SQLException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		if (user.getRole() == UserProfile.Role.PUBLIC) {
-			throw new AuthenticationException(
-					"Only authenticated users can do that.",
-					SecurityFilter.REALM);
+			throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
 		}
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
 		try {
 			dl.deleteVersion(workspaceId, researchObjectId, versionId);
@@ -122,12 +113,17 @@ public class ResearchObjectResource
 				}
 			}
 		}
+		catch (NotFoundException e) {
+			logger.warn("URI not found: " + uriInfo.getAbsolutePath());
+		}
 		finally {
 
-			SemanticMetadataService sms = SemanticMetadataServiceFactory
-					.getService(user);
+			SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
 			try {
 				sms.removeResearchObject(uriInfo.getAbsolutePath());
+			}
+			catch (IllegalArgumentException e) {
+				logger.warn("URI not found: " + uriInfo.getAbsolutePath());
 			}
 			finally {
 				sms.close();

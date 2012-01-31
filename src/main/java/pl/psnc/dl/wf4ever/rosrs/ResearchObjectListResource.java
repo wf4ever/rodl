@@ -173,7 +173,7 @@ public class ResearchObjectListResource
 			catch (ConflictException e) {
 				// nothing
 			}
-			dl.createVersion(workspaceId, researchObjectId, versionId, manifest, "/.ro/manifest.rdf",
+			dl.createVersion(workspaceId, researchObjectId, versionId, manifest, ".ro/manifest.rdf",
 				RDFFormat.RDFXML.getDefaultMIMEType());
 			dl.publishVersion(workspaceId, researchObjectId, versionId);
 		}

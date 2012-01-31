@@ -54,8 +54,7 @@ import com.sun.jersey.core.header.ContentDisposition;
 public class VersionResource
 {
 
-	private final static Logger logger = Logger
-			.getLogger(VersionResource.class);
+	private final static Logger logger = Logger.getLogger(VersionResource.class);
 
 	@Context
 	private HttpServletRequest request;
@@ -89,19 +88,16 @@ public class VersionResource
 	@DefaultValue(Constants.EDITION_QUERY_PARAM_DEFAULT_STRING)
 	long editionId, @QueryParam("edition_list")
 	String isEditionListRequested)
-		throws IOException, DigitalLibraryException,
-		OperationNotSupportedException, NotFoundException
+		throws IOException, DigitalLibraryException, OperationNotSupportedException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
 		if (isEditionListRequested != null) {
 			return getEditionList(workspaceId, researchObjectId, versionId, dl);
 		}
 		else {
-			return getZippedPublication(workspaceId, researchObjectId,
-				versionId, dl, editionId);
+			return getZippedPublication(workspaceId, researchObjectId, versionId, dl, editionId);
 		}
 	}
 
@@ -116,19 +112,16 @@ public class VersionResource
 	 * @throws DigitalLibraryException
 	 * @throws NotFoundException
 	 */
-	private Response getZippedPublication(String workspaceId,
-			String researchObjectId, String versionId,
+	private Response getZippedPublication(String workspaceId, String researchObjectId, String versionId,
 			DigitalLibrary dLibraDataSource, long editionId)
 		throws RemoteException, DigitalLibraryException, NotFoundException
 	{
 		InputStream body;
 		if (editionId == Constants.EDITION_QUERY_PARAM_DEFAULT) {
-			body = dLibraDataSource.getZippedVersion(workspaceId,
-				researchObjectId, versionId);
+			body = dLibraDataSource.getZippedVersion(workspaceId, researchObjectId, versionId);
 		}
 		else {
-			body = dLibraDataSource.getZippedVersion(workspaceId,
-				researchObjectId, versionId, editionId);
+			body = dLibraDataSource.getZippedVersion(workspaceId, researchObjectId, versionId, editionId);
 		}
 		ContentDisposition cd = ContentDisposition.type("application/zip")
 				.fileName(researchObjectId + "-" + versionId + ".zip").build();
@@ -146,18 +139,15 @@ public class VersionResource
 	 * @throws NotFoundException
 	 * @throws IdNotFoundException
 	 */
-	private Response getEditionList(String workspaceId,
-			String researchObjectId, String versionId,
+	private Response getEditionList(String workspaceId, String researchObjectId, String versionId,
 			DigitalLibrary dLibraDataSource)
 		throws RemoteException, DigitalLibraryException, NotFoundException
 	{
 		logger.debug("Getting edition list");
-		Set<Snapshot> snapshots = dLibraDataSource.getEditionList(workspaceId,
-			researchObjectId, versionId);
+		Set<Snapshot> snapshots = dLibraDataSource.getEditionList(workspaceId, researchObjectId, versionId);
 		StringBuilder sb = new StringBuilder();
 		for (Snapshot snapshot : snapshots) {
-			sb.append((snapshot.isPublished() ? "*" : "") + snapshot.getId()
-					+ "=" + snapshot.getCreationDate() + "\n");
+			sb.append((snapshot.isPublished() ? "*" : "") + snapshot.getId() + "=" + snapshot.getCreationDate() + "\n");
 		}
 		return Response.ok(sb.toString()).build();
 	}
@@ -174,10 +164,10 @@ public class VersionResource
 	 *            identifier of version of RO - defined by the user
 	 * @param rdfAsString
 	 *            manifest.rdf
-	 * @return 200 (OK) response code if the descriptive metadata was
-	 *         successfully updated, 400 (Bad Request) if manifest.rdf is not
-	 *         well-formed, 409 (Conflict) if manifest.rdf contains incorrect
-	 *         data (for example, one of required tags is missing).
+	 * @return 200 (OK) response code if the descriptive metadata was successfully
+	 *         updated, 400 (Bad Request) if manifest.rdf is not well-formed, 409
+	 *         (Conflict) if manifest.rdf contains incorrect data (for example, one of
+	 *         required tags is missing).
 	 * @throws IOException
 	 * @throws TransformerException
 	 * @throws JenaException
@@ -195,17 +185,13 @@ public class VersionResource
 	String researchObjectId, @PathParam("RO_VERSION_ID")
 	String versionId, @QueryParam("unpublish")
 	String unpublish)
-		throws IOException, TransformerException, JenaException,
-		DigitalLibraryException, NotFoundException
+		throws IOException, TransformerException, JenaException, DigitalLibraryException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		if (user.getRole() == UserProfile.Role.PUBLIC) {
-			throw new AuthenticationException(
-					"Only authenticated users can do that.",
-					SecurityFilter.REALM);
+			throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
 		}
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
 		if (unpublish == null) {
 			dl.publishVersion(workspaceId, researchObjectId, versionId);
@@ -223,23 +209,17 @@ public class VersionResource
 	String workspaceId, @PathParam("RO_ID")
 	String researchObjectId, @PathParam("RO_VERSION_ID")
 	String versionId)
-		throws RemoteException, DigitalLibraryException, MalformedURLException,
-		UnknownHostException, NotFoundException
+		throws RemoteException, DigitalLibraryException, MalformedURLException, UnknownHostException, NotFoundException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		if (user.getRole() == UserProfile.Role.PUBLIC) {
-			throw new AuthenticationException(
-					"Only authenticated users can do that.",
-					SecurityFilter.REALM);
+			throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
 		}
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
-		long editionId = dl.createEdition(workspaceId, versionId,
-			researchObjectId, versionId).getId();
+		long editionId = dl.createEdition(workspaceId, versionId, researchObjectId, versionId).getId();
 
-		String uri = uriInfo.getAbsolutePath().toString() + "?edition_id="
-				+ editionId;
+		String uri = uriInfo.getAbsolutePath().toString() + "?edition_id=" + editionId;
 
 		return Response.created(URI.create(uri)).build();
 	}
@@ -256,10 +236,10 @@ public class VersionResource
 	 *            identifier of version of RO - defined by the user
 	 * @throws DigitalLibraryException
 	 * @throws NotFoundException
-	 * @throws SQLException 
-	 * @throws NamingException 
-	 * @throws IOException 
-	 * @throws ClassNotFoundException 
+	 * @throws SQLException
+	 * @throws NamingException
+	 * @throws IOException
+	 * @throws ClassNotFoundException
 	 * @throws IdNotFoundException
 	 */
 	@DELETE
@@ -267,29 +247,33 @@ public class VersionResource
 	String workspaceId, @PathParam("RO_ID")
 	String researchObjectId, @PathParam("RO_VERSION_ID")
 	String versionId)
-		throws DigitalLibraryException, NotFoundException,
-		ClassNotFoundException, IOException, NamingException, SQLException
+		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
+		SQLException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		if (user.getRole() == UserProfile.Role.PUBLIC) {
-			throw new AuthenticationException(
-					"Only authenticated users can do that.",
-					SecurityFilter.REALM);
+			throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
 		}
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
-		dl.deleteVersion(workspaceId, researchObjectId, versionId);
-
-		URI researchObjectURI = uriInfo.getAbsolutePathBuilder().path("/")
-				.build();
-		SemanticMetadataService sms = SemanticMetadataServiceFactory
-				.getService(user);
 		try {
-			sms.removeResearchObject(researchObjectURI);
+			dl.deleteVersion(workspaceId, researchObjectId, versionId);
+		}
+		catch (NotFoundException e) {
+			logger.warn("URI not found: " + uriInfo.getAbsolutePath());
 		}
 		finally {
-			sms.close();
+			URI researchObjectURI = uriInfo.getAbsolutePathBuilder().path("/").build();
+			SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
+			try {
+				sms.removeResearchObject(researchObjectURI);
+			}
+			catch (IllegalArgumentException e) {
+				logger.warn("URI not found: " + uriInfo.getAbsolutePath());
+			}
+			finally {
+				sms.close();
+			}
 		}
 	}
 }
