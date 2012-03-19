@@ -323,13 +323,8 @@ public class AggregatedResource
 				else {
 					sms.addNamedGraph(uriInfo.getAbsolutePath(), data, format != null ? format : RDFFormat.RDFXML);
 				}
-				InputStream dataStream = sms.getNamedGraphWithRelativeURIs(uriInfo.getAbsolutePath(),
-					researchObjectURI, RDFFormat.RDFXML);
-				dl.createOrUpdateFile(workspaceId, researchObjectId, versionId,
-					filePath + "." + RDFFormat.RDFXML.getDefaultFileExtension(), dataStream, contentType);
-				Multimap<URI, Object> roAttributes = sms.getAllAttributes(researchObjectURI);
-				roAttributes.put(URI.create("Identifier"), researchObjectURI);
-				dl.storeAttributes(workspaceId, researchObjectId, versionId, roAttributes);
+				updateNamedGraphInDlibra(researchObjectId, filePath, contentType, researchObjectURI, dl, sms, uriInfo.getAbsolutePath());
+				updateROAttributesInDlibra(researchObjectId, researchObjectURI, dl, sms);
 			}
 			else {
 				if (format != null)
@@ -337,6 +332,7 @@ public class AggregatedResource
 				ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath,
 					data, contentType != null ? contentType : "text/plain");
 				sms.addResource(researchObjectURI, uriInfo.getAbsolutePath(), resourceInfo);
+				updateNamedGraphInDlibra(researchObjectId, filePath, contentType, researchObjectURI, dl, sms, uriInfo.getAbsolutePath());
 			}
 		}
 		finally {
@@ -344,6 +340,47 @@ public class AggregatedResource
 		}
 
 		return Response.ok().build();
+	}
+
+
+	/**
+	 * @param researchObjectId
+	 * @param researchObjectURI
+	 * @param dl
+	 * @param sms
+	 * @throws NotFoundException
+	 * @throws DigitalLibraryException
+	 */
+	private void updateROAttributesInDlibra(String researchObjectId, URI researchObjectURI, DigitalLibrary dl,
+			SemanticMetadataService sms)
+		throws NotFoundException, DigitalLibraryException
+	{
+		Multimap<URI, Object> roAttributes = sms.getAllAttributes(researchObjectURI);
+		roAttributes.put(URI.create("Identifier"), researchObjectURI);
+		dl.storeAttributes(workspaceId, researchObjectId, versionId, roAttributes);
+	}
+
+
+	/**
+	 * @param researchObjectId
+	 * @param filePath
+	 * @param contentType
+	 * @param researchObjectURI
+	 * @param dl
+	 * @param sms
+	 * @param namedGraphURI TODO
+	 * @throws DigitalLibraryException
+	 * @throws NotFoundException
+	 * @throws AccessDeniedException
+	 */
+	private void updateNamedGraphInDlibra(String researchObjectId, String filePath, String contentType,
+			URI researchObjectURI, DigitalLibrary dl, SemanticMetadataService sms, URI namedGraphURI)
+		throws DigitalLibraryException, NotFoundException, AccessDeniedException
+	{
+		InputStream dataStream = sms.getNamedGraphWithRelativeURIs(namedGraphURI,
+			researchObjectURI, RDFFormat.RDFXML);
+		dl.createOrUpdateFile(workspaceId, researchObjectId, versionId,
+			filePath + "." + RDFFormat.RDFXML.getDefaultFileExtension(), dataStream, contentType);
 	}
 
 
