@@ -194,7 +194,6 @@ public class ResourcesTest
 	{
 		String user = webResource.path("users/" + userIdUrlSafe).header("Authorization", "Bearer " + adminCreds)
 				.get(String.class);
-		System.out.println(user);
 		assertTrue(user.contains(userId));
 
 		user = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
@@ -271,10 +270,12 @@ public class ResourcesTest
 	private void checkWhoAmI()
 	{
 		String whoami = webResource.path("whoami/").header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue((userId + "\r\n" + username).equals(whoami));
+		assertTrue(whoami.contains(userId));
+		assertTrue(whoami.contains(username));
 
 		whoami = webResource.path("whoami/").header("Authorization", "Bearer " + accessToken2).get(String.class);
-		assertTrue((userId2 + "\r\n" + username2).equals(whoami));
+		assertTrue(whoami.contains(userId2));
+		assertTrue(whoami.contains(username2));
 
 		try {
 			webResource.path("whoami/").get(Response.class);
