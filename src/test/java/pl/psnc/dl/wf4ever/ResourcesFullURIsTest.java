@@ -285,7 +285,7 @@ public class ResourcesFullURIsTest
 	{
 		String metadata = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/" + filePath)
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(metadata.contains(username));
+		assertTrue(metadata.contains(userId));
 		assertTrue(metadata.contains(filePath));
 		assertTrue(metadata.contains("checksum"));
 
@@ -305,12 +305,12 @@ public class ResourcesFullURIsTest
 	{
 		String manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(manifest.contains(username));
+		assertTrue(manifest.contains(userId));
 		assertTrue(manifest.contains(filePath));
 
 		manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
-		assertTrue(manifest.contains(username));
+		assertTrue(manifest.contains(userId));
 		assertTrue(manifest.contains(filePath));
 	}
 
@@ -319,7 +319,7 @@ public class ResourcesFullURIsTest
 	{
 		String manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken).accept("application/x-trig").get(String.class);
-		assertTrue(manifest.contains(username));
+		assertTrue(manifest.contains(userId));
 		assertTrue(manifest.contains(filePath));
 		assertTrue("Annotation body should contain file path: " + filePath, manifest.contains("a_workflow.t2flow"));
 		assertTrue(manifest.contains("A test"));
@@ -357,12 +357,10 @@ public class ResourcesFullURIsTest
 	{
 		String manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(manifest.contains(username));
 		assertTrue(!manifest.contains(filePath));
 
 		manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
-		assertTrue(manifest.contains(username));
 		assertTrue(!manifest.contains(filePath));
 	}
 

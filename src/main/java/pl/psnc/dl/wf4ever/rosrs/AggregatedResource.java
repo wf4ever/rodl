@@ -306,6 +306,7 @@ public class AggregatedResource
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		if (user.getRole() == UserProfile.Role.PUBLIC) {
+			//TODO check permissions in dLibra
 			throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
 		}
 		String contentType = format != null ? format.getDefaultMIMEType() : request.getContentType();
@@ -323,7 +324,8 @@ public class AggregatedResource
 				else {
 					sms.addNamedGraph(uriInfo.getAbsolutePath(), data, format != null ? format : RDFFormat.RDFXML);
 				}
-				updateNamedGraphInDlibra(researchObjectId, filePath, contentType, researchObjectURI, dl, sms, uriInfo.getAbsolutePath());
+				updateNamedGraphInDlibra(researchObjectId, filePath, contentType, researchObjectURI, dl, sms,
+					uriInfo.getAbsolutePath());
 				updateROAttributesInDlibra(researchObjectId, researchObjectURI, dl, sms);
 			}
 			else {
@@ -332,7 +334,8 @@ public class AggregatedResource
 				ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath,
 					data, contentType != null ? contentType : "text/plain");
 				sms.addResource(researchObjectURI, uriInfo.getAbsolutePath(), resourceInfo);
-				updateNamedGraphInDlibra(researchObjectId, filePath, contentType, researchObjectURI, dl, sms, uriInfo.getAbsolutePath());
+				updateNamedGraphInDlibra(researchObjectId, filePath, contentType, researchObjectURI, dl, sms,
+					manifestURI);
 			}
 		}
 		finally {
@@ -368,7 +371,8 @@ public class AggregatedResource
 	 * @param researchObjectURI
 	 * @param dl
 	 * @param sms
-	 * @param namedGraphURI TODO
+	 * @param namedGraphURI
+	 *            TODO
 	 * @throws DigitalLibraryException
 	 * @throws NotFoundException
 	 * @throws AccessDeniedException
@@ -377,8 +381,7 @@ public class AggregatedResource
 			URI researchObjectURI, DigitalLibrary dl, SemanticMetadataService sms, URI namedGraphURI)
 		throws DigitalLibraryException, NotFoundException, AccessDeniedException
 	{
-		InputStream dataStream = sms.getNamedGraphWithRelativeURIs(namedGraphURI,
-			researchObjectURI, RDFFormat.RDFXML);
+		InputStream dataStream = sms.getNamedGraphWithRelativeURIs(namedGraphURI, researchObjectURI, RDFFormat.RDFXML);
 		dl.createOrUpdateFile(workspaceId, researchObjectId, versionId,
 			filePath + "." + RDFFormat.RDFXML.getDefaultFileExtension(), dataStream, contentType);
 	}
