@@ -148,6 +148,7 @@ public class ResourcesTest
 			getClientsList();
 			getClient();
 			createUsers();
+			getUser();
 			try {
 				createAccessTokens();
 				try {
@@ -186,6 +187,23 @@ public class ResourcesTest
 		finally {
 			deleteClient();
 		}
+	}
+
+
+	private void getUser()
+	{
+		String user = webResource.path("users/" + userIdUrlSafe).header("Authorization", "Bearer " + adminCreds)
+				.get(String.class);
+		System.out.println(user);
+		assertTrue(user.contains(userId));
+
+		user = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
+				.get(String.class);
+		assertTrue(user.contains(userId2));
+
+		user = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
+				.accept("application/x-turtle").get(String.class);
+		assertTrue(user.contains(userId2));
 	}
 
 
