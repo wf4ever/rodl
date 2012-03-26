@@ -20,6 +20,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.openrdf.rio.RDFFormat;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -63,7 +64,13 @@ public class ResourcesTest
 
 	private final String r2 = "r2";
 
-	private final String filePath = "foo/bar.txt";
+	private final String filePath = "foo/bar ra.txt";
+
+	private final String filePathEncoded = "foo/bar%20ra.txt";
+
+	private final String rdfFilePath = "foo/bar.rdf";
+
+	private final String rdfFilePathEncoded = "foo/bar.rdf";
 
 	private final String annotationBodyURI = ".ro/ann1";
 
@@ -154,9 +161,10 @@ public class ResourcesTest
 				try {
 					getAccessTokensList();
 					checkWhoAmI();
-					// webResource.path("ROs/" + r + "/")
-					// .header("Authorization", "Bearer " + accessToken)
-					// .delete(ClientResponse.class);
+					webResource.path("ROs/" + r + "/").header("Authorization", "Bearer " + accessToken)
+							.delete(ClientResponse.class);
+					webResource.path("ROs/" + r2 + "/").header("Authorization", "Bearer " + accessToken)
+							.delete(ClientResponse.class);
 					createROs();
 					try {
 						getROsList();
@@ -165,11 +173,15 @@ public class ResourcesTest
 						addFile();
 						getFileMetadata();
 						getFileContent();
+						addRDFFile();
+						getRDFFileMetadata();
+						getRDFFileContent();
 						getManifest();
 						addAnnotationBody();
 						getAnnotationBody();
 						getManifestWithAnnotationBody();
 						deleteFile();
+						deleteRDFFile();
 						getInitialManifest();
 					}
 					finally {
@@ -337,7 +349,7 @@ public class ResourcesTest
 		String metadata = webResource.path("ROs/" + r + "/" + filePath)
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(metadata.contains(userId));
-		assertTrue(metadata.contains(filePath));
+		assertTrue(metadata.contains(filePathEncoded));
 		assertTrue(metadata.contains("checksum"));
 	}
 
@@ -351,22 +363,51 @@ public class ResourcesTest
 	}
 
 
+	private void addRDFFile()
+	{
+		ClientResponse response = webResource.path("ROs/" + r + "/" + rdfFilePath)
+				.header("Authorization", "Bearer " + accessToken).type(RDFFormat.RDFXML.getDefaultMIMEType())
+				.put(ClientResponse.class, "lorem ipsum");
+		assertEquals(200, response.getStatus());
+	}
+
+
+	private void getRDFFileMetadata()
+	{
+		String metadata = webResource.path("ROs/" + r + "/" + rdfFilePath)
+				.header("Authorization", "Bearer " + accessToken).get(String.class);
+		System.out.println(metadata);
+		assertTrue(metadata.contains(userId));
+		assertTrue(metadata.contains(rdfFilePathEncoded));
+		assertTrue(metadata.contains("checksum"));
+	}
+
+
+	private void getRDFFileContent()
+	{
+		String metadata = webResource.path("ROs/" + r + "/" + rdfFilePath).queryParam("content", "true")
+				.header("Authorization", "Bearer " + accessToken).get(String.class);
+		assertTrue(metadata.contains("lorem ipsum"));
+
+	}
+
+
 	private void getManifest()
 	{
 		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(manifest.contains(userId));
-		assertTrue(manifest.contains(filePath));
+		assertTrue(manifest.contains(filePathEncoded));
 
 		manifest = webResource.path("/ROs/" + r + "/.ro/manifest").header("Authorization", "Bearer " + accessToken)
 				.accept("application/x-turtle").get(String.class);
 		assertTrue(manifest.contains(userId));
-		assertTrue(manifest.contains(filePath));
+		assertTrue(manifest.contains(filePathEncoded));
 
 		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.n3").header("Authorization", "Bearer " + accessToken)
 				.get(String.class);
 		assertTrue(manifest.contains(userId));
-		assertTrue(manifest.contains(filePath));
+		assertTrue(manifest.contains(filePathEncoded));
 	}
 
 
@@ -375,15 +416,16 @@ public class ResourcesTest
 		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken).accept("application/x-trig").get(String.class);
 		assertTrue(manifest.contains(userId));
-		assertTrue(manifest.contains(filePath));
+		assertTrue(manifest.contains(filePathEncoded));
 		assertTrue("Annotation body should contain file path: " + filePath, manifest.contains("a_workflow.t2flow"));
 		assertTrue(manifest.contains("A test"));
 
 		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.trig")
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(manifest.contains(userId));
-		assertTrue(manifest.contains(filePath));
-		assertTrue("Annotation body should contain file path: " + filePath, manifest.contains("a_workflow.t2flow"));
+		assertTrue(manifest.contains(filePathEncoded));
+		assertTrue("Annotation body should contain file path: " + filePathEncoded,
+			manifest.contains("a_workflow.t2flow"));
 		assertTrue(manifest.contains("A test"));
 	}
 
@@ -415,15 +457,24 @@ public class ResourcesTest
 	}
 
 
+	private void deleteRDFFile()
+	{
+		ClientResponse response = webResource.path("ROs/" + r + "/" + rdfFilePath)
+				.header("Authorization", "Bearer " + accessToken).type(RDFFormat.RDFXML.getDefaultMIMEType())
+				.delete(ClientResponse.class);
+		assertEquals(204, response.getStatus());
+	}
+
+
 	private void getInitialManifest()
 	{
 		String manifest = webResource.path("ROs/" + r + "/.ro/manifest")
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(!manifest.contains(filePath));
+		assertTrue(!manifest.contains(filePathEncoded));
 
 		manifest = webResource.path("ROs/" + r + "/.ro/manifest").header("Authorization", "Bearer " + accessToken)
 				.accept("application/x-turtle").get(String.class);
-		assertTrue(!manifest.contains(filePath));
+		assertTrue(!manifest.contains(filePathEncoded));
 	}
 
 
