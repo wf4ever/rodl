@@ -334,7 +334,8 @@ public class AggregatedResource
 				else {
 					sms.addNamedGraph(uriInfo.getAbsolutePath(), data, format != null ? format : RDFFormat.RDFXML);
 				}
-				updateNamedGraphInDlibra(researchObjectId, filePath, contentType, researchObjectURI, dl, sms,
+				// update the named graph copy in dLibra, the manifest is not changed
+				updateNamedGraphInDlibra(researchObjectId, filePath, researchObjectURI, dl, sms,
 					uriInfo.getAbsolutePath());
 				updateROAttributesInDlibra(researchObjectId, researchObjectURI, dl, sms);
 			}
@@ -350,8 +351,8 @@ public class AggregatedResource
 				ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath,
 					data, contentType != null ? contentType : "text/plain");
 				sms.addResource(researchObjectURI, resourceURI, resourceInfo);
-				updateNamedGraphInDlibra(researchObjectId, filePath, contentType, researchObjectURI, dl, sms,
-					manifestURI);
+				// update the manifest that describes the resource in dLibra
+				updateNamedGraphInDlibra(researchObjectId, ".ro/manifest", researchObjectURI, dl, sms, manifestURI);
 			}
 		}
 		finally {
@@ -393,13 +394,13 @@ public class AggregatedResource
 	 * @throws NotFoundException
 	 * @throws AccessDeniedException
 	 */
-	private void updateNamedGraphInDlibra(String researchObjectId, String filePath, String contentType,
-			URI researchObjectURI, DigitalLibrary dl, SemanticMetadataService sms, URI namedGraphURI)
+	private void updateNamedGraphInDlibra(String researchObjectId, String filePath, URI researchObjectURI,
+			DigitalLibrary dl, SemanticMetadataService sms, URI namedGraphURI)
 		throws DigitalLibraryException, NotFoundException, AccessDeniedException
 	{
 		InputStream dataStream = sms.getNamedGraphWithRelativeURIs(namedGraphURI, researchObjectURI, RDFFormat.RDFXML);
-		dl.createOrUpdateFile(workspaceId, researchObjectId, versionId,
-			filePath + "." + RDFFormat.RDFXML.getDefaultFileExtension(), dataStream, contentType);
+		dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath + ".rdf", dataStream,
+			"application/rdf+xml");
 	}
 
 

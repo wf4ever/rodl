@@ -364,8 +364,9 @@ public class AggregatedResource
 				else {
 					sms.addNamedGraph(uriInfo.getAbsolutePath(), data, format != null ? format : RDFFormat.RDFXML);
 				}
-				updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, filePath, contentType,
-					researchObjectURI, dl, sms, uriInfo.getAbsolutePath());
+				// update the named graph copy in dLibra, the manifest is not changed
+				updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, filePath, researchObjectURI, dl,
+					sms, uriInfo.getAbsolutePath());
 				updateROAttributesInDlibra(workspaceId, researchObjectId, versionId, researchObjectURI, dl, sms);
 			}
 			else {
@@ -380,8 +381,9 @@ public class AggregatedResource
 				ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath,
 					data, contentType != null ? contentType : "text/plain");
 				sms.addResource(researchObjectURI, resourceURI, resourceInfo);
-				updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, filePath, contentType,
-					researchObjectURI, dl, sms, manifestURI);
+				// update the manifest that describes the resource in dLibra
+				updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, ".ro/manifest", researchObjectURI,
+					dl, sms, manifestURI);
 			}
 		}
 		finally {
@@ -428,13 +430,12 @@ public class AggregatedResource
 	 * @throws AccessDeniedException
 	 */
 	private void updateNamedGraphInDlibra(String workspaceId, String researchObjectId, String versionId,
-			String filePath, String contentType, URI researchObjectURI, DigitalLibrary dl, SemanticMetadataService sms,
-			URI namedGraphURI)
+			String filePath, URI researchObjectURI, DigitalLibrary dl, SemanticMetadataService sms, URI namedGraphURI)
 		throws DigitalLibraryException, NotFoundException, AccessDeniedException
 	{
 		InputStream dataStream = sms.getNamedGraphWithRelativeURIs(namedGraphURI, researchObjectURI, RDFFormat.RDFXML);
-		dl.createOrUpdateFile(workspaceId, researchObjectId, versionId,
-			filePath + "." + RDFFormat.RDFXML.getDefaultFileExtension(), dataStream, contentType);
+		dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath + ".rdf", dataStream,
+			"application/rdf+xml");
 	}
 
 

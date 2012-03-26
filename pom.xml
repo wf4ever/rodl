@@ -276,5 +276,5 @@
 	<properties>
 		<jetty.version>6.1.4</jetty.version>
 	</properties>
-	<version>5.0.5</version>
+	<version>5.0.6</version>
 </project>
