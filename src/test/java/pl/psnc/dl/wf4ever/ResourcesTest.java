@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -72,7 +73,7 @@ public class ResourcesTest
 
 	private final String rdfFilePathEncoded = "foo/bar.rdf";
 
-	private final String annotationBodyURI = ".ro/ann1";
+	private final String annotationBodyURI = ".ro/ann1.ttl";
 
 	private final String username = "John Doe";
 
@@ -144,6 +145,7 @@ public class ResourcesTest
 	@Test
 	public final void test()
 	{
+		client().setFollowRedirects(true);
 		if (resource().getURI().getHost().equals("localhost")) {
 			webResource = resource();
 		}
@@ -328,9 +330,8 @@ public class ResourcesTest
 	private void updateManifest()
 	{
 		InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
-		ClientResponse response = webResource.path("ROs/" + r + "/.ro/manifest")
-				.header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
-				.put(ClientResponse.class, is);
+		ClientResponse response = webResource.path("ROs/" + r + "/.ro/manifest.rdf")
+				.header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
 		assertEquals(200, response.getStatus());
 	}
 
@@ -376,7 +377,6 @@ public class ResourcesTest
 	{
 		String metadata = webResource.path("ROs/" + r + "/" + rdfFilePath)
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		System.out.println(metadata);
 		assertTrue(metadata.contains(userId));
 		assertTrue(metadata.contains(rdfFilePathEncoded));
 		assertTrue(metadata.contains("checksum"));
@@ -394,33 +394,37 @@ public class ResourcesTest
 
 	private void getManifest()
 	{
-		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest")
+		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest.rdf")
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(manifest.contains(userId));
 		assertTrue(manifest.contains(filePathEncoded));
 
-		manifest = webResource.path("/ROs/" + r + "/.ro/manifest").header("Authorization", "Bearer " + accessToken)
+		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.rdf").header("Authorization", "Bearer " + accessToken)
 				.accept("application/x-turtle").get(String.class);
 		assertTrue(manifest.contains(userId));
 		assertTrue(manifest.contains(filePathEncoded));
 
-		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.n3").header("Authorization", "Bearer " + accessToken)
-				.get(String.class);
+		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.n3").queryParam("original", "manifest.rdf")
+				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(manifest.contains(userId));
 		assertTrue(manifest.contains(filePathEncoded));
+
+		ClientResponse response = webResource.path("/ROs/" + r + "/.ro/manifest.n3")
+				.header("Authorization", "Bearer " + accessToken).get(ClientResponse.class);
+		assertEquals("Should return 404 for manifest.n3", HttpStatus.SC_NOT_FOUND, response.getStatus());
 	}
 
 
 	private void getManifestWithAnnotationBody()
 	{
-		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest")
+		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest.rdf")
 				.header("Authorization", "Bearer " + accessToken).accept("application/x-trig").get(String.class);
 		assertTrue(manifest.contains(userId));
 		assertTrue(manifest.contains(filePathEncoded));
 		assertTrue("Annotation body should contain file path: " + filePath, manifest.contains("a_workflow.t2flow"));
 		assertTrue(manifest.contains("A test"));
 
-		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.trig")
+		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.trig").queryParam("original", "manifest.rdf")
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(manifest.contains(userId));
 		assertTrue(manifest.contains(filePathEncoded));
@@ -468,11 +472,11 @@ public class ResourcesTest
 
 	private void getInitialManifest()
 	{
-		String manifest = webResource.path("ROs/" + r + "/.ro/manifest")
+		String manifest = webResource.path("ROs/" + r + "/.ro/manifest.rdf")
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(!manifest.contains(filePathEncoded));
 
-		manifest = webResource.path("ROs/" + r + "/.ro/manifest").header("Authorization", "Bearer " + accessToken)
+		manifest = webResource.path("ROs/" + r + "/.ro/manifest.rdf").header("Authorization", "Bearer " + accessToken)
 				.accept("application/x-turtle").get(String.class);
 		assertTrue(!manifest.contains(filePathEncoded));
 	}

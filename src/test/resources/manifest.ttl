@@ -8,14 +8,14 @@
 @prefix rdfg: <http://www.w3.org/2004/03/trix/rdfg-1/> .
 @prefix ore: <http://www.openarchives.org/ore/terms/> .
 
-<.ro/manifest> a ro:Manifest ;
+<.ro/manifest.rdf> a ro:Manifest ;
     ore:describes <.> ;
     dct:created "2011-12-02T16:01:10Z"^^xsd:dateTime ;
     dct:creator [ a foaf:Agent; foaf:name "RO manager" ] .
 
 <.> a ro:ResearchObject, ore:Aggregation ;
     ore:aggregates <a_workflow.t2flow>, :ann1, <afolder> ;
-    ore:isDescribedBy <.ro/manifest> ;
+    ore:isDescribedBy <.ro/manifest.rdf> ;
     dct:created "2011-12-02T15:01:10Z"^^xsd:dateTime ;
     dct:creator [ a foaf:Person; foaf:name "Stian Soiland-Reyes" ] .
 
@@ -28,7 +28,7 @@
     dct:creator [ a foaf:Person; foaf:name "Stian Soiland-Reyes" ] .
 
 :ann1 a ore:SemanticAnnotation ;
-    ao:body <.ro/ann1> ;
+    ao:body <.ro/ann1.ttl> ;
     ro:annotatesAggregatedResource <a_workflow.t2flow> ;
     ao:annotatesResource <.> ;
     dct:created "2011-12-02T15:02:13Z"^^xsd:dateTime ;

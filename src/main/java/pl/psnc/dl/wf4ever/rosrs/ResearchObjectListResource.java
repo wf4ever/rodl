@@ -152,7 +152,7 @@ public class ResearchObjectListResource
 		try {
 			try {
 				sms.createResearchObject(researchObjectURI);
-				manifest = sms.getManifest(researchObjectURI.resolve(".ro/manifest"), RDFFormat.RDFXML);
+				manifest = sms.getManifest(researchObjectURI.resolve(".ro/manifest.rdf"), RDFFormat.RDFXML);
 			}
 			catch (IllegalArgumentException e) {
 				// RO already existed in sms, maybe created by someone else
