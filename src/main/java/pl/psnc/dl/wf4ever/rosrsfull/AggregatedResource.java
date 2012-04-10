@@ -13,6 +13,7 @@ import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -21,6 +22,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
 
@@ -53,7 +55,6 @@ import com.sun.jersey.core.header.ContentDisposition;
 public class AggregatedResource
 {
 
-	@SuppressWarnings("unused")
 	private final static Logger logger = Logger.getLogger(AggregatedResource.class);
 
 	@Context
@@ -75,12 +76,15 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, @QueryParam("content")
-	String isContentRequested)
+	String filePath, @DefaultValue("false")
+	@QueryParam("content")
+	boolean isContentRequested, @QueryParam("original")
+	String original)
 		throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException, NotFoundException,
 		NamingException, SQLException, URISyntaxException
 	{
-		return getResource(workspaceId, researchObjectId, versionId, filePath, isContentRequested, RDFFormat.TURTLE);
+		return getResource(workspaceId, researchObjectId, versionId, filePath, isContentRequested, original,
+			RDFFormat.TURTLE);
 	}
 
 
@@ -90,12 +94,15 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, @QueryParam("content")
-	String isContentRequested)
+	String filePath, @DefaultValue("false")
+	@QueryParam("content")
+	boolean isContentRequested, @QueryParam("original")
+	String original)
 		throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException, NotFoundException,
 		NamingException, SQLException, URISyntaxException
 	{
-		return getResource(workspaceId, researchObjectId, versionId, filePath, isContentRequested, RDFFormat.TRIG);
+		return getResource(workspaceId, researchObjectId, versionId, filePath, isContentRequested, original,
+			RDFFormat.TRIG);
 	}
 
 
@@ -105,12 +112,15 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, @QueryParam("content")
-	String isContentRequested)
+	String filePath, @DefaultValue("false")
+	@QueryParam("content")
+	boolean isContentRequested, @QueryParam("original")
+	String original)
 		throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException, NotFoundException,
 		NamingException, SQLException, URISyntaxException
 	{
-		return getResource(workspaceId, researchObjectId, versionId, filePath, isContentRequested, RDFFormat.TRIX);
+		return getResource(workspaceId, researchObjectId, versionId, filePath, isContentRequested, original,
+			RDFFormat.TRIX);
 	}
 
 
@@ -120,12 +130,15 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, @QueryParam("content")
-	String isContentRequested)
+	String filePath, @DefaultValue("false")
+	@QueryParam("content")
+	boolean isContentRequested, @QueryParam("original")
+	String original)
 		throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException, NotFoundException,
 		NamingException, SQLException, URISyntaxException
 	{
-		return getResource(workspaceId, researchObjectId, versionId, filePath, isContentRequested, RDFFormat.N3);
+		return getResource(workspaceId, researchObjectId, versionId, filePath, isContentRequested, original,
+			RDFFormat.N3);
 	}
 
 
@@ -135,12 +148,15 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, @QueryParam("content")
-	String isContentRequested)
+	String filePath, @DefaultValue("false")
+	@QueryParam("content")
+	boolean isContentRequested, @QueryParam("original")
+	String original)
 		throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException, NotFoundException,
 		NamingException, SQLException, URISyntaxException
 	{
-		return getResource(workspaceId, researchObjectId, versionId, filePath, isContentRequested, RDFFormat.RDFXML);
+		return getResource(workspaceId, researchObjectId, versionId, filePath, isContentRequested, original,
+			RDFFormat.RDFXML);
 	}
 
 
@@ -149,12 +165,14 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, @QueryParam("content")
-	String isContentRequested)
+	String filePath, @DefaultValue("false")
+	@QueryParam("content")
+	boolean isContentRequested, @QueryParam("original")
+	String original)
 		throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException, NotFoundException,
 		NamingException, SQLException, URISyntaxException
 	{
-		return getResource(workspaceId, researchObjectId, versionId, filePath, isContentRequested, null);
+		return getResource(workspaceId, researchObjectId, versionId, filePath, isContentRequested, original, null);
 	}
 
 
@@ -162,8 +180,10 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, @QueryParam("content")
-	String isContentRequested, RDFFormat format)
+	String filePath, @DefaultValue("false")
+	@QueryParam("content")
+	boolean isContentRequested, @QueryParam("original")
+	String original, RDFFormat format)
 		throws IOException, TransformerException, DigitalLibraryException, NotFoundException, ClassNotFoundException,
 		NamingException, SQLException, URISyntaxException
 	{
@@ -172,32 +192,66 @@ public class AggregatedResource
 
 		URI researchObjectURI = uriInfo.getBaseUriBuilder().path("workspaces").path(workspaceId).path("ROs")
 				.path(researchObjectId).path(versionId).path("/").build();
-		URI resourceURI;
-		if (format != null) {
-			filePath = filePath + "." + format.getDefaultFileExtension();
-			resourceURI = new URI(uriInfo.getAbsolutePath().toString() + "." + format.getDefaultFileExtension());
+		URI resourceURI = uriInfo.getAbsolutePath();
+
+		// check if request is for a specific format
+		if (original != null) {
+			resourceURI = resourceURI.resolve(original);
+			try {
+				if (sms.containsNamedGraph(resourceURI) && sms.isROMetadataNamedGraph(researchObjectURI, resourceURI)) {
+					RDFFormat returnedFormat = RDFFormat.forFileName(getFilename(uriInfo.getAbsolutePath()),
+						RDFFormat.RDFXML);
+					if (format != null && format != returnedFormat) {
+						logger.warn(String.format(
+							"Inconsistent request, filename is %s but Accept is %s, returning %s",
+							getFilename(uriInfo.getAbsolutePath()), format, returnedFormat));
+					}
+					return getNamedGraph(sms, resourceURI, returnedFormat);
+				}
+			}
+			finally {
+				sms.close();
+			}
 		}
-		else {
-			resourceURI = uriInfo.getAbsolutePath();
+
+		if (sms.containsNamedGraph(resourceURI) && sms.isROMetadataNamedGraph(researchObjectURI, resourceURI)) {
+			try {
+				RDFFormat extensionFormat = RDFFormat.forFileName(getFilename(uriInfo.getAbsolutePath()));
+				if (extensionFormat != null && extensionFormat == format) {
+					// 1. GET manifest.rdf Accept: application/rdf+xml
+					return getNamedGraph(sms, resourceURI, extensionFormat);
+				}
+				if (extensionFormat != null && format == null) {
+					// 2. GET manifest.rdf
+					return getNamedGraph(sms, resourceURI, extensionFormat);
+				}
+				if (format != null) {
+					// 3. GET manifest.rdf Accept: text/turtle
+					// 4. GET manifest Accept: application/rdf+xml
+					URI formatSpecificURI = createFormatSpecificURI(uriInfo.getAbsolutePath(), extensionFormat, format);
+					return Response.temporaryRedirect(formatSpecificURI).build();
+				}
+				// 5. GET manifest
+				URI formatSpecificURI = createFormatSpecificURI(uriInfo.getAbsolutePath(), extensionFormat,
+					RDFFormat.RDFXML);
+				return Response.temporaryRedirect(formatSpecificURI).build();
+			}
+			finally {
+				sms.close();
+			}
 		}
 
 		try {
-			if (sms.containsNamedGraph(uriInfo.getAbsolutePath())
-					&& sms.isROMetadataNamedGraph(researchObjectURI, uriInfo.getAbsolutePath())) {
-				return getNamedGraph(sms, format != null ? format : RDFFormat.RDFXML);
+			if (!isContentRequested) {
+				return getResourceMetadata(sms, researchObjectURI, format != null ? format : RDFFormat.RDFXML,
+					resourceURI);
 			}
 			else {
-				if (isContentRequested == null) {
-					return getResourceMetadata(sms, researchObjectURI, format != null ? format : RDFFormat.RDFXML,
-						resourceURI);
+				if (!sms.isRoFolder(researchObjectURI, resourceURI)) {
+					return getFileContent(workspaceId, researchObjectId, versionId, filePath, user);
 				}
 				else {
-					if (!sms.isRoFolder(researchObjectURI, uriInfo.getAbsolutePath())) {
-						return getFileContent(workspaceId, researchObjectId, versionId, filePath, user);
-					}
-					else {
-						return getFolderContent(workspaceId, researchObjectId, versionId, filePath, user);
-					}
+					return getFolderContent(workspaceId, researchObjectId, versionId, filePath, user);
 				}
 			}
 		}
@@ -207,11 +261,38 @@ public class AggregatedResource
 	}
 
 
+	private URI createFormatSpecificURI(URI absolutePath, RDFFormat extensionFormat, RDFFormat newFormat)
+		throws URISyntaxException
+	{
+		String path = absolutePath.getPath().toString();
+		if (extensionFormat != null) {
+			for (String extension : extensionFormat.getFileExtensions()) {
+				if (path.endsWith(extension)) {
+					path = path.substring(0, path.length() - extension.length() - 1);
+					break;
+				}
+			}
+		}
+		path = path.concat(".").concat(newFormat.getDefaultFileExtension());
+		return new URI(absolutePath.getScheme(), absolutePath.getAuthority(), path,
+				"original=".concat(getFilename(absolutePath)), null);
+	}
+
+
+	private String getFilename(URI uri)
+	{
+		return uri.resolve(".").relativize(uri).toString();
+	}
+
+
 	private Response getResourceMetadata(SemanticMetadataService sms, URI researchObjectURI, RDFFormat format,
 			URI resourceURI)
 		throws ClassNotFoundException, IOException, NamingException, SQLException
 	{
 		InputStream body = sms.getResource(researchObjectURI, resourceURI, format);
+		if (body == null) {
+			return Response.status(Status.NOT_FOUND).type("text/plain").entity("Resource not found").build();
+		}
 		String filename = resourceURI.resolve(".").relativize(resourceURI).toString();
 
 		ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType()).fileName(filename).build();
@@ -244,13 +325,13 @@ public class AggregatedResource
 	}
 
 
-	private Response getNamedGraph(SemanticMetadataService sms, RDFFormat format)
+	private Response getNamedGraph(SemanticMetadataService sms, URI namedGraphURI, RDFFormat format)
 		throws ClassNotFoundException, IOException, NamingException, SQLException
 	{
-		InputStream manifest = sms.getNamedGraph(uriInfo.getAbsolutePath(), format);
+		InputStream manifest = sms.getNamedGraph(namedGraphURI, format);
 
-		ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType())
-				.fileName("annotation." + format.getDefaultFileExtension()).build();
+		String fileName = getFilename(uriInfo.getAbsolutePath());
+		ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType()).fileName(fileName).build();
 		return Response.ok(manifest).header("Content-disposition", cd).build();
 	}
 
@@ -261,11 +342,12 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, InputStream data)
+	String filePath, @QueryParam("original")
+	String original, InputStream data)
 		throws ClassNotFoundException, AccessDeniedException, IOException, NamingException, SQLException,
 		DigitalLibraryException, NotFoundException, URISyntaxException
 	{
-		return createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, data, RDFFormat.TURTLE);
+		return createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, original, data, RDFFormat.TURTLE);
 	}
 
 
@@ -275,11 +357,12 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, InputStream data)
+	String filePath, @QueryParam("original")
+	String original, InputStream data)
 		throws ClassNotFoundException, AccessDeniedException, IOException, NamingException, SQLException,
 		DigitalLibraryException, NotFoundException, URISyntaxException
 	{
-		return createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, data, RDFFormat.TRIG);
+		return createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, original, data, RDFFormat.TRIG);
 	}
 
 
@@ -289,11 +372,12 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, InputStream data)
+	String filePath, @QueryParam("original")
+	String original, InputStream data)
 		throws ClassNotFoundException, AccessDeniedException, IOException, NamingException, SQLException,
 		DigitalLibraryException, NotFoundException, URISyntaxException
 	{
-		return createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, data, RDFFormat.TRIX);
+		return createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, original, data, RDFFormat.TRIX);
 	}
 
 
@@ -303,11 +387,12 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, InputStream data)
+	String filePath, @QueryParam("original")
+	String original, InputStream data)
 		throws ClassNotFoundException, AccessDeniedException, IOException, NamingException, SQLException,
 		DigitalLibraryException, NotFoundException, URISyntaxException
 	{
-		return createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, data, RDFFormat.N3);
+		return createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, original, data, RDFFormat.N3);
 	}
 
 
@@ -317,11 +402,12 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, InputStream data)
+	String filePath, @QueryParam("original")
+	String original, InputStream data)
 		throws ClassNotFoundException, AccessDeniedException, IOException, NamingException, SQLException,
 		DigitalLibraryException, NotFoundException, URISyntaxException
 	{
-		return createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, data, RDFFormat.RDFXML);
+		return createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, original, data, RDFFormat.RDFXML);
 	}
 
 
@@ -330,61 +416,103 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, InputStream data)
+	String filePath, @QueryParam("original")
+	String original, InputStream data)
 		throws ClassNotFoundException, AccessDeniedException, IOException, NamingException, SQLException,
 		DigitalLibraryException, NotFoundException, URISyntaxException
 	{
-		return createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, data, null);
+		return createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, original, data, null);
 	}
 
 
 	private Response createOrUpdateFile(String workspaceId, String researchObjectId, String versionId, String filePath,
-			InputStream data, RDFFormat format)
+			String original, InputStream data, RDFFormat format)
 		throws ClassNotFoundException, IOException, NamingException, SQLException, DigitalLibraryException,
 		NotFoundException, AccessDeniedException, URISyntaxException
 	{
 		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 		if (user.getRole() == UserProfile.Role.PUBLIC) {
+			//TODO check permissions in dLibra
 			throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
 		}
-		String contentType = format != null ? format.getDefaultMIMEType() : request.getContentType();
+
 		URI researchObjectURI = uriInfo.getBaseUriBuilder().path("workspaces").path(workspaceId).path("ROs")
 				.path(researchObjectId).path(versionId).path("/").build();
-		URI manifestURI = uriInfo.getBaseUriBuilder().path("workspaces").path(workspaceId).path("ROs")
-				.path(researchObjectId).path(versionId).path(".ro/manifest").build();
+		URI manifestURI = researchObjectURI.resolve(".ro/manifest.rdf");
+		URI resourceURI = uriInfo.getAbsolutePath();
 
 		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
-
 		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
-		try {
-			if (sms.isROMetadataNamedGraph(researchObjectURI, uriInfo.getAbsolutePath())) {
-				if (manifestURI.equals(uriInfo.getAbsolutePath())) {
-					sms.updateManifest(manifestURI, data, format != null ? format : RDFFormat.RDFXML);
+
+		if (original != null) {
+			resourceURI = resourceURI.resolve(original);
+			try {
+				if (sms.containsNamedGraph(resourceURI) && sms.isROMetadataNamedGraph(researchObjectURI, resourceURI)) {
+					RDFFormat calculatedFormat = RDFFormat.forFileName(getFilename(uriInfo.getAbsolutePath()),
+						RDFFormat.RDFXML);
+					if (format != null && format != calculatedFormat) {
+						logger.warn(String.format("Inconsistent request, filename is %s but Accept is %s, trying %s",
+							getFilename(uriInfo.getAbsolutePath()), format, calculatedFormat));
+					}
+					filePath = researchObjectURI.relativize(resourceURI).getPath();
+					sms.addNamedGraph(resourceURI, data, calculatedFormat);
+					// update the named graph copy in dLibra, the manifest is not changed
+					updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, filePath, researchObjectURI, dl,
+						sms, resourceURI);
+					updateROAttributesInDlibra(workspaceId, researchObjectId, versionId, researchObjectURI, dl, sms);
+					return Response.ok().build();
 				}
-				else {
-					sms.addNamedGraph(uriInfo.getAbsolutePath(), data, format != null ? format : RDFFormat.RDFXML);
-				}
-				// update the named graph copy in dLibra, the manifest is not changed
-				updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, filePath, researchObjectURI, dl,
-					sms, uriInfo.getAbsolutePath());
-				updateROAttributesInDlibra(workspaceId, researchObjectId, versionId, researchObjectURI, dl, sms);
 			}
-			else {
-				URI resourceURI;
+			finally {
+				sms.close();
+			}
+		}
+
+		if (sms.isROMetadataNamedGraph(researchObjectURI, resourceURI)) {
+			try {
+				RDFFormat extensionFormat = RDFFormat.forFileName(getFilename(uriInfo.getAbsolutePath()));
+				if (extensionFormat != null && extensionFormat == format) {
+					// 1. PUT manifest.rdf Content-Type: application/rdf+xml
+					sms.addNamedGraph(resourceURI, data, extensionFormat);
+					// update the named graph copy in dLibra, the manifest is not changed
+					updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, filePath, researchObjectURI, dl,
+						sms, resourceURI);
+					updateROAttributesInDlibra(workspaceId, researchObjectId, versionId, researchObjectURI, dl, sms);
+					return Response.ok().build();
+				}
+				if (extensionFormat != null && format == null) {
+					// 2. PUT manifest.rdf
+					sms.addNamedGraph(resourceURI, data, extensionFormat);
+					// update the named graph copy in dLibra, the manifest is not changed
+					updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, filePath, researchObjectURI, dl,
+						sms, resourceURI);
+					updateROAttributesInDlibra(workspaceId, researchObjectId, versionId, researchObjectURI, dl, sms);
+					return Response.ok().build();
+				}
 				if (format != null) {
-					filePath = filePath + "." + format.getDefaultFileExtension();
-					resourceURI = new URI(uriInfo.getAbsolutePath().toString() + "." + format.getDefaultFileExtension());
+					// 3. PUT manifest.rdf Content-Type: text/turtle
+					// 4. PUT manifest Content-Type: application/rdf+xml
+					URI formatSpecificURI = createFormatSpecificURI(uriInfo.getAbsolutePath(), extensionFormat, format);
+					return Response.temporaryRedirect(formatSpecificURI).build();
 				}
-				else {
-					resourceURI = uriInfo.getAbsolutePath();
-				}
-				ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath,
-					data, contentType != null ? contentType : "text/plain");
-				sms.addResource(researchObjectURI, resourceURI, resourceInfo);
-				// update the manifest that describes the resource in dLibra
-				updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, ".ro/manifest", researchObjectURI,
-					dl, sms, manifestURI);
+				// 5. PUT manifest
+				URI formatSpecificURI = createFormatSpecificURI(uriInfo.getAbsolutePath(), extensionFormat,
+					RDFFormat.RDFXML);
+				return Response.temporaryRedirect(formatSpecificURI).build();
 			}
+			finally {
+				sms.close();
+			}
+		}
+
+		try {
+			String contentType = format != null ? format.getDefaultMIMEType() : request.getContentType();
+			ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, data,
+				contentType != null ? contentType : "text/plain");
+			sms.addResource(researchObjectURI, resourceURI, resourceInfo);
+			// update the manifest that describes the resource in dLibra
+			updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, ".ro/manifest.rdf", researchObjectURI,
+				dl, sms, manifestURI);
 		}
 		finally {
 			sms.close();
@@ -433,9 +561,10 @@ public class AggregatedResource
 			String filePath, URI researchObjectURI, DigitalLibrary dl, SemanticMetadataService sms, URI namedGraphURI)
 		throws DigitalLibraryException, NotFoundException, AccessDeniedException
 	{
-		InputStream dataStream = sms.getNamedGraphWithRelativeURIs(namedGraphURI, researchObjectURI, RDFFormat.RDFXML);
-		dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath + ".rdf", dataStream,
-			"application/rdf+xml");
+		RDFFormat format = RDFFormat.forFileName(filePath, RDFFormat.RDFXML);
+		InputStream dataStream = sms.getNamedGraphWithRelativeURIs(namedGraphURI, researchObjectURI, format);
+		dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, dataStream,
+			format.getDefaultMIMEType());
 	}
 
 
@@ -444,11 +573,12 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath)
+	String filePath, @QueryParam("original")
+	String original)
 		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
 		SQLException, URISyntaxException
 	{
-		deleteFile(workspaceId, researchObjectId, versionId, filePath, null);
+		deleteFile(workspaceId, researchObjectId, versionId, filePath, original, null);
 	}
 
 
@@ -458,11 +588,12 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath)
+	String filePath, @QueryParam("original")
+	String original)
 		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
 		SQLException, URISyntaxException
 	{
-		deleteFile(workspaceId, researchObjectId, versionId, filePath, RDFFormat.RDFXML);
+		deleteFile(workspaceId, researchObjectId, versionId, filePath, original, RDFFormat.RDFXML);
 	}
 
 
@@ -472,11 +603,12 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath)
+	String filePath, @QueryParam("original")
+	String original)
 		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
 		SQLException, URISyntaxException
 	{
-		deleteFile(workspaceId, researchObjectId, versionId, filePath, RDFFormat.TURTLE);
+		deleteFile(workspaceId, researchObjectId, versionId, filePath, original, RDFFormat.TURTLE);
 	}
 
 
@@ -486,11 +618,12 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath)
+	String filePath, @QueryParam("original")
+	String original)
 		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
 		SQLException, URISyntaxException
 	{
-		deleteFile(workspaceId, researchObjectId, versionId, filePath, RDFFormat.TRIG);
+		deleteFile(workspaceId, researchObjectId, versionId, filePath, original, RDFFormat.TRIG);
 	}
 
 
@@ -500,11 +633,12 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath)
+	String filePath, @QueryParam("original")
+	String original)
 		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
 		SQLException, URISyntaxException
 	{
-		deleteFile(workspaceId, researchObjectId, versionId, filePath, RDFFormat.TRIX);
+		deleteFile(workspaceId, researchObjectId, versionId, filePath, original, RDFFormat.TRIX);
 	}
 
 
@@ -514,11 +648,12 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath)
+	String filePath, @QueryParam("original")
+	String original)
 		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
 		SQLException, URISyntaxException
 	{
-		deleteFile(workspaceId, researchObjectId, versionId, filePath, RDFFormat.N3);
+		deleteFile(workspaceId, researchObjectId, versionId, filePath, original, RDFFormat.N3);
 	}
 
 
@@ -526,7 +661,7 @@ public class AggregatedResource
 	String workspaceId, @PathParam("ro_id")
 	String researchObjectId, @PathParam("v_id")
 	String versionId, @PathParam("filePath")
-	String filePath, RDFFormat format)
+	String filePath, String original, RDFFormat format)
 		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
 		SQLException, URISyntaxException
 	{
@@ -538,15 +673,12 @@ public class AggregatedResource
 
 		URI researchObjectURI = uriInfo.getBaseUriBuilder().path("workspaces").path(workspaceId).path("ROs")
 				.path(researchObjectId).path(versionId).path("/").build();
-		URI manifestURI = uriInfo.getBaseUriBuilder().path("workspaces").path(workspaceId).path("ROs")
-				.path(researchObjectId).path(versionId).path(".ro/manifest").build();
-		URI resourceURI;
-		if (format != null) {
-			filePath = filePath + "." + format.getDefaultFileExtension();
-			resourceURI = new URI(uriInfo.getAbsolutePath().toString() + "." + format.getDefaultFileExtension());
-		}
-		else {
-			resourceURI = uriInfo.getAbsolutePath();
+		URI manifestURI = researchObjectURI.resolve(".ro/manifest.rdf");
+		URI resourceURI = uriInfo.getAbsolutePath();
+
+		if (original != null) {
+			resourceURI = resourceURI.resolve(original);
+			filePath = researchObjectURI.relativize(resourceURI).getPath();
 		}
 
 		if (manifestURI.equals(resourceURI)) {

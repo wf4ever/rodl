@@ -20,7 +20,6 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -144,7 +143,7 @@ public class ResourcesTest
 	}
 
 
-	@Test
+	//	@Test
 	public final void test()
 	{
 		client().setFollowRedirects(true);

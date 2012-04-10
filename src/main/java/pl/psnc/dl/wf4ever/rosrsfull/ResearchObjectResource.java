@@ -161,7 +161,7 @@ public class ResearchObjectResource
 		try {
 			if (baseVersion == null) {
 				sms.createResearchObject(roURI);
-				InputStream manifest = sms.getManifest(roURI.resolve(".ro/manifest"), RDFFormat.RDFXML);
+				InputStream manifest = sms.getManifest(roURI.resolve(".ro/manifest.rdf"), RDFFormat.RDFXML);
 				dl.createVersion(workspaceId, researchObjectId, version, manifest, ".ro/manifest.rdf",
 					RDFFormat.RDFXML.getDefaultMIMEType());
 				dl.publishVersion(workspaceId, researchObjectId, version);

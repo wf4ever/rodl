@@ -12,10 +12,12 @@ import java.util.UUID;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -63,7 +65,9 @@ public class ResourcesFullURIsTest
 
 	private final String rdfFilePathEncoded = "foo/bar.rdf";
 
-	private final String annotationBodyURI = ".ro/ann1";
+	private final String annotationBodyURI = ".ro/ann1.ttl";
+
+	private final String annotationBodyURIRDF = ".ro/ann1.rdf";
 
 	private final String username = "John Doe";
 
@@ -130,7 +134,7 @@ public class ResourcesFullURIsTest
 	}
 
 
-	//	@Test
+	@Test
 	public final void testFullURIs()
 	{
 		if (resource().getURI().getHost().equals("localhost")) {
@@ -165,6 +169,7 @@ public class ResourcesFullURIsTest
 						addAnnotationBody();
 						getAnnotationBody();
 						getManifestWithAnnotationBody();
+						deleteAnnotationBody();
 						deleteFile();
 						deleteRDFFile();
 						getInitialManifest();
@@ -192,7 +197,7 @@ public class ResourcesFullURIsTest
 	private void updateManifest()
 	{
 		InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
-		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
+		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest.rdf")
 				.header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
 				.put(ClientResponse.class, is);
 		assertEquals(200, response.getStatus());
@@ -342,22 +347,40 @@ public class ResourcesFullURIsTest
 
 	private void getManifest()
 	{
-		String manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
+		String manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest.rdf")
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(manifest.contains(userId));
 		assertTrue(manifest.contains(filePathEncoded));
 
-		manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
-				.header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
+		manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest.rdf")
+				.header("Authorization", "Bearer " + accessToken).accept("application/x-turtle").get(String.class);
 		assertTrue(manifest.contains(userId));
 		assertTrue(manifest.contains(filePathEncoded));
+
+		manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest.n3")
+				.queryParam("original", "manifest.rdf").header("Authorization", "Bearer " + accessToken)
+				.get(String.class);
+		assertTrue(manifest.contains(userId));
+		assertTrue(manifest.contains(filePathEncoded));
+
+		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest.n3")
+				.header("Authorization", "Bearer " + accessToken).get(ClientResponse.class);
+		assertEquals("Should return 404 for manifest.n3", HttpStatus.SC_NOT_FOUND, response.getStatus());
 	}
 
 
 	private void getManifestWithAnnotationBody()
 	{
-		String manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
+		String manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest.rdf")
 				.header("Authorization", "Bearer " + accessToken).accept("application/x-trig").get(String.class);
+		assertTrue(manifest.contains(userId));
+		assertTrue(manifest.contains(filePathEncoded));
+		assertTrue("Annotation body should contain file path: " + filePath, manifest.contains("a_workflow.t2flow"));
+		assertTrue(manifest.contains("A test"));
+
+		manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest.trig")
+				.queryParam("original", "manifest.rdf").header("Authorization", "Bearer " + accessToken)
+				.get(String.class);
 		assertTrue(manifest.contains(userId));
 		assertTrue(manifest.contains(filePathEncoded));
 		assertTrue("Annotation body should contain file path: " + filePathEncoded,
@@ -385,6 +408,16 @@ public class ResourcesFullURIsTest
 	}
 
 
+	private void deleteAnnotationBody()
+	{
+		ClientResponse response = webResource
+				.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/" + annotationBodyURIRDF)
+				.queryParam("original", "ann1.ttl").header("Authorization", "Bearer " + accessToken)
+				.delete(ClientResponse.class);
+		assertEquals(204, response.getStatus());
+	}
+
+
 	private void deleteFile()
 	{
 		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/" + filePath)
@@ -404,11 +437,11 @@ public class ResourcesFullURIsTest
 
 	private void getInitialManifest()
 	{
-		String manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
+		String manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest.rdf")
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue(!manifest.contains(filePathEncoded));
 
-		manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest")
+		manifest = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest.rdf")
 				.header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
 		assertTrue(!manifest.contains(filePathEncoded));
 	}
