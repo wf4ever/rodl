@@ -420,6 +420,7 @@ public class AggregatedResource
 						logger.warn(String.format("Inconsistent request, filename is %s but Accept is %s, trying %s",
 							getFilename(uriInfo.getAbsolutePath()), format, calculatedFormat));
 					}
+					filePath = researchObjectURI.relativize(resourceURI).getPath();
 					sms.addNamedGraph(resourceURI, data, calculatedFormat);
 					// update the named graph copy in dLibra, the manifest is not changed
 					updateNamedGraphInDlibra(researchObjectId, filePath, researchObjectURI, dl, sms, resourceURI);
@@ -432,7 +433,7 @@ public class AggregatedResource
 			}
 		}
 
-		if (sms.containsNamedGraph(resourceURI) && sms.isROMetadataNamedGraph(researchObjectURI, resourceURI)) {
+		if (sms.isROMetadataNamedGraph(researchObjectURI, resourceURI)) {
 			try {
 				RDFFormat extensionFormat = RDFFormat.forFileName(getFilename(uriInfo.getAbsolutePath()));
 				if (extensionFormat != null && extensionFormat == format) {
@@ -509,7 +510,6 @@ public class AggregatedResource
 	 * @param dl
 	 * @param sms
 	 * @param namedGraphURI
-	 *            TODO
 	 * @throws DigitalLibraryException
 	 * @throws NotFoundException
 	 * @throws AccessDeniedException
@@ -619,6 +619,7 @@ public class AggregatedResource
 
 		if (original != null) {
 			resourceURI = resourceURI.resolve(original);
+			filePath = researchObjectURI.relativize(resourceURI).getPath();
 		}
 
 		if (manifestURI.equals(resourceURI)) {

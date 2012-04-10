@@ -75,6 +75,8 @@ public class ResourcesTest
 
 	private final String annotationBodyURI = ".ro/ann1.ttl";
 
+	private final String annotationBodyURIRDF = ".ro/ann1.rdf";
+
 	private final String username = "John Doe";
 
 	private final String username2 = "May Gray";
@@ -182,6 +184,7 @@ public class ResourcesTest
 						addAnnotationBody();
 						getAnnotationBody();
 						getManifestWithAnnotationBody();
+						deleteAnnotationBody();
 						deleteFile();
 						deleteRDFFile();
 						getInitialManifest();
@@ -450,6 +453,15 @@ public class ResourcesTest
 				.header("Authorization", "Bearer " + accessToken).get(String.class);
 		assertTrue("Annotation body should contain file path: a_workflow.t2flow", body.contains("a_workflow.t2flow"));
 		assertTrue(body.contains("A test"));
+	}
+
+
+	private void deleteAnnotationBody()
+	{
+		ClientResponse response = webResource.path("ROs/" + r + "/" + annotationBodyURIRDF)
+				.queryParam("original", "ann1.ttl").header("Authorization", "Bearer " + accessToken)
+				.delete(ClientResponse.class);
+		assertEquals(204, response.getStatus());
 	}
 
 
