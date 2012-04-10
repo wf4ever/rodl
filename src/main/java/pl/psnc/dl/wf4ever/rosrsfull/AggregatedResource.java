@@ -208,6 +208,10 @@ public class AggregatedResource
 					}
 					return getNamedGraph(sms, resourceURI, returnedFormat);
 				}
+				else {
+					return Response.status(Status.NOT_FOUND).type("text/plain").entity("Original resource not found")
+							.build();
+				}
 			}
 			finally {
 				sms.close();
@@ -461,6 +465,10 @@ public class AggregatedResource
 						sms, resourceURI);
 					updateROAttributesInDlibra(workspaceId, researchObjectId, versionId, researchObjectURI, dl, sms);
 					return Response.ok().build();
+				}
+				else {
+					return Response.status(Status.NOT_FOUND).type("text/plain").entity("Original resource not found")
+							.build();
 				}
 			}
 			finally {
