@@ -114,7 +114,7 @@ public class ResearchObjectResource
 			}
 		}
 		catch (NotFoundException e) {
-			logger.warn("URI not found: " + uriInfo.getAbsolutePath());
+			logger.warn("URI not found in dLibra: " + uriInfo.getAbsolutePath());
 		}
 		finally {
 
@@ -123,7 +123,7 @@ public class ResearchObjectResource
 				sms.removeResearchObject(uriInfo.getAbsolutePath());
 			}
 			catch (IllegalArgumentException e) {
-				logger.warn("URI not found: " + uriInfo.getAbsolutePath());
+				logger.warn("URI not found in SMS: " + uriInfo.getAbsolutePath());
 			}
 			finally {
 				sms.close();
