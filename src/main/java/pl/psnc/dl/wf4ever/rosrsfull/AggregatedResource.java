@@ -451,7 +451,7 @@ public class AggregatedResource
 		if (original != null) {
 			resourceURI = resourceURI.resolve(original);
 			try {
-				if (sms.containsNamedGraph(resourceURI) && sms.isROMetadataNamedGraph(researchObjectURI, resourceURI)) {
+				if (sms.isROMetadataNamedGraph(researchObjectURI, resourceURI)) {
 					RDFFormat calculatedFormat = RDFFormat.forFileName(getFilename(uriInfo.getAbsolutePath()),
 						RDFFormat.RDFXML);
 					if (format != null && format != calculatedFormat) {
