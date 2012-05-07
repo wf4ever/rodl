@@ -91,7 +91,7 @@ public class SparqlResource
 
 
 	@POST
-	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Consumes({ MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_FORM_URLENCODED})
 	@Produces({ "application/sparql-results+xml", "application/xml", "text/xml"})
 	public Response executeSparqlPostXml(@FormDataParam("query")
 	String query)
@@ -103,7 +103,7 @@ public class SparqlResource
 
 
 	@POST
-	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Consumes({ MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_FORM_URLENCODED})
 	@Produces({ "application/sparql-results+json", "application/json"})
 	public Response executeSparqlPostJson(@FormDataParam("query")
 	String query)
@@ -115,7 +115,7 @@ public class SparqlResource
 
 
 	@POST
-	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Consumes({ MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_FORM_URLENCODED})
 	@Produces("application/rdf+xml")
 	public Response executeSparqlPostRdfXml(@FormDataParam("query")
 	String query)
@@ -127,7 +127,7 @@ public class SparqlResource
 
 
 	@POST
-	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Consumes({ MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_FORM_URLENCODED})
 	@Produces({ "application/x-turtle", "text/turtle"})
 	public Response executeSparqlPostTurtle(@FormDataParam("query")
 	String query)
