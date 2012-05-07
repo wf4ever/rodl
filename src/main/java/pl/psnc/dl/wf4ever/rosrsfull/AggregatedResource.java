@@ -450,63 +450,26 @@ public class AggregatedResource
 
 		if (original != null) {
 			resourceURI = resourceURI.resolve(original);
-			try {
-				if (sms.isROMetadataNamedGraph(researchObjectURI, resourceURI)) {
-					RDFFormat calculatedFormat = RDFFormat.forFileName(getFilename(uriInfo.getAbsolutePath()),
-						RDFFormat.RDFXML);
-					if (format != null && format != calculatedFormat) {
-						logger.warn(String.format("Inconsistent request, filename is %s but Accept is %s, trying %s",
-							getFilename(uriInfo.getAbsolutePath()), format, calculatedFormat));
-					}
-					filePath = researchObjectURI.relativize(resourceURI).getPath();
-					sms.addNamedGraph(resourceURI, data, calculatedFormat);
-					// update the named graph copy in dLibra, the manifest is not changed
-					updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, filePath, researchObjectURI, dl,
-						sms, resourceURI);
-					updateROAttributesInDlibra(workspaceId, researchObjectId, versionId, researchObjectURI, dl, sms);
-					return Response.ok().build();
-				}
-				else {
-					return Response.status(Status.NOT_FOUND).type("text/plain").entity("Original resource not found")
-							.build();
-				}
-			}
-			finally {
-				sms.close();
-			}
+			filePath = researchObjectURI.relativize(resourceURI).getPath();
 		}
 
 		if (sms.isROMetadataNamedGraph(researchObjectURI, resourceURI)) {
 			try {
-				RDFFormat extensionFormat = RDFFormat.forFileName(getFilename(uriInfo.getAbsolutePath()));
-				if (extensionFormat != null && extensionFormat == format) {
-					// 1. PUT manifest.rdf Content-Type: application/rdf+xml
-					sms.addNamedGraph(resourceURI, data, extensionFormat);
-					// update the named graph copy in dLibra, the manifest is not changed
-					updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, filePath, researchObjectURI, dl,
-						sms, resourceURI);
-					updateROAttributesInDlibra(workspaceId, researchObjectId, versionId, researchObjectURI, dl, sms);
+				RDFFormat calculatedFormat = format;
+				if (calculatedFormat == null) {
+					calculatedFormat = RDFFormat.forFileName(getFilename(resourceURI), RDFFormat.RDFXML);
+				}
+				boolean created = sms.addNamedGraph(resourceURI, data, calculatedFormat);
+				// update the named graph copy in dLibra, the manifest is not changed
+				updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, filePath, researchObjectURI, dl,
+					sms, resourceURI);
+				updateROAttributesInDlibra(workspaceId, researchObjectId, versionId, researchObjectURI, dl, sms);
+				if (created) {
+					return Response.created(resourceURI).build();
+				}
+				else {
 					return Response.ok().build();
 				}
-				if (extensionFormat != null && format == null) {
-					// 2. PUT manifest.rdf
-					sms.addNamedGraph(resourceURI, data, extensionFormat);
-					// update the named graph copy in dLibra, the manifest is not changed
-					updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, filePath, researchObjectURI, dl,
-						sms, resourceURI);
-					updateROAttributesInDlibra(workspaceId, researchObjectId, versionId, researchObjectURI, dl, sms);
-					return Response.ok().build();
-				}
-				if (format != null) {
-					// 3. PUT manifest.rdf Content-Type: text/turtle
-					// 4. PUT manifest Content-Type: application/rdf+xml
-					URI formatSpecificURI = createFormatSpecificURI(uriInfo.getAbsolutePath(), extensionFormat, format);
-					return Response.temporaryRedirect(formatSpecificURI).build();
-				}
-				// 5. PUT manifest
-				URI formatSpecificURI = createFormatSpecificURI(uriInfo.getAbsolutePath(), extensionFormat,
-					RDFFormat.RDFXML);
-				return Response.temporaryRedirect(formatSpecificURI).build();
 			}
 			finally {
 				sms.close();
@@ -517,16 +480,20 @@ public class AggregatedResource
 			String contentType = format != null ? format.getDefaultMIMEType() : request.getContentType();
 			ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, data,
 				contentType != null ? contentType : "text/plain");
-			sms.addResource(researchObjectURI, resourceURI, resourceInfo);
+			boolean created = sms.addResource(researchObjectURI, resourceURI, resourceInfo);
 			// update the manifest that describes the resource in dLibra
 			updateNamedGraphInDlibra(workspaceId, researchObjectId, versionId, ".ro/manifest.rdf", researchObjectURI,
 				dl, sms, manifestURI);
+			if (created) {
+				return Response.created(resourceURI).build();
+			}
+			else {
+				return Response.ok().build();
+			}
 		}
 		finally {
 			sms.close();
 		}
-
-		return Response.ok().build();
 	}
 
 

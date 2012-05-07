@@ -123,8 +123,9 @@ public class UserResource
 	 * 
 	 * @param user
 	 *            id, base64 url-safe encoded
-	 * @return 201 (Created) when the user was successfully created, 400 (Bad Request) if
-	 *         the content is malformed 409 (Conflict) if the USER_ID is already used
+	 * @return 201 (Created) when the user was successfully created, 200 OK if it was
+	 *         updated, 400 (Bad Request) if the content is malformed 409 (Conflict) if
+	 *         the USER_ID is already used
 	 * @throws DigitalLibraryException
 	 * @throws ConflictException
 	 * @throws NotFoundException
@@ -154,12 +155,17 @@ public class UserResource
 		}
 
 		String password = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 20);
-		dl.createUser(userId, password, username != null && !username.isEmpty() ? username : userId);
+		boolean created = dl.createUser(userId, password, username != null && !username.isEmpty() ? username : userId);
 		oauth.createUserCredentials(userId, password);
 		SemanticMetadataServiceFactory.getService(new UserProfile(userId, password, username != null
 				&& !username.isEmpty() ? username : userId, null));
 
-		return Response.ok().build();
+		if (created) {
+			return Response.created(uriInfo.getAbsolutePath()).build();
+		}
+		else {
+			return Response.ok().build();
+		}
 	}
 
 

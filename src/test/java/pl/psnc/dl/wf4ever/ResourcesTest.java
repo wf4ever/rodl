@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64;
@@ -251,11 +252,11 @@ public class ResourcesTest
 	{
 		ClientResponse response = webResource.path("users/" + userIdUrlSafe)
 				.header("Authorization", "Bearer " + adminCreds).put(ClientResponse.class, username);
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 
 		response = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
 				.put(ClientResponse.class, username2);
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 	}
 
 
@@ -263,13 +264,13 @@ public class ResourcesTest
 	{
 		ClientResponse response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
 				.post(ClientResponse.class, clientId + "\r\n" + userId);
-		assertEquals(201, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 		URI accessTokenURI = response.getLocation();
 		accessToken = accessTokenURI.resolve(".").relativize(accessTokenURI).toString();
 
 		response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
 				.post(ClientResponse.class, clientId + "\r\n" + userId2);
-		assertEquals(201, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 		accessTokenURI = response.getLocation();
 		accessToken2 = accessTokenURI.resolve(".").relativize(accessTokenURI).toString();
 	}
@@ -309,11 +310,11 @@ public class ResourcesTest
 	{
 		ClientResponse response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken)
 				.post(ClientResponse.class, r);
-		assertEquals(201, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 
 		response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken2)
 				.post(ClientResponse.class, r2);
-		assertEquals(201, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 	}
 
 
@@ -334,7 +335,7 @@ public class ResourcesTest
 		InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
 		ClientResponse response = webResource.path("ROs/" + r + "/.ro/manifest.rdf")
 				.header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_OK, response.getStatus());
 	}
 
 
@@ -343,7 +344,7 @@ public class ResourcesTest
 		ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
 				.header("Authorization", "Bearer " + accessToken).type("text/plain")
 				.put(ClientResponse.class, "lorem ipsum");
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 	}
 
 
@@ -371,7 +372,7 @@ public class ResourcesTest
 		ClientResponse response = webResource.path("ROs/" + r + "/" + rdfFilePath)
 				.header("Authorization", "Bearer " + accessToken).type(RDFFormat.RDFXML.getDefaultMIMEType())
 				.put(ClientResponse.class, "lorem ipsum");
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 	}
 
 
@@ -442,7 +443,7 @@ public class ResourcesTest
 		ClientResponse response = webResource.path("ROs/" + r + "/" + annotationBodyURI)
 				.header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
 				.put(ClientResponse.class, is);
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 	}
 
 
@@ -460,7 +461,7 @@ public class ResourcesTest
 		ClientResponse response = webResource.path("ROs/" + r + "/" + annotationBodyURIRDF)
 				.queryParam("original", "ann1.ttl").header("Authorization", "Bearer " + accessToken)
 				.delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -468,7 +469,7 @@ public class ResourcesTest
 	{
 		ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
 				.header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -477,7 +478,7 @@ public class ResourcesTest
 		ClientResponse response = webResource.path("ROs/" + r + "/" + rdfFilePath)
 				.header("Authorization", "Bearer " + accessToken).type(RDFFormat.RDFXML.getDefaultMIMEType())
 				.delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -497,11 +498,11 @@ public class ResourcesTest
 	{
 		ClientResponse response = webResource.path("ROs/" + r + "/").header("Authorization", "Bearer " + accessToken)
 				.delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 
 		response = webResource.path("ROs/" + r2 + "/").header("Authorization", "Bearer " + accessToken2)
 				.delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -509,11 +510,11 @@ public class ResourcesTest
 	{
 		ClientResponse response = webResource.path("accesstokens/" + accessToken)
 				.header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 
 		response = webResource.path("accesstokens/" + accessToken2).header("Authorization", "Bearer " + adminCreds)
 				.delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -521,11 +522,11 @@ public class ResourcesTest
 	{
 		ClientResponse response = webResource.path("users/" + userIdUrlSafe)
 				.header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 
 		response = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
 				.delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -533,6 +534,6 @@ public class ResourcesTest
 	{
 		ClientResponse response = webResource.path("clients/" + clientId)
 				.header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 }

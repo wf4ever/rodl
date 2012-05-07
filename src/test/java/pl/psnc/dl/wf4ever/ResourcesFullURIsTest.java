@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
@@ -200,7 +202,7 @@ public class ResourcesFullURIsTest
 		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/.ro/manifest.rdf")
 				.header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
 				.put(ClientResponse.class, is);
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_OK, response.getStatus());
 	}
 
 
@@ -208,7 +210,7 @@ public class ResourcesFullURIsTest
 	{
 		ClientResponse response = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
 				.post(ClientResponse.class, clientName + "\r\n" + clientRedirectionURI);
-		assertEquals(201, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 		URI clientURI = response.getLocation();
 		clientId = clientURI.resolve(".").relativize(clientURI).toString();
 	}
@@ -233,7 +235,7 @@ public class ResourcesFullURIsTest
 	{
 		ClientResponse response = webResource.path("users/" + userIdUrlSafe)
 				.header("Authorization", "Bearer " + adminCreds).put(ClientResponse.class, username);
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 	}
 
 
@@ -241,7 +243,7 @@ public class ResourcesFullURIsTest
 	{
 		ClientResponse response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
 				.post(ClientResponse.class, clientId + "\r\n" + userId);
-		assertEquals(201, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 		URI accessTokenURI = response.getLocation();
 		accessToken = accessTokenURI.resolve(".").relativize(accessTokenURI).toString();
 	}
@@ -259,7 +261,7 @@ public class ResourcesFullURIsTest
 	{
 		ClientResponse response = webResource.path("workspaces/").header("Authorization", "Bearer " + accessToken)
 				.post(ClientResponse.class, w);
-		assertEquals(201, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 	}
 
 
@@ -275,7 +277,7 @@ public class ResourcesFullURIsTest
 	{
 		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/")
 				.header("Authorization", "Bearer " + accessToken).post(ClientResponse.class, r);
-		assertEquals(201, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 	}
 
 
@@ -283,7 +285,7 @@ public class ResourcesFullURIsTest
 	{
 		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/" + r)
 				.header("Authorization", "Bearer " + accessToken).post(ClientResponse.class, v);
-		assertEquals(201, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 	}
 
 
@@ -292,7 +294,7 @@ public class ResourcesFullURIsTest
 		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/" + filePath)
 				.header("Authorization", "Bearer " + accessToken).type("text/plain")
 				.put(ClientResponse.class, "lorem ipsum");
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 	}
 
 
@@ -321,7 +323,7 @@ public class ResourcesFullURIsTest
 		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/" + rdfFilePath)
 				.header("Authorization", "Bearer " + accessToken).type(RDFFormat.RDFXML.getDefaultMIMEType())
 				.put(ClientResponse.class, "lorem ipsum");
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 	}
 
 
@@ -395,7 +397,7 @@ public class ResourcesFullURIsTest
 		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/" + annotationBodyURI)
 				.header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
 				.put(ClientResponse.class, is);
-		assertEquals(200, response.getStatus());
+		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
 	}
 
 
@@ -414,7 +416,7 @@ public class ResourcesFullURIsTest
 				.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/" + annotationBodyURIRDF)
 				.queryParam("original", "ann1.ttl").header("Authorization", "Bearer " + accessToken)
 				.delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -422,7 +424,7 @@ public class ResourcesFullURIsTest
 	{
 		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/" + filePath)
 				.header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -431,7 +433,7 @@ public class ResourcesFullURIsTest
 		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v + "/" + rdfFilePath)
 				.header("Authorization", "Bearer " + accessToken).type(RDFFormat.RDFXML.getDefaultMIMEType())
 				.delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -451,7 +453,7 @@ public class ResourcesFullURIsTest
 	{
 		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/" + r + "/" + v)
 				.header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -459,7 +461,7 @@ public class ResourcesFullURIsTest
 	{
 		ClientResponse response = webResource.path("workspaces/" + w + "/ROs/" + r)
 				.header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -467,7 +469,7 @@ public class ResourcesFullURIsTest
 	{
 		ClientResponse response = webResource.path("workspaces/" + w).header("Authorization", "Bearer " + accessToken)
 				.delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -475,7 +477,7 @@ public class ResourcesFullURIsTest
 	{
 		ClientResponse response = webResource.path("accesstokens/" + accessToken)
 				.header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -483,7 +485,7 @@ public class ResourcesFullURIsTest
 	{
 		ClientResponse response = webResource.path("users/" + userIdUrlSafe)
 				.header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 
 
@@ -491,6 +493,6 @@ public class ResourcesFullURIsTest
 	{
 		ClientResponse response = webResource.path("clients/" + clientId)
 				.header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
-		assertEquals(204, response.getStatus());
+		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
 	}
 }
