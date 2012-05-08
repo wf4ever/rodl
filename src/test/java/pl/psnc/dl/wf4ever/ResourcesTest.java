@@ -17,19 +17,14 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.test.framework.JerseyTest;
-import com.sun.jersey.test.framework.spi.container.TestContainerException;
-import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
-import com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory;
+import com.sun.jersey.test.framework.WebAppDescriptor;
 
 /**
  * @author piotrhol
@@ -82,69 +77,13 @@ public class ResourcesTest
 	private final String username2 = "May Gray";
 
 
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@BeforeClass
-	public static void setUpBeforeClass()
-		throws Exception
-	{
-	}
-
-
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@AfterClass
-	public static void tearDownAfterClass()
-		throws Exception
-	{
-	}
-
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.sun.jersey.test.framework.JerseyTest#setUp()
-	 */
-	@Override
-	@Before
-	public void setUp()
-		throws Exception
-	{
-		super.setUp();
-	}
-
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.sun.jersey.test.framework.JerseyTest#tearDown()
-	 */
-	@Override
-	@After
-	public void tearDown()
-		throws Exception
-	{
-		super.tearDown();
-	}
-
-
 	public ResourcesTest()
 	{
-		super("pl.psnc.dl.wf4ever");
+		super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").servletClass(TestServletContainer.class).build());
 	}
 
 
-	@Override
-	protected TestContainerFactory getTestContainerFactory()
-		throws TestContainerException
-	{
-		return new ExternalTestContainerFactory();
-	}
-
-
-	//	@Test
+	@Test
 	public final void test()
 	{
 		client().setFollowRedirects(true);
