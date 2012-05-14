@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -91,9 +92,9 @@ public class SparqlResource
 
 
 	@POST
-	@Consumes({ MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_FORM_URLENCODED})
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces({ "application/sparql-results+xml", "application/xml", "text/xml"})
-	public Response executeSparqlPostXml(@FormDataParam("query")
+	public Response executeSparqlPostXml(@FormParam("query")
 	String query)
 		throws ClassNotFoundException, DigitalLibraryException, NotFoundException, IOException, NamingException,
 		SQLException
@@ -103,9 +104,9 @@ public class SparqlResource
 
 
 	@POST
-	@Consumes({ MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_FORM_URLENCODED})
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces({ "application/sparql-results+json", "application/json"})
-	public Response executeSparqlPostJson(@FormDataParam("query")
+	public Response executeSparqlPostJson(@FormParam("query")
 	String query)
 		throws ClassNotFoundException, DigitalLibraryException, NotFoundException, IOException, NamingException,
 		SQLException
@@ -115,9 +116,9 @@ public class SparqlResource
 
 
 	@POST
-	@Consumes({ MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_FORM_URLENCODED})
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces("application/rdf+xml")
-	public Response executeSparqlPostRdfXml(@FormDataParam("query")
+	public Response executeSparqlPostRdfXml(@FormParam("query")
 	String query)
 		throws ClassNotFoundException, DigitalLibraryException, NotFoundException, IOException, NamingException,
 		SQLException
@@ -127,9 +128,57 @@ public class SparqlResource
 
 
 	@POST
-	@Consumes({ MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_FORM_URLENCODED})
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces({ "application/x-turtle", "text/turtle"})
-	public Response executeSparqlPostTurtle(@FormDataParam("query")
+	public Response executeSparqlPostTurtle(@FormParam("query")
+	String query)
+		throws ClassNotFoundException, DigitalLibraryException, NotFoundException, IOException, NamingException,
+		SQLException
+	{
+		return executeSparql(query, RDFFormat.TURTLE);
+	}
+
+
+	@POST
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces({ "application/sparql-results+xml", "application/xml", "text/xml"})
+	public Response executeSparqlPostXmlMulti(@FormDataParam("query")
+	String query)
+		throws ClassNotFoundException, DigitalLibraryException, NotFoundException, IOException, NamingException,
+		SQLException
+	{
+		return executeSparql(query, SemanticMetadataService.SPARQL_XML);
+	}
+
+
+	@POST
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces({ "application/sparql-results+json", "application/json"})
+	public Response executeSparqlPostJsonMulti(@FormDataParam("query")
+	String query)
+		throws ClassNotFoundException, DigitalLibraryException, NotFoundException, IOException, NamingException,
+		SQLException
+	{
+		return executeSparql(query, SemanticMetadataService.SPARQL_JSON);
+	}
+
+
+	@POST
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces("application/rdf+xml")
+	public Response executeSparqlPostRdfXmlMulti(@FormDataParam("query")
+	String query)
+		throws ClassNotFoundException, DigitalLibraryException, NotFoundException, IOException, NamingException,
+		SQLException
+	{
+		return executeSparql(query, RDFFormat.RDFXML);
+	}
+
+
+	@POST
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces({ "application/x-turtle", "text/turtle"})
+	public Response executeSparqlPostTurtleMulti(@FormDataParam("query")
 	String query)
 		throws ClassNotFoundException, DigitalLibraryException, NotFoundException, IOException, NamingException,
 		SQLException
