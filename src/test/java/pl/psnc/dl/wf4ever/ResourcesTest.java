@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
@@ -85,6 +86,7 @@ public class ResourcesTest
 
 	@Test
 	public final void test()
+		throws URISyntaxException
 	{
 		client().setFollowRedirects(true);
 		if (resource().getURI().getHost().equals("localhost")) {
@@ -111,6 +113,8 @@ public class ResourcesTest
 					createROs();
 					try {
 						getROsList();
+						getROMetadata();
+						getROHtml();
 						getInitialManifest();
 						updateManifest();
 						addFile();
@@ -266,6 +270,31 @@ public class ResourcesTest
 		list = webResource.path("ROs").get(String.class);
 		assertTrue(list.contains(r));
 		assertTrue(list.contains(r2));
+	}
+
+
+	private void getROMetadata()
+	{
+		client().setFollowRedirects(false);
+		ClientResponse response = webResource.path("ROs").path(r).path("/").accept("text/turtle")
+				.get(ClientResponse.class);
+		assertEquals(HttpServletResponse.SC_SEE_OTHER, response.getStatus());
+		assertEquals(webResource.path("ROs").path(r).path(".ro/manifest.rdf").getURI(), response.getLocation());
+		client().setFollowRedirects(true);
+	}
+
+
+	private void getROHtml()
+		throws URISyntaxException
+	{
+		client().setFollowRedirects(false);
+		ClientResponse response = webResource.path("ROs").path(r).path("/").accept("text/html")
+				.get(ClientResponse.class);
+		assertEquals(HttpServletResponse.SC_SEE_OTHER, response.getStatus());
+		URI portalURI = new URI("http", "sandbox.wf4ever-project.org", "/portal/ro", "ro="
+				+ webResource.path("ROs").path(r).path("/").getURI().toString(), null);
+		assertEquals(portalURI, response.getLocation());
+		client().setFollowRedirects(true);
 	}
 
 

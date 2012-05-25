@@ -3,6 +3,8 @@ package pl.psnc.dl.wf4ever.rosrs;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
@@ -16,6 +18,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -46,6 +49,8 @@ public class ResearchObjectResource
 
 	private final static Logger logger = Logger.getLogger(ResearchObjectResource.class);
 
+	public static final URI portalRoPage = URI.create("http://sandbox.wf4ever-project.org/portal/ro");
+
 	@Context
 	HttpServletRequest request;
 
@@ -60,12 +65,8 @@ public class ResearchObjectResource
 	/**
 	 * Returns zip archive with contents of RO version.
 	 * 
-	 * @param workspaceId
-	 *            identifier of a workspace in the RO SRS
 	 * @param researchObjectId
 	 *            RO identifier - defined by the user
-	 * @param versionId
-	 *            identifier of version of RO - defined by the user
 	 * @return
 	 * @throws UnknownHostException
 	 * @throws MalformedURLException
@@ -77,7 +78,7 @@ public class ResearchObjectResource
 	 * @throws NotFoundException
 	 */
 	@GET
-	@Produces("application/zip")
+	@Produces({ "application/zip", "multipart/related", "*/*"})
 	public Response getZippedRO(@PathParam("ro_id")
 	String researchObjectId)
 		throws RemoteException, MalformedURLException, UnknownHostException, DigitalLibraryException, NotFoundException
@@ -90,6 +91,26 @@ public class ResearchObjectResource
 		ContentDisposition cd = ContentDisposition.type("application/zip")
 				.fileName(researchObjectId + "-" + versionId + ".zip").build();
 		return Response.ok(body).header("Content-disposition", cd).build();
+	}
+
+
+	@GET
+	@Produces({ "application/rdf+xml", "application/x-turtle", "text/turtle", "application/x-trig", "application/trix",
+			"text/rdf+n3"})
+	public Response getROMetadata()
+	{
+		return Response.seeOther(uriInfo.getAbsolutePath().resolve(".ro/manifest.rdf")).build();
+	}
+
+
+	@GET
+	@Produces({ MediaType.TEXT_HTML})
+	public Response getROHtml()
+		throws URISyntaxException
+	{
+		URI portalURI = new URI(portalRoPage.getScheme(), portalRoPage.getAuthority(), portalRoPage.getPath(), "ro="
+				+ uriInfo.getRequestUri().toString(), null);
+		return Response.seeOther(portalURI).build();
 	}
 
 

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
@@ -23,6 +24,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.TransformerException;
@@ -55,6 +57,8 @@ public class VersionResource
 {
 
 	private final static Logger logger = Logger.getLogger(VersionResource.class);
+
+	public static final URI portalRoPage = URI.create("http://sandbox.wf4ever-project.org/portal/ro");
 
 	@Context
 	private HttpServletRequest request;
@@ -126,6 +130,26 @@ public class VersionResource
 		ContentDisposition cd = ContentDisposition.type("application/zip")
 				.fileName(researchObjectId + "-" + versionId + ".zip").build();
 		return Response.ok(body).header("Content-disposition", cd).build();
+	}
+
+
+	@GET
+	@Produces({ "application/rdf+xml", "application/x-turtle", "text/turtle", "application/x-trig", "application/trix",
+			"text/rdf+n3"})
+	public Response getROMetadata()
+	{
+		return Response.seeOther(uriInfo.getAbsolutePath().resolve(".ro/manifest.rdf")).build();
+	}
+
+
+	@GET
+	@Produces({ MediaType.TEXT_HTML})
+	public Response getROHtml()
+		throws URISyntaxException
+	{
+		URI portalURI = new URI(portalRoPage.getScheme(), portalRoPage.getAuthority(), portalRoPage.getPath(), "ro="
+				+ uriInfo.getRequestUri().toString(), null);
+		return Response.seeOther(portalURI).build();
 	}
 
 
