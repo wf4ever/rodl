@@ -31,477 +31,484 @@ import com.sun.jersey.test.framework.WebAppDescriptor;
  * @author piotrhol
  * 
  */
-public class ResourcesTest
-	extends JerseyTest
-{
-
-	private final String clientName = "ROSRS testing app written in Ruby";
-
-	private final String clientRedirectionURI = "OOB"; // will not be used
-
-	private String clientId;
-
-	private final String adminCreds = StringUtils.trim(Base64.encodeBase64String("wfadmin:wfadmin!!!".getBytes()));
-
-	private final String userId = UUID.randomUUID().toString();
-
-	private final String userIdUrlSafe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId.getBytes()));
-
-	private final String userId2 = UUID.randomUUID().toString();
-
-	private final String userId2UrlSafe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId2.getBytes()));
-
-	private WebResource webResource;
-
-	private String accessToken;
-
-	private String accessToken2;
-
-	private final String r = "r";
-
-	private final String r2 = "r2";
-
-	private final String filePath = "foo/bar ra.txt";
-
-	private final String filePathEncoded = "foo/bar%20ra.txt";
-
-	private final String rdfFilePath = "foo/bar.rdf";
-
-	private final String rdfFilePathEncoded = "foo/bar.rdf";
-
-	private final String annotationBodyURI = ".ro/ann1.ttl";
-
-	private final String annotationBodyURIRDF = ".ro/ann1.rdf";
-
-	private final String username = "John Doe";
-
-	private final String username2 = "May Gray";
-
-
-	public ResourcesTest()
-	{
-		super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").servletClass(TestServletContainer.class).build());
-	}
-
-
-	@Test
-	public final void test()
-		throws URISyntaxException
-	{
-		client().setFollowRedirects(true);
-		if (resource().getURI().getHost().equals("localhost")) {
-			webResource = resource();
-		}
-		else {
-			webResource = resource().path("rosrs5/");
-		}
-		createClient();
-		try {
-			getClientsList();
-			getClient();
-			createUsers();
-			getUser();
-			try {
-				createAccessTokens();
-				try {
-					getAccessTokensList();
-					checkWhoAmI();
-					webResource.path("ROs/" + r + "/").header("Authorization", "Bearer " + accessToken)
-							.delete(ClientResponse.class);
-					webResource.path("ROs/" + r2 + "/").header("Authorization", "Bearer " + accessToken)
-							.delete(ClientResponse.class);
-					createROs();
-					try {
-						getROsList();
-						getROMetadata();
-						getROHtml();
-						getInitialManifest();
-						updateManifest();
-						addFile();
-						getFileMetadata();
-						getFileContent();
-						addRDFFile();
-						getRDFFileMetadata();
-						getRDFFileContent();
-						getManifest();
-						addAnnotationBody();
-						getAnnotationBody();
-						getManifestWithAnnotationBody();
-						deleteAnnotationBody();
-						deleteFile();
-						deleteRDFFile();
-						getInitialManifest();
-					}
-					finally {
-						deleteROs();
-					}
-				}
-				finally {
-					deleteAccessTokens();
-				}
-			}
-			finally {
-				deleteUsers();
-			}
-		}
-		finally {
-			deleteClient();
-		}
-	}
-
-
-	private void getUser()
-	{
-		String user = webResource.path("users/" + userIdUrlSafe).header("Authorization", "Bearer " + adminCreds)
-				.get(String.class);
-		assertTrue(user.contains(userId));
-
-		user = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
-				.get(String.class);
-		assertTrue(user.contains(userId2));
-
-		user = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
-				.accept("application/x-turtle").get(String.class);
-		assertTrue(user.contains(userId2));
-	}
-
-
-	private void createClient()
-	{
-		ClientResponse response = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
-				.post(ClientResponse.class, clientName + "\r\n" + clientRedirectionURI);
-		assertEquals(201, response.getStatus());
-		URI clientURI = response.getLocation();
-		clientId = clientURI.resolve(".").relativize(clientURI).toString();
-	}
-
-
-	private void getClientsList()
-	{
-		String list = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds).get(String.class);
-		assertTrue(list.contains(clientId));
-	}
-
-
-	private void getClient()
-	{
-		String client = webResource.path("clients/" + clientId).header("Authorization", "Bearer " + adminCreds)
-				.get(String.class);
-		assertTrue(client.contains(clientId));
-	}
-
-
-	private void createUsers()
-	{
-		ClientResponse response = webResource.path("users/" + userIdUrlSafe)
-				.header("Authorization", "Bearer " + adminCreds).put(ClientResponse.class, username);
-		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
-
-		response = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
-				.put(ClientResponse.class, username2);
-		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
-	}
-
-
-	private void createAccessTokens()
-	{
-		ClientResponse response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
-				.post(ClientResponse.class, clientId + "\r\n" + userId);
-		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
-		URI accessTokenURI = response.getLocation();
-		accessToken = accessTokenURI.resolve(".").relativize(accessTokenURI).toString();
-
-		response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
-				.post(ClientResponse.class, clientId + "\r\n" + userId2);
-		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
-		accessTokenURI = response.getLocation();
-		accessToken2 = accessTokenURI.resolve(".").relativize(accessTokenURI).toString();
-	}
-
-
-	private void getAccessTokensList()
-	{
-		String list = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
-				.get(String.class);
-		assertTrue(list.contains(accessToken));
-	}
-
-
-	private void checkWhoAmI()
-	{
-		String whoami = webResource.path("whoami/").header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(whoami.contains(userId));
-		assertTrue(whoami.contains(username));
-
-		whoami = webResource.path("whoami/").header("Authorization", "Bearer " + accessToken2).get(String.class);
-		assertTrue(whoami.contains(userId2));
-		assertTrue(whoami.contains(username2));
-
-		try {
-			webResource.path("whoami/").get(Response.class);
-			fail("WhoAmI requests without access tokens should throw 401 Unauthorized");
-		}
-		catch (UniformInterfaceException e) {
-			assertEquals("WhoAmI requests without access tokens should throw 401 Unauthorized", 401, e.getResponse()
-					.getStatus());
-
-		}
-	}
-
-
-	private void createROs()
-	{
-		ClientResponse response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken)
-				.post(ClientResponse.class, r);
-		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
-
-		response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken2)
-				.post(ClientResponse.class, r2);
-		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
-	}
-
-
-	private void getROsList()
-	{
-		String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(list.contains(r));
-		assertTrue(!list.contains(r2));
-
-		list = webResource.path("ROs").get(String.class);
-		assertTrue(list.contains(r));
-		assertTrue(list.contains(r2));
-	}
-
-
-	private void getROMetadata()
-	{
-		client().setFollowRedirects(false);
-		ClientResponse response = webResource.path("ROs").path(r).path("/").accept("text/turtle")
-				.get(ClientResponse.class);
-		assertEquals(HttpServletResponse.SC_SEE_OTHER, response.getStatus());
-		assertEquals(webResource.path("ROs").path(r).path(".ro/manifest.rdf").getURI(), response.getLocation());
-		client().setFollowRedirects(true);
-	}
-
-
-	private void getROHtml()
-		throws URISyntaxException
-	{
-		client().setFollowRedirects(false);
-		ClientResponse response = webResource.path("ROs").path(r).path("/").accept("text/html")
-				.get(ClientResponse.class);
-		assertEquals(HttpServletResponse.SC_SEE_OTHER, response.getStatus());
-		URI portalURI = new URI("http", "sandbox.wf4ever-project.org", "/portal/ro", "ro="
-				+ webResource.path("ROs").path(r).path("/").getURI().toString(), null);
-		assertEquals(portalURI, response.getLocation());
-		client().setFollowRedirects(true);
-	}
-
-
-	private void updateManifest()
-	{
-		InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
-		ClientResponse response = webResource.path("ROs/" + r + "/.ro/manifest.rdf")
-				.header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
-		assertEquals(HttpServletResponse.SC_OK, response.getStatus());
-	}
-
-
-	private void addFile()
-	{
-		ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
-				.header("Authorization", "Bearer " + accessToken).type("text/plain")
-				.put(ClientResponse.class, "lorem ipsum");
-		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
-	}
-
-
-	private void getFileMetadata()
-	{
-		String metadata = webResource.path("ROs/" + r + "/" + filePath)
-				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(metadata.contains(userId));
-		assertTrue(metadata.contains(filePathEncoded));
-		assertTrue(metadata.contains("checksum"));
-	}
-
-
-	private void getFileContent()
-	{
-		String metadata = webResource.path("ROs/" + r + "/" + filePath).queryParam("content", "true")
-				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(metadata.contains("lorem ipsum"));
-
-	}
-
-
-	private void addRDFFile()
-	{
-		ClientResponse response = webResource.path("ROs/" + r + "/" + rdfFilePath)
-				.header("Authorization", "Bearer " + accessToken).type(RDFFormat.RDFXML.getDefaultMIMEType())
-				.put(ClientResponse.class, "lorem ipsum");
-		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
-	}
-
-
-	private void getRDFFileMetadata()
-	{
-		String metadata = webResource.path("ROs/" + r + "/" + rdfFilePath)
-				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(metadata.contains(userId));
-		assertTrue(metadata.contains(rdfFilePathEncoded));
-		assertTrue(metadata.contains("checksum"));
-	}
-
-
-	private void getRDFFileContent()
-	{
-		String metadata = webResource.path("ROs/" + r + "/" + rdfFilePath).queryParam("content", "true")
-				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(metadata.contains("lorem ipsum"));
-
-	}
-
-
-	private void getManifest()
-	{
-		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest.rdf")
-				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(manifest.contains(userId));
-		assertTrue(manifest.contains(filePathEncoded));
-
-		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.rdf").header("Authorization", "Bearer " + accessToken)
-				.accept("application/x-turtle").get(String.class);
-		assertTrue(manifest.contains(userId));
-		assertTrue(manifest.contains(filePathEncoded));
-
-		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.n3").queryParam("original", "manifest.rdf")
-				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(manifest.contains(userId));
-		assertTrue(manifest.contains(filePathEncoded));
-
-		ClientResponse response = webResource.path("/ROs/" + r + "/.ro/manifest.n3")
-				.header("Authorization", "Bearer " + accessToken).get(ClientResponse.class);
-		assertEquals("Should return 404 for manifest.n3", HttpStatus.SC_NOT_FOUND, response.getStatus());
-	}
-
-
-	private void getManifestWithAnnotationBody()
-	{
-		String manifest = webResource.path("/ROs/" + r + "/.ro/manifest.rdf")
-				.header("Authorization", "Bearer " + accessToken).accept("application/x-trig").get(String.class);
-		assertTrue(manifest.contains(userId));
-		assertTrue(manifest.contains(filePathEncoded));
-		assertTrue("Annotation body should contain file path: " + filePath, manifest.contains("a_workflow.t2flow"));
-		assertTrue(manifest.contains("A test"));
-
-		manifest = webResource.path("/ROs/" + r + "/.ro/manifest.trig").queryParam("original", "manifest.rdf")
-				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(manifest.contains(userId));
-		assertTrue(manifest.contains(filePathEncoded));
-		assertTrue("Annotation body should contain file path: " + filePathEncoded,
-			manifest.contains("a_workflow.t2flow"));
-		assertTrue(manifest.contains("A test"));
-	}
-
-
-	private void addAnnotationBody()
-	{
-		InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
-		ClientResponse response = webResource.path("ROs/" + r + "/" + annotationBodyURI)
-				.header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
-				.put(ClientResponse.class, is);
-		assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
-	}
-
-
-	private void getAnnotationBody()
-	{
-		String body = webResource.path("ROs/" + r + "/" + annotationBodyURI)
-				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue("Annotation body should contain file path: a_workflow.t2flow", body.contains("a_workflow.t2flow"));
-		assertTrue(body.contains("A test"));
-	}
-
-
-	private void deleteAnnotationBody()
-	{
-		ClientResponse response = webResource.path("ROs/" + r + "/" + annotationBodyURIRDF)
-				.queryParam("original", "ann1.ttl").header("Authorization", "Bearer " + accessToken)
-				.delete(ClientResponse.class);
-		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
-	}
-
-
-	private void deleteFile()
-	{
-		ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
-				.header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
-		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
-	}
-
-
-	private void deleteRDFFile()
-	{
-		ClientResponse response = webResource.path("ROs/" + r + "/" + rdfFilePath)
-				.header("Authorization", "Bearer " + accessToken).type(RDFFormat.RDFXML.getDefaultMIMEType())
-				.delete(ClientResponse.class);
-		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
-	}
-
-
-	private void getInitialManifest()
-	{
-		String manifest = webResource.path("ROs/" + r + "/.ro/manifest.rdf")
-				.header("Authorization", "Bearer " + accessToken).get(String.class);
-		assertTrue(!manifest.contains(filePathEncoded));
-
-		manifest = webResource.path("ROs/" + r + "/.ro/manifest.rdf").header("Authorization", "Bearer " + accessToken)
-				.accept("application/x-turtle").get(String.class);
-		assertTrue(!manifest.contains(filePathEncoded));
-	}
-
-
-	private void deleteROs()
-	{
-		ClientResponse response = webResource.path("ROs/" + r + "/").header("Authorization", "Bearer " + accessToken)
-				.delete(ClientResponse.class);
-		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
-
-		response = webResource.path("ROs/" + r2 + "/").header("Authorization", "Bearer " + accessToken2)
-				.delete(ClientResponse.class);
-		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
-	}
-
-
-	private void deleteAccessTokens()
-	{
-		ClientResponse response = webResource.path("accesstokens/" + accessToken)
-				.header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
-		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
-
-		response = webResource.path("accesstokens/" + accessToken2).header("Authorization", "Bearer " + adminCreds)
-				.delete(ClientResponse.class);
-		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
-	}
-
-
-	private void deleteUsers()
-	{
-		ClientResponse response = webResource.path("users/" + userIdUrlSafe)
-				.header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
-		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
-
-		response = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
-				.delete(ClientResponse.class);
-		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
-	}
-
-
-	private void deleteClient()
-	{
-		ClientResponse response = webResource.path("clients/" + clientId)
-				.header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
-		assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
-	}
+public class ResourcesTest extends JerseyTest {
+
+    private final String clientName = "ROSRS testing app written in Ruby";
+
+    private final String clientRedirectionURI = "OOB"; // will not be used
+
+    private String clientId;
+
+    private final String adminCreds = StringUtils.trim(Base64.encodeBase64String("wfadmin:wfadmin!!!".getBytes()));
+
+    private final String userId = UUID.randomUUID().toString();
+
+    private final String userIdUrlSafe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId.getBytes()));
+
+    private final String userId2 = UUID.randomUUID().toString();
+
+    private final String userId2UrlSafe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId2.getBytes()));
+
+    private WebResource webResource;
+
+    private String accessToken;
+
+    private String accessToken2;
+
+    private final String r = "r";
+
+    private final String r2 = "r2";
+
+    private final String filePath = "foo/bar ra.txt";
+
+    private final String filePathEncoded = "foo/bar%20ra.txt";
+
+    private final String rdfFilePath = "foo/bar.rdf";
+
+    private final String rdfFilePathEncoded = "foo/bar.rdf";
+
+    private final String annotationBodyURI = ".ro/ann1.ttl";
+
+    private final String annotationBodyURIRDF = ".ro/ann1.rdf";
+
+    private final String username = "John Doe";
+
+    private final String username2 = "May Gray";
+
+
+    public ResourcesTest() {
+        super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").servletClass(TestServletContainer.class).build());
+    }
+
+
+    @Test
+    public final void test()
+            throws URISyntaxException {
+        client().setFollowRedirects(true);
+        if (resource().getURI().getHost().equals("localhost")) {
+            webResource = resource();
+        } else {
+            webResource = resource().path("rosrs5/");
+        }
+        createClient();
+        try {
+            getClientsList();
+            getClient();
+            createUsers();
+            getUser();
+            try {
+                createAccessTokens();
+                try {
+                    getAccessTokensList();
+                    checkWhoAmI();
+                    webResource.path("ROs/" + r + "/").header("Authorization", "Bearer " + accessToken)
+                            .delete(ClientResponse.class);
+                    webResource.path("ROs/" + r2 + "/").header("Authorization", "Bearer " + accessToken)
+                            .delete(ClientResponse.class);
+                    createROs();
+                    try {
+                        getROsList();
+                        getROMetadata();
+                        getROHtml();
+                        getROZip();
+                        getInitialManifest();
+                        updateManifest();
+                        addFile();
+                        getFileMetadata();
+                        getFileContent();
+                        addRDFFile();
+                        getRDFFileMetadata();
+                        getRDFFileContent();
+                        getManifest();
+                        addAnnotationBody();
+                        getAnnotationBody();
+                        getManifestWithAnnotationBody();
+                        deleteAnnotationBody();
+                        deleteFile();
+                        deleteRDFFile();
+                        getInitialManifest();
+                    } finally {
+                        deleteROs();
+                    }
+                } finally {
+                    deleteAccessTokens();
+                }
+            } finally {
+                deleteUsers();
+            }
+        } finally {
+            deleteClient();
+        }
+    }
+
+
+    private void getUser() {
+        String user = webResource.path("users/" + userIdUrlSafe).header("Authorization", "Bearer " + adminCreds)
+                .get(String.class);
+        assertTrue(user.contains(userId));
+
+        user = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
+                .get(String.class);
+        assertTrue(user.contains(userId2));
+
+        user = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
+                .accept("application/x-turtle").get(String.class);
+        assertTrue(user.contains(userId2));
+    }
+
+
+    private void createClient() {
+        ClientResponse response = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
+                .post(ClientResponse.class, clientName + "\r\n" + clientRedirectionURI);
+        assertEquals(201, response.getStatus());
+        URI clientURI = response.getLocation();
+        clientId = clientURI.resolve(".").relativize(clientURI).toString();
+        response.close();
+    }
+
+
+    private void getClientsList() {
+        String list = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds).get(String.class);
+        assertTrue(list.contains(clientId));
+    }
+
+
+    private void getClient() {
+        String client = webResource.path("clients/" + clientId).header("Authorization", "Bearer " + adminCreds)
+                .get(String.class);
+        assertTrue(client.contains(clientId));
+    }
+
+
+    private void createUsers() {
+        ClientResponse response = webResource.path("users/" + userIdUrlSafe)
+                .header("Authorization", "Bearer " + adminCreds).put(ClientResponse.class, username);
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        response.close();
+
+        response = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
+                .put(ClientResponse.class, username2);
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        response.close();
+    }
+
+
+    private void createAccessTokens() {
+        ClientResponse response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
+                .post(ClientResponse.class, clientId + "\r\n" + userId);
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        URI accessTokenURI = response.getLocation();
+        accessToken = accessTokenURI.resolve(".").relativize(accessTokenURI).toString();
+        response.close();
+
+        response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
+                .post(ClientResponse.class, clientId + "\r\n" + userId2);
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        accessTokenURI = response.getLocation();
+        accessToken2 = accessTokenURI.resolve(".").relativize(accessTokenURI).toString();
+        response.close();
+    }
+
+
+    private void getAccessTokensList() {
+        String list = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
+                .get(String.class);
+        assertTrue(list.contains(accessToken));
+    }
+
+
+    private void checkWhoAmI() {
+        String whoami = webResource.path("whoami/").header("Authorization", "Bearer " + accessToken).get(String.class);
+        assertTrue(whoami.contains(userId));
+        assertTrue(whoami.contains(username));
+
+        whoami = webResource.path("whoami/").header("Authorization", "Bearer " + accessToken2).get(String.class);
+        assertTrue(whoami.contains(userId2));
+        assertTrue(whoami.contains(username2));
+
+        try {
+            webResource.path("whoami/").get(Response.class);
+            fail("WhoAmI requests without access tokens should throw 401 Unauthorized");
+        } catch (UniformInterfaceException e) {
+            assertEquals("WhoAmI requests without access tokens should throw 401 Unauthorized", 401, e.getResponse()
+                    .getStatus());
+
+        }
+    }
+
+
+    private void createROs() {
+        ClientResponse response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken)
+                .post(ClientResponse.class, r);
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        response.close();
+
+        response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken2)
+                .post(ClientResponse.class, r2);
+        response.close();
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+    }
+
+
+    private void getROsList() {
+        String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
+        assertTrue(list.contains(r));
+        assertTrue(!list.contains(r2));
+
+        list = webResource.path("ROs").get(String.class);
+        assertTrue(list.contains(r));
+        assertTrue(list.contains(r2));
+    }
+
+
+    private void getROMetadata() {
+        client().setFollowRedirects(false);
+        ClientResponse response = webResource.path("ROs").path(r).path("/").accept("text/turtle")
+                .get(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_SEE_OTHER, response.getStatus());
+        assertEquals(webResource.path("ROs").path(r).path(".ro/manifest.rdf").getURI(), response.getLocation());
+        response.close();
+        client().setFollowRedirects(true);
+    }
+
+
+    private void getROHtml()
+            throws URISyntaxException {
+        client().setFollowRedirects(false);
+        ClientResponse response = webResource.path("ROs").path(r).path("/").accept("text/html")
+                .get(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_SEE_OTHER, response.getStatus());
+        URI portalURI = new URI("http", "sandbox.wf4ever-project.org", "/portal/ro", "ro="
+                + webResource.path("ROs").path(r).path("/").getURI().toString(), null);
+        assertEquals(portalURI, response.getLocation());
+        response.close();
+        client().setFollowRedirects(true);
+    }
+
+
+    private void getROZip()
+            throws URISyntaxException {
+        client().setFollowRedirects(false);
+        ClientResponse response = webResource.path("ROs").path(r).path("/").accept("application/zip")
+                .get(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_SEE_OTHER, response.getStatus());
+        assertEquals(webResource.path("zippedROs").path(r).path("/").getURI(), response.getLocation());
+        response.close();
+
+        response = webResource.path("zippedROs").path(r).path("/").get(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+        assertEquals("application/zip", response.getType().toString());
+        response.close();
+
+        response = webResource.path("zippedROs").path(r).path("/").accept("text/html;q=0.9,*/*;q=0.8")
+                .get(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+        assertEquals("application/zip", response.getType().toString());
+        response.close();
+        client().setFollowRedirects(true);
+    }
+
+
+    private void updateManifest() {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
+        ClientResponse response = webResource.path("ROs/" + r + "/.ro/manifest.rdf")
+                .header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
+        assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+        response.close();
+    }
+
+
+    private void addFile() {
+        ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
+                .header("Authorization", "Bearer " + accessToken).type("text/plain")
+                .put(ClientResponse.class, "lorem ipsum");
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        response.close();
+    }
+
+
+    private void getFileMetadata() {
+        String metadata = webResource.path("ROs/" + r + "/" + filePath)
+                .header("Authorization", "Bearer " + accessToken).get(String.class);
+        assertTrue(metadata.contains(userId));
+        assertTrue(metadata.contains(filePathEncoded));
+        assertTrue(metadata.contains("checksum"));
+    }
+
+
+    private void getFileContent() {
+        String metadata = webResource.path("ROs/" + r + "/" + filePath).queryParam("content", "true")
+                .header("Authorization", "Bearer " + accessToken).get(String.class);
+        assertTrue(metadata.contains("lorem ipsum"));
+
+    }
+
+
+    private void addRDFFile() {
+        ClientResponse response = webResource.path("ROs/" + r + "/" + rdfFilePath)
+                .header("Authorization", "Bearer " + accessToken).type(RDFFormat.RDFXML.getDefaultMIMEType())
+                .put(ClientResponse.class, "lorem ipsum");
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        response.close();
+    }
+
+
+    private void getRDFFileMetadata() {
+        String metadata = webResource.path("ROs/" + r + "/" + rdfFilePath)
+                .header("Authorization", "Bearer " + accessToken).get(String.class);
+        assertTrue(metadata.contains(userId));
+        assertTrue(metadata.contains(rdfFilePathEncoded));
+        assertTrue(metadata.contains("checksum"));
+    }
+
+
+    private void getRDFFileContent() {
+        String metadata = webResource.path("ROs/" + r + "/" + rdfFilePath).queryParam("content", "true")
+                .header("Authorization", "Bearer " + accessToken).get(String.class);
+        assertTrue(metadata.contains("lorem ipsum"));
+
+    }
+
+
+    private void getManifest() {
+        String manifest = webResource.path("/ROs/" + r + "/.ro/manifest.rdf")
+                .header("Authorization", "Bearer " + accessToken).get(String.class);
+        assertTrue(manifest.contains(userId));
+        assertTrue(manifest.contains(filePathEncoded));
+
+        manifest = webResource.path("/ROs/" + r + "/.ro/manifest.rdf").header("Authorization", "Bearer " + accessToken)
+                .accept("application/x-turtle").get(String.class);
+        assertTrue(manifest.contains(userId));
+        assertTrue(manifest.contains(filePathEncoded));
+
+        manifest = webResource.path("/ROs/" + r + "/.ro/manifest.n3").queryParam("original", "manifest.rdf")
+                .header("Authorization", "Bearer " + accessToken).get(String.class);
+        assertTrue(manifest.contains(userId));
+        assertTrue(manifest.contains(filePathEncoded));
+
+        ClientResponse response = webResource.path("/ROs/" + r + "/.ro/manifest.n3")
+                .header("Authorization", "Bearer " + accessToken).get(ClientResponse.class);
+        assertEquals("Should return 404 for manifest.n3", HttpStatus.SC_NOT_FOUND, response.getStatus());
+        response.close();
+    }
+
+
+    private void getManifestWithAnnotationBody() {
+        String manifest = webResource.path("/ROs/" + r + "/.ro/manifest.rdf")
+                .header("Authorization", "Bearer " + accessToken).accept("application/x-trig").get(String.class);
+        assertTrue(manifest.contains(userId));
+        assertTrue(manifest.contains(filePathEncoded));
+        assertTrue("Annotation body should contain file path: " + filePath, manifest.contains("a_workflow.t2flow"));
+        assertTrue(manifest.contains("A test"));
+
+        manifest = webResource.path("/ROs/" + r + "/.ro/manifest.trig").queryParam("original", "manifest.rdf")
+                .header("Authorization", "Bearer " + accessToken).get(String.class);
+        assertTrue(manifest.contains(userId));
+        assertTrue(manifest.contains(filePathEncoded));
+        assertTrue("Annotation body should contain file path: " + filePathEncoded,
+            manifest.contains("a_workflow.t2flow"));
+        assertTrue(manifest.contains("A test"));
+    }
+
+
+    private void addAnnotationBody() {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
+        ClientResponse response = webResource.path("ROs/" + r + "/" + annotationBodyURI)
+                .header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
+                .put(ClientResponse.class, is);
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        response.close();
+    }
+
+
+    private void getAnnotationBody() {
+        String body = webResource.path("ROs/" + r + "/" + annotationBodyURI)
+                .header("Authorization", "Bearer " + accessToken).get(String.class);
+        assertTrue("Annotation body should contain file path: a_workflow.t2flow", body.contains("a_workflow.t2flow"));
+        assertTrue(body.contains("A test"));
+    }
+
+
+    private void deleteAnnotationBody() {
+        ClientResponse response = webResource.path("ROs/" + r + "/" + annotationBodyURIRDF)
+                .queryParam("original", "ann1.ttl").header("Authorization", "Bearer " + accessToken)
+                .delete(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
+        response.close();
+    }
+
+
+    private void deleteFile() {
+        ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
+                .header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
+        response.close();
+    }
+
+
+    private void deleteRDFFile() {
+        ClientResponse response = webResource.path("ROs/" + r + "/" + rdfFilePath)
+                .header("Authorization", "Bearer " + accessToken).type(RDFFormat.RDFXML.getDefaultMIMEType())
+                .delete(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
+        response.close();
+    }
+
+
+    private void getInitialManifest() {
+        String manifest = webResource.path("ROs/" + r + "/.ro/manifest.rdf")
+                .header("Authorization", "Bearer " + accessToken).get(String.class);
+        assertTrue(!manifest.contains(filePathEncoded));
+
+        manifest = webResource.path("ROs/" + r + "/.ro/manifest.rdf").header("Authorization", "Bearer " + accessToken)
+                .accept("application/x-turtle").get(String.class);
+        assertTrue(!manifest.contains(filePathEncoded));
+    }
+
+
+    private void deleteROs() {
+        ClientResponse response = webResource.path("ROs/" + r + "/").header("Authorization", "Bearer " + accessToken)
+                .delete(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
+        response.close();
+
+        response = webResource.path("ROs/" + r2 + "/").header("Authorization", "Bearer " + accessToken2)
+                .delete(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
+        response.close();
+    }
+
+
+    private void deleteAccessTokens() {
+        ClientResponse response = webResource.path("accesstokens/" + accessToken)
+                .header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
+        response.close();
+
+        response = webResource.path("accesstokens/" + accessToken2).header("Authorization", "Bearer " + adminCreds)
+                .delete(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
+        response.close();
+    }
+
+
+    private void deleteUsers() {
+        ClientResponse response = webResource.path("users/" + userIdUrlSafe)
+                .header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
+        response.close();
+
+        response = webResource.path("users/" + userId2UrlSafe).header("Authorization", "Bearer " + adminCreds)
+                .delete(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
+        response.close();
+    }
+
+
+    private void deleteClient() {
+        ClientResponse response = webResource.path("clients/" + clientId)
+                .header("Authorization", "Bearer " + adminCreds).delete(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
+        response.close();
+    }
 }
