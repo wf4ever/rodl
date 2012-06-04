@@ -159,7 +159,7 @@ public class AggregatedResource {
                             "Inconsistent request, filename is %s but Accept is %s, returning %s",
                             getFilename(uriInfo.getAbsolutePath()), format, returnedFormat));
                     }
-                    return getNamedGraph(sms, resourceURI, returnedFormat);
+                    return getNamedGraph(sms, resourceURI, returnedFormat, researchObjectId);
                 } else {
                     return Response.status(Status.NOT_FOUND).type("text/plain").entity("Original resource not found")
                             .build();
@@ -174,11 +174,11 @@ public class AggregatedResource {
                 RDFFormat extensionFormat = RDFFormat.forFileName(getFilename(uriInfo.getAbsolutePath()));
                 if (extensionFormat != null && extensionFormat == format) {
                     // 1. GET manifest.rdf Accept: application/rdf+xml
-                    return getNamedGraph(sms, resourceURI, extensionFormat);
+                    return getNamedGraph(sms, resourceURI, extensionFormat, researchObjectId);
                 }
                 if (extensionFormat != null && format == null) {
                     // 2. GET manifest.rdf
-                    return getNamedGraph(sms, resourceURI, extensionFormat);
+                    return getNamedGraph(sms, resourceURI, extensionFormat, researchObjectId);
                 }
                 if (format != null) {
                     // 3. GET manifest.rdf Accept: text/turtle
@@ -197,8 +197,8 @@ public class AggregatedResource {
 
         try {
             if (!isContentRequested) {
-                return getResourceMetadata(sms, researchObjectURI, format != null ? format : RDFFormat.RDFXML,
-                    resourceURI);
+                return getResourceMetadata(sms, researchObjectURI, researchObjectId, format != null ? format
+                        : RDFFormat.RDFXML, resourceURI);
             } else {
                 if (!sms.isRoFolder(researchObjectURI, resourceURI)) {
                     return getFileContent(workspaceId, researchObjectId, versionId, filePath, user);
@@ -229,8 +229,8 @@ public class AggregatedResource {
     }
 
 
-    private Response getResourceMetadata(SemanticMetadataService sms, URI researchObjectURI, RDFFormat format,
-            URI resourceURI)
+    private Response getResourceMetadata(SemanticMetadataService sms, URI researchObjectURI, String researchObjectId,
+            RDFFormat format, URI resourceURI)
             throws ClassNotFoundException, IOException, NamingException, SQLException {
         InputStream body = sms.getResource(researchObjectURI, resourceURI, format);
         if (body == null) {
@@ -239,7 +239,8 @@ public class AggregatedResource {
         String filename = getFilename(resourceURI);
 
         ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType()).fileName(filename).build();
-        return Response.ok(body).header("Content-disposition", cd).build();
+        return ResearchObjectResource.addLinkHeaders(Response.ok(body), uriInfo, researchObjectId)
+                .header("Content-disposition", cd).build();
     }
 
 
@@ -250,7 +251,8 @@ public class AggregatedResource {
         DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
         InputStream body = dl.getZippedFolder(workspaceId, researchObjectId, versionId, filePath);
         ContentDisposition cd = ContentDisposition.type("application/zip").fileName(versionId + ".zip").build();
-        return Response.ok(body).header("Content-disposition", cd).build();
+        return ResearchObjectResource.addLinkHeaders(Response.ok(body), uriInfo, researchObjectId)
+                .header("Content-disposition", cd).build();
     }
 
 
@@ -262,17 +264,20 @@ public class AggregatedResource {
         String fileName = getFilename(uriInfo.getAbsolutePath());
         ContentDisposition cd = ContentDisposition.type(mimeType).fileName(fileName).build();
         InputStream body = dl.getFileContents(workspaceId, researchObjectId, versionId, filePath);
-        return Response.ok(body).header("Content-disposition", cd).header("Content-type", mimeType).build();
+        return ResearchObjectResource.addLinkHeaders(Response.ok(body), uriInfo, researchObjectId)
+                .header("Content-disposition", cd).header("Content-type", mimeType).build();
     }
 
 
-    private Response getNamedGraph(SemanticMetadataService sms, URI namedGraphURI, RDFFormat format)
+    private Response getNamedGraph(SemanticMetadataService sms, URI namedGraphURI, RDFFormat format,
+            String researchObjectId)
             throws ClassNotFoundException, IOException, NamingException, SQLException {
-        InputStream manifest = sms.getNamedGraph(namedGraphURI, format);
+        InputStream graph = sms.getNamedGraph(namedGraphURI, format);
 
         String fileName = getFilename(uriInfo.getAbsolutePath());
         ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType()).fileName(fileName).build();
-        return Response.ok(manifest).header("Content-disposition", cd).build();
+        return ResearchObjectResource.addLinkHeaders(Response.ok(graph), uriInfo, researchObjectId)
+                .header("Content-disposition", cd).build();
     }
 
 

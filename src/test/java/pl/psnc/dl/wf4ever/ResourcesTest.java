@@ -10,6 +10,8 @@ import static org.junit.Assert.fail;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
@@ -75,6 +77,8 @@ public class ResourcesTest extends JerseyTest {
 
     private final String username2 = "May Gray";
 
+    private final List<String> linkHeadersR = new ArrayList<>();
+
 
     public ResourcesTest() {
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").servletClass(TestServletContainer.class).build());
@@ -90,6 +94,12 @@ public class ResourcesTest extends JerseyTest {
         } else {
             webResource = resource().path("rosrs5/");
         }
+        linkHeadersR.clear();
+        linkHeadersR.add("<" + resource().getURI() + "ROs/r/.ro/manifest.rdf>; rel=bookmark");
+        linkHeadersR.add("<" + resource().getURI() + "zippedROs/r/>; rel=bookmark");
+        linkHeadersR.add("<http://sandbox.wf4ever-project.org/portal/ro?ro=" + resource().getURI()
+                + "ROs/r/>; rel=bookmark");
+
         createClient();
         try {
             getClientsList();
@@ -304,6 +314,7 @@ public class ResourcesTest extends JerseyTest {
                 .get(ClientResponse.class);
         assertEquals(HttpServletResponse.SC_OK, response.getStatus());
         assertEquals("application/zip", response.getType().toString());
+        assertEquals(linkHeadersR, response.getHeaders().get("Link"));
         response.close();
         client().setFollowRedirects(true);
     }
@@ -463,6 +474,11 @@ public class ResourcesTest extends JerseyTest {
         manifest = webResource.path("ROs/" + r + "/.ro/manifest.rdf").header("Authorization", "Bearer " + accessToken)
                 .accept("application/x-turtle").get(String.class);
         assertTrue(!manifest.contains(filePathEncoded));
+
+        ClientResponse response = webResource.path("ROs/" + r + "/.ro/manifest.rdf")
+                .header("Authorization", "Bearer " + accessToken).get(ClientResponse.class);
+        assertEquals(linkHeadersR, response.getHeaders().get("Link"));
+        response.close();
     }
 
 

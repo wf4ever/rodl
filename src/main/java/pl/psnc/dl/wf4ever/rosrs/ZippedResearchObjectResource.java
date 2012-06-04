@@ -72,6 +72,7 @@ public class ZippedResearchObjectResource {
         //TODO add all named graphs from SMS that start with the base URI
         ContentDisposition cd = ContentDisposition.type("application/zip")
                 .fileName(researchObjectId + "-" + versionId + ".zip").build();
-        return Response.ok(body).header("Content-disposition", cd).build();
+        return ResearchObjectResource.addLinkHeaders(Response.ok(body), uriInfo, researchObjectId)
+                .header("Content-disposition", cd).build();
     }
 }
