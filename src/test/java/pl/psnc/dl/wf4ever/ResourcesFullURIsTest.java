@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
+import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -70,7 +71,7 @@ public class ResourcesFullURIsTest extends JerseyTest {
     }
 
 
-    //    @Test
+    @Test
     public final void testFullURIs() {
         if (resource().getURI().getHost().equals("localhost")) {
             webResource = resource();
