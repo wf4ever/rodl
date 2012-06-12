@@ -101,7 +101,8 @@ public class ResearchObjectResource {
     public Response getROHtml(@PathParam("ro_id") String researchObjectId)
             throws URISyntaxException, RemoteException, MalformedURLException, UnknownHostException,
             DigitalLibraryException, NotFoundException {
-        return Response.seeOther(getROHtmlURI(uriInfo.getBaseUriBuilder(), researchObjectId)).build();
+        URI uri = getROHtmlURI(uriInfo.getBaseUriBuilder(), researchObjectId);
+        return Response.seeOther(uri).build();
     }
 
 

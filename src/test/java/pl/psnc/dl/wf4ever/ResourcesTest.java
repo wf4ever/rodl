@@ -59,7 +59,9 @@ public class ResourcesTest extends JerseyTest {
 
     private final String r = "r";
 
-    private final String r2 = "r2";
+    private final String r2 = "r 2";
+
+    private final String r2Encoded = "r%202";
 
     private final String filePath = "foo/bar ra.txt";
 
@@ -267,7 +269,7 @@ public class ResourcesTest extends JerseyTest {
 
         list = webResource.path("ROs").get(String.class);
         assertTrue(list.contains(r));
-        assertTrue(list.contains(r2));
+        assertTrue(list.contains(r2Encoded));
     }
 
 
@@ -285,11 +287,11 @@ public class ResourcesTest extends JerseyTest {
     private void getROHtml()
             throws URISyntaxException {
         client().setFollowRedirects(false);
-        ClientResponse response = webResource.path("ROs").path(r).path("/").accept("text/html")
+        ClientResponse response = webResource.path("ROs").path(r2).path("/").accept("text/html")
                 .get(ClientResponse.class);
         assertEquals(HttpServletResponse.SC_SEE_OTHER, response.getStatus());
         URI portalURI = new URI("http", "sandbox.wf4ever-project.org", "/portal/ro", "ro="
-                + webResource.path("ROs").path(r).path("/").getURI().toString(), null);
+                + webResource.path("ROs").path(r2Encoded).path("/").getURI().toString(), null);
         assertEquals(portalURI, response.getLocation());
         response.close();
         client().setFollowRedirects(true);
