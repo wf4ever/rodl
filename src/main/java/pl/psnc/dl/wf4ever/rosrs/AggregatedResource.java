@@ -412,15 +412,16 @@ public class AggregatedResource {
      * @param researchObjectURI
      * @param dl
      * @param sms
-     * @throws NotFoundException
-     * @throws DigitalLibraryException
      */
     private void updateROAttributesInDlibra(String researchObjectId, URI researchObjectURI, DigitalLibrary dl,
-            SemanticMetadataService sms)
-            throws NotFoundException, DigitalLibraryException {
+            SemanticMetadataService sms) {
         Multimap<URI, Object> roAttributes = sms.getAllAttributes(researchObjectURI);
         roAttributes.put(URI.create("Identifier"), researchObjectURI);
-        dl.storeAttributes(workspaceId, researchObjectId, versionId, roAttributes);
+        try {
+            dl.storeAttributes(workspaceId, researchObjectId, versionId, roAttributes);
+        } catch (Exception e) {
+            logger.error("Caught an exception when updating RO attributes, will continue", e);
+        }
     }
 
 
