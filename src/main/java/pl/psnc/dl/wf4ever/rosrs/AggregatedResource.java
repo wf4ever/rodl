@@ -62,10 +62,6 @@ public class AggregatedResource {
     @Context
     private UriInfo uriInfo;
 
-    private static final String workspaceId = "default";
-
-    private static final String versionId = "v1";
-
 
     @GET
     public Response getResourceAny(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
@@ -345,108 +341,6 @@ public class AggregatedResource {
     }
 
 
-    private Response createOrUpdateFile(String researchObjectId, String filePath, String original, InputStream data,
-            RDFFormat format)
-            throws ClassNotFoundException, IOException, NamingException, SQLException, DigitalLibraryException,
-            NotFoundException, AccessDeniedException, URISyntaxException {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        if (user.getRole() == UserProfile.Role.PUBLIC) {
-            //TODO check permissions in dLibra
-            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
-        }
-
-        URI researchObjectURI = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
-        URI manifestURI = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path(".ro/manifest.rdf")
-                .build();
-        URI resourceURI = uriInfo.getAbsolutePath();
-
-        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
-        SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
-
-        if (original != null) {
-            resourceURI = resourceURI.resolve(original);
-            filePath = researchObjectURI.relativize(resourceURI).getPath();
-        }
-
-        if (sms.isROMetadataNamedGraph(researchObjectURI, resourceURI)) {
-            try {
-                RDFFormat calculatedFormat = format;
-                if (calculatedFormat == null) {
-                    calculatedFormat = RDFFormat.forFileName(getFilename(resourceURI), RDFFormat.RDFXML);
-                }
-                boolean created = sms.addNamedGraph(resourceURI, data, calculatedFormat);
-                // update the named graph copy in dLibra, the manifest is not changed
-                updateNamedGraphInDlibra(researchObjectId, filePath, researchObjectURI, dl, sms, resourceURI);
-                updateROAttributesInDlibra(researchObjectId, researchObjectURI, dl, sms);
-                if (created) {
-                    return Response.created(resourceURI).build();
-                } else {
-                    return Response.ok().build();
-                }
-            } finally {
-                sms.close();
-            }
-        }
-
-        try {
-            String contentType = format != null ? format.getDefaultMIMEType() : request.getContentType();
-            ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, data,
-                contentType != null ? contentType : "text/plain");
-            boolean created = sms.addResource(researchObjectURI, resourceURI, resourceInfo);
-            // update the manifest that describes the resource in dLibra
-            updateNamedGraphInDlibra(researchObjectId, ".ro/manifest.rdf", researchObjectURI, dl, sms, manifestURI);
-            if (created) {
-                return Response.created(resourceURI).build();
-            } else {
-                return Response.ok().build();
-            }
-        } finally {
-            sms.close();
-        }
-
-    }
-
-
-    /**
-     * @param researchObjectId
-     * @param researchObjectURI
-     * @param dl
-     * @param sms
-     */
-    private void updateROAttributesInDlibra(String researchObjectId, URI researchObjectURI, DigitalLibrary dl,
-            SemanticMetadataService sms) {
-        Multimap<URI, Object> roAttributes = sms.getAllAttributes(researchObjectURI);
-        roAttributes.put(URI.create("Identifier"), researchObjectURI);
-        try {
-            dl.storeAttributes(workspaceId, researchObjectId, versionId, roAttributes);
-        } catch (Exception e) {
-            logger.error("Caught an exception when updating RO attributes, will continue", e);
-        }
-    }
-
-
-    /**
-     * @param researchObjectId
-     * @param filePath
-     * @param contentType
-     * @param researchObjectURI
-     * @param dl
-     * @param sms
-     * @param namedGraphURI
-     * @throws DigitalLibraryException
-     * @throws NotFoundException
-     * @throws AccessDeniedException
-     */
-    private void updateNamedGraphInDlibra(String researchObjectId, String filePath, URI researchObjectURI,
-            DigitalLibrary dl, SemanticMetadataService sms, URI namedGraphURI)
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        RDFFormat format = RDFFormat.forFileName(filePath, RDFFormat.RDFXML);
-        InputStream dataStream = sms.getNamedGraphWithRelativeURIs(namedGraphURI, researchObjectURI, format);
-        dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, dataStream,
-            format.getDefaultMIMEType());
-    }
-
-
     @DELETE
     public void deleteFileAny(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original)
@@ -542,4 +436,100 @@ public class AggregatedResource {
         }
     }
 
+
+    private static Response createOrUpdateFile(UserProfile user, String researchObjectId, String filePath,
+            String original, InputStream data, RDFFormat format)
+            throws ClassNotFoundException, IOException, NamingException, SQLException, DigitalLibraryException,
+            NotFoundException, AccessDeniedException, URISyntaxException {
+
+        URI researchObjectURI = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        URI manifestURI = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path(".ro/manifest.rdf")
+                .build();
+        URI resourceURI = uriInfo.getAbsolutePath();
+
+        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+        SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
+
+        if (original != null) {
+            resourceURI = resourceURI.resolve(original);
+            filePath = researchObjectURI.relativize(resourceURI).getPath();
+        }
+
+        if (sms.isROMetadataNamedGraph(researchObjectURI, resourceURI)) {
+            try {
+                RDFFormat calculatedFormat = format;
+                if (calculatedFormat == null) {
+                    calculatedFormat = RDFFormat.forFileName(getFilename(resourceURI), RDFFormat.RDFXML);
+                }
+                boolean created = sms.addNamedGraph(resourceURI, data, calculatedFormat);
+                // update the named graph copy in dLibra, the manifest is not changed
+                updateNamedGraphInDlibra(researchObjectId, filePath, researchObjectURI, dl, sms, resourceURI);
+                updateROAttributesInDlibra(researchObjectId, researchObjectURI, dl, sms);
+                if (created) {
+                    return Response.created(resourceURI).build();
+                } else {
+                    return Response.ok().build();
+                }
+            } finally {
+                sms.close();
+            }
+        }
+
+        try {
+            String contentType = format != null ? format.getDefaultMIMEType() : request.getContentType();
+            ResourceInfo resourceInfo = dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, data,
+                contentType != null ? contentType : "text/plain");
+            boolean created = sms.addResource(researchObjectURI, resourceURI, resourceInfo);
+            // update the manifest that describes the resource in dLibra
+            updateNamedGraphInDlibra(researchObjectId, ".ro/manifest.rdf", researchObjectURI, dl, sms, manifestURI);
+            if (created) {
+                return Response.created(resourceURI).build();
+            } else {
+                return Response.ok().build();
+            }
+        } finally {
+            sms.close();
+        }
+
+    }
+
+
+    /**
+     * @param researchObjectId
+     * @param researchObjectURI
+     * @param dl
+     * @param sms
+     */
+    private static void updateROAttributesInDlibra(String researchObjectId, URI researchObjectURI, DigitalLibrary dl,
+            SemanticMetadataService sms) {
+        Multimap<URI, Object> roAttributes = sms.getAllAttributes(researchObjectURI);
+        roAttributes.put(URI.create("Identifier"), researchObjectURI);
+        try {
+            dl.storeAttributes(workspaceId, researchObjectId, versionId, roAttributes);
+        } catch (Exception e) {
+            logger.error("Caught an exception when updating RO attributes, will continue", e);
+        }
+    }
+
+
+    /**
+     * @param researchObjectId
+     * @param filePath
+     * @param contentType
+     * @param researchObjectURI
+     * @param dl
+     * @param sms
+     * @param namedGraphURI
+     * @throws DigitalLibraryException
+     * @throws NotFoundException
+     * @throws AccessDeniedException
+     */
+    private static void updateNamedGraphInDlibra(String researchObjectId, String filePath, URI researchObjectURI,
+            DigitalLibrary dl, SemanticMetadataService sms, URI namedGraphURI)
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        RDFFormat format = RDFFormat.forFileName(filePath, RDFFormat.RDFXML);
+        InputStream dataStream = sms.getNamedGraphWithRelativeURIs(namedGraphURI, researchObjectURI, format);
+        dl.createOrUpdateFile(workspaceId, researchObjectId, versionId, filePath, dataStream,
+            format.getDefaultMIMEType());
+    }
 }

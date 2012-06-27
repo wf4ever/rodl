@@ -7,12 +7,15 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
+import java.util.UUID;
 
 import javax.naming.NamingException;
 import javax.naming.OperationNotSupportedException;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -25,6 +28,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.AuthenticationException;
 import pl.psnc.dl.wf4ever.auth.SecurityFilter;
@@ -56,10 +60,6 @@ public class ResearchObjectResource {
 
     @Context
     UriInfo uriInfo;
-
-    private static final String workspaceId = "default";
-
-    private static final String versionId = "v1";
 
 
     /**
@@ -116,11 +116,11 @@ public class ResearchObjectResource {
         DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
 
         try {
-            dl.deleteVersion(workspaceId, researchObjectId, versionId);
-            if (dl.getVersionIds(workspaceId, researchObjectId).isEmpty()) {
-                dl.deleteResearchObject(workspaceId, researchObjectId);
-                if (dl.getResearchObjectIds(workspaceId).isEmpty()) {
-                    dl.deleteWorkspace(workspaceId);
+            dl.deleteVersion(Constants.workspaceId, researchObjectId, Constants.versionId);
+            if (dl.getVersionIds(Constants.workspaceId, researchObjectId).isEmpty()) {
+                dl.deleteResearchObject(Constants.workspaceId, researchObjectId);
+                if (dl.getResearchObjectIds(Constants.workspaceId).isEmpty()) {
+                    dl.deleteWorkspace(Constants.workspaceId);
                 }
             }
         } catch (NotFoundException e) {
@@ -136,6 +136,69 @@ public class ResearchObjectResource {
                 sms.close();
             }
         }
+    }
+
+
+    @POST
+    public Response addResource(@PathParam("ro_id") String researchObjectId, String content)
+            throws BadRequestException {
+        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        if (user.getRole() == UserProfile.Role.PUBLIC) {
+            //TODO check permissions in dLibra
+            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
+        }
+        URI researchObject = uriInfo.getAbsolutePath();
+        URI resource;
+        if (request.getHeader(Constants.SLUG_HEADER) != null) {
+            resource = uriInfo.getAbsolutePathBuilder().path(request.getHeader(Constants.SLUG_HEADER)).build();
+        } else {
+            resource = uriInfo.getAbsolutePathBuilder().path(UUID.randomUUID().toString()).build();
+        }
+        return ROSRService.aggregateInternalResource(researchObject, resource, content, request.getContentType(), null);
+    }
+
+
+    @POST
+    @Consumes(Constants.PROXY_MIME_TYPE)
+    public Response addProxy(@PathParam("ro_id") String researchObjectId, String content)
+            throws BadRequestException {
+        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        if (user.getRole() == UserProfile.Role.PUBLIC) {
+            //TODO check permissions in dLibra
+            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
+        }
+        URI researchObject = uriInfo.getAbsolutePath();
+        URI proxyFor;
+        if (request.getHeader(Constants.SLUG_HEADER) != null) {
+            // internal resource
+            proxyFor = uriInfo.getAbsolutePathBuilder().path(request.getHeader(Constants.SLUG_HEADER)).build();
+        } else {
+            // external resource
+            try {
+                proxyFor = new URI(content);
+            } catch (URISyntaxException e) {
+                throw new BadRequestException("Wrong resource URI", e);
+            }
+        }
+        return ROSRService.addProxy(researchObject, proxyFor);
+    }
+
+
+    @POST
+    @Consumes(Constants.ANNOTATION_MIME_TYPE)
+    public Response addAnnotation(@PathParam("ro_id") String researchObjectId, Annotation annotation) {
+        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        if (user.getRole() == UserProfile.Role.PUBLIC) {
+            //TODO check permissions in dLibra
+            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
+        }
+        URI researchObject = uriInfo.getAbsolutePath();
+        for (URI target : annotation.getAnnotationTargets()) {
+            if (ROSRService.isAggregatedResource(researchObject, target)) {
+                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, target);
+            }
+        }
+        return ROSRService.addAnnotation(researchObject, annotation);
     }
 
 
