@@ -16,6 +16,13 @@ public class Annotation {
     private List<URI> annotationTargets;
 
 
+    public Annotation(URI annotationBody, List<URI> annotationTargets) {
+        super();
+        this.annotationBody = annotationBody;
+        this.annotationTargets = annotationTargets;
+    }
+
+
     public URI getAnnotationBody() {
         return annotationBody;
     }

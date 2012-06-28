@@ -177,7 +177,8 @@ public final class ROSRService {
 
 
     /**
-     * An existing aggregated resource is being used as an annotation body now. Add it to the triplestore.
+     * An existing aggregated resource is being used as an annotation body now. Add it to the triplestore. If the
+     * aggregated resource is external, do nothing.
      * 
      * @param researchObject
      *            research object aggregating the resource
@@ -185,6 +186,21 @@ public final class ROSRService {
      *            URI of the resource that is converted
      */
     public static void convertAggregatedResourceToAnnotationBody(URI researchObject, URI resource) {
+        // TODO Auto-generated method stub
+
+    }
+
+
+    /**
+     * An aggregated resource is no longer an annotation body. Remove it from the triplestore. If the annotation body is
+     * not inside the triplestore (i.e. it's an external resource), do nothing.
+     * 
+     * @param researchObject
+     *            research object aggregating the resource
+     * @param resource
+     *            URI of the resource that is converted
+     */
+    public static void convertAnnotationBodyToAggregatedResource(URI researchObject, URI resource) {
         // TODO Auto-generated method stub
 
     }
@@ -200,6 +216,69 @@ public final class ROSRService {
      * @return 201 Created response
      */
     public static Response addAnnotation(URI researchObject, Annotation annotation) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    /**
+     * Update the annotation targets and the annotation body of an annotation. This method does not add/delete the
+     * annotation body to the triplestore.
+     * 
+     * @param researchObject
+     *            the research object
+     * @param annotation
+     *            annotation object, defining the target and body URIs
+     * @return 200 OK response
+     */
+    public static Response updateAnnotation(URI researchObject, Annotation annotation) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    /**
+     * Check if a resource is an annotation defined in a research object.
+     * 
+     * @param researchObject
+     *            research object to search
+     * @param resource
+     *            resource that may be an annotation
+     * @return true if this resource is an annotation in the research object, false otherwise
+     */
+    public static boolean isAnnotation(URI researchObject, URI resource) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+
+    /**
+     * Get the URI of an annotation body. If acceptHeader is not null, will return a format-specific URI.
+     * 
+     * @param researchObject
+     *            research object in which the annotation is defined
+     * @param annotation
+     *            the annotation
+     * @param acceptHeader
+     *            MIME type requested (content negotiation) or null
+     * @return URI of the annotation body
+     */
+    public static URI getAnnotationBody(URI researchObject, URI annotation, String acceptHeader) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    /**
+     * Delete an annotation. Does not delete the annotation body.
+     * 
+     * @param researchObject
+     *            research object in which the annotation is defined
+     * @param annotation
+     *            the annotation
+     * @return 204 No Content
+     */
+    public static Response deleteAnnotation(URI researchObject, URI annotation) {
         // TODO Auto-generated method stub
         return null;
     }

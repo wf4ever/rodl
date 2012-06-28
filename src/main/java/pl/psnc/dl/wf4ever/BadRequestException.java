@@ -1,6 +1,5 @@
 package pl.psnc.dl.wf4ever;
 
-import java.net.URISyntaxException;
 
 /**
  * This exception indicates that the request is incorrect.
@@ -25,7 +24,7 @@ public class BadRequestException extends Exception {
     }
 
 
-    public BadRequestException(String message, URISyntaxException e) {
+    public BadRequestException(String message, Exception e) {
         super(message, e);
     }
 

@@ -7,6 +7,9 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.UUID;
 
 import javax.naming.NamingException;
@@ -139,6 +142,15 @@ public class ResearchObjectResource {
     }
 
 
+    /**
+     * Add a resource with no specific MIME type.
+     * 
+     * @param researchObjectId
+     * @param content
+     * @return
+     * @throws BadRequestException
+     *             annotation target is an incorrect URI
+     */
     @POST
     public Response addResource(@PathParam("ro_id") String researchObjectId, String content)
             throws BadRequestException {
@@ -154,7 +166,24 @@ public class ResearchObjectResource {
         } else {
             resource = uriInfo.getAbsolutePathBuilder().path(UUID.randomUUID().toString()).build();
         }
-        return ROSRService.aggregateInternalResource(researchObject, resource, content, request.getContentType(), null);
+        if (request.getHeader(Constants.AO_ANNOTATES_HEADER) != null) {
+            List<URI> annotationTargets = new ArrayList<>();
+            for (@SuppressWarnings("unchecked")
+            Enumeration<String> headers = request.getHeaders(Constants.AO_ANNOTATES_HEADER); headers.hasMoreElements();) {
+                String header = headers.nextElement();
+                try {
+                    annotationTargets.add(new URI(header));
+                } catch (URISyntaxException e) {
+                    throw new BadRequestException("Annotation target " + header + " is incorrect", e);
+                }
+            }
+            ROSRService.aggregateInternalResource(researchObject, resource, content, request.getContentType(), null);
+            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
+            return ROSRService.addAnnotation(researchObject, new Annotation(resource, annotationTargets));
+        } else {
+            return ROSRService.aggregateInternalResource(researchObject, resource, content, request.getContentType(),
+                null);
+        }
     }
 
 
@@ -193,11 +222,10 @@ public class ResearchObjectResource {
             throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
         }
         URI researchObject = uriInfo.getAbsolutePath();
-        for (URI target : annotation.getAnnotationTargets()) {
-            if (ROSRService.isAggregatedResource(researchObject, target)) {
-                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, target);
-            }
+        if (ROSRService.isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
+            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody());
         }
+
         return ROSRService.addAnnotation(researchObject, annotation);
     }
 

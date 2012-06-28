@@ -2,7 +2,7 @@ package pl.psnc.dl.wf4ever;
 
 /**
  * 
- * @author nowakm
+ * @author piotrhol
  * 
  */
 public final class Constants {
@@ -26,7 +26,11 @@ public final class Constants {
 
     public static final String SLUG_HEADER = "Slug";
 
+    public static final String AO_ANNOTATES_HEADER = "http://purl.org/ao/annotates";
+
     public static final String PROXY_MIME_TYPE = "application/vnd.wf4ever.proxy";
 
     public static final String ANNOTATION_MIME_TYPE = "application/vnd.wf4ever.annotation";
+
+    public static final String ACCEPT_HEADER = "Accept";
 }
