@@ -17,6 +17,7 @@ import javax.ws.rs.core.UriInfo;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
+import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dlibra.service.AccessDeniedException;
@@ -57,11 +58,11 @@ public class Resource {
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
 
-        if (ROSRService.isProxy(researchObject, resource)) {
+        if (SecurityFilter.SMS.get().isProxy(researchObject, resource)) {
             return Response.status(Status.TEMPORARY_REDIRECT)
-                    .location(ROSRService.getProxyFor(researchObject, resource)).build();
+                    .location(SecurityFilter.SMS.get().getProxyFor(researchObject, resource)).build();
         }
-        if (ROSRService.isAggregatedResource(researchObject, resource)) {
+        if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, resource)) {
             return ROSRService.updateInternalResource(researchObject, resource, entity, request.getContentType(),
                 original);
         } else {
@@ -98,13 +99,13 @@ public class Resource {
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
 
-        if (!ROSRService.isAnnotation(researchObject, resource)) {
+        if (!SecurityFilter.SMS.get().isAnnotation(researchObject, resource)) {
             throw new ForbiddenException("You cannot create a new annotation using PUT, use POST instead.");
         }
         URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, resource, null);
         if (oldAnnotationBody == null || !oldAnnotationBody.equals(annotation.getAnnotationBody())) {
             ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody);
-            if (ROSRService.isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
+            if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
                 ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody(),
                     researchObjectId);
             }
@@ -119,11 +120,11 @@ public class Resource {
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
 
-        if (ROSRService.isProxy(researchObject, resource)) {
-            return Response.status(Status.SEE_OTHER).location(ROSRService.getProxyFor(researchObject, resource))
-                    .build();
+        if (SecurityFilter.SMS.get().isProxy(researchObject, resource)) {
+            return Response.status(Status.SEE_OTHER)
+                    .location(SecurityFilter.SMS.get().getProxyFor(researchObject, resource)).build();
         }
-        if (ROSRService.isAnnotation(researchObject, resource)) {
+        if (SecurityFilter.SMS.get().isAnnotation(researchObject, resource)) {
             return Response
                     .status(Status.SEE_OTHER)
                     .location(
@@ -134,26 +135,40 @@ public class Resource {
     }
 
 
+    /**
+     * 
+     * @param researchObjectId
+     * @param filePath
+     * @param original
+     * @return
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
     @DELETE
     public Response deleteResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
-            @QueryParam("original") String original) {
+            @QueryParam("original") String original)
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
 
-        if (ROSRService.isProxy(researchObject, resource)) {
+        if (SecurityFilter.SMS.get().isProxy(researchObject, resource)) {
             if (ROSRService.isInternalResource(researchObject, resource)) {
                 return Response.status(Status.TEMPORARY_REDIRECT)
-                        .location(ROSRService.getProxyFor(researchObject, resource)).build();
+                        .location(SecurityFilter.SMS.get().getProxyFor(researchObject, resource)).build();
             } else {
-                return ROSRService.deaggregateExternalResource(researchObject, resource);
+                return ROSRService.deaggregateExternalResource(researchObject, resource, researchObjectId);
             }
         }
-        if (ROSRService.isAnnotation(researchObject, resource)) {
+        if (SecurityFilter.SMS.get().isAnnotation(researchObject, resource)) {
             URI annotationBody = ROSRService.getAnnotationBody(researchObject, resource, null);
             ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotationBody);
             return ROSRService.deleteAnnotation(researchObject, resource);
         }
-        return ROSRService.deaggregateInternalResource(researchObject, resource, original);
+        return ROSRService.deaggregateInternalResource(researchObject, resource, researchObjectId, original);
     }
 
 }

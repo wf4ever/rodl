@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
@@ -81,10 +82,57 @@ public final class ROSRService {
     public static Response aggregateExternalResource(URI researchObject, URI resource, String researchObjectId)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         SecurityFilter.SMS.get().addResource(researchObject, resource, null);
+        Response response = addProxy(researchObject, resource);
         // update the manifest that describes the resource in dLibra
         updateNamedGraphInDlibra(researchObjectId, Constants.MANIFEST_PATH, researchObject,
             researchObject.resolve(Constants.MANIFEST_PATH));
-        return addProxy(researchObject, resource);
+        return response;
+    }
+
+
+    /**
+     * De-aggregate an internal resource, delete its content and proxy.
+     * 
+     * @param researchObject
+     *            research object aggregating the resource
+     * @param resource
+     *            resource to delete
+     * @param researchObjectId
+     *            research object ID
+     * @param original
+     *            original resource in case of using a format specific URI
+     * @return 204 No Content response
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
+    public static Response deaggregateInternalResource(URI researchObject, URI resource, String researchObjectId,
+            String original)
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        if (original != null) {
+            resource = resource.resolve(original);
+        }
+        String filePath = researchObject.relativize(resource).getPath();
+
+        if (researchObject.resolve(Constants.MANIFEST_PATH).equals(resource)) {
+            throw new ForbiddenException("Can't delete the manifest");
+        }
+
+        SecurityFilter.DL.get().deleteFile(Constants.workspaceId, researchObjectId, Constants.versionId, filePath);
+        if (SecurityFilter.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
+            SecurityFilter.SMS.get().removeNamedGraph(researchObject, resource);
+        } else {
+            SecurityFilter.SMS.get().removeResource(researchObject, resource);
+        }
+        URI proxy = SecurityFilter.SMS.get().getProxyForResource(researchObject, resource);
+        Response response = deleteProxy(researchObject, proxy);
+        // update the manifest that describes the resource in dLibra
+        updateNamedGraphInDlibra(researchObjectId, Constants.MANIFEST_PATH, researchObject,
+            researchObject.resolve(Constants.MANIFEST_PATH));
+        return response;
     }
 
 
@@ -95,71 +143,42 @@ public final class ROSRService {
      *            research object that aggregates the resource
      * @param proxy
      *            external resource proxy
+     * @param researchObjectId
+     *            research object ID
      * @return 204 No Content
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
      */
-    public static Response deaggregateExternalResource(URI researchObject, URI proxy) {
-        // TODO Auto-generated method stub
-        return null;
+    public static Response deaggregateExternalResource(URI researchObject, URI proxy, String researchObjectId)
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
+        URI resource = SecurityFilter.SMS.get().getProxyFor(researchObject, proxy);
+        SecurityFilter.SMS.get().removeResource(researchObject, resource);
+        // update the manifest that describes the resource in dLibra
+        updateNamedGraphInDlibra(researchObjectId, Constants.MANIFEST_PATH, researchObject,
+            researchObject.resolve(Constants.MANIFEST_PATH));
+        return deleteProxy(researchObject, proxy);
     }
 
 
     /**
-     * Check if the research object defines a proxy with a given URI
+     * Check if the resource is internal. Resource is internal only if its content has been deployed under the control
+     * of the service. A resource that has "internal" URI but the content has not been uploaded is considered external.
      * 
      * @param researchObject
-     *            research object to search
+     *            research object that aggregates the resource
      * @param resource
-     *            resource that may be a proxy
-     * @return true if the resource is a proxy, false otherwise
+     *            the resource that may be internal
+     * @return true if the resource content is deployed under the control of the service, false otherwise
      */
-    public static boolean isProxy(URI researchObject, URI resource) {
+    public static boolean isInternalResource(URI researchObject, URI resource) {
+        String filePath = researchObject.relativize(resource).getPath();
+
         // TODO Auto-generated method stub
         return false;
-    }
-
-
-    /**
-     * Checks if there exists a proxy that has ore:proxyFor pointing to the resource.
-     * 
-     * @param researchObject
-     *            research object to search in
-     * @param resource
-     *            resource which should be pointed
-     * @return true if a proxy was found, false otherwise
-     */
-    public static boolean existsProxyFor(URI researchObject, URI resource) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-
-    /**
-     * Return the ore:proxyFor object of a proxy.
-     * 
-     * @param researchObject
-     *            research object in which the proxy is
-     * @param proxy
-     *            the proxy URI
-     * @return the proxyFor object URI
-     */
-    public static URI getProxyFor(URI researchObject, URI proxy) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    /**
-     * Delete the proxy. Does not delete the resource that it points to.
-     * 
-     * @param researchObject
-     *            research object that aggregates the proxy
-     * @param proxy
-     *            proxy to delete
-     * @return 204 No Content
-     */
-    private static Response deleteProxy(URI researchObject, URI proxy) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
 
@@ -182,33 +201,17 @@ public final class ROSRService {
 
 
     /**
-     * Checks if there exists an annotation that has ao:body pointing to the resource.
+     * Delete the proxy. Does not delete the resource that it points to.
      * 
      * @param researchObject
-     *            research object to search in
-     * @param resource
-     *            resource which should be pointed
-     * @return true if an annotation was found, false otherwise
+     *            research object that aggregates the proxy
+     * @param proxy
+     *            proxy to delete
+     * @return 204 No Content
      */
-    public static boolean isAnnotationBody(URI researchObject, URI resource) {
-        // TODO Auto-generated method stub
-        //        sms.isROMetadataNamedGraph(researchObjectURI, resourceURI);
-        return false;
-    }
-
-
-    /**
-     * Check if the research object aggregates a resource.
-     * 
-     * @param researchObject
-     *            the research object
-     * @param resource
-     *            the resource URI
-     * @return true if the research object aggregates the resource, false otherwise
-     */
-    public static boolean isAggregatedResource(URI researchObject, URI resource) {
-        // TODO Auto-generated method stub
-        return false;
+    private static Response deleteProxy(URI researchObject, URI proxy) {
+        SecurityFilter.SMS.get().deleteProxy(researchObject, proxy);
+        return Response.noContent().build();
     }
 
 
@@ -249,23 +252,6 @@ public final class ROSRService {
      * @return 200 OK with resource content
      */
     public static Response getInternalResource(URI researchObject, URI resource, String accept, String original) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    /**
-     * De-aggregate an internal resource, delete its content and proxy.
-     * 
-     * @param researchObject
-     *            research object aggregating the resource
-     * @param resource
-     *            resource to delete
-     * @param original
-     *            original resource in case of using a format specific URI
-     * @return 204 No Content response
-     */
-    public static Response deaggregateInternalResource(URI researchObject, URI resource, String original) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -348,21 +334,6 @@ public final class ROSRService {
 
 
     /**
-     * Check if a resource is an annotation defined in a research object.
-     * 
-     * @param researchObject
-     *            research object to search
-     * @param resource
-     *            resource that may be an annotation
-     * @return true if this resource is an annotation in the research object, false otherwise
-     */
-    public static boolean isAnnotation(URI researchObject, URI resource) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-
-    /**
      * Get the URI of an annotation body. If acceptHeader is not null, will return a format-specific URI.
      * 
      * @param researchObject
@@ -414,22 +385,6 @@ public final class ROSRService {
             researchObjectURI, format);
         SecurityFilter.DL.get().createOrUpdateFile(Constants.workspaceId, researchObjectId, Constants.versionId,
             filePath, dataStream, format.getDefaultMIMEType());
-    }
-
-
-    /**
-     * Check if the resource is internal. Resource is internal only if its content has been deployed under the control
-     * of the service. A resource that has "internal" URI but the content has not been uploaded is considered external.
-     * 
-     * @param researchObject
-     *            research object that aggregates the resource
-     * @param resource
-     *            the resource that may be internal
-     * @return true if the resource content is deployed under the control of the service, false otherwise
-     */
-    public static boolean isInternalResource(URI researchObject, URI resource) {
-        // TODO Auto-generated method stub
-        return false;
     }
 
 }

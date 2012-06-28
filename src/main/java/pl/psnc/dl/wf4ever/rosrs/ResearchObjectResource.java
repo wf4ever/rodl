@@ -149,7 +149,7 @@ public class ResearchObjectResource {
         } else {
             resource = uriInfo.getAbsolutePathBuilder().path(UUID.randomUUID().toString()).build();
         }
-        if (ROSRService.isAggregatedResource(researchObject, resource)) {
+        if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, resource)) {
             throw new ConflictException("This resource has already been aggregated. Use PUT to update it.");
         }
         if (request.getHeader(Constants.AO_ANNOTATES_HEADER) != null) {
@@ -170,7 +170,7 @@ public class ResearchObjectResource {
         } else {
             Response response = ROSRService.aggregateInternalResource(researchObject, resource, researchObjectId,
                 content, request.getContentType(), null);
-            if (ROSRService.isAnnotationBody(researchObject, resource)) {
+            if (SecurityFilter.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
                 ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource, researchObjectId);
             }
             return response;
@@ -226,7 +226,7 @@ public class ResearchObjectResource {
     public Response addAnnotation(@PathParam("ro_id") String researchObjectId, Annotation annotation)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getAbsolutePath();
-        if (ROSRService.isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
+        if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
             ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody(),
                 researchObjectId);
         }
