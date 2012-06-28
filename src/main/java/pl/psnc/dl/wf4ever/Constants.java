@@ -28,9 +28,18 @@ public final class Constants {
 
     public static final String AO_ANNOTATES_HEADER = "http://purl.org/ao/annotates";
 
+    public static final String ORE_PROXY_FOR_HEADER = "http://www.openarchives.org/ore/terms/proxyFor";
+
     public static final String PROXY_MIME_TYPE = "application/vnd.wf4ever.proxy";
 
     public static final String ANNOTATION_MIME_TYPE = "application/vnd.wf4ever.annotation";
 
     public static final String ACCEPT_HEADER = "Accept";
+
+    public static final String MANIFEST_PATH = ".ro/manifest.rdf";
+
+    public static final String LINK_HEADER = "Link";
+
+    public static final String LINK_HEADER_TEMPLATE = "<%s>; rel=%s";
+
 }

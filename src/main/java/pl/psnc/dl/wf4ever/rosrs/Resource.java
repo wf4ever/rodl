@@ -15,12 +15,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.auth.AuthenticationException;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
-import pl.psnc.dl.wf4ever.auth.SecurityFilter;
-import pl.psnc.dl.wf4ever.dlibra.UserProfile;
+import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
+import pl.psnc.dlibra.service.AccessDeniedException;
 
 /**
  * 
@@ -37,15 +36,24 @@ public class Resource {
     private UriInfo uriInfo;
 
 
+    /**
+     * 
+     * @param researchObjectId
+     * @param filePath
+     * @param original
+     * @param entity
+     * @return
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
     @PUT
     public Response putResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original, String entity)
-            throws BadRequestException {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        if (user.getRole() == UserProfile.Role.PUBLIC) {
-            //TODO check permissions in dLibra
-            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
-        }
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
 
@@ -53,33 +61,40 @@ public class Resource {
             return Response.status(Status.TEMPORARY_REDIRECT)
                     .location(ROSRService.getProxyFor(researchObject, resource)).build();
         }
-        boolean isProxyTarget = ROSRService.existsProxyFor(researchObject, resource);
-        boolean isAnnotationBody = ROSRService.isAnnotationBody(researchObject, resource);
-        boolean isAggregatedResource = ROSRService.isAggregatedResource(researchObject, resource);
-        if (isAggregatedResource) {
+        if (ROSRService.isAggregatedResource(researchObject, resource)) {
             return ROSRService.updateInternalResource(researchObject, resource, entity, request.getContentType(),
                 original);
         } else {
-            if (isProxyTarget || isAnnotationBody) {
-                return ROSRService.aggregateInternalResource(researchObject, resource, entity,
-                    request.getContentType(), original);
-            } else {
-                throw new ForbiddenException(
-                        "You cannot use PUT to create new resources unless they have been referenced in a proxy or an annotation. Use POST instead.");
-            }
+            throw new ForbiddenException(
+                    "You cannot use PUT to create new resources unless they have been referenced in a proxy or an annotation. Use POST instead.");
         }
     }
 
 
+    /**
+     * Make a PUT to update an annotation.
+     * 
+     * @param researchObjectId
+     *            research object ID
+     * @param filePath
+     *            the file path
+     * @param original
+     *            original resource in case of a format-specific URI
+     * @param annotation
+     *            JSON representation of an annotation
+     * @return 200 OK
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
     @PUT
     @Consumes(Constants.ANNOTATION_MIME_TYPE)
     public Response updateAnnotation(@PathParam("ro_id") String researchObjectId,
-            @PathParam("filePath") String filePath, @QueryParam("original") String original, Annotation annotation) {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        if (user.getRole() == UserProfile.Role.PUBLIC) {
-            //TODO check permissions in dLibra
-            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
-        }
+            @PathParam("filePath") String filePath, @QueryParam("original") String original, Annotation annotation)
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
 
@@ -90,7 +105,8 @@ public class Resource {
         if (oldAnnotationBody == null || !oldAnnotationBody.equals(annotation.getAnnotationBody())) {
             ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody);
             if (ROSRService.isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
-                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody());
+                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody(),
+                    researchObjectId);
             }
         }
         return ROSRService.updateAnnotation(researchObject, annotation);
@@ -100,11 +116,6 @@ public class Resource {
     @GET
     public Response getResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original) {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        if (user.getRole() == UserProfile.Role.PUBLIC) {
-            //TODO check permissions in dLibra
-            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
-        }
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
 
@@ -126,24 +137,23 @@ public class Resource {
     @DELETE
     public Response deleteResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original) {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        if (user.getRole() == UserProfile.Role.PUBLIC) {
-            //TODO check permissions in dLibra
-            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
-        }
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.isProxy(researchObject, resource)) {
-            return Response.status(Status.TEMPORARY_REDIRECT)
-                    .location(ROSRService.getProxyFor(researchObject, resource)).build();
+            if (ROSRService.isInternalResource(researchObject, resource)) {
+                return Response.status(Status.TEMPORARY_REDIRECT)
+                        .location(ROSRService.getProxyFor(researchObject, resource)).build();
+            } else {
+                return ROSRService.deaggregateExternalResource(researchObject, resource);
+            }
         }
         if (ROSRService.isAnnotation(researchObject, resource)) {
             URI annotationBody = ROSRService.getAnnotationBody(researchObject, resource, null);
             ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotationBody);
             return ROSRService.deleteAnnotation(researchObject, resource);
         }
-        return ROSRService.deleteInternalResource(researchObject, resource, original);
+        return ROSRService.deaggregateInternalResource(researchObject, resource, original);
     }
 
 }

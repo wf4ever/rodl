@@ -33,16 +33,13 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.auth.AuthenticationException;
 import pl.psnc.dl.wf4ever.auth.SecurityFilter;
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
-import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
-import pl.psnc.dl.wf4ever.dlibra.UserProfile;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
+import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.IdNotFoundException;
+
+import com.sun.jersey.api.ConflictException;
 
 /**
  * 
@@ -55,8 +52,6 @@ public class ResearchObjectResource {
     private static final Logger logger = Logger.getLogger(ResearchObjectResource.class);
 
     private static final URI portalRoPage = URI.create("http://sandbox.wf4ever-project.org/portal/ro");
-
-    private static final String linkHeaderTemplate = "<%s>; rel=bookmark";
 
     @Context
     HttpServletRequest request;
@@ -112,31 +107,21 @@ public class ResearchObjectResource {
     @DELETE
     public void deleteVersion(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, ClassNotFoundException, IOException, NamingException, SQLException {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        if (user.getRole() == UserProfile.Role.PUBLIC) {
-            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
-        }
-        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
-
         try {
-            dl.deleteVersion(Constants.workspaceId, researchObjectId, Constants.versionId);
-            if (dl.getVersionIds(Constants.workspaceId, researchObjectId).isEmpty()) {
-                dl.deleteResearchObject(Constants.workspaceId, researchObjectId);
-                if (dl.getResearchObjectIds(Constants.workspaceId).isEmpty()) {
-                    dl.deleteWorkspace(Constants.workspaceId);
+            SecurityFilter.DL.get().deleteVersion(Constants.workspaceId, researchObjectId, Constants.versionId);
+            if (SecurityFilter.DL.get().getVersionIds(Constants.workspaceId, researchObjectId).isEmpty()) {
+                SecurityFilter.DL.get().deleteResearchObject(Constants.workspaceId, researchObjectId);
+                if (SecurityFilter.DL.get().getResearchObjectIds(Constants.workspaceId).isEmpty()) {
+                    SecurityFilter.DL.get().deleteWorkspace(Constants.workspaceId);
                 }
             }
         } catch (NotFoundException e) {
             logger.warn("URI not found in dLibra: " + uriInfo.getAbsolutePath());
         } finally {
-
-            SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
             try {
-                sms.removeResearchObject(uriInfo.getAbsolutePath());
+                SecurityFilter.SMS.get().removeResearchObject(uriInfo.getAbsolutePath());
             } catch (IllegalArgumentException e) {
                 logger.warn("URI not found in SMS: " + uriInfo.getAbsolutePath());
-            } finally {
-                sms.close();
             }
         }
     }
@@ -150,21 +135,22 @@ public class ResearchObjectResource {
      * @return
      * @throws BadRequestException
      *             annotation target is an incorrect URI
+     * @throws NotFoundException
+     * @throws DigitalLibraryException
+     * @throws AccessDeniedException
      */
     @POST
     public Response addResource(@PathParam("ro_id") String researchObjectId, String content)
-            throws BadRequestException {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        if (user.getRole() == UserProfile.Role.PUBLIC) {
-            //TODO check permissions in dLibra
-            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
-        }
+            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getAbsolutePath();
         URI resource;
         if (request.getHeader(Constants.SLUG_HEADER) != null) {
             resource = uriInfo.getAbsolutePathBuilder().path(request.getHeader(Constants.SLUG_HEADER)).build();
         } else {
             resource = uriInfo.getAbsolutePathBuilder().path(UUID.randomUUID().toString()).build();
+        }
+        if (ROSRService.isAggregatedResource(researchObject, resource)) {
+            throw new ConflictException("This resource has already been aggregated. Use PUT to update it.");
         }
         if (request.getHeader(Constants.AO_ANNOTATES_HEADER) != null) {
             List<URI> annotationTargets = new ArrayList<>();
@@ -177,25 +163,38 @@ public class ResearchObjectResource {
                     throw new BadRequestException("Annotation target " + header + " is incorrect", e);
                 }
             }
-            ROSRService.aggregateInternalResource(researchObject, resource, content, request.getContentType(), null);
-            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
+            ROSRService.aggregateInternalResource(researchObject, resource, researchObjectId, content,
+                request.getContentType(), null);
+            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource, researchObjectId);
             return ROSRService.addAnnotation(researchObject, new Annotation(resource, annotationTargets));
         } else {
-            return ROSRService.aggregateInternalResource(researchObject, resource, content, request.getContentType(),
-                null);
+            Response response = ROSRService.aggregateInternalResource(researchObject, resource, researchObjectId,
+                content, request.getContentType(), null);
+            if (ROSRService.isAnnotationBody(researchObject, resource)) {
+                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource, researchObjectId);
+            }
+            return response;
         }
     }
 
 
+    /**
+     * 
+     * @param researchObjectId
+     * @param content
+     * @return
+     * @throws BadRequestException
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
     @POST
     @Consumes(Constants.PROXY_MIME_TYPE)
     public Response addProxy(@PathParam("ro_id") String researchObjectId, String content)
-            throws BadRequestException {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        if (user.getRole() == UserProfile.Role.PUBLIC) {
-            //TODO check permissions in dLibra
-            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
-        }
+            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getAbsolutePath();
         URI proxyFor;
         if (request.getHeader(Constants.SLUG_HEADER) != null) {
@@ -209,21 +208,27 @@ public class ResearchObjectResource {
                 throw new BadRequestException("Wrong resource URI", e);
             }
         }
-        return ROSRService.addProxy(researchObject, proxyFor);
+        return ROSRService.aggregateExternalResource(researchObject, proxyFor, researchObjectId);
     }
 
 
+    /**
+     * 
+     * @param researchObjectId
+     * @param annotation
+     * @return
+     * @throws NotFoundException
+     * @throws DigitalLibraryException
+     * @throws AccessDeniedException
+     */
     @POST
     @Consumes(Constants.ANNOTATION_MIME_TYPE)
-    public Response addAnnotation(@PathParam("ro_id") String researchObjectId, Annotation annotation) {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        if (user.getRole() == UserProfile.Role.PUBLIC) {
-            //TODO check permissions in dLibra
-            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
-        }
+    public Response addAnnotation(@PathParam("ro_id") String researchObjectId, Annotation annotation)
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getAbsolutePath();
         if (ROSRService.isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
-            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody());
+            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody(),
+                researchObjectId);
         }
 
         return ROSRService.addAnnotation(researchObject, annotation);
@@ -252,25 +257,26 @@ public class ResearchObjectResource {
         try {
             return responseBuilder
                     .header(
-                        "Link",
-                        String.format(linkHeaderTemplate,
-                            getROHtmlURI(linkUriInfo.getBaseUriBuilder(), researchObjectId)))
+                        Constants.LINK_HEADER,
+                        String.format(Constants.LINK_HEADER_TEMPLATE,
+                            getROHtmlURI(linkUriInfo.getBaseUriBuilder(), researchObjectId), "bookmark"))
                     .header(
-                        "Link",
-                        String.format(linkHeaderTemplate,
-                            getZippedROURI(linkUriInfo.getBaseUriBuilder(), researchObjectId)))
+                        Constants.LINK_HEADER,
+                        String.format(Constants.LINK_HEADER_TEMPLATE,
+                            getZippedROURI(linkUriInfo.getBaseUriBuilder(), researchObjectId), "bookmark"))
                     .header(
-                        "Link",
-                        String.format(linkHeaderTemplate,
-                            getROMetadataURI(linkUriInfo.getBaseUriBuilder(), researchObjectId)));
+                        Constants.LINK_HEADER,
+                        String.format(Constants.LINK_HEADER_TEMPLATE,
+                            getROMetadataURI(linkUriInfo.getBaseUriBuilder(), researchObjectId), "bookmark"));
         } catch (URISyntaxException e) {
             logger.error("Could not create RO Portal URI", e);
-            return responseBuilder.header("Link",
-                String.format(linkHeaderTemplate, getZippedROURI(linkUriInfo.getBaseUriBuilder(), researchObjectId)))
-                    .header(
-                        "Link",
-                        String.format(linkHeaderTemplate,
-                            getROMetadataURI(linkUriInfo.getBaseUriBuilder(), researchObjectId)));
+            return responseBuilder.header(
+                Constants.LINK_HEADER,
+                String.format(Constants.LINK_HEADER_TEMPLATE,
+                    getZippedROURI(linkUriInfo.getBaseUriBuilder(), researchObjectId), "bookmark")).header(
+                Constants.LINK_HEADER,
+                String.format(Constants.LINK_HEADER_TEMPLATE,
+                    getROMetadataURI(linkUriInfo.getBaseUriBuilder(), researchObjectId), "bookmark"));
         }
     }
 }

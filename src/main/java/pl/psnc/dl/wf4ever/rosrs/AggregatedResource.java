@@ -14,11 +14,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
@@ -61,75 +59,6 @@ public class AggregatedResource {
 
     @Context
     private UriInfo uriInfo;
-
-
-    @GET
-    public Response getResourceAny(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
-            @DefaultValue("false") @QueryParam("content") boolean isContentRequested,
-            @QueryParam("original") String original)
-            throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException,
-            NotFoundException, NamingException, SQLException, URISyntaxException {
-        return getResource(researchObjectId, filePath, isContentRequested, original, null);
-    }
-
-
-    @GET
-    @Produces({ "application/x-turtle", "text/turtle" })
-    public Response getResourceTurtle(@PathParam("ro_id") String researchObjectId,
-            @PathParam("filePath") String filePath,
-            @DefaultValue("false") @QueryParam("content") boolean isContentRequested,
-            @QueryParam("original") String original)
-            throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException,
-            NotFoundException, NamingException, SQLException, URISyntaxException {
-        return getResource(researchObjectId, filePath, isContentRequested, original, RDFFormat.TURTLE);
-    }
-
-
-    @GET
-    @Produces("application/x-trig")
-    public Response getResourceTrig(@PathParam("ro_id") String researchObjectId,
-            @PathParam("filePath") String filePath,
-            @DefaultValue("false") @QueryParam("content") boolean isContentRequested,
-            @QueryParam("original") String original)
-            throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException,
-            NotFoundException, NamingException, SQLException, URISyntaxException {
-        return getResource(researchObjectId, filePath, isContentRequested, original, RDFFormat.TRIG);
-    }
-
-
-    @GET
-    @Produces("application/trix")
-    public Response getResourceTrix(@PathParam("ro_id") String researchObjectId,
-            @PathParam("filePath") String filePath,
-            @DefaultValue("false") @QueryParam("content") boolean isContentRequested,
-            @QueryParam("original") String original)
-            throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException,
-            NotFoundException, NamingException, SQLException, URISyntaxException {
-        return getResource(researchObjectId, filePath, isContentRequested, original, RDFFormat.TRIX);
-    }
-
-
-    @GET
-    @Produces("text/rdf+n3")
-    public Response getResourceN3(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
-            @DefaultValue("false") @QueryParam("content") boolean isContentRequested,
-            @QueryParam("original") String original)
-            throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException,
-            NotFoundException, NamingException, SQLException, URISyntaxException {
-        return getResource(researchObjectId, filePath, isContentRequested, original, RDFFormat.N3);
-    }
-
-
-    @GET
-    @Produces("application/rdf+xml")
-    public Response getResourceRdfXml(@PathParam("ro_id") String researchObjectId,
-            @PathParam("filePath") String filePath,
-            @DefaultValue("false") @QueryParam("content") boolean isContentRequested,
-            @QueryParam("original") String original)
-            throws ClassNotFoundException, IOException, TransformerException, DigitalLibraryException,
-            NotFoundException, NamingException, SQLException, URISyntaxException {
-        return getResource(researchObjectId, filePath, isContentRequested, original, RDFFormat.RDFXML);
-    }
 
 
     private Response getResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
