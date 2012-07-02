@@ -63,8 +63,14 @@ public class Resource {
                     .location(SecurityFilter.SMS.get().getProxyFor(researchObject, resource)).build();
         }
         if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, resource)) {
-            return ROSRService.updateInternalResource(researchObject, resource, entity, request.getContentType(),
-                original);
+            if (original != null) {
+                resource = resource.resolve(original);
+            }
+            if (researchObject.resolve(Constants.MANIFEST_PATH).equals(resource)) {
+                throw new ForbiddenException("Can't update the manifest");
+            }
+            return ROSRService.updateInternalResource(researchObject, resource, researchObjectId, entity,
+                request.getContentType());
         } else {
             throw new ForbiddenException(
                     "You cannot use PUT to create new resources unless they have been referenced in a proxy or an annotation. Use POST instead.");
@@ -104,19 +110,29 @@ public class Resource {
         }
         URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, resource, null);
         if (oldAnnotationBody == null || !oldAnnotationBody.equals(annotation.getAnnotationBody())) {
-            ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody);
+            ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody, researchObjectId);
             if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
                 ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody(),
                     researchObjectId);
             }
         }
-        return ROSRService.updateAnnotation(researchObject, annotation);
+        return ROSRService.updateAnnotation(researchObject, resource, annotation);
     }
 
 
+    /**
+     * 
+     * @param researchObjectId
+     * @param filePath
+     * @param original
+     * @return
+     * @throws NotFoundException
+     * @throws DigitalLibraryException
+     */
     @GET
     public Response getResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
-            @QueryParam("original") String original) {
+            @QueryParam("original") String original)
+            throws DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
 
@@ -131,7 +147,11 @@ public class Resource {
                         ROSRService.getAnnotationBody(researchObject, resource,
                             request.getHeader(Constants.ACCEPT_HEADER))).build();
         }
-        return ROSRService.getInternalResource(researchObject, resource, request.getHeader("Accept"), original);
+        if (original != null) {
+            resource = resource.resolve(original);
+        }
+        return ROSRService.getInternalResource(researchObject, resource, researchObjectId, request.getHeader("Accept"),
+            original);
     }
 
 
@@ -156,7 +176,7 @@ public class Resource {
         URI resource = uriInfo.getAbsolutePath();
 
         if (SecurityFilter.SMS.get().isProxy(researchObject, resource)) {
-            if (ROSRService.isInternalResource(researchObject, resource)) {
+            if (ROSRService.isInternalResource(researchObject, resource, researchObjectId)) {
                 return Response.status(Status.TEMPORARY_REDIRECT)
                         .location(SecurityFilter.SMS.get().getProxyFor(researchObject, resource)).build();
             } else {
@@ -165,10 +185,16 @@ public class Resource {
         }
         if (SecurityFilter.SMS.get().isAnnotation(researchObject, resource)) {
             URI annotationBody = ROSRService.getAnnotationBody(researchObject, resource, null);
-            ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotationBody);
+            ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotationBody, researchObjectId);
             return ROSRService.deleteAnnotation(researchObject, resource);
         }
-        return ROSRService.deaggregateInternalResource(researchObject, resource, researchObjectId, original);
+        if (original != null) {
+            resource = resource.resolve(original);
+        }
+        if (researchObject.resolve(Constants.MANIFEST_PATH).equals(resource)) {
+            throw new ForbiddenException("Can't delete the manifest");
+        }
+        return ROSRService.deaggregateInternalResource(researchObject, resource, researchObjectId);
     }
 
 }

@@ -42,4 +42,7 @@ public final class Constants {
 
     public static final String LINK_HEADER_TEMPLATE = "<%s>; rel=%s";
 
+    public static final String AO_ANNOTATION_BODY_HEADER = "http://purl.org/ao/annotationBody";
+
+    public static final String AO_ANNOTATES_RESOURCE_HEADER = "http://purl.org/ao/annotatesResource";
 }

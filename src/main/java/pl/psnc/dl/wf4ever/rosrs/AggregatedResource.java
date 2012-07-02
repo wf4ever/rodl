@@ -60,6 +60,10 @@ public class AggregatedResource {
     @Context
     private UriInfo uriInfo;
 
+    String workspaceId, versionId;
+
+    UserProfile user;
+
 
     private Response getResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @DefaultValue("false") @QueryParam("content") boolean isContentRequested,
@@ -366,8 +370,8 @@ public class AggregatedResource {
     }
 
 
-    private static Response createOrUpdateFile(UserProfile user, String researchObjectId, String filePath,
-            String original, InputStream data, RDFFormat format)
+    private Response createOrUpdateFile(String researchObjectId, String filePath, String original, InputStream data,
+            RDFFormat format)
             throws ClassNotFoundException, IOException, NamingException, SQLException, DigitalLibraryException,
             NotFoundException, AccessDeniedException, URISyntaxException {
 
@@ -429,7 +433,7 @@ public class AggregatedResource {
      * @param dl
      * @param sms
      */
-    private static void updateROAttributesInDlibra(String researchObjectId, URI researchObjectURI, DigitalLibrary dl,
+    private void updateROAttributesInDlibra(String researchObjectId, URI researchObjectURI, DigitalLibrary dl,
             SemanticMetadataService sms) {
         Multimap<URI, Object> roAttributes = sms.getAllAttributes(researchObjectURI);
         roAttributes.put(URI.create("Identifier"), researchObjectURI);
@@ -453,7 +457,7 @@ public class AggregatedResource {
      * @throws NotFoundException
      * @throws AccessDeniedException
      */
-    private static void updateNamedGraphInDlibra(String researchObjectId, String filePath, URI researchObjectURI,
+    private void updateNamedGraphInDlibra(String researchObjectId, String filePath, URI researchObjectURI,
             DigitalLibrary dl, SemanticMetadataService sms, URI namedGraphURI)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         RDFFormat format = RDFFormat.forFileName(filePath, RDFFormat.RDFXML);
