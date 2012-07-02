@@ -71,7 +71,7 @@ public class ResourcesTest extends JerseyTest {
 
     private final String rdfFilePathEncoded = "foo/bar.rdf";
 
-    private final String annotationBodyURI = ".ro/ann1.ttl";
+    private final String annotationBodyPath = ".ro/ann1.ttl";
 
     private final String annotationBodyURIRDF = ".ro/ann1.rdf";
 
@@ -94,7 +94,7 @@ public class ResourcesTest extends JerseyTest {
         if (resource().getURI().getHost().equals("localhost")) {
             webResource = resource();
         } else {
-            webResource = resource().path("rosrs5/");
+            webResource = resource().path("rodl/");
         }
         linkHeadersR.clear();
         linkHeadersR.add("<" + resource().getURI() + "ROs/r/.ro/manifest.rdf>; rel=bookmark");
@@ -113,10 +113,6 @@ public class ResourcesTest extends JerseyTest {
                 try {
                     getAccessTokensList();
                     checkWhoAmI();
-                    webResource.path("ROs/" + r + "/").header("Authorization", "Bearer " + accessToken)
-                            .delete(ClientResponse.class);
-                    webResource.path("ROs/" + r2 + "/").header("Authorization", "Bearer " + accessToken)
-                            .delete(ClientResponse.class);
                     createROs();
                     try {
                         getROsList();
@@ -126,14 +122,12 @@ public class ResourcesTest extends JerseyTest {
                         getInitialManifest();
                         updateManifest();
                         addFile();
-                        getFileMetadata();
                         getFileContent();
                         addRDFFile();
-                        getRDFFileMetadata();
                         getRDFFileContent();
-                        getManifest();
                         addAnnotationBody();
                         getAnnotationBody();
+                        getManifest();
                         getManifestWithAnnotationBody();
                         deleteAnnotationBody();
                         deleteFile();
@@ -251,12 +245,12 @@ public class ResourcesTest extends JerseyTest {
 
     private void createROs() {
         ClientResponse response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken)
-                .post(ClientResponse.class, r);
+                .header("Slug", r).post(ClientResponse.class);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         response.close();
 
-        response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken2)
-                .post(ClientResponse.class, r2);
+        response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken2).header("Slug", r2)
+                .post(ClientResponse.class);
         response.close();
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
     }
@@ -326,31 +320,22 @@ public class ResourcesTest extends JerseyTest {
         InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
         ClientResponse response = webResource.path("ROs/" + r + "/.ro/manifest.rdf")
                 .header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
-        assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+        assertEquals(HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         response.close();
     }
 
 
     private void addFile() {
-        ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
+        ClientResponse response = webResource.path("ROs/" + r + "/").header("Slug", filePath)
                 .header("Authorization", "Bearer " + accessToken).type("text/plain")
-                .put(ClientResponse.class, "lorem ipsum");
+                .post(ClientResponse.class, "lorem ipsum");
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         response.close();
     }
 
 
-    private void getFileMetadata() {
-        String metadata = webResource.path("ROs/" + r + "/" + filePath)
-                .header("Authorization", "Bearer " + accessToken).get(String.class);
-        assertTrue(metadata.contains(userId));
-        assertTrue(metadata.contains(filePathEncoded));
-        assertTrue(metadata.contains("checksum"));
-    }
-
-
     private void getFileContent() {
-        String metadata = webResource.path("ROs/" + r + "/" + filePath).queryParam("content", "true")
+        String metadata = webResource.path("ROs/" + r + "/" + filePath)
                 .header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue(metadata.contains("lorem ipsum"));
 
@@ -358,20 +343,11 @@ public class ResourcesTest extends JerseyTest {
 
 
     private void addRDFFile() {
-        ClientResponse response = webResource.path("ROs/" + r + "/" + rdfFilePath)
+        ClientResponse response = webResource.path("ROs/" + r + "/").header("Slug", rdfFilePath)
                 .header("Authorization", "Bearer " + accessToken).type(RDFFormat.RDFXML.getDefaultMIMEType())
-                .put(ClientResponse.class, "lorem ipsum");
+                .post(ClientResponse.class, "lorem ipsum");
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         response.close();
-    }
-
-
-    private void getRDFFileMetadata() {
-        String metadata = webResource.path("ROs/" + r + "/" + rdfFilePath)
-                .header("Authorization", "Bearer " + accessToken).get(String.class);
-        assertTrue(metadata.contains(userId));
-        assertTrue(metadata.contains(rdfFilePathEncoded));
-        assertTrue(metadata.contains("checksum"));
     }
 
 
@@ -426,16 +402,22 @@ public class ResourcesTest extends JerseyTest {
 
     private void addAnnotationBody() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
-        ClientResponse response = webResource.path("ROs/" + r + "/" + annotationBodyURI)
+        ClientResponse response = webResource
+                .path("ROs/" + r + "/")
+                .header("Slug", annotationBodyPath)
+                .header(
+                    "Link",
+                    "<" + webResource.path("ROs").path(r).path("/").getURI().toString()
+                            + ">; rel=\"http://purl.org/ao/annotates\"")
                 .header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
-                .put(ClientResponse.class, is);
+                .post(ClientResponse.class, is);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         response.close();
     }
 
 
     private void getAnnotationBody() {
-        String body = webResource.path("ROs/" + r + "/" + annotationBodyURI)
+        String body = webResource.path("ROs/" + r + "/" + annotationBodyPath)
                 .header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue("Annotation body should contain file path: a_workflow.t2flow", body.contains("a_workflow.t2flow"));
         assertTrue(body.contains("A test"));

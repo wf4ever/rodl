@@ -15,7 +15,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -49,7 +48,6 @@ import com.sun.jersey.core.header.ContentDisposition;
  * @author Piotr Hołubowicz
  * 
  */
-@Path("ROs/{ro_id}/{filePath: .+}")
 public class AggregatedResource {
 
     private final static Logger logger = Logger.getLogger(AggregatedResource.class);

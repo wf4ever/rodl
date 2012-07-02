@@ -17,11 +17,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
+import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
-import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.sun.jersey.core.header.ContentDisposition;
@@ -39,10 +37,6 @@ public class ZippedResearchObjectResource {
 
     @Context
     UriInfo uriInfo;
-
-    private static final String workspaceId = "default";
-
-    private static final String versionId = "v1";
 
 
     /**
@@ -65,13 +59,11 @@ public class ZippedResearchObjectResource {
     public Response getZippedRO(@PathParam("ro_id") String researchObjectId)
             throws RemoteException, MalformedURLException, UnknownHostException, DigitalLibraryException,
             NotFoundException {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
-
-        InputStream body = dl.getZippedVersion(workspaceId, researchObjectId, versionId);
+        InputStream body = SecurityFilter.DL.get().getZippedVersion(Constants.workspaceId, researchObjectId,
+            Constants.versionId);
         //TODO add all named graphs from SMS that start with the base URI
         ContentDisposition cd = ContentDisposition.type("application/zip")
-                .fileName(researchObjectId + "-" + versionId + ".zip").build();
+                .fileName(researchObjectId + "-" + Constants.versionId + ".zip").build();
         return ResearchObjectResource.addLinkHeaders(Response.ok(body), uriInfo, researchObjectId)
                 .header("Content-disposition", cd).build();
     }

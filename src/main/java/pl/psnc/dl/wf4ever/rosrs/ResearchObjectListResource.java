@@ -9,7 +9,6 @@ import java.util.Set;
 
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -117,7 +116,6 @@ public class ResearchObjectListResource {
      * @throws IdNotFoundException
      */
     @POST
-    @Consumes("text/plain")
     public Response createResearchObject()
             throws NotFoundException, DigitalLibraryException, ClassNotFoundException, IOException, NamingException,
             SQLException, ConflictException, BadRequestException {
@@ -130,7 +128,7 @@ public class ResearchObjectListResource {
         InputStream manifest;
         try {
             SecurityFilter.SMS.get().createResearchObject(researchObjectURI);
-            manifest = SecurityFilter.SMS.get().getManifest(researchObjectURI.resolve(".ro/manifest.rdf"),
+            manifest = SecurityFilter.SMS.get().getManifest(researchObjectURI.resolve(Constants.MANIFEST_PATH),
                 RDFFormat.RDFXML);
         } catch (IllegalArgumentException e) {
             // RO already existed in sms, maybe created by someone else
@@ -148,7 +146,7 @@ public class ResearchObjectListResource {
             // nothing
         }
         SecurityFilter.DL.get().createVersion(Constants.workspaceId, researchObjectId, Constants.versionId, manifest,
-            ".ro/manifest.rdf", RDFFormat.RDFXML.getDefaultMIMEType());
+            Constants.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
         SecurityFilter.DL.get().publishVersion(Constants.workspaceId, researchObjectId, Constants.versionId);
 
         return Response.created(researchObjectURI).build();
