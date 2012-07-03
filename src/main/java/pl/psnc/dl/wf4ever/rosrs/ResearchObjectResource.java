@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
 
 import javax.naming.NamingException;
 import javax.naming.OperationNotSupportedException;
@@ -152,17 +153,21 @@ public class ResearchObjectResource {
         if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, resource)) {
             throw new ConflictException("This resource has already been aggregated. Use PUT to update it.");
         }
-        if (request.getHeader(Constants.AO_ANNOTATES_HEADER) != null) {
-            List<URI> annotationTargets = new ArrayList<>();
-            for (@SuppressWarnings("unchecked")
-            Enumeration<String> headers = request.getHeaders(Constants.AO_ANNOTATES_HEADER); headers.hasMoreElements();) {
-                String header = headers.nextElement();
+
+        List<URI> annotationTargets = new ArrayList<>();
+        for (@SuppressWarnings("unchecked")
+        Enumeration<String> en = request.getHeaders(Constants.LINK_HEADER); en.hasMoreElements();) {
+            Matcher m = Constants.AO_LINK_HEADER_PATTERN.matcher(en.nextElement());
+            if (m.matches()) {
                 try {
-                    annotationTargets.add(new URI(header));
+                    annotationTargets.add(new URI(m.group(1)));
                 } catch (URISyntaxException e) {
-                    throw new BadRequestException("Annotation target " + header + " is incorrect", e);
+                    throw new BadRequestException("Annotation target " + m.group(1) + " is incorrect", e);
                 }
             }
+        }
+
+        if (!annotationTargets.isEmpty()) {
             ROSRService.aggregateInternalResource(researchObject, resource, researchObjectId, content,
                 request.getContentType(), null);
             ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource, researchObjectId);

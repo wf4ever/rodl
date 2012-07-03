@@ -147,9 +147,6 @@ public class Resource {
                         ROSRService.getAnnotationBody(researchObject, resource,
                             request.getHeader(Constants.ACCEPT_HEADER))).build();
         }
-        if (original != null) {
-            resource = resource.resolve(original);
-        }
         return ROSRService.getInternalResource(researchObject, resource, researchObjectId, request.getHeader("Accept"),
             original);
     }
@@ -196,5 +193,4 @@ public class Resource {
         }
         return ROSRService.deaggregateInternalResource(researchObject, resource, researchObjectId);
     }
-
 }
