@@ -3,12 +3,15 @@ package pl.psnc.dl.wf4ever.rosrs;
 import java.net.URI;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  * JSON representation of an annotation.
  * 
  * @author piotrekhol
  * 
  */
+@XmlRootElement
 public class Annotation {
 
     private URI annotationBody;
