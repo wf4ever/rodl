@@ -1,7 +1,6 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -18,7 +17,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
-import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
@@ -123,31 +121,7 @@ public class ResearchObjectListResource {
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
-        URI researchObjectURI = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
-
-        InputStream manifest;
-        try {
-            SecurityFilter.SMS.get().createResearchObject(researchObjectURI);
-            manifest = SecurityFilter.SMS.get().getManifest(researchObjectURI.resolve(Constants.MANIFEST_PATH),
-                RDFFormat.RDFXML);
-        } catch (IllegalArgumentException e) {
-            // RO already existed in sms, maybe created by someone else
-            throw new ConflictException("The RO with identifier " + researchObjectId + " already exists");
-        }
-
-        try {
-            SecurityFilter.DL.get().createWorkspace(Constants.workspaceId);
-        } catch (ConflictException e) {
-            // nothing
-        }
-        try {
-            SecurityFilter.DL.get().createResearchObject(Constants.workspaceId, researchObjectId);
-        } catch (ConflictException e) {
-            // nothing
-        }
-        SecurityFilter.DL.get().createVersion(Constants.workspaceId, researchObjectId, Constants.versionId, manifest,
-            Constants.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
-        SecurityFilter.DL.get().publishVersion(Constants.workspaceId, researchObjectId, Constants.versionId);
+        URI researchObjectURI = ROSRService.createResearchObject(uriInfo.getAbsolutePath(), researchObjectId);
 
         return Response.created(researchObjectURI).build();
     }

@@ -14,6 +14,7 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.SecurityFilter;
+import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.ResourceInfo;
@@ -25,6 +26,52 @@ import com.sun.jersey.core.header.ContentDisposition;
 public final class ROSRService {
 
     private final static Logger logger = Logger.getLogger(ROSRService.class);
+
+
+    /**
+     * Create a new research object.
+     * 
+     * @param serviceURI
+     *            the base URI
+     * @param researchObjectId
+     *            research object id
+     * @return research object URI
+     * @throws ConflictException
+     *             the research object id is already used
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     */
+    public static URI createResearchObject(URI serviceURI, String researchObjectId)
+            throws ConflictException, DigitalLibraryException, NotFoundException {
+        URI researchObjectURI = serviceURI.resolve(researchObjectId + "/");
+
+        InputStream manifest;
+        try {
+            SecurityFilter.SMS.get().createResearchObject(researchObjectURI);
+            manifest = SecurityFilter.SMS.get().getManifest(researchObjectURI.resolve(Constants.MANIFEST_PATH),
+                RDFFormat.RDFXML);
+        } catch (IllegalArgumentException e) {
+            // RO already existed in sms, maybe created by someone else
+            throw new ConflictException("The RO with identifier " + researchObjectId + " already exists");
+        }
+
+        try {
+            SecurityFilter.DL.get().createWorkspace(Constants.workspaceId);
+        } catch (ConflictException e) {
+            // nothing
+        }
+        try {
+            SecurityFilter.DL.get().createResearchObject(Constants.workspaceId, researchObjectId);
+        } catch (ConflictException e) {
+            // nothing
+        }
+        SecurityFilter.DL.get().createVersion(Constants.workspaceId, researchObjectId, Constants.versionId, manifest,
+            Constants.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
+        SecurityFilter.DL.get().publishVersion(Constants.workspaceId, researchObjectId, Constants.versionId);
+        return researchObjectURI;
+    }
 
 
     /**
