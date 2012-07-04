@@ -50,4 +50,6 @@ public final class Constants {
     public static final String AO_ANNOTATION_BODY_HEADER = "http://purl.org/ao/annotationBody";
 
     public static final String AO_ANNOTATES_RESOURCE_HEADER = "http://purl.org/ao/annotatesResource";
+
+    public static final String RO_COPY_MIME_TYPE = "application/vnd.wf4ever.ro-copy";
 }
