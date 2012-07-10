@@ -251,13 +251,12 @@ public class ResourcesTest extends JerseyTest {
 
 
     private void createROs() {
-        ClientResponse response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken)
-                .header("Slug", r).post(ClientResponse.class);
-        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
-        response.close();
+        String manifest = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken).header("Slug", r)
+                .post(String.class);
+        assertTrue(manifest.contains(userId));
 
-        response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken2).header("Slug", r2)
-                .post(ClientResponse.class);
+        ClientResponse response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken2)
+                .header("Slug", r2).post(ClientResponse.class);
         response.close();
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
     }

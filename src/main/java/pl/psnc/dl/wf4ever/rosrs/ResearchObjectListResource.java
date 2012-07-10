@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -14,9 +15,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
@@ -121,9 +124,16 @@ public class ResearchObjectListResource {
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
-        URI researchObjectURI = ROSRService.createResearchObject(uriInfo.getAbsolutePath(), researchObjectId);
+        URI researchObjectURI = ROSRService.createResearchObject(uriInfo.getAbsolutePathBuilder()
+                .path(researchObjectId).path("/").build(), researchObjectId);
 
-        return Response.created(researchObjectURI).build();
+        RDFFormat format = RDFFormat.forMIMEType(request.getHeader(Constants.ACCEPT_HEADER), RDFFormat.RDFXML);
+        InputStream manifest = SecurityFilter.SMS.get().getNamedGraph(
+            researchObjectURI.resolve(Constants.MANIFEST_PATH), format);
+        ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType()).fileName(Constants.MANIFEST_PATH)
+                .build();
+
+        return Response.status(Status.CREATED).location(researchObjectURI).entity(manifest)
+                .header("Content-disposition", cd).build();
     }
-
 }

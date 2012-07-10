@@ -31,8 +31,8 @@ public final class ROSRService {
     /**
      * Create a new research object.
      * 
-     * @param serviceURI
-     *            the base URI
+     * @param researchObjectURI
+     *            the research object URI
      * @param researchObjectId
      *            research object id
      * @return research object URI
@@ -43,9 +43,8 @@ public final class ROSRService {
      * @throws DigitalLibraryException
      *             could not connect to the DL
      */
-    public static URI createResearchObject(URI serviceURI, String researchObjectId)
+    public static URI createResearchObject(URI researchObjectURI, String researchObjectId)
             throws ConflictException, DigitalLibraryException, NotFoundException {
-        URI researchObjectURI = serviceURI.resolve(researchObjectId + "/");
 
         InputStream manifest;
         try {
