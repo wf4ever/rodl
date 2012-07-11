@@ -208,7 +208,7 @@ public class ResearchObjectResource {
         } else {
             // external resource
             try {
-                proxyFor = new URI(content);
+                proxyFor = new URI(content.trim());
             } catch (URISyntaxException e) {
                 throw new BadRequestException("Wrong resource URI", e);
             }

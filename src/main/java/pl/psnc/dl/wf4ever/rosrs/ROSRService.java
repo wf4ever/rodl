@@ -273,7 +273,7 @@ public final class ROSRService {
      *            resource content
      * @param contentType
      *            resource content type
-     * @return 200 OK response
+     * @return 200 OK response or 201 Created if there had been no content
      * @throws NotFoundException
      *             could not find the resource in DL
      * @throws DigitalLibraryException
@@ -285,6 +285,8 @@ public final class ROSRService {
             String entity, String contentType)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         String filePath = researchObject.relativize(resource).getPath();
+        boolean contentExisted = SecurityFilter.DL.get().fileExists(Constants.workspaceId, researchObjectId,
+            Constants.versionId, filePath);
         if (SecurityFilter.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
             RDFFormat format = RDFFormat.forMIMEType(contentType);
             if (format == null) {
@@ -303,7 +305,11 @@ public final class ROSRService {
             updateNamedGraphInDlibra(researchObjectId, Constants.MANIFEST_PATH, researchObject,
                 researchObject.resolve(Constants.MANIFEST_PATH));
         }
-        return Response.ok().build();
+        if (contentExisted) {
+            return Response.ok().build();
+        } else {
+            return Response.created(resource).build();
+        }
     }
 
 
