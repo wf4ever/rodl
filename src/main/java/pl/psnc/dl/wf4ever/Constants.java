@@ -2,6 +2,10 @@ package pl.psnc.dl.wf4ever;
 
 import java.util.regex.Pattern;
 
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.Resource;
+
 /**
  * 
  * @author piotrhol
@@ -52,4 +56,10 @@ public final class Constants {
     public static final String AO_ANNOTATES_RESOURCE_HEADER = "http://purl.org/ao/annotatesResource";
 
     public static final String RO_COPY_MIME_TYPE = "application/vnd.wf4ever.ro-copy";
+
+    public static final Resource ORE_PROXY_CLASS = ModelFactory.createDefaultModel().createResource(
+        "http://www.openarchives.org/ore/terms/Proxy");
+
+    public static final Property ORE_PROXY_FOR_PROPERTY = ModelFactory.createDefaultModel().createProperty(
+        "http://www.openarchives.org/ore/terms/proxyFor");
 }
