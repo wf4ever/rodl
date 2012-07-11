@@ -349,8 +349,11 @@ public class ResourcesTest extends JerseyTest {
 
 
     private void aggregateExternalResource() {
+        String body = String.format("<rdf:RDF xmlns:ore=\"http://www.openarchives.org/ore/terms/\""
+                + " xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" >"
+                + "<ore:Proxy> <ore:proxyFor rdf:resource=\"%s\" /> </ore:Proxy> </rdf:RDF>", externalResource);
         ClientResponse response = webResource.path("ROs/" + r + "/").header("Authorization", "Bearer " + accessToken)
-                .type("application/vnd.wf4ever.proxy").post(ClientResponse.class, externalResource + "\n");
+                .type("application/vnd.wf4ever.proxy").post(ClientResponse.class, body);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         response.close();
     }
@@ -365,8 +368,11 @@ public class ResourcesTest extends JerseyTest {
 
 
     private void addRDFFile() {
+        String body = "<rdf:RDF" + "  xmlns:ore=\"http://www.openarchives.org/ore/terms/\" \n"
+                + "   xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" >\n" + "   <ore:Proxy>\n"
+                + "   </ore:Proxy>\n" + " </rdf:RDF>";
         ClientResponse response = webResource.path("ROs/" + r + "/").header("Authorization", "Bearer " + accessToken)
-                .type("application/vnd.wf4ever.proxy").header("Slug", rdfFilePath).post(ClientResponse.class);
+                .type("application/vnd.wf4ever.proxy").header("Slug", rdfFilePath).post(ClientResponse.class, body);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         rdfProxy = response.getLocation();
         response.close();

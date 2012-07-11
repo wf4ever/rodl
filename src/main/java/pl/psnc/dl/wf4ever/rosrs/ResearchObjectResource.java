@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -40,6 +41,13 @@ import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
+import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.NodeIterator;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.sun.jersey.api.ConflictException;
 
 /**
@@ -198,7 +206,7 @@ public class ResearchObjectResource {
      */
     @POST
     @Consumes(Constants.PROXY_MIME_TYPE)
-    public Response addProxy(@PathParam("ro_id") String researchObjectId, String content)
+    public Response addProxy(@PathParam("ro_id") String researchObjectId, InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getAbsolutePath();
         URI proxyFor;
@@ -207,10 +215,27 @@ public class ResearchObjectResource {
             proxyFor = uriInfo.getAbsolutePathBuilder().path(request.getHeader(Constants.SLUG_HEADER)).build();
         } else {
             // external resource
-            try {
-                proxyFor = new URI(content.trim());
-            } catch (URISyntaxException e) {
-                throw new BadRequestException("Wrong resource URI", e);
+            OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+            model.read(content, researchObject.toString());
+            ExtendedIterator<Individual> it = model.listIndividuals(Constants.ORE_PROXY_CLASS);
+            if (it.hasNext()) {
+                NodeIterator it2 = it.next().listPropertyValues(Constants.ORE_PROXY_FOR_PROPERTY);
+                if (it2.hasNext()) {
+                    RDFNode proxyForResource = it2.next();
+                    if (proxyForResource.isURIResource()) {
+                        try {
+                            proxyFor = new URI(proxyForResource.asResource().getURI());
+                        } catch (URISyntaxException e) {
+                            throw new BadRequestException("Wrong target resource URI", e);
+                        }
+                    } else {
+                        throw new BadRequestException("The target is not an URI resource.");
+                    }
+                } else {
+                    throw new BadRequestException("The ore:Proxy does not have a ore:proxyFor property.");
+                }
+            } else {
+                throw new BadRequestException("The entity body does not define any ore:Proxy.");
             }
         }
         return ROSRService.aggregateExternalResource(researchObject, proxyFor, researchObjectId);
