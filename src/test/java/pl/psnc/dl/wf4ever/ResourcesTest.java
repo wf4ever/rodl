@@ -480,6 +480,15 @@ public class ResourcesTest extends JerseyTest {
                 .type(RDFFormat.RDFXML.getDefaultMIMEType()).delete(ClientResponse.class);
         assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
         response.close();
+
+        response = webResource.uri(rdfProxy).header("Authorization", "Bearer " + accessToken).get(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NOT_FOUND, response.getStatus());
+        response.close();
+
+        response = webResource.path("ROs/" + r + "/" + rdfFilePath).header("Authorization", "Bearer " + accessToken)
+                .get(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NOT_FOUND, response.getStatus());
+        response.close();
     }
 
 

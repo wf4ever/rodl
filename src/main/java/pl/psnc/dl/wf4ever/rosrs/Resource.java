@@ -173,9 +173,9 @@ public class Resource {
         URI resource = uriInfo.getAbsolutePath();
 
         if (SecurityFilter.SMS.get().isProxy(researchObject, resource)) {
-            if (ROSRService.isInternalResource(researchObject, resource, researchObjectId)) {
-                return Response.status(Status.TEMPORARY_REDIRECT)
-                        .location(SecurityFilter.SMS.get().getProxyFor(researchObject, resource)).build();
+            URI proxyFor = SecurityFilter.SMS.get().getProxyFor(researchObject, resource);
+            if (ROSRService.isInternalResource(researchObject, proxyFor, researchObjectId)) {
+                return Response.status(Status.TEMPORARY_REDIRECT).location(proxyFor).build();
             } else {
                 return ROSRService.deaggregateExternalResource(researchObject, resource, researchObjectId);
             }
