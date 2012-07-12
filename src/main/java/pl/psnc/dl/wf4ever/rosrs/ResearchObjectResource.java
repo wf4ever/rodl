@@ -149,7 +149,7 @@ public class ResearchObjectResource {
      * @throws AccessDeniedException
      */
     @POST
-    public Response addResource(@PathParam("ro_id") String researchObjectId, String content)
+    public Response addResource(@PathParam("ro_id") String researchObjectId, InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getAbsolutePath();
         URI resource;
