@@ -10,6 +10,7 @@ import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
+import pl.psnc.dlibra.service.AccessDeniedException;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
@@ -19,6 +20,9 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 
 /**
  * Copy one research object to another.
@@ -49,7 +53,7 @@ public class CopyOperation implements Operation {
         status.setTarget(target);
 
         try {
-            ROSRService.createResearchObject(target, null);
+            ROSRService.createResearchObject(target);
         } catch (ConflictException | DigitalLibraryException | NotFoundException e) {
             throw new OperationFailedException("Could not create the target research object", e);
         }
@@ -72,9 +76,22 @@ public class CopyOperation implements Operation {
             Resource resource = node.asResource();
             URI resourceURI = URI.create(resource.getURI());
             if (isInternalResource(resourceURI, status.getCopyfrom())) {
-
+                try {
+                    Client client = Client.create();
+                    WebResource webResource = client.resource(resourceURI.toString());
+                    ClientResponse response = webResource.get(ClientResponse.class);
+                    ROSRService.aggregateInternalResource(target, resourceURI, response.getEntityInputStream(), response.getType().toString(), null);
+                } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                    throw new OperationFailedException("Could not create aggregate internal resource: " + resourceURI,
+                            e);
+                }
             } else {
-                //                                ROSRService.aggregateExternalResource(researchObject, resource, researchObjectId)
+                try {
+                    ROSRService.aggregateExternalResource(target, resourceURI);
+                } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                    throw new OperationFailedException("Could not create aggregate external resource: " + resourceURI,
+                            e);
+                }
             }
         }
 

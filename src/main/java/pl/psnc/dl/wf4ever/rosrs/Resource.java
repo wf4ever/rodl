@@ -69,8 +69,7 @@ public class Resource {
             if (researchObject.resolve(Constants.MANIFEST_PATH).equals(resource)) {
                 throw new ForbiddenException("Can't update the manifest");
             }
-            return ROSRService.updateInternalResource(researchObject, resource, researchObjectId, entity,
-                request.getContentType());
+            return ROSRService.updateInternalResource(researchObject, resource, entity, request.getContentType());
         } else {
             throw new ForbiddenException(
                     "You cannot use PUT to create new resources unless they have been referenced in a proxy or an annotation. Use POST instead.");
@@ -110,10 +109,9 @@ public class Resource {
         }
         URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, resource, null);
         if (oldAnnotationBody == null || !oldAnnotationBody.equals(annotation.getAnnotationBody())) {
-            ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody, researchObjectId);
+            ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody);
             if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
-                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody(),
-                    researchObjectId);
+                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody());
             }
         }
         return ROSRService.updateAnnotation(researchObject, resource, annotation);
@@ -147,8 +145,7 @@ public class Resource {
                         ROSRService.getAnnotationBody(researchObject, resource,
                             request.getHeader(Constants.ACCEPT_HEADER))).build();
         }
-        return ROSRService.getInternalResource(researchObject, resource, researchObjectId, request.getHeader("Accept"),
-            original);
+        return ROSRService.getInternalResource(researchObject, resource, request.getHeader("Accept"), original);
     }
 
 
@@ -174,15 +171,15 @@ public class Resource {
 
         if (SecurityFilter.SMS.get().isProxy(researchObject, resource)) {
             URI proxyFor = SecurityFilter.SMS.get().getProxyFor(researchObject, resource);
-            if (ROSRService.isInternalResource(researchObject, proxyFor, researchObjectId)) {
+            if (ROSRService.isInternalResource(researchObject, proxyFor)) {
                 return Response.status(Status.TEMPORARY_REDIRECT).location(proxyFor).build();
             } else {
-                return ROSRService.deaggregateExternalResource(researchObject, resource, researchObjectId);
+                return ROSRService.deaggregateExternalResource(researchObject, resource);
             }
         }
         if (SecurityFilter.SMS.get().isAnnotation(researchObject, resource)) {
             URI annotationBody = ROSRService.getAnnotationBody(researchObject, resource, null);
-            ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotationBody, researchObjectId);
+            ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotationBody);
             return ROSRService.deleteAnnotation(researchObject, resource);
         }
         if (original != null) {
@@ -191,6 +188,6 @@ public class Resource {
         if (researchObject.resolve(Constants.MANIFEST_PATH).equals(resource)) {
             throw new ForbiddenException("Can't delete the manifest");
         }
-        return ROSRService.deaggregateInternalResource(researchObject, resource, researchObjectId);
+        return ROSRService.deaggregateInternalResource(researchObject, resource);
     }
 }

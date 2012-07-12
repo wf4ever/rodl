@@ -43,9 +43,9 @@ public final class ROSRService {
      * @throws DigitalLibraryException
      *             could not connect to the DL
      */
-    public static URI createResearchObject(URI researchObjectURI, String researchObjectId)
+    public static URI createResearchObject(URI researchObjectURI)
             throws ConflictException, DigitalLibraryException, NotFoundException {
-
+        String researchObjectId = getResearchObjectId(researchObjectURI);
         InputStream manifest;
         try {
             SecurityFilter.SMS.get().createResearchObject(researchObjectURI);
@@ -80,8 +80,6 @@ public final class ROSRService {
      *            the research object
      * @param resource
      *            resource URI, must be internal
-     * @param researchObjectId
-     *            research object ID from the URI
      * @param entity
      *            request entity
      * @param contentType
@@ -96,19 +94,20 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response aggregateInternalResource(URI researchObject, URI resource, String researchObjectId,
-            String entity, String contentType, String original)
+    public static Response aggregateInternalResource(URI researchObject, URI resource, String entity,
+            String contentType, String original)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         if (original != null) {
             resource = resource.resolve(original);
         }
+        String researchObjectId = getResearchObjectId(researchObject);
         String filePath = researchObject.relativize(resource).getPath();
         ResourceInfo resourceInfo = SecurityFilter.DL.get().createOrUpdateFile(Constants.workspaceId, researchObjectId,
             Constants.versionId, filePath, new ByteArrayInputStream(entity.getBytes()),
             contentType != null ? contentType : "text/plain");
         SecurityFilter.SMS.get().addResource(researchObject, resource, resourceInfo);
         // update the manifest that describes the resource in dLibra
-        updateNamedGraphInDlibra(researchObjectId, Constants.MANIFEST_PATH, researchObject,
+        updateNamedGraphInDlibra(Constants.MANIFEST_PATH, researchObject,
             researchObject.resolve(Constants.MANIFEST_PATH));
         return addProxy(researchObject, resource);
     }
@@ -128,12 +127,12 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response aggregateExternalResource(URI researchObject, URI resource, String researchObjectId)
+    public static Response aggregateExternalResource(URI researchObject, URI resource)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         SecurityFilter.SMS.get().addResource(researchObject, resource, null);
         Response response = addProxy(researchObject, resource);
         // update the manifest that describes the resource in dLibra
-        updateNamedGraphInDlibra(researchObjectId, Constants.MANIFEST_PATH, researchObject,
+        updateNamedGraphInDlibra(Constants.MANIFEST_PATH, researchObject,
             researchObject.resolve(Constants.MANIFEST_PATH));
         return response;
     }
@@ -146,8 +145,6 @@ public final class ROSRService {
      *            research object aggregating the resource
      * @param resource
      *            resource to delete
-     * @param researchObjectId
-     *            research object ID
      * @param original
      *            original resource in case of using a format specific URI
      * @return 204 No Content response
@@ -158,8 +155,9 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response deaggregateInternalResource(URI researchObject, URI resource, String researchObjectId)
+    public static Response deaggregateInternalResource(URI researchObject, URI resource)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        String researchObjectId = getResearchObjectId(researchObject);
         String filePath = researchObject.relativize(resource).getPath();
         SecurityFilter.DL.get().deleteFile(Constants.workspaceId, researchObjectId, Constants.versionId, filePath);
         if (SecurityFilter.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
@@ -170,7 +168,7 @@ public final class ROSRService {
         URI proxy = SecurityFilter.SMS.get().getProxyForResource(researchObject, resource);
         Response response = deleteProxy(researchObject, proxy);
         // update the manifest that describes the resource in dLibra
-        updateNamedGraphInDlibra(researchObjectId, Constants.MANIFEST_PATH, researchObject,
+        updateNamedGraphInDlibra(Constants.MANIFEST_PATH, researchObject,
             researchObject.resolve(Constants.MANIFEST_PATH));
         return response;
     }
@@ -183,8 +181,6 @@ public final class ROSRService {
      *            research object that aggregates the resource
      * @param proxy
      *            external resource proxy
-     * @param researchObjectId
-     *            research object ID
      * @return 204 No Content
      * @throws NotFoundException
      *             could not find the resource in DL
@@ -193,12 +189,12 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response deaggregateExternalResource(URI researchObject, URI proxy, String researchObjectId)
+    public static Response deaggregateExternalResource(URI researchObject, URI proxy)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI resource = SecurityFilter.SMS.get().getProxyFor(researchObject, proxy);
         SecurityFilter.SMS.get().removeResource(researchObject, resource);
         // update the manifest that describes the resource in dLibra
-        updateNamedGraphInDlibra(researchObjectId, Constants.MANIFEST_PATH, researchObject,
+        updateNamedGraphInDlibra(Constants.MANIFEST_PATH, researchObject,
             researchObject.resolve(Constants.MANIFEST_PATH));
         return deleteProxy(researchObject, proxy);
     }
@@ -212,16 +208,15 @@ public final class ROSRService {
      *            research object that aggregates the resource
      * @param resource
      *            the resource that may be internal
-     * @param researchObjectId
-     *            research object ID
      * @return true if the resource content is deployed under the control of the service, false otherwise
      * @throws NotFoundException
      *             could not find the resource in DL
      * @throws DigitalLibraryException
      *             could not connect to the DL
      */
-    public static boolean isInternalResource(URI researchObject, URI resource, String researchObjectId)
+    public static boolean isInternalResource(URI researchObject, URI resource)
             throws NotFoundException, DigitalLibraryException {
+        String researchObjectId = getResearchObjectId(researchObject);
         String filePath = researchObject.relativize(resource).getPath();
         return SecurityFilter.DL.get().fileExists(Constants.workspaceId, researchObjectId, Constants.versionId,
             filePath);
@@ -281,9 +276,9 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response updateInternalResource(URI researchObject, URI resource, String researchObjectId,
-            String entity, String contentType)
+    public static Response updateInternalResource(URI researchObject, URI resource, String entity, String contentType)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
+        String researchObjectId = getResearchObjectId(researchObject);
         String filePath = researchObject.relativize(resource).getPath();
         boolean contentExisted = SecurityFilter.DL.get().fileExists(Constants.workspaceId, researchObjectId,
             Constants.versionId, filePath);
@@ -294,15 +289,15 @@ public final class ROSRService {
             }
             SecurityFilter.SMS.get().addNamedGraph(resource, new ByteArrayInputStream(entity.getBytes()), format);
             // update the named graph copy in dLibra, the manifest is not changed
-            updateNamedGraphInDlibra(researchObjectId, filePath, researchObject, resource);
-            updateROAttributesInDlibra(researchObjectId, researchObject);
+            updateNamedGraphInDlibra(filePath, researchObject, resource);
+            updateROAttributesInDlibra(researchObject);
         } else {
             ResourceInfo resourceInfo = SecurityFilter.DL.get().createOrUpdateFile(Constants.workspaceId,
                 researchObjectId, Constants.versionId, filePath, new ByteArrayInputStream(entity.getBytes()),
                 contentType != null ? contentType : "text/plain");
             SecurityFilter.SMS.get().addResource(researchObject, resource, resourceInfo);
             // update the manifest that describes the resource in dLibra
-            updateNamedGraphInDlibra(researchObjectId, Constants.MANIFEST_PATH, researchObject,
+            updateNamedGraphInDlibra(Constants.MANIFEST_PATH, researchObject,
                 researchObject.resolve(Constants.MANIFEST_PATH));
         }
         if (contentExisted) {
@@ -326,9 +321,9 @@ public final class ROSRService {
      * @throws NotFoundException
      * @throws DigitalLibraryException
      */
-    public static Response getInternalResource(URI researchObject, URI resource, String researchObjectId,
-            String accept, String original)
+    public static Response getInternalResource(URI researchObject, URI resource, String accept, String original)
             throws DigitalLibraryException, NotFoundException {
+        String researchObjectId = getResearchObjectId(researchObject);
         String filePath = researchObject.relativize(resource).getPath();
 
         // check if request is for a specific format
@@ -420,9 +415,9 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static void convertAggregatedResourceToAnnotationBody(URI researchObject, URI resource,
-            String researchObjectId)
+    public static void convertAggregatedResourceToAnnotationBody(URI researchObject, URI resource)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        String researchObjectId = getResearchObjectId(researchObject);
         String filePath = researchObject.relativize(resource).getPath();
         InputStream data = SecurityFilter.DL.get().getFileContents(Constants.workspaceId, researchObjectId,
             Constants.versionId, filePath);
@@ -430,8 +425,8 @@ public final class ROSRService {
             researchObjectId, Constants.versionId, filePath));
         SecurityFilter.SMS.get().addNamedGraph(resource, data, format);
         // update the named graph copy in dLibra, the manifest is not changed
-        updateNamedGraphInDlibra(researchObjectId, filePath, researchObject, resource);
-        updateROAttributesInDlibra(researchObjectId, researchObject);
+        updateNamedGraphInDlibra(filePath, researchObject, resource);
+        updateROAttributesInDlibra(researchObject);
     }
 
 
@@ -444,10 +439,9 @@ public final class ROSRService {
      * @param resource
      *            URI of the resource that is converted
      */
-    public static void convertAnnotationBodyToAggregatedResource(URI researchObject, URI resource,
-            String researchObjectId) {
+    public static void convertAnnotationBodyToAggregatedResource(URI researchObject, URI resource) {
         SecurityFilter.SMS.get().removeNamedGraph(researchObject, resource);
-        updateROAttributesInDlibra(researchObjectId, researchObject);
+        updateROAttributesInDlibra(researchObject);
     }
 
 
@@ -540,9 +534,10 @@ public final class ROSRService {
     }
 
 
-    private static void updateROAttributesInDlibra(String researchObjectId, URI researchObjectURI) {
-        Multimap<URI, Object> roAttributes = SecurityFilter.SMS.get().getAllAttributes(researchObjectURI);
-        roAttributes.put(URI.create("Identifier"), researchObjectURI);
+    private static void updateROAttributesInDlibra(URI researchObject) {
+        String researchObjectId = getResearchObjectId(researchObject);
+        Multimap<URI, Object> roAttributes = SecurityFilter.SMS.get().getAllAttributes(researchObject);
+        roAttributes.put(URI.create("Identifier"), researchObject);
         try {
             SecurityFilter.DL.get().storeAttributes(Constants.workspaceId, researchObjectId, Constants.versionId,
                 roAttributes);
@@ -552,14 +547,20 @@ public final class ROSRService {
     }
 
 
-    private static void updateNamedGraphInDlibra(String researchObjectId, String filePath, URI researchObjectURI,
-            URI namedGraphURI)
+    private static void updateNamedGraphInDlibra(String filePath, URI researchObject, URI namedGraphURI)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        String researchObjectId = getResearchObjectId(researchObject);
         RDFFormat format = RDFFormat.forFileName(filePath, RDFFormat.RDFXML);
-        InputStream dataStream = SecurityFilter.SMS.get().getNamedGraphWithRelativeURIs(namedGraphURI,
-            researchObjectURI, format);
+        InputStream dataStream = SecurityFilter.SMS.get().getNamedGraphWithRelativeURIs(namedGraphURI, researchObject,
+            format);
         SecurityFilter.DL.get().createOrUpdateFile(Constants.workspaceId, researchObjectId, Constants.versionId,
             filePath, dataStream, format.getDefaultMIMEType());
+    }
+
+
+    private static String getResearchObjectId(URI researchObject) {
+        String[] segments = researchObject.getPath().split("/");
+        return segments[segments.length - 1];
     }
 
 }

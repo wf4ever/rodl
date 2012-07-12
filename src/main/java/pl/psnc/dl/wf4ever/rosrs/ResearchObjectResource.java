@@ -176,15 +176,14 @@ public class ResearchObjectResource {
         }
 
         if (!annotationTargets.isEmpty()) {
-            ROSRService.aggregateInternalResource(researchObject, resource, researchObjectId, content,
-                request.getContentType(), null);
-            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource, researchObjectId);
+            ROSRService.aggregateInternalResource(researchObject, resource, content, request.getContentType(), null);
+            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
             return ROSRService.addAnnotation(researchObject, new Annotation(resource, annotationTargets));
         } else {
-            Response response = ROSRService.aggregateInternalResource(researchObject, resource, researchObjectId,
-                content, request.getContentType(), null);
+            Response response = ROSRService.aggregateInternalResource(researchObject, resource, content,
+                request.getContentType(), null);
             if (SecurityFilter.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
-                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource, researchObjectId);
+                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
             }
             return response;
         }
@@ -238,7 +237,7 @@ public class ResearchObjectResource {
                 throw new BadRequestException("The entity body does not define any ore:Proxy.");
             }
         }
-        return ROSRService.aggregateExternalResource(researchObject, proxyFor, researchObjectId);
+        return ROSRService.aggregateExternalResource(researchObject, proxyFor);
     }
 
 
@@ -257,8 +256,7 @@ public class ResearchObjectResource {
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getAbsolutePath();
         if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
-            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody(),
-                researchObjectId);
+            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody());
         }
 
         return ROSRService.addAnnotation(researchObject, annotation);
