@@ -125,7 +125,7 @@ public class ResearchObjectListResource {
             throw new BadRequestException("Research object ID is null or empty");
         }
         URI researchObjectURI = ROSRService.createResearchObject(uriInfo.getAbsolutePathBuilder()
-                .path(researchObjectId).path("/").build(), researchObjectId);
+                .path(researchObjectId).path("/").build());
 
         RDFFormat format = RDFFormat.forMIMEType(request.getHeader(Constants.ACCEPT_HEADER), RDFFormat.RDFXML);
         InputStream manifest = SecurityFilter.SMS.get().getNamedGraph(
