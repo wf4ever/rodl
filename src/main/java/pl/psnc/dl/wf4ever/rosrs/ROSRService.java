@@ -94,7 +94,7 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response aggregateInternalResource(URI researchObject, URI resource, String entity,
+    public static Response aggregateInternalResource(URI researchObject, URI resource, InputStream entity,
             String contentType, String original)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         if (original != null) {
@@ -103,8 +103,7 @@ public final class ROSRService {
         String researchObjectId = getResearchObjectId(researchObject);
         String filePath = researchObject.relativize(resource).getPath();
         ResourceInfo resourceInfo = SecurityFilter.DL.get().createOrUpdateFile(Constants.workspaceId, researchObjectId,
-            Constants.versionId, filePath, new ByteArrayInputStream(entity.getBytes()),
-            contentType != null ? contentType : "text/plain");
+            Constants.versionId, filePath, entity, contentType != null ? contentType : "text/plain");
         SecurityFilter.SMS.get().addResource(researchObject, resource, resourceInfo);
         // update the manifest that describes the resource in dLibra
         updateNamedGraphInDlibra(Constants.MANIFEST_PATH, researchObject,
