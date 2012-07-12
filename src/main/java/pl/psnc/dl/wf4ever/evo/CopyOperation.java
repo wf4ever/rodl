@@ -6,6 +6,10 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.SecurityFilter;
+import pl.psnc.dl.wf4ever.dlibra.ConflictException;
+import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
@@ -44,6 +48,12 @@ public class CopyOperation implements Operation {
         }
         status.setTarget(target);
 
+        try {
+            ROSRService.createResearchObject(target, null);
+        } catch (ConflictException | DigitalLibraryException | NotFoundException e) {
+            throw new OperationFailedException("Could not create the target research object", e);
+        }
+
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(status.getCopyfrom().resolve(Constants.MANIFEST_PATH).toString());
 
@@ -64,7 +74,7 @@ public class CopyOperation implements Operation {
             if (isInternalResource(resourceURI, status.getCopyfrom())) {
 
             } else {
-                //                ROSRService.
+                //                                ROSRService.aggregateExternalResource(researchObject, resource, researchObjectId)
             }
         }
 

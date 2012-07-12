@@ -16,4 +16,9 @@ public class OperationFailedException extends Exception {
         super(message);
     }
 
+
+    public OperationFailedException(String message, Exception e) {
+        super(message, e);
+    }
+
 }
