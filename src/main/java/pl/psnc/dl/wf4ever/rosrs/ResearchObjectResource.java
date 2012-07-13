@@ -114,25 +114,9 @@ public class ResearchObjectResource {
 
 
     @DELETE
-    public void deleteVersion(@PathParam("ro_id") String researchObjectId)
+    public void deleteResearchObject(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, ClassNotFoundException, IOException, NamingException, SQLException {
-        try {
-            SecurityFilter.DL.get().deleteVersion(Constants.workspaceId, researchObjectId, Constants.versionId);
-            if (SecurityFilter.DL.get().getVersionIds(Constants.workspaceId, researchObjectId).isEmpty()) {
-                SecurityFilter.DL.get().deleteResearchObject(Constants.workspaceId, researchObjectId);
-                if (SecurityFilter.DL.get().getResearchObjectIds(Constants.workspaceId).isEmpty()) {
-                    SecurityFilter.DL.get().deleteWorkspace(Constants.workspaceId);
-                }
-            }
-        } catch (NotFoundException e) {
-            logger.warn("URI not found in dLibra: " + uriInfo.getAbsolutePath());
-        } finally {
-            try {
-                SecurityFilter.SMS.get().removeResearchObject(uriInfo.getAbsolutePath());
-            } catch (IllegalArgumentException e) {
-                logger.warn("URI not found in SMS: " + uriInfo.getAbsolutePath());
-            }
-        }
+        ROSRService.deleteResearchObject(uriInfo.getAbsolutePath());
     }
 
 
