@@ -74,6 +74,37 @@ public final class ROSRService {
 
 
     /**
+     * Delete a research object
+     * 
+     * @param researchObject
+     *            research object URI
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     */
+    public static void deleteResearchObject(URI researchObject)
+            throws DigitalLibraryException {
+        String researchObjectId = getResearchObjectId(researchObject);
+        try {
+            SecurityFilter.DL.get().deleteVersion(Constants.workspaceId, researchObjectId, Constants.versionId);
+            if (SecurityFilter.DL.get().getVersionIds(Constants.workspaceId, researchObjectId).isEmpty()) {
+                SecurityFilter.DL.get().deleteResearchObject(Constants.workspaceId, researchObjectId);
+                if (SecurityFilter.DL.get().getResearchObjectIds(Constants.workspaceId).isEmpty()) {
+                    SecurityFilter.DL.get().deleteWorkspace(Constants.workspaceId);
+                }
+            }
+        } catch (NotFoundException e) {
+            logger.warn("URI not found in dLibra: " + researchObject);
+        } finally {
+            try {
+                SecurityFilter.SMS.get().removeResearchObject(researchObject);
+            } catch (IllegalArgumentException e) {
+                logger.warn("URI not found in SMS: " + researchObject);
+            }
+        }
+    }
+
+
+    /**
      * Aggregate a new internal resource in the research object, upload the resource and add a proxy.
      * 
      * @param researchObject
