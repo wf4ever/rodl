@@ -71,6 +71,9 @@ public class CopyOperation implements Operation {
         OntProperty aggregates = model.getOntProperty("http://www.openarchives.org/ore/terms/aggregates");
         NodeIterator it = source.listPropertyValues(aggregates);
         while (it.hasNext()) {
+            if (Thread.interrupted()) {
+                // TODO
+            }
             RDFNode node = it.next();
             if (!node.isURIResource()) {
                 LOG.warn("Node " + node.toString() + " is not an URI resource");
@@ -123,4 +126,5 @@ public class CopyOperation implements Operation {
     private boolean isInternalResource(URI resource, URI ro) {
         return resource.toString().startsWith(ro.toString());
     }
+
 }

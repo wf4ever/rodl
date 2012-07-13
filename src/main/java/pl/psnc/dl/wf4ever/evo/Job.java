@@ -101,4 +101,9 @@ public class Job extends Thread {
         return status;
     }
 
+
+    public void abort() {
+        this.interrupt();
+    }
+
 }
