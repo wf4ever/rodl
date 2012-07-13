@@ -25,13 +25,9 @@ public class JobStatus {
     private URI target;
 
     /** job state. */
-    @XmlElement(name = "status")
     private State state;
 
     private String reason;
-
-    @XmlElement(name = "authorization_code")
-    private String authorizationCode;
 
 
     /**
@@ -82,6 +78,7 @@ public class JobStatus {
     }
 
 
+    @XmlElement(name = "status")
     public synchronized State getState() {
         return state;
     }
@@ -99,23 +96,6 @@ public class JobStatus {
 
     public synchronized void setReason(String reason) {
         this.reason = reason;
-    }
-
-
-    public synchronized String getAuthorizationCode() {
-        return authorizationCode;
-    }
-
-
-    public synchronized void setAuthorizationCode(String authorizationCode) {
-        this.authorizationCode = authorizationCode;
-    }
-
-
-    public synchronized String getAuthorizationCodeAndSetNull() {
-        String code = authorizationCode;
-        authorizationCode = null;
-        return code;
     }
 
 

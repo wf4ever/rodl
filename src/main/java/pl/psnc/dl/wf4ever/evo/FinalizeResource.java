@@ -13,13 +13,13 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
-import pl.psnc.dl.wf4ever.Constants;
 
 import com.sun.jersey.api.NotFoundException;
 
@@ -72,7 +72,7 @@ public class FinalizeResource implements JobsContainer {
      *             if the operation parameters are incorrect
      */
     @POST
-    @Consumes(Constants.RO_COPY_MIME_TYPE)
+    @Consumes(MediaType.APPLICATION_JSON)
     public Response createCopyJob(JobStatus newStatus)
             throws BadRequestException {
         if (newStatus.getTarget() == null) {

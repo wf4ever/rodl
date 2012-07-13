@@ -15,7 +15,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
@@ -133,7 +132,6 @@ public class ResearchObjectListResource {
         ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType()).fileName(Constants.MANIFEST_PATH)
                 .build();
 
-        return Response.status(Status.CREATED).location(researchObjectURI).entity(manifest)
-                .header("Content-disposition", cd).build();
+        return Response.created(researchObjectURI).entity(manifest).header("Content-disposition", cd).build();
     }
 }
