@@ -72,7 +72,12 @@ public class CopyOperation implements Operation {
         NodeIterator it = source.listPropertyValues(aggregates);
         while (it.hasNext()) {
             if (Thread.interrupted()) {
-                // TODO
+                try {
+                    ROSRService.deleteResearchObject(target);
+                } catch (DigitalLibraryException e) {
+                    LOG.error("Could not delete the target when aborting: " + target, e);
+                }
+                return;
             }
             RDFNode node = it.next();
             if (!node.isURIResource()) {
