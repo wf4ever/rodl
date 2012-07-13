@@ -19,13 +19,11 @@ import org.openrdf.rio.RDFFormat;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.AuthenticationException;
 import pl.psnc.dl.wf4ever.auth.SecurityFilter;
-import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile.Role;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 
 /**
  * 
@@ -33,66 +31,52 @@ import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
  * 
  */
 @Path(("whoami/"))
-public class WhoAmIResource
-{
+public class WhoAmIResource {
 
-	@Context
-	HttpServletRequest request;
+    @Context
+    HttpServletRequest request;
 
-	@Context
-	UriInfo uriInfo;
-
-
-	@GET
-	public Response getUserRdfXml(@PathParam("U_ID")
-	String urlSafeUserId)
-		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-		SQLException, URISyntaxException
-	{
-		return getUser(RDFFormat.RDFXML);
-	}
+    @Context
+    UriInfo uriInfo;
 
 
-	@GET
-	@Produces({ "application/x-turtle", "text/turtle"})
-	public Response getUserTurtle(@PathParam("U_ID")
-	String urlSafeUserId)
-		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-		SQLException, URISyntaxException
-	{
-		return getUser(RDFFormat.TURTLE);
-	}
+    @GET
+    public Response getUserRdfXml(@PathParam("U_ID") String urlSafeUserId)
+            throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
+            SQLException, URISyntaxException {
+        return getUser(RDFFormat.RDFXML);
+    }
 
 
-	@GET
-	@Produces("text/rdf+n3")
-	public Response getUserN3(@PathParam("U_ID")
-	String urlSafeUserId)
-		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-		SQLException, URISyntaxException
-	{
-		return getUser(RDFFormat.N3);
-	}
+    @GET
+    @Produces({ "application/x-turtle", "text/turtle" })
+    public Response getUserTurtle(@PathParam("U_ID") String urlSafeUserId)
+            throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
+            SQLException, URISyntaxException {
+        return getUser(RDFFormat.TURTLE);
+    }
 
 
-	private Response getUser(RDFFormat rdfFormat)
-		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-		SQLException
-	{
-		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		if (user.getRole() == Role.PUBLIC) {
-			throw new AuthenticationException("Only authenticated users can use this resource", SecurityFilter.REALM);
-		}
-		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
+    @GET
+    @Produces("text/rdf+n3")
+    public Response getUserN3(@PathParam("U_ID") String urlSafeUserId)
+            throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
+            SQLException, URISyntaxException {
+        return getUser(RDFFormat.N3);
+    }
 
-		QueryResult qs;
-		try {
-			qs = sms.getUser(UserProfile.generateAbsoluteURI(null, user.getLogin()), rdfFormat);
-		}
-		finally {
-			sms.close();
-		}
 
-		return Response.ok(qs.getInputStream()).type(qs.getFormat().getDefaultMIMEType()).build();
-	}
+    private Response getUser(RDFFormat rdfFormat)
+            throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
+            SQLException {
+        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        if (user.getRole() == Role.PUBLIC) {
+            throw new AuthenticationException("Only authenticated users can use this resource", SecurityFilter.REALM);
+        }
+
+        QueryResult qs = SecurityFilter.SMS.get().getUser(UserProfile.generateAbsoluteURI(null, user.getLogin()),
+            rdfFormat);
+
+        return Response.ok(qs.getInputStream()).type(qs.getFormat().getDefaultMIMEType()).build();
+    }
 }

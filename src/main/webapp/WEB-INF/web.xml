@@ -25,6 +25,10 @@
 			<param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
 			<param-value>pl.psnc.dl.wf4ever.auth.SecurityFilter</param-value>
 		</init-param>
+		<init-param>
+			<param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
+			<param-value>pl.psnc.dl.wf4ever.auth.ResourceCloseFilter</param-value>
+		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 
