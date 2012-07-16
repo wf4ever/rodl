@@ -7,8 +7,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
@@ -55,9 +53,7 @@ public class EvoTest extends JerseyTest {
 
     private String accessToken;
 
-    private final String r = "r";
-
-    private final List<URI> rosCreated = new ArrayList<>();
+    private URI ro;
 
     private final String username = "John Doe";
 
@@ -101,14 +97,13 @@ public class EvoTest extends JerseyTest {
     public final void test()
             throws URISyntaxException {
         JobStatus status = new JobStatus();
-        status.setCopyfrom(rosCreated.get(0));
+        status.setCopyfrom(ro);
         status.setType(EvoType.SNAPSHOT);
         status.setFinalize(false);
         URI copyJob = createCopyJob(status);
         do {
             status = getCopyJobStatus(copyJob, status);
         } while (status.getState() == State.RUNNING);
-        rosCreated.add(status.getTarget());
         checkFinishedCopyJob(copyJob);
 
         JobStatus status2 = new JobStatus();
@@ -119,14 +114,13 @@ public class EvoTest extends JerseyTest {
         } while (status.getState() == State.RUNNING);
         checkFinishedFinalizeJob(finalizeJob, status.getType());
 
-        status.setCopyfrom(rosCreated.get(0));
+        status.setCopyfrom(ro);
         status.setType(EvoType.SNAPSHOT);
         status.setFinalize(false);
         URI copyAndFinalizeJob = createCopyJob(status);
         do {
             status = getCopyJobStatus(copyAndFinalizeJob, status);
         } while (status.getState() == State.RUNNING);
-        rosCreated.add(status.getTarget());
         checkFinishedFinalizeJob(copyAndFinalizeJob, status.getType());
     }
 
@@ -134,7 +128,6 @@ public class EvoTest extends JerseyTest {
     private URI createCopyJob(JobStatus status) {
         ClientResponse response = webResource.path("evo/copy/").header("Authorization", "Bearer " + accessToken)
                 .type(MediaType.APPLICATION_JSON).post(ClientResponse.class, status);
-        System.out.println("copyfrom = " + status.getCopyfrom());
         assertEquals(response.getEntity(String.class), HttpServletResponse.SC_CREATED, response.getStatus());
         return response.getLocation();
     }
@@ -213,15 +206,16 @@ public class EvoTest extends JerseyTest {
 
     private void createROs() {
         ClientResponse response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken)
-                .header("Slug", r).post(ClientResponse.class);
-        System.out.println("New ro: " + response.getLocation());
-        rosCreated.add(response.getLocation());
+                .header("Slug", UUID.randomUUID().toString()).post(ClientResponse.class);
+        ro = response.getLocation();
     }
 
 
     private void deleteROs() {
-        for (URI ro : rosCreated) {
-            webResource.uri(ro).header("Authorization", "Bearer " + accessToken).delete();
+        String[] ros = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken).get(String.class)
+                .split("\r\n");
+        for (String ro : ros) {
+            webResource.uri(URI.create(ro)).header("Authorization", "Bearer " + accessToken).delete();
         }
     }
 
