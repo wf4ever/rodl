@@ -17,12 +17,4 @@ public class SMSThreadLocal extends ThreadLocal<SemanticMetadataService> {
         return sms;
     }
 
-
-    @Override
-    protected void finalize()
-            throws Throwable {
-        super.finalize();
-        sms.close();
-    }
-
 }

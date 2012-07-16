@@ -28,6 +28,7 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.OAuthManager;
+import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
@@ -44,174 +45,145 @@ import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
  * 
  */
 @Path(("users/{U_ID}"))
-public class UserResource
-{
+public class UserResource {
 
-	private final static Logger logger = Logger.getLogger(UserResource.class);
+    private final static Logger logger = Logger.getLogger(UserResource.class);
 
-	@Context
-	HttpServletRequest request;
+    @Context
+    HttpServletRequest request;
 
-	@Context
-	UriInfo uriInfo;
-
-
-	@GET
-	public Response getUserRdfXml(@PathParam("U_ID")
-	String urlSafeUserId)
-		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-		SQLException, URISyntaxException
-	{
-		return getUser(urlSafeUserId, RDFFormat.RDFXML);
-	}
+    @Context
+    UriInfo uriInfo;
 
 
-	@GET
-	@Produces({ "application/x-turtle", "text/turtle"})
-	public Response getUserTurtle(@PathParam("U_ID")
-	String urlSafeUserId)
-		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-		SQLException, URISyntaxException
-	{
-		return getUser(urlSafeUserId, RDFFormat.TURTLE);
-	}
+    @GET
+    public Response getUserRdfXml(@PathParam("U_ID") String urlSafeUserId)
+            throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
+            SQLException, URISyntaxException {
+        return getUser(urlSafeUserId, RDFFormat.RDFXML);
+    }
 
 
-	@GET
-	@Produces("text/rdf+n3")
-	public Response getUserN3(@PathParam("U_ID")
-	String urlSafeUserId)
-		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-		SQLException, URISyntaxException
-	{
-		return getUser(urlSafeUserId, RDFFormat.N3);
-	}
+    @GET
+    @Produces({ "application/x-turtle", "text/turtle" })
+    public Response getUserTurtle(@PathParam("U_ID") String urlSafeUserId)
+            throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
+            SQLException, URISyntaxException {
+        return getUser(urlSafeUserId, RDFFormat.TURTLE);
+    }
 
 
-	private Response getUser(@PathParam("U_ID")
-	String urlSafeUserId, RDFFormat rdfFormat)
-		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-		SQLException, URISyntaxException
-	{
-		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
-		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
-
-		String userId = new String(Base64.decodeBase64(urlSafeUserId));
-
-		QueryResult qs;
-		try {
-			qs = sms.getUser(UserProfile.generateAbsoluteURI(null, userId), rdfFormat);
-		}
-		finally {
-			sms.close();
-		}
-
-		if (dl.userExists(userId)) {
-			return Response.ok(qs.getInputStream()).type(qs.getFormat().getDefaultMIMEType()).build();
-		}
-		else {
-			return Response.status(Status.NOT_FOUND).type("text/plain").entity("User " + userId + " does not exist")
-					.build();
-		}
-	}
+    @GET
+    @Produces("text/rdf+n3")
+    public Response getUserN3(@PathParam("U_ID") String urlSafeUserId)
+            throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
+            SQLException, URISyntaxException {
+        return getUser(urlSafeUserId, RDFFormat.N3);
+    }
 
 
-	/**
-	 * Creates new user with given USER_ID. input: USER_ID (the password is generated
-	 * internally).
-	 * 
-	 * @param user
-	 *            id, base64 url-safe encoded
-	 * @return 201 (Created) when the user was successfully created, 200 OK if it was
-	 *         updated, 400 (Bad Request) if the content is malformed 409 (Conflict) if
-	 *         the USER_ID is already used
-	 * @throws DigitalLibraryException
-	 * @throws ConflictException
-	 * @throws NotFoundException
-	 * @throws SQLException
-	 * @throws NamingException
-	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 */
-	@PUT
-	@Consumes("text/plain")
-	public Response createUser(@PathParam("U_ID")
-	String urlSafeUserId, String username)
-		throws DigitalLibraryException, NotFoundException, ConflictException, ClassNotFoundException, IOException,
-		NamingException, SQLException
-	{
-		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		OAuthManager oauth = new OAuthManager();
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+    private Response getUser(@PathParam("U_ID") String urlSafeUserId, RDFFormat rdfFormat)
+            throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
+            SQLException, URISyntaxException {
+        String userId = new String(Base64.decodeBase64(urlSafeUserId));
 
-		String userId = new String(Base64.decodeBase64(urlSafeUserId));
+        QueryResult qs = SecurityFilter.SMS.get().getUser(UserProfile.generateAbsoluteURI(null, userId), rdfFormat);
 
-		try {
-			new URI(userId);
-		}
-		catch (URISyntaxException e) {
-			logger.warn("URI " + userId + " is not valid", e);
-		}
-
-		String password = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 20);
-		boolean created = dl.createUser(userId, password, username != null && !username.isEmpty() ? username : userId);
-		oauth.createUserCredentials(userId, password);
-		SemanticMetadataServiceFactory.getService(new UserProfile(userId, password, username != null
-				&& !username.isEmpty() ? username : userId, null));
-
-		if (created) {
-			return Response.created(uriInfo.getAbsolutePath()).build();
-		}
-		else {
-			return Response.ok().build();
-		}
-	}
+        if (SecurityFilter.DL.get().userExists(userId)) {
+            return Response.ok(qs.getInputStream()).type(qs.getFormat().getDefaultMIMEType()).build();
+        } else {
+            return Response.status(Status.NOT_FOUND).type("text/plain").entity("User " + userId + " does not exist")
+                    .build();
+        }
+    }
 
 
-	/**
-	 * Deletes the workspace.
-	 * 
-	 * @param userId
-	 *            identifier of a workspace in the RO SRS
-	 * @throws DigitalLibraryException
-	 * @throws NotFoundException
-	 * @throws SQLException
-	 * @throws NamingException
-	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 * @throws URISyntaxException
-	 */
-	@DELETE
-	public void deleteUser(@PathParam("U_ID")
-	String urlSafeUserId)
-		throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-		SQLException, URISyntaxException
-	{
-		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		OAuthManager oauth = new OAuthManager();
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
-		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
+    /**
+     * Creates new user with given USER_ID. input: USER_ID (the password is generated internally).
+     * 
+     * @param user
+     *            id, base64 url-safe encoded
+     * @return 201 (Created) when the user was successfully created, 200 OK if it was updated, 400 (Bad Request) if the
+     *         content is malformed 409 (Conflict) if the USER_ID is already used
+     * @throws DigitalLibraryException
+     * @throws ConflictException
+     * @throws NotFoundException
+     * @throws SQLException
+     * @throws NamingException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    @PUT
+    @Consumes("text/plain")
+    public Response createUser(@PathParam("U_ID") String urlSafeUserId, String username)
+            throws DigitalLibraryException, NotFoundException, ConflictException, ClassNotFoundException, IOException,
+            NamingException, SQLException {
+        OAuthManager oauth = new OAuthManager();
 
-		String userId = new String(Base64.decodeBase64(urlSafeUserId));
+        String userId = new String(Base64.decodeBase64(urlSafeUserId));
 
-		List<String> list = dl.getWorkspaceIds();
-		try {
-			for (String workspaceId : list) {
-				dl.deleteWorkspace(workspaceId);
-				Set<URI> versions = sms.findResearchObjects(uriInfo.getBaseUriBuilder().path("workspaces")
-						.path(workspaceId).build());
-				for (URI uri : versions) {
-					sms.removeResearchObject(uri);
-				}
-			}
-			sms.removeUser(new URI(userId));
-		}
-		finally {
-			sms.close();
-		}
+        try {
+            new URI(userId);
+        } catch (URISyntaxException e) {
+            logger.warn("URI " + userId + " is not valid", e);
+        }
 
-		dl.deleteUser(userId);
-		oauth.deleteUserCredentials(userId);
-	}
+        String password = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 20);
+        boolean created = SecurityFilter.DL.get().createUser(userId, password,
+            username != null && !username.isEmpty() ? username : userId);
+        oauth.createUserCredentials(userId, password);
+        SemanticMetadataServiceFactory.getService(
+            new UserProfile(userId, password, username != null && !username.isEmpty() ? username : userId, null))
+                .close();
+
+        if (created) {
+            return Response.created(uriInfo.getAbsolutePath()).build();
+        } else {
+            return Response.ok().build();
+        }
+    }
+
+
+    /**
+     * Deletes the workspace.
+     * 
+     * @param userId
+     *            identifier of a workspace in the RO SRS
+     * @throws DigitalLibraryException
+     * @throws NotFoundException
+     * @throws SQLException
+     * @throws NamingException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws URISyntaxException
+     */
+    @DELETE
+    public void deleteUser(@PathParam("U_ID") String urlSafeUserId)
+            throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
+            SQLException, URISyntaxException {
+        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        OAuthManager oauth = new OAuthManager();
+        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+        SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
+
+        String userId = new String(Base64.decodeBase64(urlSafeUserId));
+
+        List<String> list = dl.getWorkspaceIds();
+        try {
+            for (String workspaceId : list) {
+                dl.deleteWorkspace(workspaceId);
+                Set<URI> versions = sms.findResearchObjects(uriInfo.getBaseUriBuilder().path("workspaces")
+                        .path(workspaceId).build());
+                for (URI uri : versions) {
+                    sms.removeResearchObject(uri);
+                }
+            }
+            sms.removeUser(new URI(userId));
+        } finally {
+            sms.close();
+        }
+
+        dl.deleteUser(userId);
+        oauth.deleteUserCredentials(userId);
+    }
 }
