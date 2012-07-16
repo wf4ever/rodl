@@ -22,7 +22,6 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
@@ -70,12 +69,12 @@ public class ResearchObjectListResource {
 
         Set<URI> list;
         if (user.getRole() == Role.PUBLIC) {
-            list = SecurityFilter.SMS.get().findResearchObjects(uriInfo.getAbsolutePath());
+            list = ROSRService.SMS.get().findResearchObjects(uriInfo.getAbsolutePath());
         } else {
             list = new HashSet<URI>();
-            for (String wId : SecurityFilter.DL.get().getWorkspaceIds()) {
-                for (String rId : SecurityFilter.DL.get().getResearchObjectIds(wId)) {
-                    for (String vId : SecurityFilter.DL.get().getVersionIds(wId, rId)) {
+            for (String wId : ROSRService.DL.get().getWorkspaceIds()) {
+                for (String rId : ROSRService.DL.get().getResearchObjectIds(wId)) {
+                    for (String vId : ROSRService.DL.get().getVersionIds(wId, rId)) {
                         if (wId.equals(Constants.workspaceId) && vId.equals(Constants.versionId)) {
                             list.add(uriInfo.getAbsolutePathBuilder().path(rId).path("/").build());
                         } else {
@@ -127,7 +126,7 @@ public class ResearchObjectListResource {
                 .path(researchObjectId).path("/").build());
 
         RDFFormat format = RDFFormat.forMIMEType(request.getHeader(Constants.ACCEPT_HEADER), RDFFormat.RDFXML);
-        InputStream manifest = SecurityFilter.SMS.get().getNamedGraph(
+        InputStream manifest = ROSRService.SMS.get().getNamedGraph(
             researchObjectURI.resolve(Constants.MANIFEST_PATH), format);
         ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType()).fileName(Constants.MANIFEST_PATH)
                 .build();

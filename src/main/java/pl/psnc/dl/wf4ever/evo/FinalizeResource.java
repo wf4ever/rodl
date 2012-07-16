@@ -20,6 +20,8 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
+import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 
 import com.sun.jersey.api.NotFoundException;
 
@@ -85,8 +87,9 @@ public class FinalizeResource implements JobsContainer {
         FinalizeOperation finalize = new FinalizeOperation();
 
         UUID jobUUID = UUID.randomUUID();
-        Job job = new Job(jobUUID, status, this, finalize);
+        Job job = new Job((UserProfile) request.getAttribute(Constants.USER), jobUUID, status, this, finalize);
         jobs.put(jobUUID, job);
+        job.start();
 
         return Response.created(uriInfo.getAbsolutePath().resolve(jobUUID.toString())).build();
     }

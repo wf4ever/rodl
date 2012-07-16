@@ -35,7 +35,6 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dlibra.service.AccessDeniedException;
@@ -142,7 +141,7 @@ public class ResearchObjectResource {
         } else {
             resource = uriInfo.getAbsolutePathBuilder().path(UUID.randomUUID().toString()).build();
         }
-        if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, resource)) {
+        if (ROSRService.SMS.get().isAggregatedResource(researchObject, resource)) {
             throw new ConflictException("This resource has already been aggregated. Use PUT to update it.");
         }
 
@@ -166,7 +165,7 @@ public class ResearchObjectResource {
         } else {
             Response response = ROSRService.aggregateInternalResource(researchObject, resource, content,
                 request.getContentType(), null);
-            if (SecurityFilter.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
+            if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
                 ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
             }
             return response;
@@ -239,7 +238,7 @@ public class ResearchObjectResource {
     public Response addAnnotation(@PathParam("ro_id") String researchObjectId, Annotation annotation)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getAbsolutePath();
-        if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
+        if (ROSRService.SMS.get().isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
             ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody());
         }
 

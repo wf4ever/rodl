@@ -1,8 +1,17 @@
 package pl.psnc.dl.wf4ever.evo;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.UUID;
 
+import javax.naming.NamingException;
+
 import org.apache.log4j.Logger;
+
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
+import pl.psnc.dl.wf4ever.dlibra.UserProfile;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 /**
  * Represents a copying job. It runs in a separate thread.
@@ -35,7 +44,7 @@ public class Job extends Thread {
 
         @Override
         public String toString() {
-            return this.toString().toLowerCase();
+            return super.toString().toLowerCase();
         };
     }
 
@@ -50,6 +59,8 @@ public class Job extends Thread {
 
     private JobStatus status;
 
+    private UserProfile user;
+
 
     /**
      * Constructor.
@@ -62,8 +73,11 @@ public class Job extends Thread {
      *            RODL access token
      * @param container
      *            the object that created this job
+     * @param user
+     *            user that authorizes access to DL and SMS
      */
-    public Job(UUID jobUUID, JobStatus status, JobsContainer container, Operation... operations) {
+    public Job(UserProfile user, UUID jobUUID, JobStatus status, JobsContainer container, Operation... operations) {
+        this.user = user;
         this.uuid = jobUUID;
         this.status = status;
         this.status.setState(State.RUNNING);
@@ -77,6 +91,8 @@ public class Job extends Thread {
     @Override
     public void run() {
         try {
+            ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword()));
+            ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(user));
             for (Operation operation : operations) {
                 operation.execute(status);
             }
@@ -84,7 +100,7 @@ public class Job extends Thread {
         } catch (OperationFailedException e) {
             LOG.warn("Operation " + uuid + " failed", e);
             status.setStateAndReason(State.FAILED, e.getMessage());
-        } catch (RuntimeException e) {
+        } catch (ClassNotFoundException | IOException | RuntimeException | NamingException | SQLException e) {
             LOG.error("Operation " + uuid + " terminated unexpectedly", e);
             status.setStateAndReason(State.SERVICE_ERROR, e.getMessage());
         }

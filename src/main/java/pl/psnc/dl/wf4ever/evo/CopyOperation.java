@@ -7,7 +7,6 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
@@ -48,10 +47,10 @@ public class CopyOperation implements Operation {
     @Override
     public void execute(JobStatus status)
             throws OperationFailedException {
-        URI target = status.getCopyfrom().resolve(id);
+        URI target = status.getCopyfrom().resolve("../" + id + "/");
         int i = 1;
-        while (SecurityFilter.SMS.get().containsNamedGraph(target)) {
-            target = status.getCopyfrom().resolve(id + "-" + (i++));
+        while (ROSRService.SMS.get().containsNamedGraph(target)) {
+            target = status.getCopyfrom().resolve("../" + id + "-" + (i++) + "/");
         }
         status.setTarget(target);
 
@@ -68,7 +67,7 @@ public class CopyOperation implements Operation {
         if (source == null) {
             throw new OperationFailedException("The manifest does not describe the research object");
         }
-        OntProperty aggregates = model.getOntProperty("http://www.openarchives.org/ore/terms/aggregates");
+        OntProperty aggregates = model.createOntProperty("http://www.openarchives.org/ore/terms/aggregates");
         NodeIterator it = source.listPropertyValues(aggregates);
         while (it.hasNext()) {
             if (Thread.interrupted()) {
@@ -80,8 +79,9 @@ public class CopyOperation implements Operation {
                 return;
             }
             RDFNode node = it.next();
+            LOG.info("Processing aggregated resource " + node.toString());
             if (!node.isURIResource()) {
-                LOG.warn("Node " + node.toString() + " is not an URI resource");
+                LOG.warn("Aggregated node " + node.toString() + " is not a URI resource");
                 continue;
             }
             Individual resource = node.as(Individual.class);
@@ -107,15 +107,16 @@ public class CopyOperation implements Operation {
                     }
                 }
             } else if (resource.hasRDFType("http://purl.org/wf4ever/ro#AggregatedAnnotation")) {
-                OntProperty annotates = model.getOntProperty("http://purl.org/wf4ever/ro#annotatesAggregatedResource");
-                OntProperty body = model.getOntProperty("http://purl.org/ao/body");
+                OntProperty annotates = model
+                        .createOntProperty("http://purl.org/wf4ever/ro#annotatesAggregatedResource");
+                OntProperty body = model.createOntProperty("http://purl.org/ao/body");
                 Resource annBody = resource.getPropertyResourceValue(body);
                 List<URI> targets = new ArrayList<>();
                 NodeIterator it2 = resource.listPropertyValues(annotates);
                 while (it2.hasNext()) {
                     RDFNode annTarget = it2.next();
                     if (!annTarget.isURIResource()) {
-                        LOG.warn("Annotation target " + annTarget.toString() + " is not an URI resource");
+                        LOG.warn("Annotation target " + annTarget.toString() + " is not a URI resource");
                         continue;
                     }
                     targets.add(URI.create(annTarget.asResource().getURI()));

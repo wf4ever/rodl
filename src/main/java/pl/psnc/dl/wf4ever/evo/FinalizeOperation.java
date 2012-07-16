@@ -1,6 +1,6 @@
 package pl.psnc.dl.wf4ever.evo;
 
-import pl.psnc.dl.wf4ever.auth.SecurityFilter;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 
 /**
@@ -23,15 +23,15 @@ public class FinalizeOperation implements Operation {
         switch (status.getType()) {
             default:
             case LIVE:
-                SecurityFilter.SMS.get().setEvolutionClass(status.getTarget(),
+                ROSRService.SMS.get().setEvolutionClass(status.getTarget(),
                     SemanticMetadataService.EvolutionClass.LIVE);
                 break;
             case SNAPSHOT:
-                SecurityFilter.SMS.get().setEvolutionClass(status.getTarget(),
+                ROSRService.SMS.get().setEvolutionClass(status.getTarget(),
                     SemanticMetadataService.EvolutionClass.SNAPSHOT);
                 break;
             case ARCHIVED:
-                SecurityFilter.SMS.get().setEvolutionClass(status.getTarget(),
+                ROSRService.SMS.get().setEvolutionClass(status.getTarget(),
                     SemanticMetadataService.EvolutionClass.ARCHIVED);
                 break;
         }

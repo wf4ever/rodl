@@ -39,6 +39,10 @@ public class EvoTest extends JerseyTest {
 
     private final String clientName = "ROSRS testing app written in Ruby";
 
+    public static final int WAIT_FOR_COPY = 100;
+
+    public static final int WAIT_FOR_FINALIZE = 10;
+
     private final String clientRedirectionURI = "OOB"; // will not be used
 
     private String clientId;
@@ -95,23 +99,31 @@ public class EvoTest extends JerseyTest {
 
     @Test
     public final void test()
-            throws URISyntaxException {
+            throws URISyntaxException, InterruptedException {
         JobStatus status = new JobStatus();
         status.setCopyfrom(ro);
         status.setType(EvoType.SNAPSHOT);
         status.setFinalize(false);
         URI copyJob = createCopyJob(status);
+        int cnt = 0;
         do {
             status = getCopyJobStatus(copyJob, status);
-        } while (status.getState() == State.RUNNING);
+            synchronized (this) {
+                wait(1000);
+            }
+        } while (status.getState() == State.RUNNING && (cnt++) < WAIT_FOR_COPY);
         checkFinishedCopyJob(copyJob);
 
         JobStatus status2 = new JobStatus();
         status2.setTarget(status.getTarget());
         URI finalizeJob = createFinalizeJob(status2);
+        cnt = 0;
         do {
             status = getFinalizeJobStatus(finalizeJob, status2);
-        } while (status.getState() == State.RUNNING);
+            synchronized (this) {
+                wait(1000);
+            }
+        } while (status.getState() == State.RUNNING && (cnt++) < WAIT_FOR_COPY);
         checkFinishedFinalizeJob(finalizeJob, status.getType());
 
         status.setCopyfrom(ro);

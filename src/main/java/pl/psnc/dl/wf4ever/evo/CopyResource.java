@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 
 import com.sun.jersey.api.NotFoundException;
 
@@ -103,12 +104,13 @@ public class CopyResource implements JobsContainer {
         UUID jobUUID = UUID.randomUUID();
         Job job;
         if (!status.isFinalize()) {
-            job = new Job(jobUUID, status, this, copy);
+            job = new Job((UserProfile) request.getAttribute(Constants.USER), jobUUID, status, this, copy);
         } else {
             FinalizeOperation finalize = new FinalizeOperation();
-            job = new Job(jobUUID, status, this, copy, finalize);
+            job = new Job((UserProfile) request.getAttribute(Constants.USER), jobUUID, status, this, copy, finalize);
         }
         jobs.put(jobUUID, job);
+        job.start();
 
         return Response.created(uriInfo.getAbsolutePath().resolve(jobUUID.toString())).build();
     }
