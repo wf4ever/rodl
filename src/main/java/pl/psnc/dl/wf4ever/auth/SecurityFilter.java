@@ -45,15 +45,21 @@ public class SecurityFilter implements ContainerRequestFilter {
     public ContainerRequest filter(ContainerRequest request) {
         try {
             UserCredentials creds = authenticate(request);
-            UserProfile user = DigitalLibraryFactory.getDigitalLibrary(creds).getUserProfile();
+            //HACK FIXME
+            UserCredentials superUserCreds = new UserCredentials("wfadmin", "wfadmin!!!");
+            ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary(superUserCreds));
+            UserProfile user = ROSRService.DL.get().getUserProfile(creds.getUserId());
+            ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(user));
+            httpRequest.setAttribute(Constants.USER, user);
+
             //TODO in here should go access rights control, based on dLibra for example
             if (!request.getMethod().equals("GET") && user.getRole() == UserProfile.Role.PUBLIC) {
                 throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
             }
-
-            httpRequest.setAttribute(Constants.USER, user);
-            ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword()));
-            ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(user));
+            if (creds == UserCredentials.PUBLIC_USER) {
+                logger.info("Public credentials for: " + request.getMethod() + " "
+                        + request.getAbsolutePath().toString());
+            }
         } catch (AccessDeniedException | DigitalLibraryException e) {
             throw new MappableContainerException(new AuthenticationException("Incorrect login/password\r\n", REALM));
         } catch (NotFoundException | DLibraException | SQLException | NamingException | IOException

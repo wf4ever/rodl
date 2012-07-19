@@ -25,7 +25,9 @@ import pl.psnc.dl.wf4ever.evo.JobStatus;
 
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.ontology.OntProperty;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Resource;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.test.framework.JerseyTest;
@@ -59,6 +61,8 @@ public class EvoTest extends JerseyTest {
 
     private URI ro;
 
+    private String filePath = "foobar";
+
     private final String username = "John Doe";
 
 
@@ -82,6 +86,7 @@ public class EvoTest extends JerseyTest {
         createUsers();
         createAccessTokens();
         createROs();
+        addFile();
     }
 
 
@@ -123,16 +128,21 @@ public class EvoTest extends JerseyTest {
             synchronized (this) {
                 wait(1000);
             }
-        } while (status.getState() == State.RUNNING && (cnt++) < WAIT_FOR_COPY);
+        } while (status.getState() == State.RUNNING && (cnt++) < WAIT_FOR_FINALIZE);
         checkFinishedFinalizeJob(finalizeJob, status.getType());
 
+        status = new JobStatus();
         status.setCopyfrom(ro);
         status.setType(EvoType.SNAPSHOT);
-        status.setFinalize(false);
+        status.setFinalize(true);
         URI copyAndFinalizeJob = createCopyJob(status);
+        cnt = 0;
         do {
             status = getCopyJobStatus(copyAndFinalizeJob, status);
-        } while (status.getState() == State.RUNNING);
+            synchronized (this) {
+                wait(1000);
+            }
+        } while (status.getState() == State.RUNNING && (cnt++) < WAIT_FOR_COPY + WAIT_FOR_FINALIZE);
         checkFinishedFinalizeJob(copyAndFinalizeJob, status.getType());
     }
 
@@ -162,6 +172,12 @@ public class EvoTest extends JerseyTest {
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         model.read(status.getTarget().toString());
+        Resource ro = model.getResource(status.getTarget().toString());
+        Assert.assertNotNull(ro);
+        Resource file = model.getResource(status.getTarget().resolve(filePath).toString());
+        Assert.assertNotNull(file);
+        OntProperty aggregates = model.createOntProperty("http://www.openarchives.org/ore/terms/aggregates");
+        Assert.assertTrue("" + ro + " aggregates " + file, model.contains(ro, aggregates, file));
         //TODO verify correct transient RO
     }
 
@@ -223,11 +239,21 @@ public class EvoTest extends JerseyTest {
     }
 
 
+    private void addFile() {
+        webResource.uri(ro).header("Slug", filePath).header("Authorization", "Bearer " + accessToken)
+                .type("text/plain").post(String.class, "lorem ipsum");
+
+    }
+
+
     private void deleteROs() {
-        String[] ros = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken).get(String.class)
-                .split("\r\n");
-        for (String ro : ros) {
-            webResource.uri(URI.create(ro)).header("Authorization", "Bearer " + accessToken).delete();
+        String list = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken).get(String.class);
+        if (!list.isEmpty()) {
+            String[] ros = list.trim().split("\r\n");
+            System.out.println(ros.length);
+            for (String ro : ros) {
+                webResource.uri(URI.create(ro)).header("Authorization", "Bearer " + accessToken).delete();
+            }
         }
     }
 

@@ -21,10 +21,7 @@ public final class Constants {
     }
 
 
-    /**
-     * Used for accessing DLibraDataSource stored in HttpRequest
-     */
-    public static final String USER = "user";
+    public static final String USER = "User";
 
     public static final String workspaceId = "default";
 
@@ -60,4 +57,5 @@ public final class Constants {
 
     public static final Property ORE_PROXY_FOR_PROPERTY = ModelFactory.createDefaultModel().createProperty(
         "http://www.openarchives.org/ore/terms/proxyFor");
+
 }

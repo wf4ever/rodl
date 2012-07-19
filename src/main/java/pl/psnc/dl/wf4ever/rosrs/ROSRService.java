@@ -26,7 +26,7 @@ import com.sun.jersey.core.header.ContentDisposition;
 
 public final class ROSRService {
 
-    private final static Logger logger = Logger.getLogger(ROSRService.class);
+    private final static Logger LOG = Logger.getLogger(ROSRService.class);
 
     public static ThreadLocal<DigitalLibrary> DL = new ThreadLocal<>();
 
@@ -98,12 +98,12 @@ public final class ROSRService {
                 }
             }
         } catch (NotFoundException e) {
-            logger.warn("URI not found in dLibra: " + researchObject);
+            LOG.warn("URI not found in dLibra: " + researchObject);
         } finally {
             try {
                 ROSRService.SMS.get().removeResearchObject(researchObject);
             } catch (IllegalArgumentException e) {
-                logger.warn("URI not found in SMS: " + researchObject);
+                LOG.warn("URI not found in SMS: " + researchObject);
             }
         }
     }
@@ -428,7 +428,7 @@ public final class ROSRService {
             return new URI(absolutePath.getScheme(), absolutePath.getAuthority(), path,
                     "original=".concat(getFilename(absolutePath)), null);
         } catch (URISyntaxException e) {
-            logger.error("Can't create a format-specific URI", e);
+            LOG.error("Can't create a format-specific URI", e);
             return null;
         }
     }
@@ -576,7 +576,7 @@ public final class ROSRService {
             ROSRService.DL.get().storeAttributes(Constants.workspaceId, researchObjectId, Constants.versionId,
                 roAttributes);
         } catch (Exception e) {
-            logger.error("Caught an exception when updating RO attributes, will continue", e);
+            LOG.error("Caught an exception when updating RO attributes, will continue", e);
         }
     }
 

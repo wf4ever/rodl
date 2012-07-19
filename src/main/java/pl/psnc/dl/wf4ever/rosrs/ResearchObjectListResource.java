@@ -72,9 +72,9 @@ public class ResearchObjectListResource {
             list = ROSRService.SMS.get().findResearchObjects(uriInfo.getAbsolutePath());
         } else {
             list = new HashSet<URI>();
-            for (String wId : ROSRService.DL.get().getWorkspaceIds()) {
-                for (String rId : ROSRService.DL.get().getResearchObjectIds(wId)) {
-                    for (String vId : ROSRService.DL.get().getVersionIds(wId, rId)) {
+            for (String wId : ROSRService.DL.get().getWorkspaceIds(user)) {
+                for (String rId : ROSRService.DL.get().getResearchObjectIds(user, wId)) {
+                    for (String vId : ROSRService.DL.get().getVersionIds(user, wId, rId)) {
                         if (wId.equals(Constants.workspaceId) && vId.equals(Constants.versionId)) {
                             list.add(uriInfo.getAbsolutePathBuilder().path(rId).path("/").build());
                         } else {
@@ -126,8 +126,8 @@ public class ResearchObjectListResource {
                 .path(researchObjectId).path("/").build());
 
         RDFFormat format = RDFFormat.forMIMEType(request.getHeader(Constants.ACCEPT_HEADER), RDFFormat.RDFXML);
-        InputStream manifest = ROSRService.SMS.get().getNamedGraph(
-            researchObjectURI.resolve(Constants.MANIFEST_PATH), format);
+        InputStream manifest = ROSRService.SMS.get().getNamedGraph(researchObjectURI.resolve(Constants.MANIFEST_PATH),
+            format);
         ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType()).fileName(Constants.MANIFEST_PATH)
                 .build();
 

@@ -79,7 +79,6 @@ public class CopyOperation implements Operation {
                 return;
             }
             RDFNode node = it.next();
-            LOG.info("Processing aggregated resource " + node.toString());
             if (!node.isURIResource()) {
                 LOG.warn("Aggregated node " + node.toString() + " is not a URI resource");
                 continue;
@@ -92,8 +91,9 @@ public class CopyOperation implements Operation {
                         Client client = Client.create();
                         WebResource webResource = client.resource(resourceURI.toString());
                         ClientResponse response = webResource.get(ClientResponse.class);
-                        ROSRService.aggregateInternalResource(target, resourceURI, response.getEntityInputStream(),
-                            response.getType().toString(), null);
+                        URI resourcePath = status.getCopyfrom().relativize(resourceURI);
+                        ROSRService.aggregateInternalResource(target, target.resolve(resourcePath),
+                            response.getEntityInputStream(), response.getType().toString(), null);
                     } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
                         throw new OperationFailedException("Could not create aggregate internal resource: "
                                 + resourceURI, e);
