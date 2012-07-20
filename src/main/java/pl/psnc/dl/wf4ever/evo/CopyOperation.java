@@ -55,7 +55,7 @@ public class CopyOperation implements Operation {
         status.setTarget(target);
 
         try {
-            ROSRService.createResearchObject(target);
+            ROSRService.createResearchObject(target, status.getType(), status.getCopyfrom());
         } catch (ConflictException | DigitalLibraryException | NotFoundException e) {
             throw new OperationFailedException("Could not create the target research object", e);
         }

@@ -1,7 +1,5 @@
 package pl.psnc.dl.wf4ever.evo;
 
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 
 /**
  * Finalize research object status transformation.
@@ -19,21 +17,6 @@ public class FinalizeOperation implements Operation {
         }
         if (status.getType() == null) {
             throw new OperationFailedException("New type must be set");
-        }
-        switch (status.getType()) {
-            default:
-            case LIVE:
-                ROSRService.SMS.get().setEvolutionClass(status.getTarget(),
-                    SemanticMetadataService.EvolutionClass.LIVE);
-                break;
-            case SNAPSHOT:
-                ROSRService.SMS.get().setEvolutionClass(status.getTarget(),
-                    SemanticMetadataService.EvolutionClass.SNAPSHOT);
-                break;
-            case ARCHIVED:
-                ROSRService.SMS.get().setEvolutionClass(status.getTarget(),
-                    SemanticMetadataService.EvolutionClass.ARCHIVED);
-                break;
         }
     }
 }

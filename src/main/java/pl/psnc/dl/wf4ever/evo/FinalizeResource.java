@@ -63,7 +63,7 @@ public class FinalizeResource implements JobsContainer {
 
 
     /**
-     * Creates a copy of a research object.
+     * Creates a finalize of a research object.
      * 
      * @param copy
      *            operation parameters
@@ -73,7 +73,7 @@ public class FinalizeResource implements JobsContainer {
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response createCopyJob(JobStatus newStatus)
+    public Response createFinalizeJob(JobStatus newStatus)
             throws BadRequestException {
         if (newStatus.getTarget() == null) {
             throw new BadRequestException("incorrect or missing \"target\" attribute");

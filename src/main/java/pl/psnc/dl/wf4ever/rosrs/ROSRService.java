@@ -18,6 +18,7 @@ import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.ResourceInfo;
+import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dlibra.service.AccessDeniedException;
 
@@ -38,8 +39,6 @@ public final class ROSRService {
      * 
      * @param researchObjectURI
      *            the research object URI
-     * @param researchObjectId
-     *            research object id
      * @return research object URI
      * @throws ConflictException
      *             the research object id is already used
@@ -50,10 +49,48 @@ public final class ROSRService {
      */
     public static URI createResearchObject(URI researchObjectURI)
             throws ConflictException, DigitalLibraryException, NotFoundException {
+        return createResearchObject(researchObjectURI, null, null);
+    }
+
+
+    /**
+     * Create a new research object of a specific ROEVO type.
+     * 
+     * @param researchObjectURI
+     *            the research object URI
+     * @param type
+     *            ROEVO type, may be null
+     * @param sourceRO
+     *            live RO for snapshots and archives, any URI for live ROs, may be null if type is null
+     * @return research object URI
+     * @throws ConflictException
+     *             the research object id is already used
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     */
+    public static URI createResearchObject(URI researchObjectURI, EvoType type, URI sourceRO)
+            throws ConflictException, DigitalLibraryException, NotFoundException {
         String researchObjectId = getResearchObjectId(researchObjectURI);
         InputStream manifest;
         try {
-            ROSRService.SMS.get().createResearchObject(researchObjectURI);
+            if (type == null) {
+                ROSRService.SMS.get().createResearchObject(researchObjectURI);
+            } else {
+                switch (type) {
+                    default:
+                    case LIVE:
+                        ROSRService.SMS.get().createLiveResearchObject(researchObjectURI, sourceRO);
+                        break;
+                    case SNAPSHOT:
+                        ROSRService.SMS.get().createSnapshotResearchObject(researchObjectURI, sourceRO);
+                        break;
+                    case ARCHIVED:
+                        ROSRService.SMS.get().createArchivedResearchObject(researchObjectURI, sourceRO);
+                        break;
+                }
+            }
             manifest = ROSRService.SMS.get().getManifest(researchObjectURI.resolve(Constants.MANIFEST_PATH),
                 RDFFormat.RDFXML);
         } catch (IllegalArgumentException e) {
