@@ -9,8 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import pl.psnc.dl.wf4ever.auth.AuthenticationException;
-import pl.psnc.dl.wf4ever.auth.DLThreadLocal;
-import pl.psnc.dl.wf4ever.auth.SMSThreadLocal;
 import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
@@ -18,6 +16,7 @@ import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
@@ -51,9 +50,10 @@ public class TestServletContainer extends ServletContainer {
                 throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
             }
             request.setAttribute(Constants.USER, user);
-            SecurityFilter.DL = new DLThreadLocal(DigitalLibraryFactory.getDigitalLibrary(user.getLogin(),
-                user.getPassword()));
-            SecurityFilter.SMS = new SMSThreadLocal(SemanticMetadataServiceFactory.getService(user));
+            //HACK FIXME
+            UserCredentials superUserCreds = new UserCredentials("wfadmin", "wfadmin!!!");
+            ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary(superUserCreds));
+            ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(user));
 
         } catch (DigitalLibraryException | NotFoundException | ClassNotFoundException | NamingException | SQLException e) {
             // TODO Auto-generated catch block

@@ -35,7 +35,6 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dlibra.service.AccessDeniedException;
@@ -142,7 +141,7 @@ public class ResearchObjectResource {
         } else {
             resource = uriInfo.getAbsolutePathBuilder().path(UUID.randomUUID().toString()).build();
         }
-        if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, resource)) {
+        if (ROSRService.SMS.get().isAggregatedResource(researchObject, resource)) {
             throw new ConflictException("This resource has already been aggregated. Use PUT to update it.");
         }
 
@@ -166,7 +165,7 @@ public class ResearchObjectResource {
         } else {
             Response response = ROSRService.aggregateInternalResource(researchObject, resource, content,
                 request.getContentType(), null);
-            if (SecurityFilter.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
+            if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
                 ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
             }
             return response;
@@ -277,7 +276,7 @@ public class ResearchObjectResource {
         } else {
             throw new BadRequestException("The entity body does not define any ro:AggregatedAnnotation.");
         }
-        if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, body)) {
+        if (ROSRService.SMS.get().isAggregatedResource(researchObject, body)) {
             ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, body);
         }
 

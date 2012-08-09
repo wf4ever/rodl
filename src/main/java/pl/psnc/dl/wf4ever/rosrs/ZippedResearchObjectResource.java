@@ -17,7 +17,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dlibra.service.IdNotFoundException;
@@ -59,7 +58,7 @@ public class ZippedResearchObjectResource {
     public Response getZippedRO(@PathParam("ro_id") String researchObjectId)
             throws RemoteException, MalformedURLException, UnknownHostException, DigitalLibraryException,
             NotFoundException {
-        InputStream body = SecurityFilter.DL.get().getZippedVersion(Constants.workspaceId, researchObjectId,
+        InputStream body = ROSRService.DL.get().getZippedVersion(Constants.workspaceId, researchObjectId,
             Constants.versionId);
         //TODO add all named graphs from SMS that start with the base URI
         ContentDisposition cd = ContentDisposition.type("application/zip")

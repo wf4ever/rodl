@@ -16,11 +16,10 @@ import org.apache.log4j.Logger;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.DLibraException;
 
@@ -41,24 +40,26 @@ public class SecurityFilter implements ContainerRequestFilter {
     @Context
     private HttpServletRequest httpRequest;
 
-    public static ThreadLocal<DigitalLibrary> DL;
-
-    public static ThreadLocal<SemanticMetadataService> SMS;
-
 
     @Override
     public ContainerRequest filter(ContainerRequest request) {
         try {
             UserCredentials creds = authenticate(request);
-            UserProfile user = DigitalLibraryFactory.getDigitalLibrary(creds).getUserProfile();
+            //HACK FIXME
+            UserCredentials superUserCreds = new UserCredentials("wfadmin", "wfadmin!!!");
+            ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary(superUserCreds));
+            UserProfile user = ROSRService.DL.get().getUserProfile(creds.getUserId());
+            ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(user));
+            httpRequest.setAttribute(Constants.USER, user);
+
             //TODO in here should go access rights control, based on dLibra for example
             if (!request.getMethod().equals("GET") && user.getRole() == UserProfile.Role.PUBLIC) {
                 throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
             }
-
-            httpRequest.setAttribute(Constants.USER, user);
-            DL = new DLThreadLocal(DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword()));
-            SMS = new SMSThreadLocal(SemanticMetadataServiceFactory.getService(user));
+            if (creds == UserCredentials.PUBLIC_USER) {
+                logger.info("Public credentials for: " + request.getMethod() + " "
+                        + request.getAbsolutePath().toString());
+            }
         } catch (AccessDeniedException | DigitalLibraryException e) {
             throw new MappableContainerException(new AuthenticationException("Incorrect login/password\r\n", REALM));
         } catch (NotFoundException | DLibraException | SQLException | NamingException | IOException

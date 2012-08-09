@@ -23,6 +23,7 @@ import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile.Role;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
 
 /**
@@ -74,7 +75,7 @@ public class WhoAmIResource {
             throw new AuthenticationException("Only authenticated users can use this resource", SecurityFilter.REALM);
         }
 
-        QueryResult qs = SecurityFilter.SMS.get().getUser(UserProfile.generateAbsoluteURI(null, user.getLogin()),
+        QueryResult qs = ROSRService.SMS.get().getUser(UserProfile.generateAbsoluteURI(null, user.getLogin()),
             rdfFormat);
 
         return Response.ok(qs.getInputStream()).type(qs.getFormat().getDefaultMIMEType()).build();

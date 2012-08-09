@@ -26,18 +26,14 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.OAuthManager;
-import pl.psnc.dl.wf4ever.auth.SecurityFilter;
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 
 /**
  * 
@@ -87,9 +83,9 @@ public class UserResource {
             SQLException, URISyntaxException {
         String userId = new String(Base64.decodeBase64(urlSafeUserId));
 
-        QueryResult qs = SecurityFilter.SMS.get().getUser(UserProfile.generateAbsoluteURI(null, userId), rdfFormat);
+        QueryResult qs = ROSRService.SMS.get().getUser(UserProfile.generateAbsoluteURI(null, userId), rdfFormat);
 
-        if (SecurityFilter.DL.get().userExists(userId)) {
+        if (ROSRService.DL.get().userExists(userId)) {
             return Response.ok(qs.getInputStream()).type(qs.getFormat().getDefaultMIMEType()).build();
         } else {
             return Response.status(Status.NOT_FOUND).type("text/plain").entity("User " + userId + " does not exist")
@@ -129,7 +125,7 @@ public class UserResource {
         }
 
         String password = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 20);
-        boolean created = SecurityFilter.DL.get().createUser(userId, password,
+        boolean created = ROSRService.DL.get().createUser(userId, password,
             username != null && !username.isEmpty() ? username : userId);
         oauth.createUserCredentials(userId, password);
         SemanticMetadataServiceFactory.getService(
@@ -161,29 +157,22 @@ public class UserResource {
     public void deleteUser(@PathParam("U_ID") String urlSafeUserId)
             throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
             SQLException, URISyntaxException {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
         OAuthManager oauth = new OAuthManager();
-        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
-        SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
 
         String userId = new String(Base64.decodeBase64(urlSafeUserId));
 
-        List<String> list = dl.getWorkspaceIds();
-        try {
-            for (String workspaceId : list) {
-                dl.deleteWorkspace(workspaceId);
-                Set<URI> versions = sms.findResearchObjects(uriInfo.getBaseUriBuilder().path("workspaces")
-                        .path(workspaceId).build());
-                for (URI uri : versions) {
-                    sms.removeResearchObject(uri);
-                }
+        List<String> list = ROSRService.DL.get().getWorkspaceIds();
+        for (String workspaceId : list) {
+            ROSRService.DL.get().deleteWorkspace(workspaceId);
+            Set<URI> versions = ROSRService.SMS.get().findResearchObjects(
+                uriInfo.getBaseUriBuilder().path("workspaces").path(workspaceId).build());
+            for (URI uri : versions) {
+                ROSRService.SMS.get().removeResearchObject(uri);
             }
-            sms.removeUser(new URI(userId));
-        } finally {
-            sms.close();
         }
+        ROSRService.SMS.get().removeUser(new URI(userId));
 
-        dl.deleteUser(userId);
+        ROSRService.DL.get().deleteUser(userId);
         oauth.deleteUserCredentials(userId);
     }
 }

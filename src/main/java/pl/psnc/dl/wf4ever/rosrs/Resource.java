@@ -22,7 +22,6 @@ import javax.ws.rs.core.UriInfo;
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
-import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dlibra.service.AccessDeniedException;
@@ -71,11 +70,11 @@ public class Resource {
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
 
-        if (SecurityFilter.SMS.get().isProxy(researchObject, resource)) {
+        if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
             return Response.status(Status.TEMPORARY_REDIRECT)
-                    .location(SecurityFilter.SMS.get().getProxyFor(researchObject, resource)).build();
+                    .location(ROSRService.SMS.get().getProxyFor(researchObject, resource)).build();
         }
-        if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, resource)) {
+        if (ROSRService.SMS.get().isAggregatedResource(researchObject, resource)) {
             if (original != null) {
                 resource = resource.resolve(original);
             }
@@ -156,13 +155,13 @@ public class Resource {
             throw new BadRequestException("The entity body does not define any ro:AggregatedAnnotation.");
         }
 
-        if (!SecurityFilter.SMS.get().isAnnotation(researchObject, resource)) {
+        if (!ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
             throw new ForbiddenException("You cannot create a new annotation using PUT, use POST instead.");
         }
         URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, resource, null);
         if (oldAnnotationBody == null || !oldAnnotationBody.equals(body)) {
             ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody);
-            if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, body)) {
+            if (ROSRService.SMS.get().isAggregatedResource(researchObject, body)) {
                 ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, body);
             }
         }
@@ -186,11 +185,11 @@ public class Resource {
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
 
-        if (SecurityFilter.SMS.get().isProxy(researchObject, resource)) {
+        if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
             return Response.status(Status.SEE_OTHER)
-                    .location(SecurityFilter.SMS.get().getProxyFor(researchObject, resource)).build();
+                    .location(ROSRService.SMS.get().getProxyFor(researchObject, resource)).build();
         }
-        if (SecurityFilter.SMS.get().isAnnotation(researchObject, resource)) {
+        if (ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
             return Response
                     .status(Status.SEE_OTHER)
                     .location(
@@ -221,15 +220,15 @@ public class Resource {
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
 
-        if (SecurityFilter.SMS.get().isProxy(researchObject, resource)) {
-            URI proxyFor = SecurityFilter.SMS.get().getProxyFor(researchObject, resource);
+        if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
+            URI proxyFor = ROSRService.SMS.get().getProxyFor(researchObject, resource);
             if (ROSRService.isInternalResource(researchObject, proxyFor)) {
                 return Response.status(Status.TEMPORARY_REDIRECT).location(proxyFor).build();
             } else {
                 return ROSRService.deaggregateExternalResource(researchObject, resource);
             }
         }
-        if (SecurityFilter.SMS.get().isAnnotation(researchObject, resource)) {
+        if (ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
             URI annotationBody = ROSRService.getAnnotationBody(researchObject, resource, null);
             ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotationBody);
             return ROSRService.deleteAnnotation(researchObject, resource);
