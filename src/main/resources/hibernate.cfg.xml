@@ -8,7 +8,7 @@
 	<session-factory>
 
 		<!-- Database connection settings -->
-		<property name="connection.datasource">java:/comp/env/jdbc/rosrs</property>
+		<property name="connection.datasource">java:/comp/env/jdbc/rodl</property>
 
 		<!-- SQL dialect -->
 		<property name="dialect">org.hibernate.dialect.MySQLDialect</property>
