@@ -1,6 +1,10 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
+import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -15,12 +19,21 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dlibra.service.AccessDeniedException;
+
+import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.NodeIterator;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 
 /**
  * 
@@ -86,8 +99,8 @@ public class Resource {
      *            the file path
      * @param original
      *            original resource in case of a format-specific URI
-     * @param annotation
-     *            JSON representation of an annotation
+     * @param content
+     *            RDF/XML representation of an annotation
      * @return 200 OK
      * @throws NotFoundException
      *             could not find the resource in DL
@@ -95,26 +108,65 @@ public class Resource {
      *             could not connect to the DL
      * @throws AccessDeniedException
      *             access denied when updating data in DL
+     * @throws BadRequestException
+     *             the RDF/XML content is incorrect
      */
     @PUT
     @Consumes(Constants.ANNOTATION_MIME_TYPE)
     public Response updateAnnotation(@PathParam("ro_id") String researchObjectId,
-            @PathParam("filePath") String filePath, @QueryParam("original") String original, Annotation annotation)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
+            @PathParam("filePath") String filePath, @QueryParam("original") String original, InputStream content)
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
+        URI body;
+        List<URI> targets = new ArrayList<>();
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+        model.read(content, researchObject.toString());
+        ExtendedIterator<Individual> it = model.listIndividuals(Constants.RO_AGGREGATED_ANNOTATION_CLASS);
+        if (it.hasNext()) {
+            NodeIterator it2 = it.next().listPropertyValues(Constants.AO_BODY_PROPERTY);
+            if (it2.hasNext()) {
+                RDFNode bodyResource = it2.next();
+                if (bodyResource.isURIResource()) {
+                    try {
+                        body = new URI(bodyResource.asResource().getURI());
+                    } catch (URISyntaxException e) {
+                        throw new BadRequestException("Wrong body resource URI", e);
+                    }
+                } else {
+                    throw new BadRequestException("The body is not an URI resource.");
+                }
+            } else {
+                throw new BadRequestException("The ro:AggregatedAnnotation does not have a ao:body property.");
+            }
+            it2 = it.next().listPropertyValues(Constants.AO_ANNOTATES_RESOURCE_PROPERTY);
+            while (it2.hasNext()) {
+                RDFNode targetResource = it2.next();
+                if (targetResource.isURIResource()) {
+                    try {
+                        targets.add(new URI(targetResource.asResource().getURI()));
+                    } catch (URISyntaxException e) {
+                        throw new BadRequestException("Wrong target resource URI", e);
+                    }
+                } else {
+                    throw new BadRequestException("The target is not an URI resource.");
+                }
+            }
+        } else {
+            throw new BadRequestException("The entity body does not define any ro:AggregatedAnnotation.");
+        }
 
         if (!SecurityFilter.SMS.get().isAnnotation(researchObject, resource)) {
             throw new ForbiddenException("You cannot create a new annotation using PUT, use POST instead.");
         }
         URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, resource, null);
-        if (oldAnnotationBody == null || !oldAnnotationBody.equals(annotation.getAnnotationBody())) {
+        if (oldAnnotationBody == null || !oldAnnotationBody.equals(body)) {
             ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody);
-            if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
-                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody());
+            if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, body)) {
+                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, body);
             }
         }
-        return ROSRService.updateAnnotation(researchObject, resource, annotation);
+        return ROSRService.updateAnnotation(researchObject, resource, body, targets);
     }
 
 

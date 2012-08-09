@@ -162,7 +162,7 @@ public class ResearchObjectResource {
         if (!annotationTargets.isEmpty()) {
             ROSRService.aggregateInternalResource(researchObject, resource, content, request.getContentType(), null);
             ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
-            return ROSRService.addAnnotation(researchObject, new Annotation(resource, annotationTargets));
+            return ROSRService.addAnnotation(researchObject, resource, annotationTargets);
         } else {
             Response response = ROSRService.aggregateInternalResource(researchObject, resource, content,
                 request.getContentType(), null);
@@ -233,17 +233,55 @@ public class ResearchObjectResource {
      * @throws NotFoundException
      * @throws DigitalLibraryException
      * @throws AccessDeniedException
+     * @throws BadRequestException
      */
     @POST
     @Consumes(Constants.ANNOTATION_MIME_TYPE)
-    public Response addAnnotation(@PathParam("ro_id") String researchObjectId, Annotation annotation)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
+    public Response addAnnotation(@PathParam("ro_id") String researchObjectId, InputStream content)
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
         URI researchObject = uriInfo.getAbsolutePath();
-        if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
-            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody());
+        URI body;
+        List<URI> targets = new ArrayList<>();
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+        model.read(content, researchObject.toString());
+        ExtendedIterator<Individual> it = model.listIndividuals(Constants.RO_AGGREGATED_ANNOTATION_CLASS);
+        if (it.hasNext()) {
+            NodeIterator it2 = it.next().listPropertyValues(Constants.AO_BODY_PROPERTY);
+            if (it2.hasNext()) {
+                RDFNode bodyResource = it2.next();
+                if (bodyResource.isURIResource()) {
+                    try {
+                        body = new URI(bodyResource.asResource().getURI());
+                    } catch (URISyntaxException e) {
+                        throw new BadRequestException("Wrong body resource URI", e);
+                    }
+                } else {
+                    throw new BadRequestException("The body is not an URI resource.");
+                }
+            } else {
+                throw new BadRequestException("The ro:AggregatedAnnotation does not have a ao:body property.");
+            }
+            it2 = it.next().listPropertyValues(Constants.AO_ANNOTATES_RESOURCE_PROPERTY);
+            while (it2.hasNext()) {
+                RDFNode targetResource = it2.next();
+                if (targetResource.isURIResource()) {
+                    try {
+                        targets.add(new URI(targetResource.asResource().getURI()));
+                    } catch (URISyntaxException e) {
+                        throw new BadRequestException("Wrong target resource URI", e);
+                    }
+                } else {
+                    throw new BadRequestException("The target is not an URI resource.");
+                }
+            }
+        } else {
+            throw new BadRequestException("The entity body does not define any ro:AggregatedAnnotation.");
+        }
+        if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, body)) {
+            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, body);
         }
 
-        return ROSRService.addAnnotation(researchObject, annotation);
+        return ROSRService.addAnnotation(researchObject, body, targets);
     }
 
 

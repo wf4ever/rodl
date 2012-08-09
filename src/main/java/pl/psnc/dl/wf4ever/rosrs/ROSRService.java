@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -480,18 +481,19 @@ public final class ROSRService {
      * 
      * @param researchObject
      *            the research object
-     * @param annotation
-     *            annotation object, defining the target and body URIs
+     * @param annotationBody
+     *            annotation body URI
+     * @param annotationTargets
+     *            list of annotated resources URIs
      * @return 201 Created response
      */
-    public static Response addAnnotation(URI researchObject, Annotation annotationData) {
-        URI annotation = SecurityFilter.SMS.get().addAnnotation(researchObject, annotationData.getAnnotationTargets(),
-            annotationData.getAnnotationBody());
+    public static Response addAnnotation(URI researchObject, URI annotationBody, List<URI> annotationTargets) {
+        URI annotation = SecurityFilter.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody);
 
-        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationData.getAnnotationBody()
-                .toString(), Constants.AO_ANNOTATION_BODY_HEADER);
+        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(),
+            Constants.AO_ANNOTATION_BODY_HEADER);
         ResponseBuilder response = Response.created(annotation).header(Constants.LINK_HEADER, annotationBodyHeader);
-        for (URI target : annotationData.getAnnotationTargets()) {
+        for (URI target : annotationTargets) {
             String targetHeader = String.format(Constants.LINK_HEADER_TEMPLATE, target.toString(),
                 Constants.AO_ANNOTATES_RESOURCE_HEADER);
             response = response.header(Constants.LINK_HEADER, targetHeader);
@@ -507,17 +509,21 @@ public final class ROSRService {
      * @param researchObject
      *            the research object
      * @param annotation
-     *            annotation object, defining the target and body URIs
+     *            annotation URI
+     * @param annotationBody
+     *            annotation body URI
+     * @param annotationTargets
+     *            list of annotated resources URIs
      * @return 200 OK response
      */
-    public static Response updateAnnotation(URI researchObject, URI annotation, Annotation annotationData) {
-        SecurityFilter.SMS.get().updateAnnotation(researchObject, annotation, annotationData.getAnnotationTargets(),
-            annotationData.getAnnotationBody());
+    public static Response updateAnnotation(URI researchObject, URI annotation, URI annotationBody,
+            List<URI> annotationTargets) {
+        SecurityFilter.SMS.get().updateAnnotation(researchObject, annotation, annotationTargets, annotationBody);
 
-        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationData.getAnnotationBody()
-                .toString(), Constants.AO_ANNOTATION_BODY_HEADER);
+        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(),
+            Constants.AO_ANNOTATION_BODY_HEADER);
         ResponseBuilder response = Response.ok().header(Constants.LINK_HEADER, annotationBodyHeader);
-        for (URI target : annotationData.getAnnotationTargets()) {
+        for (URI target : annotationTargets) {
             String targetHeader = String.format(Constants.LINK_HEADER_TEMPLATE, target.toString(),
                 Constants.AO_ANNOTATES_RESOURCE_HEADER);
             response = response.header(Constants.LINK_HEADER, targetHeader);

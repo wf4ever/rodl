@@ -60,4 +60,16 @@ public final class Constants {
 
     public static final Property ORE_PROXY_FOR_PROPERTY = ModelFactory.createDefaultModel().createProperty(
         "http://www.openarchives.org/ore/terms/proxyFor");
+
+    /** ro:AggregatedAnnotation. */
+    public static final Resource RO_AGGREGATED_ANNOTATION_CLASS = ModelFactory.createDefaultModel().createResource(
+        "http://purl.org/wf4ever/ro#AggregatedAnnotation");
+
+    /** ao:annotatesResource. */
+    public static final Property AO_ANNOTATES_RESOURCE_PROPERTY = ModelFactory.createDefaultModel().createProperty(
+        "http://purl.org/ao/annotatesResource");
+
+    /** body. */
+    public static final Property AO_BODY_PROPERTY = ModelFactory.createDefaultModel().createProperty(
+        "http://purl.org/ao/body");
 }
