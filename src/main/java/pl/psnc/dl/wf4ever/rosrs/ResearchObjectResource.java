@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -40,6 +41,13 @@ import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
+import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.NodeIterator;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.sun.jersey.api.ConflictException;
 
 /**
@@ -106,25 +114,9 @@ public class ResearchObjectResource {
 
 
     @DELETE
-    public void deleteVersion(@PathParam("ro_id") String researchObjectId)
+    public void deleteResearchObject(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, ClassNotFoundException, IOException, NamingException, SQLException {
-        try {
-            SecurityFilter.DL.get().deleteVersion(Constants.workspaceId, researchObjectId, Constants.versionId);
-            if (SecurityFilter.DL.get().getVersionIds(Constants.workspaceId, researchObjectId).isEmpty()) {
-                SecurityFilter.DL.get().deleteResearchObject(Constants.workspaceId, researchObjectId);
-                if (SecurityFilter.DL.get().getResearchObjectIds(Constants.workspaceId).isEmpty()) {
-                    SecurityFilter.DL.get().deleteWorkspace(Constants.workspaceId);
-                }
-            }
-        } catch (NotFoundException e) {
-            logger.warn("URI not found in dLibra: " + uriInfo.getAbsolutePath());
-        } finally {
-            try {
-                SecurityFilter.SMS.get().removeResearchObject(uriInfo.getAbsolutePath());
-            } catch (IllegalArgumentException e) {
-                logger.warn("URI not found in SMS: " + uriInfo.getAbsolutePath());
-            }
-        }
+        ROSRService.deleteResearchObject(uriInfo.getAbsolutePath());
     }
 
 
@@ -141,7 +133,7 @@ public class ResearchObjectResource {
      * @throws AccessDeniedException
      */
     @POST
-    public Response addResource(@PathParam("ro_id") String researchObjectId, String content)
+    public Response addResource(@PathParam("ro_id") String researchObjectId, InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getAbsolutePath();
         URI resource;
@@ -168,15 +160,14 @@ public class ResearchObjectResource {
         }
 
         if (!annotationTargets.isEmpty()) {
-            ROSRService.aggregateInternalResource(researchObject, resource, researchObjectId, content,
-                request.getContentType(), null);
-            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource, researchObjectId);
+            ROSRService.aggregateInternalResource(researchObject, resource, content, request.getContentType(), null);
+            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
             return ROSRService.addAnnotation(researchObject, new Annotation(resource, annotationTargets));
         } else {
-            Response response = ROSRService.aggregateInternalResource(researchObject, resource, researchObjectId,
-                content, request.getContentType(), null);
+            Response response = ROSRService.aggregateInternalResource(researchObject, resource, content,
+                request.getContentType(), null);
             if (SecurityFilter.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
-                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource, researchObjectId);
+                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
             }
             return response;
         }
@@ -198,7 +189,7 @@ public class ResearchObjectResource {
      */
     @POST
     @Consumes(Constants.PROXY_MIME_TYPE)
-    public Response addProxy(@PathParam("ro_id") String researchObjectId, String content)
+    public Response addProxy(@PathParam("ro_id") String researchObjectId, InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getAbsolutePath();
         URI proxyFor;
@@ -207,13 +198,30 @@ public class ResearchObjectResource {
             proxyFor = uriInfo.getAbsolutePathBuilder().path(request.getHeader(Constants.SLUG_HEADER)).build();
         } else {
             // external resource
-            try {
-                proxyFor = new URI(content);
-            } catch (URISyntaxException e) {
-                throw new BadRequestException("Wrong resource URI", e);
+            OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+            model.read(content, researchObject.toString());
+            ExtendedIterator<Individual> it = model.listIndividuals(Constants.ORE_PROXY_CLASS);
+            if (it.hasNext()) {
+                NodeIterator it2 = it.next().listPropertyValues(Constants.ORE_PROXY_FOR_PROPERTY);
+                if (it2.hasNext()) {
+                    RDFNode proxyForResource = it2.next();
+                    if (proxyForResource.isURIResource()) {
+                        try {
+                            proxyFor = new URI(proxyForResource.asResource().getURI());
+                        } catch (URISyntaxException e) {
+                            throw new BadRequestException("Wrong target resource URI", e);
+                        }
+                    } else {
+                        throw new BadRequestException("The target is not an URI resource.");
+                    }
+                } else {
+                    throw new BadRequestException("The ore:Proxy does not have a ore:proxyFor property.");
+                }
+            } else {
+                throw new BadRequestException("The entity body does not define any ore:Proxy.");
             }
         }
-        return ROSRService.aggregateExternalResource(researchObject, proxyFor, researchObjectId);
+        return ROSRService.aggregateExternalResource(researchObject, proxyFor);
     }
 
 
@@ -232,8 +240,7 @@ public class ResearchObjectResource {
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI researchObject = uriInfo.getAbsolutePath();
         if (SecurityFilter.SMS.get().isAggregatedResource(researchObject, annotation.getAnnotationBody())) {
-            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody(),
-                researchObjectId);
+            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotation.getAnnotationBody());
         }
 
         return ROSRService.addAnnotation(researchObject, annotation);

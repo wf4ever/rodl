@@ -15,6 +15,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
@@ -123,33 +124,16 @@ public class ResearchObjectListResource {
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
-        URI researchObjectURI = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
+        URI researchObjectURI = ROSRService.createResearchObject(uriInfo.getAbsolutePathBuilder()
+                .path(researchObjectId).path("/").build());
 
-        InputStream manifest;
-        try {
-            SecurityFilter.SMS.get().createResearchObject(researchObjectURI);
-            manifest = SecurityFilter.SMS.get().getManifest(researchObjectURI.resolve(Constants.MANIFEST_PATH),
-                RDFFormat.RDFXML);
-        } catch (IllegalArgumentException e) {
-            // RO already existed in sms, maybe created by someone else
-            throw new ConflictException("The RO with identifier " + researchObjectId + " already exists");
-        }
+        RDFFormat format = RDFFormat.forMIMEType(request.getHeader(Constants.ACCEPT_HEADER), RDFFormat.RDFXML);
+        InputStream manifest = SecurityFilter.SMS.get().getNamedGraph(
+            researchObjectURI.resolve(Constants.MANIFEST_PATH), format);
+        ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType()).fileName(Constants.MANIFEST_PATH)
+                .build();
 
-        try {
-            SecurityFilter.DL.get().createWorkspace(Constants.workspaceId);
-        } catch (ConflictException e) {
-            // nothing
-        }
-        try {
-            SecurityFilter.DL.get().createResearchObject(Constants.workspaceId, researchObjectId);
-        } catch (ConflictException e) {
-            // nothing
-        }
-        SecurityFilter.DL.get().createVersion(Constants.workspaceId, researchObjectId, Constants.versionId, manifest,
-            Constants.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
-        SecurityFilter.DL.get().publishVersion(Constants.workspaceId, researchObjectId, Constants.versionId);
-
-        return Response.created(researchObjectURI).build();
+        return Response.status(Status.CREATED).location(researchObjectURI).entity(manifest)
+                .header("Content-disposition", cd).build();
     }
-
 }

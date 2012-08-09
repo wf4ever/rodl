@@ -69,6 +69,10 @@ public class ResourcesTest extends JerseyTest {
 
     private final String rdfFilePath = "foo/bar.rdf";
 
+    private URI rdfProxy;
+
+    private final String externalResource = "http://example.com/external/resource.txt";
+
     private final String annotationBodyPath = ".ro/ann1.ttl";
 
     private final String annotationBodyURIRDF = ".ro/ann1.rdf";
@@ -130,6 +134,7 @@ public class ResourcesTest extends JerseyTest {
                         updateManifest();
                         addFile();
                         getFileContent();
+                        aggregateExternalResource();
                         addRDFFile();
                         getRDFFileContent();
                         addAnnotationBody();
@@ -251,13 +256,12 @@ public class ResourcesTest extends JerseyTest {
 
 
     private void createROs() {
-        ClientResponse response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken)
-                .header("Slug", r).post(ClientResponse.class);
-        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
-        response.close();
+        String manifest = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken).header("Slug", r)
+                .post(String.class);
+        assertTrue(manifest.contains(userId));
 
-        response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken2).header("Slug", r2)
-                .post(ClientResponse.class);
+        ClientResponse response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken2)
+                .header("Slug", r2).post(ClientResponse.class);
         response.close();
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
     }
@@ -344,6 +348,17 @@ public class ResourcesTest extends JerseyTest {
     }
 
 
+    private void aggregateExternalResource() {
+        String body = String.format("<rdf:RDF xmlns:ore=\"http://www.openarchives.org/ore/terms/\""
+                + " xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" >"
+                + "<ore:Proxy> <ore:proxyFor rdf:resource=\"%s\" /> </ore:Proxy> </rdf:RDF>", externalResource);
+        ClientResponse response = webResource.path("ROs/" + r + "/").header("Authorization", "Bearer " + accessToken)
+                .type("application/vnd.wf4ever.proxy").post(ClientResponse.class, body);
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        response.close();
+    }
+
+
     private void getFileContent() {
         String metadata = webResource.path("ROs/" + r + "/" + filePath)
                 .header("Authorization", "Bearer " + accessToken).get(String.class);
@@ -353,9 +368,17 @@ public class ResourcesTest extends JerseyTest {
 
 
     private void addRDFFile() {
-        ClientResponse response = webResource.path("ROs/" + r + "/").header("Slug", rdfFilePath)
-                .header("Authorization", "Bearer " + accessToken).type(RDFFormat.RDFXML.getDefaultMIMEType())
-                .post(ClientResponse.class, "lorem ipsum");
+        String body = "<rdf:RDF" + "  xmlns:ore=\"http://www.openarchives.org/ore/terms/\" \n"
+                + "   xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" >\n" + "   <ore:Proxy>\n"
+                + "   </ore:Proxy>\n" + " </rdf:RDF>";
+        ClientResponse response = webResource.path("ROs/" + r + "/").header("Authorization", "Bearer " + accessToken)
+                .type("application/vnd.wf4ever.proxy").header("Slug", rdfFilePath).post(ClientResponse.class, body);
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        rdfProxy = response.getLocation();
+        response.close();
+
+        response = webResource.path("ROs/" + r + "/" + rdfFilePath).header("Authorization", "Bearer " + accessToken)
+                .type(RDFFormat.RDFXML.getDefaultMIMEType()).put(ClientResponse.class, "lorem ipsum");
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         response.close();
     }
@@ -374,6 +397,7 @@ public class ResourcesTest extends JerseyTest {
                 .header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue(manifest.contains(userId));
         assertTrue(manifest.contains(filePathEncoded));
+        assertTrue(manifest.contains(rdfProxy.toString()));
 
         manifest = webResource.path("/ROs/" + r + "/.ro/manifest.rdf").header("Authorization", "Bearer " + accessToken)
                 .accept("application/x-turtle").get(String.class);
@@ -452,10 +476,18 @@ public class ResourcesTest extends JerseyTest {
 
 
     private void deleteRDFFile() {
-        ClientResponse response = webResource.path("ROs/" + r + "/" + rdfFilePath)
-                .header("Authorization", "Bearer " + accessToken).type(RDFFormat.RDFXML.getDefaultMIMEType())
-                .delete(ClientResponse.class);
+        ClientResponse response = webResource.uri(rdfProxy).header("Authorization", "Bearer " + accessToken)
+                .type(RDFFormat.RDFXML.getDefaultMIMEType()).delete(ClientResponse.class);
         assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
+        response.close();
+
+        response = webResource.uri(rdfProxy).header("Authorization", "Bearer " + accessToken).get(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NOT_FOUND, response.getStatus());
+        response.close();
+
+        response = webResource.path("ROs/" + r + "/" + rdfFilePath).header("Authorization", "Bearer " + accessToken)
+                .get(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_NOT_FOUND, response.getStatus());
         response.close();
     }
 
