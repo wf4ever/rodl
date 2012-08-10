@@ -30,9 +30,9 @@ public final class ROSRService {
 
     private final static Logger LOG = Logger.getLogger(ROSRService.class);
 
-    public static ThreadLocal<DigitalLibrary> DL = new ThreadLocal<>();
+    public static final ThreadLocal<DigitalLibrary> DL = new ThreadLocal<>();
 
-    public static ThreadLocal<SemanticMetadataService> SMS = new ThreadLocal<>();
+    public static final ThreadLocal<SemanticMetadataService> SMS = new ThreadLocal<>();
 
 
     /**
