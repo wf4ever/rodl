@@ -53,9 +53,9 @@ public class SecurityFilter implements ContainerRequestFilter {
             httpRequest.setAttribute(Constants.USER, user);
 
             //TODO in here should go access rights control, based on dLibra for example
-            if (!request.getMethod().equals("GET") && user.getRole() == UserProfile.Role.PUBLIC) {
-                throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
-            }
+            //            if (!request.getMethod().equals("GET") && user.getRole() == UserProfile.Role.PUBLIC) {
+            //                throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
+            //            }
             if (creds == UserCredentials.PUBLIC_USER) {
                 logger.info("Public credentials for: " + request.getMethod() + " "
                         + request.getAbsolutePath().toString());
