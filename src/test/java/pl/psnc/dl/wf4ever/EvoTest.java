@@ -67,7 +67,7 @@ public class EvoTest extends JerseyTest {
 
 
     public EvoTest() {
-        super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").servletClass(TestServletContainer.class).build());
+        super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
     }
 
 
