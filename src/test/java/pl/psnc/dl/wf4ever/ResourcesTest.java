@@ -20,7 +20,6 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
-import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -57,11 +56,11 @@ public class ResourcesTest extends JerseyTest {
 
     private String accessToken2;
 
-    private final String r = UUID.randomUUID().toString();
+    private final String r = "r";
 
-    private final String r2 = "r " + UUID.randomUUID().toString();
+    private final String r2 = "r 2";
 
-    private final String r2Encoded = r.replaceAll(" ", "%20");
+    private final String r2Encoded = "r%202";
 
     private final String filePath = "foo/bar ra.txt";
 
@@ -85,11 +84,10 @@ public class ResourcesTest extends JerseyTest {
 
 
     public ResourcesTest() {
-        super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
+        super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").servletClass(TestServletContainer.class).build());
     }
 
 
-    @Test
     public final void test()
             throws URISyntaxException {
         client().setFollowRedirects(true);
@@ -269,7 +267,6 @@ public class ResourcesTest extends JerseyTest {
 
     private void getROsList() {
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
-        System.out.println("List: " + list);
         assertTrue(list.contains(r));
         assertTrue(!list.contains(r2));
 

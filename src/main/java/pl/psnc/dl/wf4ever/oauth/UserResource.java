@@ -164,7 +164,7 @@ public class UserResource {
         List<String> list = ROSRService.DL.get().getWorkspaceIds();
         for (String workspaceId : list) {
             ROSRService.DL.get().deleteWorkspace(workspaceId);
-            Set<URI> versions = ROSRService.SMS.get().findResearchObjectsByPrefix(
+            Set<URI> versions = ROSRService.SMS.get().findResearchObjects(
                 uriInfo.getBaseUriBuilder().path("workspaces").path(workspaceId).build());
             for (URI uri : versions) {
                 ROSRService.SMS.get().removeResearchObject(uri);

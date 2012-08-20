@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.naming.NamingException;
@@ -68,9 +69,21 @@ public class ResearchObjectListResource {
 
         Set<URI> list;
         if (user.getRole() == Role.PUBLIC) {
-            list = ROSRService.SMS.get().findResearchObjects();
+            list = ROSRService.SMS.get().findResearchObjects(uriInfo.getAbsolutePath());
         } else {
-            list = ROSRService.SMS.get().findResearchObjectsByCreator(user.getUri());
+            list = new HashSet<URI>();
+            for (String wId : ROSRService.DL.get().getWorkspaceIds(user)) {
+                for (String rId : ROSRService.DL.get().getResearchObjectIds(user, wId)) {
+                    for (String vId : ROSRService.DL.get().getVersionIds(user, wId, rId)) {
+                        if (wId.equals(Constants.workspaceId) && vId.equals(Constants.versionId)) {
+                            list.add(uriInfo.getAbsolutePathBuilder().path(rId).path("/").build());
+                        } else {
+                            list.add(uriInfo.getAbsolutePathBuilder().path("..").path("workspaces").path(wId)
+                                    .path("ROs").path(rId).path(vId).path("/").build());
+                        }
+                    }
+                }
+            }
         }
         StringBuilder sb = new StringBuilder();
         for (URI id : list) {
