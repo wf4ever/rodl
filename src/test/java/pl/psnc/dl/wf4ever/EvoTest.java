@@ -17,7 +17,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.evo.Job.State;
@@ -102,7 +101,7 @@ public class EvoTest extends JerseyTest {
     }
 
 
-    @Test
+    //    @Test
     public final void test()
             throws URISyntaxException, InterruptedException {
         JobStatus status = new JobStatus();
