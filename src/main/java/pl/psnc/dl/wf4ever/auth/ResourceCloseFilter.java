@@ -10,7 +10,9 @@ public class ResourceCloseFilter implements ContainerResponseFilter {
 
     @Override
     public ContainerResponse filter(ContainerRequest request, ContainerResponse response) {
-        ROSRService.SMS.get().close();
+        if (ROSRService.SMS.get() != null) {
+            ROSRService.SMS.get().close();
+        }
         return response;
     }
 
