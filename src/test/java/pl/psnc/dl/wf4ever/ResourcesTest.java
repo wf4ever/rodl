@@ -20,7 +20,6 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
-import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -87,7 +86,7 @@ public class ResourcesTest extends JerseyTest {
     }
 
 
-    @Test
+    //    @Test
     public final void test()
             throws URISyntaxException {
         client().setFollowRedirects(true);
