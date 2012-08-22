@@ -40,102 +40,88 @@ import com.sun.jersey.core.header.ContentDisposition;
  * 
  */
 @Path(("workspaces" + "/{W_ID}" + "/ROs"))
-public class ResearchObjectListResource
-{
+public class ResearchObjectListResource {
 
-	@SuppressWarnings("unused")
-	private final static Logger logger = Logger
-			.getLogger(ResearchObjectListResource.class);
+    @SuppressWarnings("unused")
+    private final static Logger logger = Logger.getLogger(ResearchObjectListResource.class);
 
-	@Context
-	HttpServletRequest request;
+    @Context
+    HttpServletRequest request;
 
-	@Context
-	UriInfo uriInfo;
+    @Context
+    UriInfo uriInfo;
 
 
-	/**
-	 * Returns list of links to research objects. Output format is TBD.
-	 * 
-	 * @param workspaceId
-	 *            identifier of a workspace in the RO SRS
-	 * @return TBD
-	 * @throws RemoteException
-	 * @throws TransformerException
-	 * @throws UnknownHostException
-	 * @throws MalformedURLException
-	 * @throws DigitalLibraryException
-	 * @throws NotFoundException
-	 */
-	@GET
-	@Produces("text/plain")
-	public Response getResearchObjectList(@PathParam("W_ID")
-	String workspaceId)
-		throws RemoteException, DLibraException, TransformerException,
-		MalformedURLException, UnknownHostException, DigitalLibraryException,
-		NotFoundException
-	{
+    /**
+     * Returns list of links to research objects. Output format is TBD.
+     * 
+     * @param workspaceId
+     *            identifier of a workspace in the RO SRS
+     * @return TBD
+     * @throws RemoteException
+     * @throws TransformerException
+     * @throws UnknownHostException
+     * @throws MalformedURLException
+     * @throws DigitalLibraryException
+     * @throws NotFoundException
+     */
+    @GET
+    @Produces("text/plain")
+    public Response getResearchObjectList(@PathParam("W_ID") String workspaceId)
+            throws RemoteException, DLibraException, TransformerException, MalformedURLException, UnknownHostException,
+            DigitalLibraryException, NotFoundException {
 
-		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
-		List<String> list = dl.getResearchObjectIds(workspaceId);
+        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(),
+            (String) request.getAttribute(Constants.PASSWORD));
+        List<String> list = dl.getResearchObjectIds(workspaceId);
 
-		StringBuilder sb = new StringBuilder();
-		for (String id : list) {
-			sb.append(uriInfo.getAbsolutePathBuilder().path("/").build()
-					.resolve(id).toString());
-			sb.append("\r\n");
-		}
+        StringBuilder sb = new StringBuilder();
+        for (String id : list) {
+            sb.append(uriInfo.getAbsolutePathBuilder().path("/").build().resolve(id).toString());
+            sb.append("\r\n");
+        }
 
-		ContentDisposition cd = ContentDisposition.type("text/plain")
-				.fileName(workspaceId + ".txt").build();
+        ContentDisposition cd = ContentDisposition.type("text/plain").fileName(workspaceId + ".txt").build();
 
-		return Response.ok().entity(sb.toString())
-				.header("Content-disposition", cd).build();
-	}
+        return Response.ok().entity(sb.toString()).header("Content-disposition", cd).build();
+    }
 
 
-	/**
-	 * Creates new RO with given RO_ID.
-	 * 
-	 * @param workspaceId
-	 *            identifier of a workspace in the RO SRS
-	 * @param researchObjectId
-	 *            RO_ID in plain text (text/plain)
-	 * @return 201 (Created) when the RO was successfully created, 409
-	 *         (Conflict) if the RO_ID is already used in the WORKSPACE_ID
-	 *         workspace
-	 * @throws RemoteException
-	 * @throws UnknownHostException
-	 * @throws MalformedURLException
-	 * @throws DigitalLibraryException
-	 * @throws NotFoundException
-	 * @throws ConflictException 
-	 * @throws IdNotFoundException
-	 */
-	@POST
-	@Consumes("text/plain")
-	public Response createResearchObject(@PathParam("W_ID")
-	String workspaceId, String researchObjectId)
-		throws RemoteException, MalformedURLException, UnknownHostException,
-		DigitalLibraryException, NotFoundException, ConflictException
-	{
-		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		if (user.getRole() == UserProfile.Role.PUBLIC) {
-			throw new AuthenticationException(
-					"Only authenticated users can do that.",
-					SecurityFilter.REALM);
-		}
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+    /**
+     * Creates new RO with given RO_ID.
+     * 
+     * @param workspaceId
+     *            identifier of a workspace in the RO SRS
+     * @param researchObjectId
+     *            RO_ID in plain text (text/plain)
+     * @return 201 (Created) when the RO was successfully created, 409 (Conflict) if the RO_ID is already used in the
+     *         WORKSPACE_ID workspace
+     * @throws RemoteException
+     * @throws UnknownHostException
+     * @throws MalformedURLException
+     * @throws DigitalLibraryException
+     * @throws NotFoundException
+     * @throws ConflictException
+     * @throws IdNotFoundException
+     */
+    @POST
+    @Consumes("text/plain")
+    public Response createResearchObject(@PathParam("W_ID") String workspaceId, String researchObjectId)
+            throws RemoteException, MalformedURLException, UnknownHostException, DigitalLibraryException,
+            NotFoundException, ConflictException {
+        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        if (user.getRole() == UserProfile.Role.PUBLIC) {
+            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
+        }
+        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(),
+            (String) request.getAttribute(Constants.PASSWORD));
 
-		dl.createResearchObject(workspaceId, researchObjectId);
+        dl.createResearchObject(workspaceId, researchObjectId);
 
-		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
-				.resolve(researchObjectId);
+        URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build().resolve(researchObjectId);
 
-		return Response.created(resourceUri).build();
-	}
+        return Response.created(resourceUri).build();
+    }
 
 }

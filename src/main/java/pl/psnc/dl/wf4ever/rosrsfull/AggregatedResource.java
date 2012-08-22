@@ -265,7 +265,8 @@ public class AggregatedResource {
             UserProfile user)
             throws RemoteException, DigitalLibraryException, NotFoundException, MalformedURLException,
             UnknownHostException {
-        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(),
+            (String) request.getAttribute(Constants.PASSWORD));
         InputStream body = dl.getZippedFolder(workspaceId, researchObjectId, versionId, filePath);
         ContentDisposition cd = ContentDisposition.type("application/zip").fileName(versionId + ".zip").build();
         return Response.ok(body).header("Content-disposition", cd).build();
@@ -275,7 +276,8 @@ public class AggregatedResource {
     private Response getFileContent(String workspaceId, String researchObjectId, String versionId, String filePath,
             UserProfile user)
             throws IOException, DigitalLibraryException, NotFoundException {
-        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(),
+            (String) request.getAttribute(Constants.PASSWORD));
         String mimeType = dl.getFileMimeType(workspaceId, researchObjectId, versionId, filePath);
         String fileName = uriInfo.getPath().substring(1 + uriInfo.getPath().lastIndexOf("/"));
         ContentDisposition cd = ContentDisposition.type(mimeType).fileName(fileName).build();
@@ -374,7 +376,8 @@ public class AggregatedResource {
         URI manifestURI = researchObjectURI.resolve(".ro/manifest.rdf");
         URI resourceURI = uriInfo.getAbsolutePath();
 
-        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(),
+            (String) request.getAttribute(Constants.PASSWORD));
         SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
 
         if (original != null) {
@@ -540,7 +543,8 @@ public class AggregatedResource {
         if (user.getRole() == UserProfile.Role.PUBLIC) {
             throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
         }
-        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(),
+            (String) request.getAttribute(Constants.PASSWORD));
 
         URI researchObjectURI = uriInfo.getBaseUriBuilder().path("workspaces").path(workspaceId).path("ROs")
                 .path(researchObjectId).path(versionId).path("/").build();

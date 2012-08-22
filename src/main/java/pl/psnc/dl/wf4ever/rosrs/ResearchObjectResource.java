@@ -113,7 +113,8 @@ public class ResearchObjectResource {
         if (user.getRole() == UserProfile.Role.PUBLIC) {
             throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
         }
-        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(),
+            (String) request.getAttribute(Constants.PASSWORD));
 
         try {
             dl.deleteVersion(workspaceId, researchObjectId, versionId);

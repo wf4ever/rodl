@@ -43,145 +43,137 @@ import com.sun.jersey.core.header.ContentDisposition;
  * 
  */
 @Path("ROs/")
-public class ResearchObjectListResource
-{
+public class ResearchObjectListResource {
 
-	@SuppressWarnings("unused")
-	private final static Logger logger = Logger.getLogger(ResearchObjectListResource.class);
+    @SuppressWarnings("unused")
+    private final static Logger logger = Logger.getLogger(ResearchObjectListResource.class);
 
-	private static final String workspaceId = "default";
+    private static final String workspaceId = "default";
 
-	private static final String versionId = "v1";
+    private static final String versionId = "v1";
 
-	@Context
-	HttpServletRequest request;
+    @Context
+    HttpServletRequest request;
 
-	@Context
-	UriInfo uriInfo;
-
-
-	/**
-	 * Returns list of relative links to research objects
-	 * 
-	 * @return TBD
-	 * @throws SQLException
-	 * @throws NamingException
-	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 * @throws NotFoundException
-	 * @throws DigitalLibraryException
-	 */
-	@GET
-	@Produces("text/plain")
-	public Response getResearchObjectList()
-		throws ClassNotFoundException, IOException, NamingException, SQLException, DigitalLibraryException,
-		NotFoundException
-	{
-		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-
-		Set<URI> list;
-		if (user.getRole() == Role.PUBLIC) {
-			SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
-			try {
-				// FIXME this will not include ROs with workspaces in URIs.
-				list = sms.findResearchObjects(uriInfo.getAbsolutePath());
-			}
-			finally {
-				sms.close();
-			}
-		}
-		else {
-			DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
-			list = new HashSet<URI>();
-			for (String wId : dl.getWorkspaceIds()) {
-				for (String rId : dl.getResearchObjectIds(wId)) {
-					for (String vId : dl.getVersionIds(wId, rId)) {
-						if (wId.equals(workspaceId) && vId.equals(versionId)) {
-							list.add(uriInfo.getAbsolutePathBuilder().path(rId).path("/").build());
-						}
-						else {
-							list.add(uriInfo.getAbsolutePathBuilder().path("..").path("workspaces").path(wId)
-									.path("ROs").path(rId).path(vId).path("/").build());
-						}
-					}
-				}
-			}
-		}
-		StringBuilder sb = new StringBuilder();
-		for (URI id : list) {
-			sb.append(id.toString());
-			sb.append("\r\n");
-		}
-
-		ContentDisposition cd = ContentDisposition.type("text/plain").fileName("ROs.txt").build();
-
-		return Response.ok().entity(sb.toString()).header("Content-disposition", cd).build();
-	}
+    @Context
+    UriInfo uriInfo;
 
 
-	/**
-	 * Creates new RO with given RO_ID.
-	 * 
-	 * @param researchObjectId
-	 *            RO_ID in plain text (text/plain)
-	 * @return 201 (Created) when the RO was successfully created, 409 (Conflict) if the
-	 *         RO_ID is already used in the WORKSPACE_ID workspace
-	 * @throws DigitalLibraryException
-	 * @throws NotFoundException
-	 * @throws SQLException
-	 * @throws NamingException
-	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 * @throws ConflictException
-	 * @throws IdNotFoundException
-	 */
-	@POST
-	@Consumes("text/plain")
-	public Response createResearchObject(String researchObjectId)
-		throws NotFoundException, DigitalLibraryException, ClassNotFoundException, IOException, NamingException,
-		SQLException, ConflictException
-	{
-		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		if (user.getRole() == UserProfile.Role.PUBLIC) {
-			throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
-		}
-		URI researchObjectURI = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
+    /**
+     * Returns list of relative links to research objects
+     * 
+     * @return TBD
+     * @throws SQLException
+     * @throws NamingException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws NotFoundException
+     * @throws DigitalLibraryException
+     */
+    @GET
+    @Produces("text/plain")
+    public Response getResearchObjectList()
+            throws ClassNotFoundException, IOException, NamingException, SQLException, DigitalLibraryException,
+            NotFoundException {
+        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 
-		InputStream manifest;
-		SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
-		try {
-			try {
-				sms.createResearchObject(researchObjectURI);
-				manifest = sms.getManifest(researchObjectURI.resolve(".ro/manifest.rdf"), RDFFormat.RDFXML);
-			}
-			catch (IllegalArgumentException e) {
-				// RO already existed in sms, maybe created by someone else
-				throw new ConflictException("The RO with identifier " + researchObjectId + " already exists");
-			}
+        Set<URI> list;
+        if (user.getRole() == Role.PUBLIC) {
+            SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
+            try {
+                // FIXME this will not include ROs with workspaces in URIs.
+                list = sms.findResearchObjects(uriInfo.getAbsolutePath());
+            } finally {
+                sms.close();
+            }
+        } else {
+            DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(),
+                (String) request.getAttribute(Constants.PASSWORD));
+            list = new HashSet<URI>();
+            for (String wId : dl.getWorkspaceIds()) {
+                for (String rId : dl.getResearchObjectIds(wId)) {
+                    for (String vId : dl.getVersionIds(wId, rId)) {
+                        if (wId.equals(workspaceId) && vId.equals(versionId)) {
+                            list.add(uriInfo.getAbsolutePathBuilder().path(rId).path("/").build());
+                        } else {
+                            list.add(uriInfo.getAbsolutePathBuilder().path("..").path("workspaces").path(wId)
+                                    .path("ROs").path(rId).path(vId).path("/").build());
+                        }
+                    }
+                }
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        for (URI id : list) {
+            sb.append(id.toString());
+            sb.append("\r\n");
+        }
 
-			DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+        ContentDisposition cd = ContentDisposition.type("text/plain").fileName("ROs.txt").build();
 
-			try {
-				dl.createWorkspace(workspaceId);
-			}
-			catch (ConflictException e) {
-				// nothing
-			}
-			try {
-				dl.createResearchObject(workspaceId, researchObjectId);
-			}
-			catch (ConflictException e) {
-				// nothing
-			}
-			dl.createVersion(workspaceId, researchObjectId, versionId, manifest, ".ro/manifest.rdf",
-				RDFFormat.RDFXML.getDefaultMIMEType());
-			dl.publishVersion(workspaceId, researchObjectId, versionId);
-		}
-		finally {
-			sms.close();
-		}
+        return Response.ok().entity(sb.toString()).header("Content-disposition", cd).build();
+    }
 
-		return Response.created(researchObjectURI).build();
-	}
+
+    /**
+     * Creates new RO with given RO_ID.
+     * 
+     * @param researchObjectId
+     *            RO_ID in plain text (text/plain)
+     * @return 201 (Created) when the RO was successfully created, 409 (Conflict) if the RO_ID is already used in the
+     *         WORKSPACE_ID workspace
+     * @throws DigitalLibraryException
+     * @throws NotFoundException
+     * @throws SQLException
+     * @throws NamingException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws ConflictException
+     * @throws IdNotFoundException
+     */
+    @POST
+    @Consumes("text/plain")
+    public Response createResearchObject(String researchObjectId)
+            throws NotFoundException, DigitalLibraryException, ClassNotFoundException, IOException, NamingException,
+            SQLException, ConflictException {
+        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        if (user.getRole() == UserProfile.Role.PUBLIC) {
+            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
+        }
+        URI researchObjectURI = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
+
+        InputStream manifest;
+        SemanticMetadataService sms = SemanticMetadataServiceFactory.getService(user);
+        try {
+            try {
+                sms.createResearchObject(researchObjectURI);
+                manifest = sms.getManifest(researchObjectURI.resolve(".ro/manifest.rdf"), RDFFormat.RDFXML);
+            } catch (IllegalArgumentException e) {
+                // RO already existed in sms, maybe created by someone else
+                throw new ConflictException("The RO with identifier " + researchObjectId + " already exists");
+            }
+
+            DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(),
+                (String) request.getAttribute(Constants.PASSWORD));
+
+            try {
+                dl.createWorkspace(workspaceId);
+            } catch (ConflictException e) {
+                // nothing
+            }
+            try {
+                dl.createResearchObject(workspaceId, researchObjectId);
+            } catch (ConflictException e) {
+                // nothing
+            }
+            dl.createVersion(workspaceId, researchObjectId, versionId, manifest, ".ro/manifest.rdf",
+                RDFFormat.RDFXML.getDefaultMIMEType());
+            dl.publishVersion(workspaceId, researchObjectId, versionId);
+        } finally {
+            sms.close();
+        }
+
+        return Response.created(researchObjectURI).build();
+    }
 
 }

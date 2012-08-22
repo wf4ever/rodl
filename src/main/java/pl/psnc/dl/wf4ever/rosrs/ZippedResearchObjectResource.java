@@ -66,7 +66,8 @@ public class ZippedResearchObjectResource {
             throws RemoteException, MalformedURLException, UnknownHostException, DigitalLibraryException,
             NotFoundException {
         UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(), user.getPassword());
+        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(),
+            (String) request.getAttribute(Constants.PASSWORD));
 
         InputStream body = dl.getZippedVersion(workspaceId, researchObjectId, versionId);
         //TODO add all named graphs from SMS that start with the base URI

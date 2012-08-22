@@ -38,91 +38,81 @@ import com.sun.jersey.core.header.ContentDisposition;
  * 
  */
 @Path("workspaces")
-public class WorkspaceListResource
-{
+public class WorkspaceListResource {
 
-	@Context
-	HttpServletRequest request;
+    @Context
+    HttpServletRequest request;
 
-	@Context
-	private UriInfo uriInfo;
-
-
-	/**
-	 * Returns list of links to workspaces. Output format is RDF.
-	 * 
-	 * @param workspaceId
-	 *            identifier of a workspace in the RO SRS
-	 * @return TBD
-	 * @throws RemoteException
-	 * @throws DLibraException
-	 * @throws TransformerException
-	 * @throws DigitalLibraryException
-	 * @throws UnknownHostException
-	 * @throws MalformedURLException
-	 * @throws NotFoundException
-	 */
-	@GET
-	@Produces("text/plain")
-	public Response getWorkspaceList()
-		throws DigitalLibraryException, TransformerException, RemoteException,
-		MalformedURLException, UnknownHostException, NotFoundException
-	{
-		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
-		List<String> list = dl.getWorkspaceIds();
-
-		StringBuilder sb = new StringBuilder();
-		for (String id : list) {
-			sb.append(uriInfo.getAbsolutePathBuilder().path("/").build()
-					.resolve(id).toString());
-			sb.append("\r\n");
-		}
-
-		ContentDisposition cd = ContentDisposition.type("application/rdf+xml")
-				.fileName("workspaces.txt").build();
-
-		return Response.ok().entity(sb.toString())
-				.header("Content-disposition", cd).build();
-	}
+    @Context
+    private UriInfo uriInfo;
 
 
-	/**
-	 * Creates new workspace with given WORKSPACE_ID. input: WORKSPACE_ID
-	 * 
-	 * @param data
-	 *            text/plain with id in first line and password in second.
-	 * @return 201 (Created) when the workspace was successfully created, 400
-	 *         (Bad Request) if the content is malformed 409 (Conflict) if the
-	 *         WORKSPACE_ID is already used
-	 * @throws DigitalLibraryException
-	 * @throws UnknownHostException
-	 * @throws MalformedURLException
-	 * @throws RemoteException
-	 * @throws NotFoundException
-	 * @throws ConflictException 
-	 */
-	@POST
-	@Consumes("text/plain")
-	public Response createWorkspace(String workspaceId)
-		throws DigitalLibraryException, RemoteException, MalformedURLException,
-		UnknownHostException, NotFoundException, ConflictException
-	{
-		UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-		if (user.getRole() == UserProfile.Role.PUBLIC) {
-			throw new AuthenticationException(
-					"Only authenticated users can do that.",
-					SecurityFilter.REALM);
-		}
-		DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(
-			user.getLogin(), user.getPassword());
+    /**
+     * Returns list of links to workspaces. Output format is RDF.
+     * 
+     * @param workspaceId
+     *            identifier of a workspace in the RO SRS
+     * @return TBD
+     * @throws RemoteException
+     * @throws DLibraException
+     * @throws TransformerException
+     * @throws DigitalLibraryException
+     * @throws UnknownHostException
+     * @throws MalformedURLException
+     * @throws NotFoundException
+     */
+    @GET
+    @Produces("text/plain")
+    public Response getWorkspaceList()
+            throws DigitalLibraryException, TransformerException, RemoteException, MalformedURLException,
+            UnknownHostException, NotFoundException {
+        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(),
+            (String) request.getAttribute(Constants.PASSWORD));
+        List<String> list = dl.getWorkspaceIds();
 
-		dl.createWorkspace(workspaceId);
+        StringBuilder sb = new StringBuilder();
+        for (String id : list) {
+            sb.append(uriInfo.getAbsolutePathBuilder().path("/").build().resolve(id).toString());
+            sb.append("\r\n");
+        }
 
-		URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build()
-				.resolve(workspaceId);
+        ContentDisposition cd = ContentDisposition.type("application/rdf+xml").fileName("workspaces.txt").build();
 
-		return Response.created(resourceUri).build();
-	}
+        return Response.ok().entity(sb.toString()).header("Content-disposition", cd).build();
+    }
+
+
+    /**
+     * Creates new workspace with given WORKSPACE_ID. input: WORKSPACE_ID
+     * 
+     * @param data
+     *            text/plain with id in first line and password in second.
+     * @return 201 (Created) when the workspace was successfully created, 400 (Bad Request) if the content is malformed
+     *         409 (Conflict) if the WORKSPACE_ID is already used
+     * @throws DigitalLibraryException
+     * @throws UnknownHostException
+     * @throws MalformedURLException
+     * @throws RemoteException
+     * @throws NotFoundException
+     * @throws ConflictException
+     */
+    @POST
+    @Consumes("text/plain")
+    public Response createWorkspace(String workspaceId)
+            throws DigitalLibraryException, RemoteException, MalformedURLException, UnknownHostException,
+            NotFoundException, ConflictException {
+        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        if (user.getRole() == UserProfile.Role.PUBLIC) {
+            throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
+        }
+        DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(user.getLogin(),
+            (String) request.getAttribute(Constants.PASSWORD));
+
+        dl.createWorkspace(workspaceId);
+
+        URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build().resolve(workspaceId);
+
+        return Response.created(resourceUri).build();
+    }
 }
