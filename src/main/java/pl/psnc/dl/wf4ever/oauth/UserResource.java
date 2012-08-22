@@ -129,8 +129,7 @@ public class UserResource {
             username != null && !username.isEmpty() ? username : userId);
         oauth.createUserCredentials(userId, password);
         SemanticMetadataServiceFactory.getService(
-            new UserProfile(userId, password, username != null && !username.isEmpty() ? username : userId, null))
-                .close();
+            new UserProfile(userId, username != null && !username.isEmpty() ? username : userId, null)).close();
 
         if (created) {
             return Response.created(uriInfo.getAbsolutePath()).build();
