@@ -177,11 +177,12 @@ public class Resource {
      * @return
      * @throws NotFoundException
      * @throws DigitalLibraryException
+     * @throws AccessDeniedException
      */
     @GET
     public Response getResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original)
-            throws DigitalLibraryException, NotFoundException {
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
 

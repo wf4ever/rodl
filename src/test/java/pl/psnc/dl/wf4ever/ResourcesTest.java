@@ -4,6 +4,7 @@
 package pl.psnc.dl.wf4ever;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -20,6 +21,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
+import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -81,6 +83,10 @@ public class ResourcesTest extends JerseyTest {
     private final String username2 = "May Gray";
 
     private final List<String> linkHeadersR = new ArrayList<>();
+
+    private DateTime addFileTime;
+
+    private DateTime addRdfFileTime;
 
 
     public ResourcesTest() {
@@ -340,6 +346,7 @@ public class ResourcesTest extends JerseyTest {
 
 
     private void addFile() {
+        addFileTime = new DateTime();
         ClientResponse response = webResource.path("ROs/" + r + "/").header("Slug", filePath)
                 .header("Authorization", "Bearer " + accessToken).type("text/plain")
                 .post(ClientResponse.class, "lorem ipsum");
@@ -360,14 +367,21 @@ public class ResourcesTest extends JerseyTest {
 
 
     private void getFileContent() {
-        String metadata = webResource.path("ROs/" + r + "/" + filePath)
-                .header("Authorization", "Bearer " + accessToken).get(String.class);
-        assertTrue(metadata.contains("lorem ipsum"));
+        String content = webResource.path("ROs/" + r + "/" + filePath).header("Authorization", "Bearer " + accessToken)
+                .get(String.class);
+        assertTrue(content.contains("lorem ipsum"));
 
+        ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
+                .header("Authorization", "Bearer " + accessToken).head();
+        assertNotNull(response.getLastModified());
+        assertTrue(new DateTime(response.getLastModified()).isAfter(addFileTime));
+        assertNotNull(response.getEntityTag());
+        response.close();
     }
 
 
     private void addRDFFile() {
+        addRdfFileTime = new DateTime();
         String body = "<rdf:RDF" + "  xmlns:ore=\"http://www.openarchives.org/ore/terms/\" \n"
                 + "   xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" >\n" + "   <ore:Proxy>\n"
                 + "   </ore:Proxy>\n" + " </rdf:RDF>";
@@ -385,10 +399,16 @@ public class ResourcesTest extends JerseyTest {
 
 
     private void getRDFFileContent() {
-        String metadata = webResource.path("ROs/" + r + "/" + rdfFilePath).queryParam("content", "true")
+        String metadata = webResource.path("ROs/" + r + "/" + rdfFilePath)
                 .header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue(metadata.contains("lorem ipsum"));
 
+        ClientResponse response = webResource.path("ROs/" + r + "/" + rdfFilePath)
+                .header("Authorization", "Bearer " + accessToken).head();
+        assertNotNull(response.getLastModified());
+        assertTrue(new DateTime(response.getLastModified()).isAfter(addRdfFileTime));
+        assertNotNull(response.getEntityTag());
+        response.close();
     }
 
 

@@ -391,16 +391,22 @@ public final class ROSRService {
      *            requested MIME type
      * @return 200 OK with resource content
      * @throws NotFoundException
+     * @throws AccessDeniedException
      * @throws DigitalLibraryException
      */
     public static Response getInternalResource(URI researchObject, URI resource, String accept, String original)
-            throws DigitalLibraryException, NotFoundException {
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         String researchObjectId = getResearchObjectId(researchObject);
         String filePath = researchObject.relativize(resource).getPath();
+
+        ResourceInfo resInfo;
 
         // check if request is for a specific format
         if (original != null) {
             URI originalResource = resource.resolve(original);
+            filePath = researchObject.relativize(originalResource).getPath();
+            resInfo = ROSRService.DL.get().getFileInfo(Constants.workspaceId, researchObjectId, Constants.versionId,
+                filePath);
             if (ROSRService.SMS.get().containsNamedGraph(originalResource)
                     && ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, originalResource)) {
                 RDFFormat format = RDFFormat.forMIMEType(accept);
@@ -410,11 +416,15 @@ public final class ROSRService {
                 InputStream graph = ROSRService.SMS.get().getNamedGraph(originalResource, format);
                 ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType())
                         .fileName(getFilename(resource)).build();
-                return Response.ok(graph).header("Content-disposition", cd).build();
+                return Response.ok(graph).header("Content-disposition", cd).tag(resInfo.getChecksum())
+                        .lastModified(resInfo.getLastModified().toDate()).build();
             } else {
                 return Response.status(Status.NOT_FOUND).type("text/plain").entity("Original resource not found")
                         .build();
             }
+        } else {
+            resInfo = ROSRService.DL.get().getFileInfo(Constants.workspaceId, researchObjectId, Constants.versionId,
+                filePath);
         }
 
         if (ROSRService.SMS.get().containsNamedGraph(resource)
@@ -427,7 +437,8 @@ public final class ROSRService {
                 InputStream graph = ROSRService.SMS.get().getNamedGraph(resource, extensionFormat);
                 ContentDisposition cd = ContentDisposition.type(extensionFormat.getDefaultMIMEType())
                         .fileName(getFilename(resource)).build();
-                return Response.ok(graph).header("Content-disposition", cd).build();
+                return Response.ok(graph).header("Content-disposition", cd).tag(resInfo.getChecksum())
+                        .lastModified(resInfo.getLastModified().toDate()).build();
             }
             // 3. GET manifest.rdf Accept: text/turtle
             // 4. GET manifest Accept: application/rdf+xml
@@ -442,7 +453,8 @@ public final class ROSRService {
         ContentDisposition cd = ContentDisposition.type(mimeType).fileName(getFilename(resource)).build();
         InputStream body = ROSRService.DL.get().getFileContents(Constants.workspaceId, researchObjectId,
             Constants.versionId, filePath);
-        return Response.ok(body).header("Content-disposition", cd).header("Content-type", mimeType).build();
+        return Response.ok(body).header("Content-disposition", cd).header("Content-type", mimeType)
+                .tag(resInfo.getChecksum()).lastModified(resInfo.getLastModified().toDate()).build();
     }
 
 
