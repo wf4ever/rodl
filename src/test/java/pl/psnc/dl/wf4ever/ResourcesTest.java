@@ -12,10 +12,12 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64;
@@ -374,7 +376,7 @@ public class ResourcesTest extends JerseyTest {
         ClientResponse response = webResource.path("ROs/" + r + "/" + filePath)
                 .header("Authorization", "Bearer " + accessToken).head();
         assertNotNull(response.getLastModified());
-        assertTrue(new DateTime(response.getLastModified()).isAfter(addFileTime));
+        assertTrue(!new DateTime(response.getLastModified()).isBefore(addFileTime));
         assertNotNull(response.getEntityTag());
         response.close();
     }
@@ -405,9 +407,21 @@ public class ResourcesTest extends JerseyTest {
 
         ClientResponse response = webResource.path("ROs/" + r + "/" + rdfFilePath)
                 .header("Authorization", "Bearer " + accessToken).head();
-        assertNotNull(response.getLastModified());
-        assertTrue(new DateTime(response.getLastModified()).isAfter(addRdfFileTime));
-        assertNotNull(response.getEntityTag());
+        Date lastModified = response.getLastModified();
+        assertNotNull(lastModified);
+        assertTrue(!new DateTime(lastModified).isBefore(addRdfFileTime));
+        EntityTag tag = response.getEntityTag();
+        assertNotNull(tag);
+        response.close();
+
+        response = webResource.path("ROs/" + r + "/" + rdfFilePath).header("Authorization", "Bearer " + accessToken)
+                .header("If-None-Match", tag).head();
+        assertEquals(HttpStatus.SC_NOT_MODIFIED, response.getStatus());
+        response.close();
+
+        response = webResource.path("ROs/" + r + "/" + rdfFilePath).header("Authorization", "Bearer " + accessToken)
+                .header("If-Modified-Since", lastModified).head();
+        assertEquals(HttpStatus.SC_NOT_MODIFIED, response.getStatus());
         response.close();
     }
 

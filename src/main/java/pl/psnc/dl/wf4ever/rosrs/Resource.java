@@ -14,8 +14,12 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
@@ -24,6 +28,7 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
+import pl.psnc.dl.wf4ever.dlibra.ResourceInfo;
 import pl.psnc.dlibra.service.AccessDeniedException;
 
 import com.hp.hpl.jena.ontology.Individual;
@@ -43,7 +48,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 public class Resource {
 
     @Context
-    private HttpServletRequest request;
+    private HttpServletRequest servletRequest;
 
     @Context
     private UriInfo uriInfo;
@@ -81,7 +86,8 @@ public class Resource {
             if (researchObject.resolve(Constants.MANIFEST_PATH).equals(resource)) {
                 throw new ForbiddenException("Can't update the manifest");
             }
-            return ROSRService.updateInternalResource(researchObject, resource, entity, request.getContentType());
+            return ROSRService
+                    .updateInternalResource(researchObject, resource, entity, servletRequest.getContentType());
         } else {
             throw new ForbiddenException(
                     "You cannot use PUT to create new resources unless they have been referenced in a proxy or an annotation. Use POST instead.");
@@ -181,7 +187,7 @@ public class Resource {
      */
     @GET
     public Response getResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
-            @QueryParam("original") String original)
+            @QueryParam("original") String original, @Context Request request)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         URI resource = uriInfo.getAbsolutePath();
@@ -195,9 +201,26 @@ public class Resource {
                     .status(Status.SEE_OTHER)
                     .location(
                         ROSRService.getAnnotationBody(researchObject, resource,
-                            request.getHeader(Constants.ACCEPT_HEADER))).build();
+                            servletRequest.getHeader(Constants.ACCEPT_HEADER))).build();
         }
-        return ROSRService.getInternalResource(researchObject, resource, request.getHeader("Accept"), original);
+
+        ResourceInfo resInfo = ROSRService.getResourceInfo(researchObject, resource, original);
+        ResponseBuilder rb = request.evaluatePreconditions(resInfo.getLastModified().toDate(),
+            new EntityTag(resInfo.getChecksum()));
+        if (rb != null) {
+            return rb.build();
+        }
+
+        ResponseBuilder builder = ROSRService.getInternalResource(researchObject, resource,
+            servletRequest.getHeader("Accept"), original);
+
+        if (resInfo != null) {
+            CacheControl cache = new CacheControl();
+            cache.setMustRevalidate(true);
+            builder = builder.cacheControl(cache).tag(resInfo.getChecksum())
+                    .lastModified(resInfo.getLastModified().toDate());
+        }
+        return builder.build();
     }
 
 
