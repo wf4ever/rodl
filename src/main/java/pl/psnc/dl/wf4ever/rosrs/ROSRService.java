@@ -168,7 +168,7 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response aggregateInternalResource(URI researchObject, URI resource, InputStream entity,
+    public static ResponseBuilder aggregateInternalResource(URI researchObject, URI resource, InputStream entity,
             String contentType, String original)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         if (original != null) {
@@ -200,14 +200,14 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response aggregateExternalResource(URI researchObject, URI resource)
+    public static ResponseBuilder aggregateExternalResource(URI researchObject, URI resource)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         ROSRService.SMS.get().addResource(researchObject, resource, null);
-        Response response = addProxy(researchObject, resource);
+        ResponseBuilder builder = addProxy(researchObject, resource);
         // update the manifest that describes the resource in dLibra
         updateNamedGraphInDlibra(Constants.MANIFEST_PATH, researchObject,
             researchObject.resolve(Constants.MANIFEST_PATH));
-        return response;
+        return builder;
     }
 
 
@@ -304,12 +304,12 @@ public final class ROSRService {
      *            resource for which the proxy is
      * @return 201 Created response pointing to the proxy
      */
-    private static Response addProxy(URI researchObject, URI proxyFor) {
+    private static ResponseBuilder addProxy(URI researchObject, URI proxyFor) {
         URI proxy = ROSRService.SMS.get().addProxy(researchObject, proxyFor);
 
         String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, proxyFor.toString(),
             Constants.ORE_PROXY_FOR_HEADER);
-        return Response.created(proxy).header(Constants.LINK_HEADER, proxyForHeader).build();
+        return Response.created(proxy).header(Constants.LINK_HEADER, proxyForHeader);
     }
 
 
@@ -348,7 +348,8 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response updateInternalResource(URI researchObject, URI resource, String entity, String contentType)
+    public static ResponseBuilder updateInternalResource(URI researchObject, URI resource, String entity,
+            String contentType)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         String researchObjectId = getResearchObjectId(researchObject);
         String filePath = researchObject.relativize(resource).getPath();
@@ -373,9 +374,9 @@ public final class ROSRService {
                 researchObject.resolve(Constants.MANIFEST_PATH));
         }
         if (contentExisted) {
-            return Response.ok().build();
+            return Response.ok();
         } else {
-            return Response.created(resource).build();
+            return Response.created(resource);
         }
     }
 

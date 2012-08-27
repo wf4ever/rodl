@@ -352,7 +352,19 @@ public class ResourcesTest extends JerseyTest {
         ClientResponse response = webResource.path("ROs/" + r + "/").header("Slug", filePath)
                 .header("Authorization", "Bearer " + accessToken).type("text/plain")
                 .post(ClientResponse.class, "lorem ipsum");
-        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        assertEquals(HttpStatus.SC_CREATED, response.getStatus());
+        assertNotNull(response.getLastModified());
+        assertTrue(!new DateTime(response.getLastModified()).isBefore(addFileTime));
+        assertNotNull(response.getEntityTag());
+        response.close();
+
+        response = webResource.path("ROs/" + r + "/" + filePathEncoded)
+                .header("Authorization", "Bearer " + accessToken).type("text/plain")
+                .put(ClientResponse.class, "lorem ipsum");
+        assertEquals(HttpStatus.SC_OK, response.getStatus());
+        assertNotNull(response.getLastModified());
+        assertTrue(!new DateTime(response.getLastModified()).isBefore(addFileTime));
+        assertNotNull(response.getEntityTag());
         response.close();
     }
 

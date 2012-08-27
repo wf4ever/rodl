@@ -86,8 +86,16 @@ public class Resource {
             if (researchObject.resolve(Constants.MANIFEST_PATH).equals(resource)) {
                 throw new ForbiddenException("Can't update the manifest");
             }
-            return ROSRService
-                    .updateInternalResource(researchObject, resource, entity, servletRequest.getContentType());
+            ResponseBuilder builder = ROSRService.updateInternalResource(researchObject, resource, entity,
+                servletRequest.getContentType());
+            ResourceInfo resInfo = ROSRService.getResourceInfo(researchObject, resource, original);
+            if (resInfo != null) {
+                CacheControl cache = new CacheControl();
+                cache.setMustRevalidate(true);
+                builder = builder.cacheControl(cache).tag(resInfo.getChecksum())
+                        .lastModified(resInfo.getLastModified().toDate());
+            }
+            return builder.build();
         } else {
             throw new ForbiddenException(
                     "You cannot use PUT to create new resources unless they have been referenced in a proxy or an annotation. Use POST instead.");

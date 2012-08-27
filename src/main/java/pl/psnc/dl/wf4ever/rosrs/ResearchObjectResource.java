@@ -24,6 +24,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -37,6 +38,7 @@ import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
+import pl.psnc.dl.wf4ever.dlibra.ResourceInfo;
 import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
@@ -163,12 +165,19 @@ public class ResearchObjectResource {
             ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
             return ROSRService.addAnnotation(researchObject, resource, annotationTargets);
         } else {
-            Response response = ROSRService.aggregateInternalResource(researchObject, resource, content,
+            ResponseBuilder builder = ROSRService.aggregateInternalResource(researchObject, resource, content,
                 request.getContentType(), null);
             if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
                 ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
             }
-            return response;
+            ResourceInfo resInfo = ROSRService.getResourceInfo(researchObject, resource, null);
+            if (resInfo != null) {
+                CacheControl cache = new CacheControl();
+                cache.setMustRevalidate(true);
+                builder = builder.cacheControl(cache).tag(resInfo.getChecksum())
+                        .lastModified(resInfo.getLastModified().toDate());
+            }
+            return builder.build();
         }
     }
 
@@ -220,7 +229,7 @@ public class ResearchObjectResource {
                 throw new BadRequestException("The entity body does not define any ore:Proxy.");
             }
         }
-        return ROSRService.aggregateExternalResource(researchObject, proxyFor);
+        return ROSRService.aggregateExternalResource(researchObject, proxyFor).build();
     }
 
 
