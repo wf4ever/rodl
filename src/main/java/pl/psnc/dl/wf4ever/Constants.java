@@ -46,7 +46,7 @@ public final class Constants {
     public static final String LINK_HEADER_TEMPLATE = "<%s>; rel=\"%s\"";
 
     public static final Pattern AO_LINK_HEADER_PATTERN = Pattern
-            .compile("<(.+)>; rel=\"http://purl.org/ao/annotates\"");
+            .compile("\\s*<([^>]*)>\\s*;\\s*rel\\s*=\\s*\"http://purl.org/ao/annotatesResource\"");
 
     public static final String AO_ANNOTATION_BODY_HEADER = "http://purl.org/ao/body";
 
