@@ -23,6 +23,8 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.http.HttpStatus;
+
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
@@ -80,6 +82,13 @@ public class Resource {
                     .location(ROSRService.SMS.get().getProxyFor(researchObject, resource)).build();
         }
         if (ROSRService.SMS.get().isAggregatedResource(researchObject, resource)) {
+            if (ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
+                return Response
+                        .status(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE)
+                        .entity(
+                            "This resource is an annotation, only \"application/vnd.wf4ever.annotation\" media type is accepted")
+                        .build();
+            }
             if (original != null) {
                 resource = resource.resolve(original);
             }
