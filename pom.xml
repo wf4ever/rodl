@@ -347,5 +347,5 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
-	<version>6.0.7-SNAPSHOT</version>
+	<version>6.0.7</version>
 </project>
