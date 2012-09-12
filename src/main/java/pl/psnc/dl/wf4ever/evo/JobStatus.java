@@ -36,7 +36,11 @@ public class JobStatus {
     public JobStatus() {
 
     }
-
+    public JobStatus(URI copyfrom, EvoType type, boolean finalize) {
+        setCopyfrom(copyfrom);
+        setType(type);
+        setFinalize(finalize);
+    }
 
     public synchronized URI getCopyfrom() {
         return copyfrom;
