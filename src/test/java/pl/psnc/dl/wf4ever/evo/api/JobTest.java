@@ -21,14 +21,17 @@ import pl.psnc.dl.wf4ever.evo.Job.State;
  */
 public class JobTest extends EvoTest {
 
-    //@Test
-    public final void testCopyJobCreation() {
+    @Test
+    public final void testCopyJobCreation() throws InterruptedException {
         ClientResponse response = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, false));
+        URI copyJob = response.getLocation();
         assertEquals(response.getEntity(String.class), HttpServletResponse.SC_CREATED, response.getStatus());
+        //to finish all operation before object will be removed
+        JobStatus remoteStatus = getRemoteStatus(copyJob, WAIT_FOR_COPY);        
     }
 
 
-    //@Test
+    @Test
     public final void testCopyJobStatusDataIntegrity()
             throws InterruptedException {
         JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, false);
@@ -40,7 +43,7 @@ public class JobTest extends EvoTest {
     }
 
 
-    //@Test
+    @Test
     public final void testJobFinalization()
             throws InterruptedException {
         URI copyJob = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, false)).getLocation();
@@ -56,7 +59,7 @@ public class JobTest extends EvoTest {
     }
 
 
-    //@Test
+    @Test
     public final void testCopyAndFinalizationJob()
             throws InterruptedException {
         JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, true);
@@ -67,18 +70,5 @@ public class JobTest extends EvoTest {
         //model.read(status.getTarget().toString());
         //TODO verify correct finalized RO
     }
-
-
-    private JobStatus getRemoteStatus(URI job, int interval)
-            throws InterruptedException {
-        int cnt = 0;
-        JobStatus remoteStatus;
-        do {
-            remoteStatus = webResource.uri(job).header("Authorization", "Bearer " + accessToken).get(JobStatus.class);
-            synchronized (this) {
-                wait(1000);
-            }
-        } while (remoteStatus.getState() == State.RUNNING && (cnt++) < interval);
-        return remoteStatus;
-    }
+    
 }

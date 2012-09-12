@@ -8,6 +8,9 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+
+import pl.psnc.dl.wf4ever.evo.Job.State;
+
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.test.framework.JerseyTest;
@@ -158,4 +161,18 @@ public class EvoTest extends JerseyTest {
     protected JobStatus getFinalizeJobStatus(URI job, JobStatus original) {
         return webResource.uri(job).header("Authorization", "Bearer " + accessToken).get(JobStatus.class);
     }
+    
+    protected JobStatus getRemoteStatus(URI job, int interval)
+            throws InterruptedException {
+        int cnt = 0;
+        JobStatus remoteStatus;
+        do {
+            remoteStatus = webResource.uri(job).header("Authorization", "Bearer " + accessToken).get(JobStatus.class);
+            synchronized (this) {
+                wait(1000);
+            }
+        } while (remoteStatus.getState() == State.RUNNING && (cnt++) < interval);
+        return remoteStatus;
+    }
+ 
 }

@@ -123,9 +123,12 @@ public class CopyOperation implements Operation {
                 ROSRService.addAnnotation(target, URI.create(annBody.getURI()), targets);
             }
         }
-
+        storeHistoryInformation();
     }
-
+    
+    private void storeHistoryInformation(){
+        
+    }
 
     private boolean isInternalResource(URI resource, URI ro) {
         return resource.toString().startsWith(ro.toString());
