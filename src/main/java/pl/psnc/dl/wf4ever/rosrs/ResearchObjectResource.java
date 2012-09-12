@@ -223,7 +223,8 @@ public class ResearchObjectResource {
                         throw new BadRequestException("The target is not an URI resource.");
                     }
                 } else {
-                    throw new BadRequestException("The ore:Proxy does not have a ore:proxyFor property.");
+                    //The ore:Proxy does not have a ore:proxyFor property.
+                    proxyFor = uriInfo.getAbsolutePathBuilder().path(UUID.randomUUID().toString()).build();
                 }
             } else {
                 throw new BadRequestException("The entity body does not define any ore:Proxy.");

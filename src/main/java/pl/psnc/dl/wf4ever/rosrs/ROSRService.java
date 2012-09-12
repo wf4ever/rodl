@@ -593,11 +593,16 @@ public final class ROSRService {
      * @param acceptHeader
      *            MIME type requested (content negotiation) or null
      * @return URI of the annotation body
+     * @throws NotFoundException
+     *             could not find the resource in DL when checking if it's internal
+     * @throws DigitalLibraryException
+     *             could not connect to the DL to check if it's internal
      */
-    public static URI getAnnotationBody(URI researchObject, URI annotation, String acceptHeader) {
+    public static URI getAnnotationBody(URI researchObject, URI annotation, String acceptHeader)
+            throws NotFoundException, DigitalLibraryException {
         URI body = ROSRService.SMS.get().getAnnotationBody(researchObject, annotation);
         RDFFormat acceptFormat = RDFFormat.forMIMEType(acceptHeader);
-        if (acceptFormat != null) {
+        if (acceptFormat != null && isInternalResource(researchObject, body)) {
             RDFFormat extensionFormat = RDFFormat.forFileName(annotation.getPath());
             return createFormatSpecificURI(body, extensionFormat, acceptFormat);
         } else {

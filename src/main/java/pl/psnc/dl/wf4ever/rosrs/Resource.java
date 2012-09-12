@@ -23,6 +23,8 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.http.HttpStatus;
+
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
@@ -80,6 +82,13 @@ public class Resource {
                     .location(ROSRService.SMS.get().getProxyFor(researchObject, resource)).build();
         }
         if (ROSRService.SMS.get().isAggregatedResource(researchObject, resource)) {
+            if (ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
+                return Response
+                        .status(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE)
+                        .entity(
+                            "This resource is an annotation, only \"application/vnd.wf4ever.annotation\" media type is accepted")
+                        .build();
+            }
             if (original != null) {
                 resource = resource.resolve(original);
             }
@@ -137,7 +146,8 @@ public class Resource {
         model.read(content, researchObject.toString());
         ExtendedIterator<Individual> it = model.listIndividuals(Constants.RO_AGGREGATED_ANNOTATION_CLASS);
         if (it.hasNext()) {
-            NodeIterator it2 = it.next().listPropertyValues(Constants.AO_BODY_PROPERTY);
+            Individual aggregatedAnnotation = it.next();
+            NodeIterator it2 = aggregatedAnnotation.listPropertyValues(Constants.AO_BODY_PROPERTY);
             if (it2.hasNext()) {
                 RDFNode bodyResource = it2.next();
                 if (bodyResource.isURIResource()) {
@@ -152,7 +162,7 @@ public class Resource {
             } else {
                 throw new BadRequestException("The ro:AggregatedAnnotation does not have a ao:body property.");
             }
-            it2 = it.next().listPropertyValues(Constants.AO_ANNOTATES_RESOURCE_PROPERTY);
+            it2 = aggregatedAnnotation.listPropertyValues(Constants.AO_ANNOTATES_RESOURCE_PROPERTY);
             while (it2.hasNext()) {
                 RDFNode targetResource = it2.next();
                 if (targetResource.isURIResource()) {
