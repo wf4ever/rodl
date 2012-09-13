@@ -7,14 +7,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 
-import javax.naming.NamingException;
 import javax.naming.OperationNotSupportedException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -114,9 +112,19 @@ public class ResearchObjectResource {
     }
 
 
+    /**
+     * Delete a research object.
+     * 
+     * @param researchObjectId
+     *            research object id
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws NotFoundException
+     *             Research Object not found neither in dLibra nor in SMS
+     */
     @DELETE
     public void deleteResearchObject(@PathParam("ro_id") String researchObjectId)
-            throws DigitalLibraryException, ClassNotFoundException, IOException, NamingException, SQLException {
+            throws DigitalLibraryException, NotFoundException {
         ROSRService.deleteResearchObject(uriInfo.getAbsolutePath());
     }
 

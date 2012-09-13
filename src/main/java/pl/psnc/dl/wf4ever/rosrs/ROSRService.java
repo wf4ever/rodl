@@ -117,15 +117,17 @@ public final class ROSRService {
 
 
     /**
-     * Delete a research object
+     * Delete a research object.
      * 
      * @param researchObject
      *            research object URI
      * @throws DigitalLibraryException
      *             could not connect to the DL
+     * @throws NotFoundException
+     *             Research Object not found neither in dLibra nor in SMS
      */
     public static void deleteResearchObject(URI researchObject)
-            throws DigitalLibraryException {
+            throws DigitalLibraryException, NotFoundException {
         String researchObjectId = getResearchObjectId(researchObject);
         try {
             ROSRService.DL.get().deleteVersion(Constants.workspaceId, researchObjectId, Constants.versionId);
@@ -135,8 +137,6 @@ public final class ROSRService {
                     ROSRService.DL.get().deleteWorkspace(Constants.workspaceId);
                 }
             }
-        } catch (NotFoundException e) {
-            LOG.warn("URI not found in dLibra: " + researchObject);
         } finally {
             try {
                 ROSRService.SMS.get().removeResearchObject(researchObject);

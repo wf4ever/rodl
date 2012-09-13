@@ -72,7 +72,7 @@ public class CopyOperation implements Operation {
             if (Thread.interrupted()) {
                 try {
                     ROSRService.deleteResearchObject(target);
-                } catch (DigitalLibraryException e) {
+                } catch (DigitalLibraryException | NotFoundException e) {
                     LOG.error("Could not delete the target when aborting: " + target, e);
                 }
                 return;
