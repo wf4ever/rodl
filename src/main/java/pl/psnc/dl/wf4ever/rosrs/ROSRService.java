@@ -522,8 +522,10 @@ public final class ROSRService {
      *            URI of the resource that is converted
      */
     public static void convertAnnotationBodyToAggregatedResource(URI researchObject, URI resource) {
-        ROSRService.SMS.get().removeNamedGraph(researchObject, resource);
-        updateROAttributesInDlibra(researchObject);
+        if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
+            ROSRService.SMS.get().removeNamedGraph(researchObject, resource);
+            updateROAttributesInDlibra(researchObject);
+        }
     }
 
 
