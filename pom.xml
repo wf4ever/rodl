@@ -269,7 +269,7 @@
 	</reporting>
 	<scm>
 		<developerConnection>scm:git:git@github.com:wf4ever/rosrs.git</developerConnection>
-	  <tag>rosrs-6.0.10</tag>
+	  <tag>rosrs-6.0.9</tag>
   </scm>
 	<repositories>
 		<repository>
