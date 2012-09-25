@@ -1,11 +1,11 @@
 package pl.psnc.dl.wf4ever.evo;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
@@ -61,7 +61,6 @@ public class CopyOperation implements Operation {
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(status.getCopyfrom().resolve(Constants.MANIFEST_PATH).toString());
-
         Individual source = model.getIndividual(status.getCopyfrom().toString());
         if (source == null) {
             throw new OperationFailedException("The manifest does not describe the research object");
@@ -123,11 +122,17 @@ public class CopyOperation implements Operation {
                 ROSRService.addAnnotation(target, URI.create(annBody.getURI()), targets);
             }
         }
-        storeHistoryInformation();
+       try {
+            storeHistoryInformation(status.getTarget());
+       } catch (URISyntaxException e) {
+            e.printStackTrace();
+       }
     }
     
-    private void storeHistoryInformation(){
-        
+    private void storeHistoryInformation(URI freshObjectURI) throws URISyntaxException {
+        URI liveObjectURI = ROSRService.SMS.get().getLiveURIFromSnapshotOrArchive(freshObjectURI);
+        URI antecessorObjectURI = ROSRService.SMS.get().getPreviousSnaphotOrArchive(liveObjectURI,freshObjectURI);
+        ROSRService.SMS.get().storeAggregatedDifferences(freshObjectURI, antecessorObjectURI);
     }
 
     private boolean isInternalResource(URI resource, URI ro) {
