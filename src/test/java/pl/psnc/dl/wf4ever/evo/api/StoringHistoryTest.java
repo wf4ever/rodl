@@ -23,7 +23,7 @@ public class StoringHistoryTest extends EvoTest {
     }
 
 
-    @Test
+    //@Test
     public void testStoringHistory() throws InterruptedException {
         //@TODO create test structure by adding files and so on        
         JobStatus sp1Status = new JobStatus(ro, EvoType.SNAPSHOT, false);

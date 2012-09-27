@@ -24,9 +24,9 @@ public class JobTest extends EvoTest {
     public final void testCopyJobCreation() throws InterruptedException {
         ClientResponse response = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, false));
         URI copyJob = response.getLocation();
+        getRemoteStatus(copyJob, WAIT_FOR_COPY);        
         assertEquals(response.getEntity(String.class), HttpServletResponse.SC_CREATED, response.getStatus());
         //to finish all operation before object will be removed
-        getRemoteStatus(copyJob, WAIT_FOR_COPY);        
     }
 
 

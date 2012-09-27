@@ -24,14 +24,12 @@ public class APITest extends JerseyTest {
     protected final String clientName = "ROSRS testing app written in Ruby";
     protected final String clientRedirectionURI = "OOB"; // will not be used
     protected String clientId;
-    protected final String roUUID = UUID.randomUUID().toString();
     protected final String userId2 = UUID.randomUUID().toString();
     protected final String userId = UUID.randomUUID().toString();
     protected final String userIdUrlSafe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId.getBytes()));
     protected final String userId2UrlSafe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId2.getBytes()));
     protected final String username = "John Doe";
     protected final String username2 = "May Gray";
-    protected URI ro;
     
     public APITest() {
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
@@ -106,12 +104,6 @@ public class APITest extends JerseyTest {
         URI ro = response.getLocation();
         response.close();
         return ro;
-    }
-    
-    protected void addFile(String accessToken, String filePath, URI roURI) {
-        webResource.uri(roURI).header("Slug", filePath).header("Authorization", "Bearer " + accessToken)
-                .type("text/plain").post(String.class, "lorem ipsum");
-
     }
 
 }
