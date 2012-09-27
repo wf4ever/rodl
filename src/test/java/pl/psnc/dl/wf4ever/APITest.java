@@ -16,7 +16,6 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 
-
 public class APITest extends JerseyTest {
 
     protected WebResource webResource;
@@ -30,16 +29,21 @@ public class APITest extends JerseyTest {
     protected final String userId2UrlSafe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId2.getBytes()));
     protected final String username = "John Doe";
     protected final String username2 = "May Gray";
-    
+
+
     public APITest() {
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
     }
-    public APITest(WebAppDescriptor webAppDescriptor){
+
+
+    public APITest(WebAppDescriptor webAppDescriptor) {
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
     }
-    
+
+
     @Override
-    public void setUp() throws Exception{
+    public void setUp()
+            throws Exception {
         super.setUp();
         client().setFollowRedirects(true);
         if (resource().getURI().getHost().equals("localhost")) {
@@ -49,7 +53,8 @@ public class APITest extends JerseyTest {
         }
         clientId = createClient();
     }
-    
+
+
     protected String createClient() {
         ClientResponse response = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, clientName + "\r\n" + clientRedirectionURI);
@@ -57,7 +62,8 @@ public class APITest extends JerseyTest {
         response.close();
         return clientId;
     }
-    
+
+
     protected void createUsers() {
         ClientResponse response = webResource.path("users/" + userIdUrlSafe)
                 .header("Authorization", "Bearer " + adminCreds).put(ClientResponse.class, username);
@@ -69,7 +75,8 @@ public class APITest extends JerseyTest {
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         response.close();
     }
-    
+
+
     protected void getUser() {
         String user = webResource.path("users/" + userIdUrlSafe).header("Authorization", "Bearer " + adminCreds)
                 .get(String.class);
@@ -83,7 +90,8 @@ public class APITest extends JerseyTest {
                 .accept("application/x-turtle").get(String.class);
         assertTrue(user.contains(userId2));
     }
-    
+
+
     protected String createAccessToken(String userId) {
         ClientResponse response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, clientId + "\r\n" + userId);
@@ -91,7 +99,8 @@ public class APITest extends JerseyTest {
         response.close();
         return accessToken;
     }
-    
+
+
     protected URI createRO(String accessToken) {
         String uuid = UUID.randomUUID().toString();
         return createRO(uuid, accessToken);
@@ -105,7 +114,8 @@ public class APITest extends JerseyTest {
         response.close();
         return ro;
     }
-    
+
+
     protected void addFile(URI roURI, String filePath, String accessToken) {
         webResource.uri(roURI).header("Slug", filePath).header("Authorization", "Bearer " + accessToken)
                 .type("text/plain").post(String.class, "lorem ipsum");

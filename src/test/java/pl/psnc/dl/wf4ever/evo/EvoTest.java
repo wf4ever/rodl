@@ -38,7 +38,7 @@ public class EvoTest extends APITest {
         createUsers();
         accessToken = createAccessToken(userId);
         ro = createRO(accessToken);
-        addFile(ro,filePath,accessToken);
+        addFile(ro, filePath, accessToken);
     }
 
 
@@ -54,7 +54,6 @@ public class EvoTest extends APITest {
 
 
     /** Creating test structure */
-
 
     private void deleteROs() {
         String list = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken).get(String.class);
@@ -97,7 +96,8 @@ public class EvoTest extends APITest {
     protected JobStatus getFinalizeJobStatus(URI job, JobStatus original) {
         return webResource.uri(job).header("Authorization", "Bearer " + accessToken).get(JobStatus.class);
     }
-    
+
+
     protected JobStatus getRemoteStatus(URI job, int interval)
             throws InterruptedException {
         int cnt = 0;
@@ -110,5 +110,5 @@ public class EvoTest extends APITest {
         } while (remoteStatus.getState() == State.RUNNING && (cnt++) < interval);
         return remoteStatus;
     }
- 
+
 }

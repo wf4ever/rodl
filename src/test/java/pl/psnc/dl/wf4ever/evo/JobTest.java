@@ -6,8 +6,6 @@ import java.net.URI;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
-import org.junit.Test;
-
 import com.sun.jersey.api.client.ClientResponse;
 
 import pl.psnc.dl.wf4ever.evo.EvoType;
@@ -21,10 +19,11 @@ import pl.psnc.dl.wf4ever.evo.Job.State;
 public class JobTest extends EvoTest {
 
     //@Test
-    public final void testCopyJobCreation() throws InterruptedException {
+    public final void testCopyJobCreation()
+            throws InterruptedException {
         ClientResponse response = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, false));
         URI copyJob = response.getLocation();
-        getRemoteStatus(copyJob, WAIT_FOR_COPY);        
+        getRemoteStatus(copyJob, WAIT_FOR_COPY);
         assertEquals(response.getEntity(String.class), HttpServletResponse.SC_CREATED, response.getStatus());
         //to finish all operation before object will be removed
     }
@@ -69,5 +68,5 @@ public class JobTest extends EvoTest {
         //model.read(status.getTarget().toString());
         //TODO verify correct finalized RO
     }
-    
+
 }

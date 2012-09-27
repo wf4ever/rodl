@@ -122,19 +122,22 @@ public class CopyOperation implements Operation {
                 ROSRService.addAnnotation(target, URI.create(annBody.getURI()), targets);
             }
         }
-       try {
+        try {
             storeHistoryInformation(status.getTarget());
-       } catch (URISyntaxException e) {
+        } catch (URISyntaxException e) {
             //@TODO thing about the exception handling
             e.printStackTrace();
-       }
+        }
     }
-    
-    private void storeHistoryInformation(URI freshObjectURI) throws URISyntaxException {
+
+
+    private void storeHistoryInformation(URI freshObjectURI)
+            throws URISyntaxException {
         URI liveObjectURI = ROSRService.SMS.get().getLiveURIFromSnapshotOrArchive(freshObjectURI);
-        URI antecessorObjectURI = ROSRService.SMS.get().getPreviousSnaphotOrArchive(liveObjectURI,freshObjectURI);
+        URI antecessorObjectURI = ROSRService.SMS.get().getPreviousSnaphotOrArchive(liveObjectURI, freshObjectURI);
         ROSRService.SMS.get().storeAggregatedDifferences(freshObjectURI, antecessorObjectURI);
     }
+
 
     private boolean isInternalResource(URI resource, URI ro) {
         return resource.toString().startsWith(ro.toString());

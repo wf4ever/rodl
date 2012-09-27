@@ -11,8 +11,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.openrdf.rio.RDFFormat;
-
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 @Path("evo/info")
@@ -30,15 +28,6 @@ public class EvoInfoResource {
     public Response evoInfoContent(@QueryParam("ro") URI ResearchObjectURI) {
         //@TODO How to write the inforamtion in TTL format?
         InputStream stream = ROSRService.SMS.get().getEvoInfo(ResearchObjectURI);
-        return Response.ok(stream).header("Content-Type", "text/turtle").build();
-    }
-    
-    @GET
-    @Produces("text/turtle")
-    @Path("manifest")
-    public Response evoInfoManifestContent(@QueryParam("ro") URI ResearchObjectURI) {
-        //@TODO How to write the inforamtion in TTL format?
-        InputStream stream = ROSRService.SMS.get().getManifest(ResearchObjectURI, RDFFormat.RDFXML);
         return Response.ok(stream).header("Content-Type", "text/turtle").build();
     }
 }
