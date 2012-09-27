@@ -270,13 +270,8 @@
 	</reporting>
 	<scm>
 		<developerConnection>scm:git:git@github.com:wf4ever/rosrs.git</developerConnection>
-<<<<<<< HEAD
-	  <tag>rosrs-6.0.9</tag>
-  </scm>
-=======
-		<tag>rosrs-6.0.7</tag>
+		<tag>rosrs-6.0.9</tag>
 	</scm>
->>>>>>> evo-history
 	<repositories>
 		<repository>
 			<id>openrdf</id>

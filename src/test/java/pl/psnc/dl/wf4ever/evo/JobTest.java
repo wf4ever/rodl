@@ -6,6 +6,8 @@ import java.net.URI;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
+import org.junit.Test;
+
 import com.sun.jersey.api.client.ClientResponse;
 
 import pl.psnc.dl.wf4ever.evo.EvoType;
