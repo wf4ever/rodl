@@ -125,6 +125,7 @@ public class CopyOperation implements Operation {
        try {
             storeHistoryInformation(status.getTarget());
        } catch (URISyntaxException e) {
+            //@TODO thing about the exception handling
             e.printStackTrace();
        }
     }

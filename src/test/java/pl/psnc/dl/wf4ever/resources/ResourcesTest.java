@@ -97,7 +97,7 @@ public class ResourcesTest extends JerseyTest {
     }
 
 
-    @Test
+    //@Test
     public final void test()
             throws URISyntaxException {
         client().setFollowRedirects(true);
