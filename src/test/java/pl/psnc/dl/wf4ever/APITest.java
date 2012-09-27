@@ -105,5 +105,11 @@ public class APITest extends JerseyTest {
         response.close();
         return ro;
     }
+    
+    protected void addFile(URI roURI, String filePath, String accessToken) {
+        webResource.uri(roURI).header("Slug", filePath).header("Authorization", "Bearer " + accessToken)
+                .type("text/plain").post(String.class, "lorem ipsum");
+
+    }
 
 }

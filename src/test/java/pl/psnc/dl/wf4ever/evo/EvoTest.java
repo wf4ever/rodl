@@ -1,12 +1,8 @@
 package pl.psnc.dl.wf4ever.evo;
 
 import java.net.URI;
-import java.util.UUID;
-
 import javax.ws.rs.core.MediaType;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.APITest;
@@ -42,7 +38,7 @@ public class EvoTest extends APITest {
         createUsers();
         accessToken = createAccessToken(userId);
         ro = createRO(accessToken);
-        addFile();
+        addFile(ro,filePath,accessToken);
     }
 
 
@@ -58,13 +54,6 @@ public class EvoTest extends APITest {
 
 
     /** Creating test structure */
-
-
-    private void addFile() {
-        webResource.uri(ro).header("Slug", filePath).header("Authorization", "Bearer " + accessToken)
-                .type("text/plain").post(String.class, "lorem ipsum");
-
-    }
 
 
     private void deleteROs() {
