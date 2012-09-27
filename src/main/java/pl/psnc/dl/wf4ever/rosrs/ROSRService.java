@@ -295,6 +295,19 @@ public final class ROSRService {
     }
 
 
+    
+    /**
+     *  Get The evolution Information.
+     * 
+     * @param researchObject
+     *              the RO URI
+     * @return InputStream with evolution information written in TTL format
+    **/
+    public static InputStream getEvoInfo(URI researchObject){
+        ROSRService.SMS.get();
+        return null;
+    }
+    
     /**
      * Add a proxy to the research object.
      * 

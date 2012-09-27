@@ -52,7 +52,6 @@ public class SparqlResource {
         return executeSparql(query, SemanticMetadataService.SPARQL_XML);
     }
 
-
     @GET
     @Produces({ "application/sparql-results+json", "application/json" })
     public Response executeSparqlGetJson(@QueryParam("query") String query)

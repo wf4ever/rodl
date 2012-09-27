@@ -1,7 +1,7 @@
 /**
  * 
  */
-package resources;
+package pl.psnc.dl.wf4ever.resources;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -96,7 +96,7 @@ public class ResourcesTest extends JerseyTest {
     }
 
 
-    //    @Test
+    //@Test
     public final void test()
             throws URISyntaxException {
         client().setFollowRedirects(true);
