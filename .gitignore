@@ -5,3 +5,4 @@
 /rosrs.log
 *~
 /tokens
+/src/test/resources/rdfStructure*manifest.ttl
