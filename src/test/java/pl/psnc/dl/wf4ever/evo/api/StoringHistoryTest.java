@@ -3,6 +3,8 @@ package pl.psnc.dl.wf4ever.evo.api;
 import java.io.InputStream;
 import java.net.URI;
 
+import org.junit.Test;
+
 import junit.framework.Assert;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -49,6 +51,8 @@ public class StoringHistoryTest extends EvoTest {
         String snapho2Answer = webResource.path("evo/info/").queryParam("ro", sp2Status.getTarget().toString())
                 .header("Authorization", "Bearer " + adminCreds).accept("text/turtle").get(String.class);
 
+        logger.info(snapho2Answer);
+        
         Assert.assertEquals("Snapshot 1 should not contain any content", snaphot1Answer, "");
         Assert.assertTrue("Snaphot 2 should contain the Change Specification",
             snapho2Answer.contains("ChangeSpecification"));
