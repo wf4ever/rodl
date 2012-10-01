@@ -27,7 +27,7 @@ public class StoringHistoryTest extends EvoTest {
     }
 
 
-    @Test
+    //@Test
     public void testStoringHistory()
             throws InterruptedException {
         //@TODO improve the text structure
