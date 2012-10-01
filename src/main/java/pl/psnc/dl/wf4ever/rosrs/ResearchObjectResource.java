@@ -37,6 +37,9 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.ResourceInfo;
+import pl.psnc.dl.wf4ever.vocabulary.AO;
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dlibra.service.AccessDeniedException;
 import pl.psnc.dlibra.service.IdNotFoundException;
 
@@ -216,9 +219,9 @@ public class ResearchObjectResource {
             // external resource
             OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
             model.read(content, researchObject.toString());
-            ExtendedIterator<Individual> it = model.listIndividuals(Constants.ORE_PROXY_CLASS);
+            ExtendedIterator<Individual> it = model.listIndividuals(ORE.Proxy);
             if (it.hasNext()) {
-                NodeIterator it2 = it.next().listPropertyValues(Constants.ORE_PROXY_FOR_PROPERTY);
+                NodeIterator it2 = it.next().listPropertyValues(ORE.proxyFor);
                 if (it2.hasNext()) {
                     RDFNode proxyForResource = it2.next();
                     if (proxyForResource.isURIResource()) {
@@ -261,10 +264,10 @@ public class ResearchObjectResource {
         List<URI> targets = new ArrayList<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         model.read(content, researchObject.toString());
-        ExtendedIterator<Individual> it = model.listIndividuals(Constants.RO_AGGREGATED_ANNOTATION_CLASS);
+        ExtendedIterator<Individual> it = model.listIndividuals(RO.AggregatedAnnotationClass);
         if (it.hasNext()) {
             Individual aggregatedAnnotation = it.next();
-            NodeIterator it2 = aggregatedAnnotation.listPropertyValues(Constants.AO_BODY_PROPERTY);
+            NodeIterator it2 = aggregatedAnnotation.listPropertyValues(AO.body);
             if (it2.hasNext()) {
                 RDFNode bodyResource = it2.next();
                 if (bodyResource.isURIResource()) {
@@ -279,7 +282,7 @@ public class ResearchObjectResource {
             } else {
                 throw new BadRequestException("The ro:AggregatedAnnotation does not have a ao:body property.");
             }
-            it2 = aggregatedAnnotation.listPropertyValues(Constants.AO_ANNOTATES_RESOURCE_PROPERTY);
+            it2 = aggregatedAnnotation.listPropertyValues(AO.annotatesResource);
             while (it2.hasNext()) {
                 RDFNode targetResource = it2.next();
                 if (targetResource.isURIResource()) {

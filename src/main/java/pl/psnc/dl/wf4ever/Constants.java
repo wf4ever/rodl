@@ -2,10 +2,6 @@ package pl.psnc.dl.wf4ever;
 
 import java.util.regex.Pattern;
 
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Property;
-import com.hp.hpl.jena.rdf.model.Resource;
-
 /**
  * 
  * @author piotrhol
@@ -52,21 +48,4 @@ public final class Constants {
 
     public static final String AO_ANNOTATES_RESOURCE_HEADER = "http://purl.org/ao/annotatesResource";
 
-    public static final Resource ORE_PROXY_CLASS = ModelFactory.createDefaultModel().createResource(
-        "http://www.openarchives.org/ore/terms/Proxy");
-
-    public static final Property ORE_PROXY_FOR_PROPERTY = ModelFactory.createDefaultModel().createProperty(
-        "http://www.openarchives.org/ore/terms/proxyFor");
-
-    /** ro:AggregatedAnnotation. */
-    public static final Resource RO_AGGREGATED_ANNOTATION_CLASS = ModelFactory.createDefaultModel().createResource(
-        "http://purl.org/wf4ever/ro#AggregatedAnnotation");
-
-    /** ao:annotatesResource. */
-    public static final Property AO_ANNOTATES_RESOURCE_PROPERTY = ModelFactory.createDefaultModel().createProperty(
-        "http://purl.org/ao/annotatesResource");
-
-    /** body. */
-    public static final Property AO_BODY_PROPERTY = ModelFactory.createDefaultModel().createProperty(
-        "http://purl.org/ao/body");
 }

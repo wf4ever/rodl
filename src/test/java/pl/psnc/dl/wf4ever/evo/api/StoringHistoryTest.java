@@ -27,7 +27,7 @@ public class StoringHistoryTest extends EvoTest {
     }
 
 
-    //@Test
+    @Test
     public void testStoringHistory()
             throws InterruptedException {
         //@TODO improve the text structure
@@ -51,8 +51,6 @@ public class StoringHistoryTest extends EvoTest {
         String snapho2Answer = webResource.path("evo/info/").queryParam("ro", sp2Status.getTarget().toString())
                 .header("Authorization", "Bearer " + adminCreds).accept("text/turtle").get(String.class);
 
-        logger.info(snapho2Answer);
-        
         Assert.assertEquals("Snapshot 1 should not contain any content", snaphot1Answer, "");
         Assert.assertTrue("Snaphot 2 should contain the Change Specification",
             snapho2Answer.contains("ChangeSpecification"));

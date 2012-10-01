@@ -24,6 +24,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.joda.time.DateTime;
+import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -96,7 +97,7 @@ public class ResourcesTest extends JerseyTest {
     }
 
 
-    //@Test
+    @Test
     public final void test()
             throws URISyntaxException {
         client().setFollowRedirects(true);
@@ -276,7 +277,6 @@ public class ResourcesTest extends JerseyTest {
 
     private void getROsList() {
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
-        System.out.println("List: " + list);
         assertTrue(list.contains(r));
         assertTrue(!list.contains(r2));
 
