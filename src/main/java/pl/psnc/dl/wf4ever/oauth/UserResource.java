@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.naming.NamingException;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -36,6 +35,7 @@ import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
 
 /**
+ * OAuth user REST API resource.
  * 
  * @author Piotr Hołubowicz
  * 
@@ -43,44 +43,77 @@ import pl.psnc.dl.wf4ever.sms.QueryResult;
 @Path(("users/{U_ID}"))
 public class UserResource {
 
-    private final static Logger logger = Logger.getLogger(UserResource.class);
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(UserResource.class);
 
-    @Context
-    HttpServletRequest request;
-
+    /** URI info. */
     @Context
     UriInfo uriInfo;
 
 
+    /**
+     * Get a user described with RDF/XML format.
+     * 
+     * @param urlSafeUserId
+     *            user id URL-safe base 64 encoded
+     * @return 200 OK with user metadata serialized in RDF
+     * @throws DigitalLibraryException
+     *             dLibra error
+     */
     @GET
     public Response getUserRdfXml(@PathParam("U_ID") String urlSafeUserId)
-            throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-            SQLException, URISyntaxException {
+            throws DigitalLibraryException {
         return getUser(urlSafeUserId, RDFFormat.RDFXML);
     }
 
 
+    /**
+     * Get a user described with Turtle format.
+     * 
+     * @param urlSafeUserId
+     *            user id URL-safe base 64 encoded
+     * @return 200 OK with user metadata serialized in RDF
+     * @throws DigitalLibraryException
+     *             dLibra error
+     */
     @GET
     @Produces({ "application/x-turtle", "text/turtle" })
     public Response getUserTurtle(@PathParam("U_ID") String urlSafeUserId)
-            throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-            SQLException, URISyntaxException {
+            throws DigitalLibraryException {
         return getUser(urlSafeUserId, RDFFormat.TURTLE);
     }
 
 
+    /**
+     * Get a user described with N3 format.
+     * 
+     * @param urlSafeUserId
+     *            user id URL-safe base 64 encoded
+     * @return 200 OK with user metadata serialized in RDF
+     * @throws DigitalLibraryException
+     *             dLibra error
+     */
     @GET
     @Produces("text/rdf+n3")
     public Response getUserN3(@PathParam("U_ID") String urlSafeUserId)
-            throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-            SQLException, URISyntaxException {
+            throws DigitalLibraryException {
         return getUser(urlSafeUserId, RDFFormat.N3);
     }
 
 
+    /**
+     * Get a user REST API resource.
+     * 
+     * @param urlSafeUserId
+     *            user id URL-safe base 64 encoded
+     * @param rdfFormat
+     *            RDF format for the output
+     * @return 200 OK with user metadata serialized in RDF
+     * @throws DigitalLibraryException
+     *             dLibra error
+     */
     private Response getUser(@PathParam("U_ID") String urlSafeUserId, RDFFormat rdfFormat)
-            throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-            SQLException, URISyntaxException {
+            throws DigitalLibraryException {
         String userId = new String(Base64.decodeBase64(urlSafeUserId));
 
         QueryResult qs = ROSRService.SMS.get().getUser(UserProfile.generateAbsoluteURI(null, userId), rdfFormat);
@@ -97,17 +130,26 @@ public class UserResource {
     /**
      * Creates new user with given USER_ID. input: USER_ID (the password is generated internally).
      * 
-     * @param user
+     * @param urlSafeUserId
      *            id, base64 url-safe encoded
+     * @param username
+     *            human friendly username
      * @return 201 (Created) when the user was successfully created, 200 OK if it was updated, 400 (Bad Request) if the
      *         content is malformed 409 (Conflict) if the USER_ID is already used
      * @throws DigitalLibraryException
+     *             error storing the user in dLibra
      * @throws ConflictException
+     *             error storing user profile in SMS
      * @throws NotFoundException
+     *             error storing user profile in SMS
      * @throws SQLException
+     *             error storing user profile in SMS
      * @throws NamingException
+     *             error storing user profile in SMS
      * @throws IOException
+     *             error storing user profile in SMS
      * @throws ClassNotFoundException
+     *             error storing user profile in SMS
      */
     @PUT
     @Consumes("text/plain")
@@ -121,7 +163,7 @@ public class UserResource {
         try {
             new URI(userId);
         } catch (URISyntaxException e) {
-            logger.warn("URI " + userId + " is not valid", e);
+            LOGGER.warn("URI " + userId + " is not valid", e);
         }
 
         String password = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 20);
@@ -142,20 +184,25 @@ public class UserResource {
     /**
      * Deletes the workspace.
      * 
-     * @param userId
-     *            identifier of a workspace in the RO SRS
+     * @param urlSafeUserId
+     *            id, base64 url-safe encoded
      * @throws DigitalLibraryException
+     *             error deleting the user from dLibra
      * @throws NotFoundException
+     *             error deleting the user profile from SMS
      * @throws SQLException
+     *             error deleting the user profile from SMS
      * @throws NamingException
+     *             error deleting the user profile from SMS
      * @throws IOException
+     *             error deleting the user profile from SMS
      * @throws ClassNotFoundException
-     * @throws URISyntaxException
+     *             error deleting the user profile from SMS
      */
     @DELETE
     public void deleteUser(@PathParam("U_ID") String urlSafeUserId)
             throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-            SQLException, URISyntaxException {
+            SQLException {
         OAuthManager oauth = new OAuthManager();
 
         String userId = new String(Base64.decodeBase64(urlSafeUserId));
@@ -169,7 +216,7 @@ public class UserResource {
                 ROSRService.SMS.get().removeResearchObject(uri);
             }
         }
-        ROSRService.SMS.get().removeUser(new URI(userId));
+        ROSRService.SMS.get().removeUser(URI.create(userId));
 
         ROSRService.DL.get().deleteUser(userId);
         oauth.deleteUserCredentials(userId);

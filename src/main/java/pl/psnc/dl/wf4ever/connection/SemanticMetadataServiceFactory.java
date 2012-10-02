@@ -23,23 +23,44 @@ import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
 
 /**
+ * A factory for creating a connection to the Semantic Metadata Service.
  * 
  * @author Piotr Hołubowicz
- *
+ * 
  */
-public class SemanticMetadataServiceFactory
-{
+public final class SemanticMetadataServiceFactory {
 
-	@SuppressWarnings("unused")
-	private final static Logger logger = Logger
-			.getLogger(SemanticMetadataServiceFactory.class);
+    /** logger. */
+    @SuppressWarnings("unused")
+    private static final Logger LOGGER = Logger.getLogger(SemanticMetadataServiceFactory.class);
 
 
-	public static SemanticMetadataService getService(UserProfile user)
-		throws ClassNotFoundException, IOException, NamingException,
-		SQLException
-	{
-		return new SemanticMetadataServiceImpl(user);
-	}
+    /**
+     * Private constructor.
+     */
+    private SemanticMetadataServiceFactory() {
+        //nope
+    }
+
+
+    /**
+     * Get the SMS.
+     * 
+     * @param user
+     *            user identity
+     * @return SMS
+     * @throws ClassNotFoundException
+     *             could not create the SMS
+     * @throws IOException
+     *             could not create the SMS
+     * @throws NamingException
+     *             could not create the SMS
+     * @throws SQLException
+     *             could not create the SMS
+     */
+    public static SemanticMetadataService getService(UserProfile user)
+            throws ClassNotFoundException, IOException, NamingException, SQLException {
+        return new SemanticMetadataServiceImpl(user);
+    }
 
 }

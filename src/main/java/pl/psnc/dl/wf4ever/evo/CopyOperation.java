@@ -35,11 +35,19 @@ import com.sun.jersey.api.client.WebResource;
  */
 public class CopyOperation implements Operation {
 
-    private static final Logger LOG = Logger.getLogger(CopyOperation.class);
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(CopyOperation.class);
 
+    /** operation id. */
     private String id;
 
 
+    /**
+     * Constructor.
+     * 
+     * @param id
+     *            operation id
+     */
     public CopyOperation(String id) {
         this.id = id;
     }
@@ -75,12 +83,12 @@ public class CopyOperation implements Operation {
                 try {
                     ROSRService.deleteResearchObject(target);
                 } catch (DigitalLibraryException | NotFoundException e) {
-                    LOG.error("Could not delete the target when aborting: " + target, e);
+                    LOGGER.error("Could not delete the target when aborting: " + target, e);
                 }
                 return;
             }
             if (!aggregatedResource.isURIResource()) {
-                LOG.warn("Aggregated node " + aggregatedResource.toString() + " is not a URI resource");
+                LOGGER.warn("Aggregated node " + aggregatedResource.toString() + " is not a URI resource");
                 continue;
             }
             Individual resource = aggregatedResource.as(Individual.class);
@@ -117,7 +125,7 @@ public class CopyOperation implements Operation {
                 List<RDFNode> annotationTargets = resource.listPropertyValues(annotates).toList();
                 for (RDFNode annTarget : annotationTargets) {
                     if (!annTarget.isURIResource()) {
-                        LOG.warn("Annotation target " + annTarget.toString() + " is not a URI resource");
+                        LOGGER.warn("Annotation target " + annTarget.toString() + " is not a URI resource");
                         continue;
                     }
                     targets.add(URI.create(annTarget.asResource().getURI()));
@@ -137,6 +145,14 @@ public class CopyOperation implements Operation {
     }
 
 
+    /**
+     * Generate RO evolution history of an RO and store it.
+     * 
+     * @param freshObjectURI
+     *            RO URI
+     * @throws URISyntaxException
+     *             some URI in SMS is incorrect
+     */
     private void storeHistoryInformation(URI freshObjectURI)
             throws URISyntaxException {
         URI liveObjectURI = ROSRService.SMS.get().getLiveURIFromSnapshotOrArchive(freshObjectURI);
@@ -145,8 +161,18 @@ public class CopyOperation implements Operation {
     }
 
 
+    /**
+     * Check if a resource is internal to the RO. This will not work if they have different domains, for example if the
+     * RO URI uses purl.
+     * 
+     * @param resource
+     *            resource URI
+     * @param ro
+     *            RO URI
+     * @return true if the resource URI starts with the RO URI, false otherwise
+     */
     private boolean isInternalResource(URI resource, URI ro) {
-        return resource.toString().startsWith(ro.toString());
+        return resource.normalize().toString().startsWith(ro.normalize().toString());
     }
 
 }

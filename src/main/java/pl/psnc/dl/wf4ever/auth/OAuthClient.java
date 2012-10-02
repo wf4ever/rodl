@@ -11,97 +11,83 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
+ * OAuth client application DAO.
+ * 
  * @author Piotr Hołubowicz
- *
+ * 
  */
 @Entity
 @Table(name = "clients")
 @XmlRootElement(name = "client")
-public class OAuthClient
-{
+public class OAuthClient {
 
-	private String clientId;
+    /** client id. */
+    private String clientId;
 
-	private String name;
+    /** client name for humans. */
+    private String name;
 
-	private String redirectionURI;
-
-
-	public OAuthClient()
-	{
-
-	}
+    /** client redirection URI in case of web clients. */
+    private String redirectionURI;
 
 
-	/**
-	 * @param clientId
-	 * @param name
-	 * @param redirectionURI
-	 */
-	public OAuthClient(String clientId, String name, String redirectionURI)
-	{
-		this.clientId = clientId;
-		this.name = name;
-		this.redirectionURI = redirectionURI;
-	}
+    /**
+     * Constructor.
+     */
+    public OAuthClient() {
+
+    }
 
 
-	/**
-	 * @return the clientId
-	 */
-	@Id
-	@XmlElement
-	public String getClientId()
-	{
-		return clientId;
-	}
+    /**
+     * Constructor.
+     * 
+     * @param clientId
+     *            client id
+     * @param name
+     *            client name for humans
+     * @param redirectionURI
+     *            client redirection URI in case of web clients
+     */
+    public OAuthClient(String clientId, String name, String redirectionURI) {
+        this.clientId = clientId;
+        this.name = name;
+        this.redirectionURI = redirectionURI;
+    }
 
 
-	/**
-	 * @param clientId the clientId to set
-	 */
-	public void setClientId(String clientId)
-	{
-		this.clientId = clientId;
-	}
+    @Id
+    @XmlElement
+    public String getClientId() {
+        return clientId;
+    }
 
 
-	/**
-	 * @return the name
-	 */
-	@Basic
-	@XmlElement
-	public String getName()
-	{
-		return name;
-	}
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
 
 
-	/**
-	 * @param name the name to set
-	 */
-	public void setName(String name)
-	{
-		this.name = name;
-	}
+    @Basic
+    @XmlElement
+    public String getName() {
+        return name;
+    }
 
 
-	/**
-	 * @return the redirectionURI
-	 */
-	@Basic
-	@XmlElement
-	public String getRedirectionURI()
-	{
-		return redirectionURI;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
 
-	/**
-	 * @param redirectionURI the redirectionURI to set
-	 */
-	public void setRedirectionURI(String redirectionURI)
-	{
-		this.redirectionURI = redirectionURI;
-	}
+    @Basic
+    @XmlElement
+    public String getRedirectionURI() {
+        return redirectionURI;
+    }
+
+
+    public void setRedirectionURI(String redirectionURI) {
+        this.redirectionURI = redirectionURI;
+    }
 }

@@ -16,17 +16,22 @@ import pl.psnc.dl.wf4ever.evo.Job.State;
 @XmlRootElement
 public class JobStatus {
 
+    /** RO to copy from. */
     private URI copyfrom;
 
+    /** Target RO evolution status. */
     private EvoType type;
 
+    /** Finalize? */
     private boolean finalize;
 
+    /** Target RO URI. */
     private URI target;
 
     /** job state. */
     private State state;
 
+    /** Justification of the current state, useful in case of error. */
     private String reason;
 
 
@@ -36,11 +41,24 @@ public class JobStatus {
     public JobStatus() {
 
     }
+
+
+    /**
+     * Constructor.
+     * 
+     * @param copyfrom
+     *            RO to copy from
+     * @param type
+     *            Target RO evolution status
+     * @param finalize
+     *            Finalize?
+     */
     public JobStatus(URI copyfrom, EvoType type, boolean finalize) {
         setCopyfrom(copyfrom);
         setType(type);
         setFinalize(finalize);
     }
+
 
     public synchronized URI getCopyfrom() {
         return copyfrom;
@@ -103,6 +121,14 @@ public class JobStatus {
     }
 
 
+    /**
+     * A synchronized method for setting the job status state.
+     * 
+     * @param state
+     *            state
+     * @param message
+     *            explanation
+     */
     public synchronized void setStateAndReason(State state, String message) {
         this.state = state;
         this.reason = message;

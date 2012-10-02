@@ -27,6 +27,7 @@ import pl.psnc.dl.wf4ever.Constants;
 import com.sun.jersey.api.NotFoundException;
 
 /**
+ * The RO copy REST API resource.
  * 
  * @author piotrhol
  * 
@@ -34,8 +35,9 @@ import com.sun.jersey.api.NotFoundException;
 @Path("evo/copy/")
 public class CopyResource implements JobsContainer {
 
+    /** logger. */
     @SuppressWarnings("unused")
-    private final static Logger logger = Logger.getLogger(CopyResource.class);
+    private static final Logger LOGGER = Logger.getLogger(CopyResource.class);
 
     /** Maximum number of concurrent jobs. */
     public static final int MAX_JOBS = 100;
@@ -78,7 +80,7 @@ public class CopyResource implements JobsContainer {
     /**
      * Creates a copy of a research object.
      * 
-     * @param copy
+     * @param status
      *            operation parameters
      * @return 201 Created
      * @throws BadRequestException
@@ -123,6 +125,13 @@ public class CopyResource implements JobsContainer {
     }
 
 
+    /**
+     * Retrieve the job status.
+     * 
+     * @param uuid
+     *            job id
+     * @return job status
+     */
     @GET
     @Path("{id}")
     public JobStatus getJob(@PathParam("id") UUID uuid) {
@@ -136,6 +145,12 @@ public class CopyResource implements JobsContainer {
     }
 
 
+    /**
+     * Abort the job.
+     * 
+     * @param uuid
+     *            job id
+     */
     @DELETE
     @Path("{id}")
     public void abortJob(@PathParam("id") UUID uuid) {
@@ -152,6 +167,13 @@ public class CopyResource implements JobsContainer {
     }
 
 
+    /**
+     * Find the job status.
+     * 
+     * @param target
+     *            target RO URI
+     * @return the job status
+     */
     public static JobStatus getStatusForTarget(URI target) {
         return finishedJobsByTarget.get(target);
     }

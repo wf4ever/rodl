@@ -16,143 +16,120 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
+ * OAuth access token DAO.
+ * 
  * @author Piotr Hołubowicz
  * 
  */
 @Entity
 @Table(name = "tokens")
 @XmlRootElement(name = "access-token")
-public class AccessToken
-	implements Serializable
-{
+public class AccessToken implements Serializable {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 8724845005623981779L;
+    /** id. */
+    private static final long serialVersionUID = 8724845005623981779L;
 
-	private String token;
+    /** token. */
+    private String token;
 
-	private OAuthClient client;
+    /** client application. */
+    private OAuthClient client;
 
-	private UserCredentials user;
+    /** token owner. */
+    private UserCredentials user;
 
-	private Date created;
+    /** token creation date. */
+    private Date created;
 
-	private Date lastUsed;
-
-
-	public AccessToken()
-	{
-
-	}
+    /** token last usage date. */
+    private Date lastUsed;
 
 
-	public AccessToken(String token, OAuthClient client, UserCredentials user)
-	{
-		super();
-		this.token = token;
-		this.client = client;
-		this.user = user;
-	}
+    /**
+     * Constructor.
+     */
+    public AccessToken() {
+
+    }
 
 
-	/**
-	 * @return the token
-	 */
-	@Id
-	@XmlElement
-	public String getToken()
-	{
-		return token;
-	}
+    /**
+     * Constructor.
+     * 
+     * @param token
+     *            token
+     * @param client
+     *            client application
+     * @param user
+     *            token owner
+     */
+    public AccessToken(String token, OAuthClient client, UserCredentials user) {
+        super();
+        this.token = token;
+        this.client = client;
+        this.user = user;
+    }
 
 
-	/**
-	 * @param token
-	 *            the token to set
-	 */
-	public void setToken(String token)
-	{
-		this.token = token;
-	}
+    @Id
+    @XmlElement
+    public String getToken() {
+        return token;
+    }
 
 
-	/**
-	 * @return the client
-	 */
-	@ManyToOne
-	@JoinColumn(nullable = false)
-	@XmlElement
-	public OAuthClient getClient()
-	{
-		return client;
-	}
+    public void setToken(String token) {
+        this.token = token;
+    }
 
 
-	/**
-	 * @param client
-	 *            the client to set
-	 */
-	public void setClient(OAuthClient client)
-	{
-		this.client = client;
-	}
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    @XmlElement
+    public OAuthClient getClient() {
+        return client;
+    }
 
 
-	/**
-	 * @return the user
-	 */
-	@ManyToOne
-	@JoinColumn(name = "userId", nullable = false)
-	@XmlElement
-	public UserCredentials getUser()
-	{
-		return user;
-	}
+    public void setClient(OAuthClient client) {
+        this.client = client;
+    }
 
 
-	/**
-	 * @param user
-	 *            the user to set
-	 */
-	public void setUser(UserCredentials user)
-	{
-		this.user = user;
-	}
+    @ManyToOne
+    @JoinColumn(name = "userId", nullable = false)
+    @XmlElement
+    public UserCredentials getUser() {
+        return user;
+    }
 
 
-	@Basic
-	@XmlElement
-	public Date getCreated()
-	{
-		return created;
-	}
+    public void setUser(UserCredentials user) {
+        this.user = user;
+    }
 
 
-	public void setCreated(Date created)
-	{
-		this.created = created;
-	}
+    @Basic
+    @XmlElement
+    public Date getCreated() {
+        return created;
+    }
 
 
-	/**
-	 * @return the lastUsed
-	 */
-	@Basic
-	@XmlElement
-	public Date getLastUsed()
-	{
-		return lastUsed;
-	}
+    public void setCreated(Date created) {
+        this.created = created;
+    }
 
 
-	/**
-	 * @param lastUsed the lastUsed to set
-	 */
-	public void setLastUsed(Date lastUsed)
-	{
-		this.lastUsed = lastUsed;
-	}
+    @Basic
+    @XmlElement
+    public Date getLastUsed() {
+        return lastUsed;
+    }
+
+
+    public void setLastUsed(Date lastUsed) {
+        this.lastUsed = lastUsed;
+    }
 
 }

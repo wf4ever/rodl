@@ -9,19 +9,16 @@ import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 
 /**
  * Maps <code>IdNotFoundException</code> to <code>404 (Not Found)</code> HTTP response.
+ * 
  * @author nowakm
- *
+ * 
  */
 @Provider
-public class NotFoundExceptionMapper
-	implements ExceptionMapper<NotFoundException>
-{
+public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundException> {
 
-	@Override
-	public Response toResponse(NotFoundException e)
-	{
-		return Response.status(Status.NOT_FOUND).type("text/plain")
-				.entity(e.getMessage()).build();
-	}
+    @Override
+    public Response toResponse(NotFoundException e) {
+        return Response.status(Status.NOT_FOUND).type("text/plain").entity(e.getMessage()).build();
+    }
 
 }

@@ -1,9 +1,6 @@
 package pl.psnc.dl.wf4ever.auth;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.UnknownHostException;
-import java.rmi.RemoteException;
 import java.sql.SQLException;
 
 import javax.naming.NamingException;
@@ -20,23 +17,31 @@ import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
-import pl.psnc.dlibra.service.AccessDeniedException;
-import pl.psnc.dlibra.service.DLibraException;
 
 import com.sun.jersey.api.container.MappableContainerException;
 import com.sun.jersey.core.util.Base64;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 
+/**
+ * Authentication and authorization filter.
+ * 
+ * @author piotrekhol
+ * 
+ */
 public class SecurityFilter implements ContainerRequestFilter {
 
-    private final static Logger logger = Logger.getLogger(SecurityFilter.class);
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(SecurityFilter.class);
 
+    /** authentication realm. */
     public static final String REALM = "ROSRS";
 
+    /** URI info. */
     @Context
     private UriInfo uriInfo;
 
+    /** HTTP request. */
     @Context
     private HttpServletRequest httpRequest;
 
@@ -57,13 +62,12 @@ public class SecurityFilter implements ContainerRequestFilter {
             //                throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
             //            }
             if (creds == UserCredentials.PUBLIC_USER) {
-                logger.info("Public credentials for: " + request.getMethod() + " "
+                LOGGER.info("Public credentials for: " + request.getMethod() + " "
                         + request.getAbsolutePath().toString());
             }
-        } catch (AccessDeniedException | DigitalLibraryException e) {
+        } catch (DigitalLibraryException e) {
             throw new MappableContainerException(new AuthenticationException("Incorrect login/password\r\n", REALM));
-        } catch (NotFoundException | DLibraException | SQLException | NamingException | IOException
-                | ClassNotFoundException e) {
+        } catch (NotFoundException | SQLException | NamingException | IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
 
@@ -71,11 +75,17 @@ public class SecurityFilter implements ContainerRequestFilter {
     }
 
 
-    private UserCredentials authenticate(ContainerRequest request)
-            throws MalformedURLException, RemoteException, AccessDeniedException, UnknownHostException, DLibraException {
+    /**
+     * Identify the user making the request.
+     * 
+     * @param request
+     *            HTTP request
+     * @return user credentials, UserCredentials.PUBLIC_USER if the request is not authenticated
+     */
+    private UserCredentials authenticate(ContainerRequest request) {
         //TODO allow only secure https connections
         //		logger.info("Connection secure? " + isSecure());
-        logger.info("Request to: " + uriInfo.getAbsolutePath() + " | method:  " + request.getMethod());
+        LOGGER.info("Request to: " + uriInfo.getAbsolutePath() + " | method:  " + request.getMethod());
 
         // Extract authentication credentials
         String authentication = request.getHeaderValue(ContainerRequest.AUTHORIZATION);
@@ -85,9 +95,8 @@ public class SecurityFilter implements ContainerRequestFilter {
         try {
             if (authentication.startsWith("Basic ")) {
                 return getBasicCredentials(authentication.substring("Basic ".length()));
-            }
-            // this is the recommended OAuth 2.0 method
-            else if (authentication.startsWith("Bearer ")) {
+            } else if (authentication.startsWith("Bearer ")) {
+                // this is the recommended OAuth 2.0 method
                 return getBearerCredentials(authentication.substring("Bearer ".length()));
             } else {
                 throw new MappableContainerException(new AuthenticationException(
@@ -99,6 +108,13 @@ public class SecurityFilter implements ContainerRequestFilter {
     }
 
 
+    /**
+     * Find user credentials for a OAuth Bearer token.
+     * 
+     * @param accessToken
+     *            access token
+     * @return user credentials
+     */
     public UserCredentials getBearerCredentials(String accessToken) {
         OAuthManager manager = new OAuthManager();
         AccessToken token = manager.getAccessToken(accessToken);
@@ -110,13 +126,17 @@ public class SecurityFilter implements ContainerRequestFilter {
 
 
     /**
+     * Find user credentials for a Base64 encoded token. This is a deprecated, not very secure method.
+     * 
      * @param authentication
-     * @return
+     *            authentication token
+     * @return user credentials
      */
     public UserCredentials getBasicCredentials(String authentication) {
         String[] values = new String(Base64.base64Decode(authentication)).split(":");
-        if (values.length != 2)
+        if (values.length != 2) {
             throw new MappableContainerException(new AuthenticationException("Incorrect login/password\r\n", REALM));
+        }
         return new UserCredentials(values[0], values[1]);
     }
 

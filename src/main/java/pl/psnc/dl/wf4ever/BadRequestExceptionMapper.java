@@ -15,15 +15,11 @@ import javax.ws.rs.ext.Provider;
  * 
  */
 @Provider
-public class BadRequestExceptionMapper implements ExceptionMapper<BadRequestException>
-
-{
+public class BadRequestExceptionMapper implements ExceptionMapper<BadRequestException> {
 
     @Override
     public Response toResponse(BadRequestException e) {
-        {
-            return Response.status(Status.BAD_REQUEST).type("text/plain").entity(e.getMessage()).build();
-        }
+        return Response.status(Status.BAD_REQUEST).type("text/plain").entity(e.getMessage()).build();
     }
 
 }
