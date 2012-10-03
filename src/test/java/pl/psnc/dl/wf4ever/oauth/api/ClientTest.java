@@ -5,8 +5,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.URI;
 
-import org.junit.Test;
-
 import pl.psnc.dl.wf4ever.W4ETest;
 
 import com.sun.jersey.api.client.ClientResponse;

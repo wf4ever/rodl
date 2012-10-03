@@ -13,12 +13,11 @@ import javax.ws.rs.core.EntityTag;
 
 import org.apache.http.HttpStatus;
 import org.joda.time.DateTime;
-import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-public class FileTest extends RefactorTest {
+public class FileTest extends ResourceTest {
 
     private final String filePath = "foo/bar ra.txt";
     private final String filePathEncoded = "foo/bar%20ra.txt";

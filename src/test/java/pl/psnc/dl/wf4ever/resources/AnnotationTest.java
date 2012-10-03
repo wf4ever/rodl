@@ -4,15 +4,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
-import java.net.URI;
-
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Test;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-public class AnnotationTest extends RefactorTest {
+public class AnnotationTest extends ResourceTest {
 
     private final String annotationBodyPath = ".ro/ann1.ttl";
     private final String annotationBodyURIRDF = ".ro/ann1.rdf";
@@ -34,7 +32,7 @@ public class AnnotationTest extends RefactorTest {
     }
 
 
-    //@Test
+    @Test
     public void addAnnotationBody() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
         ClientResponse response = addAnnotation(is, ro, annotationBodyPath, accessToken);
@@ -45,7 +43,7 @@ public class AnnotationTest extends RefactorTest {
     }
 
 
-    //@Test
+    @Test
     public void getAnnotationBody() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
         addAnnotation(is, ro, annotationBodyPath, accessToken);
@@ -57,7 +55,7 @@ public class AnnotationTest extends RefactorTest {
     }
 
     
-    //@Test
+    @Test
     public void deleteAnnotationBody() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
         addAnnotation(is, ro, annotationBodyPath, accessToken);

@@ -2,10 +2,6 @@ package pl.psnc.dl.wf4ever.oauth.api;
 
 import javax.ws.rs.core.Response;
 
-import org.junit.Test;
-
-import com.sun.jersey.api.client.UniformInterfaceException;
-
 import junit.framework.Assert;
 import pl.psnc.dl.wf4ever.W4ETest;
 

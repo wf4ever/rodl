@@ -3,8 +3,6 @@ package pl.psnc.dl.wf4ever.evo.api;
 import java.io.InputStream;
 import java.net.URI;
 
-import org.junit.Test;
-
 import junit.framework.Assert;
 import pl.psnc.dl.wf4ever.evo.EvoTest;
 import pl.psnc.dl.wf4ever.evo.EvoType;
