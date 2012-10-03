@@ -6,12 +6,11 @@ import java.net.URI;
 import org.junit.Test;
 
 import junit.framework.Assert;
-
-import com.sun.jersey.api.client.ClientResponse;
-
 import pl.psnc.dl.wf4ever.evo.EvoTest;
 import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.evo.JobStatus;
+
+import com.sun.jersey.api.client.ClientResponse;
 
 public class StoringHistoryTest extends EvoTest {
 
