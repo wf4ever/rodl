@@ -1,11 +1,14 @@
 package pl.psnc.dl.wf4ever.oauth.api;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertTrue;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.junit.Test;
+
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.test.framework.WebAppDescriptor;
 
 import pl.psnc.dl.wf4ever.W4ETest;
 
@@ -24,13 +27,24 @@ public class UsersTest extends W4ETest {
         super.tearDown();
     }
 
+    
+    public UsersTest() {
+        super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
+
+    }
+
+
+    @Override
+    protected void finalize()
+            throws Throwable {
+        super.finalize();
+    }
 
     //@Test
     public void testUserCreation() {
         ClientResponse response = createUserWithAnswer(userIdSafe, username);
-        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        assertEquals("DUPA",HttpServletResponse.SC_CREATED, response.getStatus());
         response.close();
-
         response = createUserWithAnswer(userId2Safe, username2);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         response.close();

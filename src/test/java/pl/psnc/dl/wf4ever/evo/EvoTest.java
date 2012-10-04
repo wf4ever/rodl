@@ -26,13 +26,6 @@ public class EvoTest extends W4ETest {
 
     public EvoTest() {
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
-    }
-
-
-    @Override
-    public void setUp()
-            throws Exception {
-        super.setUp();
         createUserWithAnswer(userIdSafe, username).close();
         createUserWithAnswer(userId2Safe, username2).close();
         accessToken = createAccessToken(userId);
@@ -42,13 +35,26 @@ public class EvoTest extends W4ETest {
 
 
     @Override
+    public void setUp()
+            throws Exception {
+        super.setUp();
+    }
+
+
+    @Override
     public void tearDown()
             throws Exception {
+        super.tearDown();
+    }
+    
+    @Override
+    protected void finalize()
+            throws Throwable {
         deleteROs();
         deleteAccessToken(accessToken);
         deleteUser(userIdSafe);
         deleteUser(userId2Safe);
-        super.tearDown();
+        super.finalize();
     }
 
     protected ClientResponse createCopyJob(JobStatus status) {

@@ -37,13 +37,6 @@ public class W4ETest extends JerseyTest {
 
     public W4ETest(WebAppDescriptor webAppDescriptor) {
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
-    }
-
-
-    @Override
-    public void setUp()
-            throws Exception {
-        super.setUp();
         client().setFollowRedirects(true);
         if (resource().getURI().getHost().equals("localhost")) {
             webResource = resource();
@@ -55,13 +48,22 @@ public class W4ETest extends JerseyTest {
 
 
     @Override
-    public void tearDown()
+    public void setUp()
             throws Exception {
-        super.tearDown();
-        deleteClient(clientId);
+        super.setUp();
     }
 
 
+    @Override
+    public void tearDown()
+            throws Exception {
+        super.tearDown();
+    }
+
+    protected void finalize() throws Throwable {
+        deleteClient(clientId);
+    }
+    
     protected String createClient(String clientName) {
         ClientResponse response = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, clientName + "\r\n" + clientRedirectionURI);

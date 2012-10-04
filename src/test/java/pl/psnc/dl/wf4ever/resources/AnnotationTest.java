@@ -32,7 +32,7 @@ public class AnnotationTest extends ResourceTest {
     }
 
 
-    @Test
+    //@Test
     public void addAnnotationBody() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
         ClientResponse response = addAnnotation(is, ro, annotationBodyPath, accessToken);
@@ -43,7 +43,7 @@ public class AnnotationTest extends ResourceTest {
     }
 
 
-    @Test
+    //@Test
     public void getAnnotationBody() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
         addAnnotation(is, ro, annotationBodyPath, accessToken);
@@ -55,7 +55,7 @@ public class AnnotationTest extends ResourceTest {
     }
 
     
-    @Test
+    //@Test
     public void deleteAnnotationBody() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
         addAnnotation(is, ro, annotationBodyPath, accessToken);

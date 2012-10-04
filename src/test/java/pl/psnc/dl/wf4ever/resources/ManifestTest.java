@@ -10,6 +10,8 @@ import java.net.URI;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.HttpStatus;
+import org.junit.Test;
+
 import com.sun.jersey.api.client.ClientResponse;
 
 

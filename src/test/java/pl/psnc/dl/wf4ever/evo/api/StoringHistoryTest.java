@@ -3,18 +3,25 @@ package pl.psnc.dl.wf4ever.evo.api;
 import java.io.InputStream;
 import java.net.URI;
 
+import org.junit.Test;
+
 import junit.framework.Assert;
 import pl.psnc.dl.wf4ever.evo.EvoTest;
 import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.evo.JobStatus;
 
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.test.framework.WebAppDescriptor;
 
 public class StoringHistoryTest extends EvoTest {
 
     protected URI ro2;
     protected String newResourceFile = "newREsourceFile";
 
+    
+    public StoringHistoryTest() {
+        super();
+    }
 
     @Override
     public void setUp()

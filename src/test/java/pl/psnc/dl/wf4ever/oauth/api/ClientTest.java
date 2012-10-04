@@ -5,15 +5,27 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.URI;
 
+import org.junit.Test;
+
 import pl.psnc.dl.wf4ever.W4ETest;
 
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.test.framework.WebAppDescriptor;
 
 public class ClientTest extends W4ETest {
 
     private String testClientName = "Test client name";
     private String testClientID;
 
+    
+    public ClientTest() {
+        super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
+        
+    }
+    
+    protected void finalize() throws Throwable {
+        super.finalize();
+    };
 
     @Override
     public void setUp()
@@ -26,10 +38,9 @@ public class ClientTest extends W4ETest {
     public void tearDown()
             throws Exception {
         super.tearDown();
-        deleteClient(testClientID);
     }
 
-    //@Test
+    //Test
     public void testClientCreation() {
         ClientResponse response = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, testClientName + "\r\n" + clientRedirectionURI);
