@@ -25,7 +25,7 @@ public class JobTest extends EvoTest {
         super();
     }
     
-    //@Test
+    @Test
     public final void testCopyJobCreation()
             throws InterruptedException {
         ClientResponse response = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, false));
@@ -70,7 +70,7 @@ public class JobTest extends EvoTest {
         JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, true);
         URI copyAndFinalizeJob = createCopyJob(status).getLocation();
         JobStatus remoteStatus = getRemoteStatus(copyAndFinalizeJob, WAIT_FOR_COPY + WAIT_FOR_FINALIZE);
-        Assert.assertEquals(State.DONE, remoteStatus.getState());
+        Assert.assertEquals(remoteStatus.toString(),State.DONE, remoteStatus.getState());
         //OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         //model.read(status.getTarget().toString());
         //TODO verify correct finalized RO

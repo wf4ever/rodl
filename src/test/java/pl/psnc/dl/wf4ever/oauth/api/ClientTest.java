@@ -40,7 +40,7 @@ public class ClientTest extends W4ETest {
         super.tearDown();
     }
 
-    //Test
+    //@Test
     public void testClientCreation() {
         ClientResponse response = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, testClientName + "\r\n" + clientRedirectionURI);
