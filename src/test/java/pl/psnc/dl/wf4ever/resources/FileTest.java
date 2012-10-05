@@ -18,7 +18,7 @@ import org.openrdf.rio.RDFFormat;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-public class FileTest extends ResourceTest {
+public class FileTest extends ResourceBase {
 
     private final String filePath = "foo/bar ra.txt";
     private final String filePathEncoded = "foo/bar%20ra.txt";

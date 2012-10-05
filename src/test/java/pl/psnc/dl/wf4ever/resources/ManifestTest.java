@@ -15,7 +15,7 @@ import org.junit.Test;
 import com.sun.jersey.api.client.ClientResponse;
 
 
-public class ManifestTest extends ResourceTest {
+public class ManifestTest extends ResourceBase {
 
     
     private final String filePath = "foo/bar ra.txt";

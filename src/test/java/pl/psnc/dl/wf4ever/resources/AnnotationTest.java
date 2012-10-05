@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-public class AnnotationTest extends ResourceTest {
+public class AnnotationTest extends ResourceBase {
 
     private final String annotationBodyPath = ".ro/ann1.ttl";
     private final String annotationBodyURIRDF = ".ro/ann1.rdf";
