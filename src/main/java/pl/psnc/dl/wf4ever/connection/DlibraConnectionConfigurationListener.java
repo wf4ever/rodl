@@ -16,30 +16,28 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 /**
+ * Read in the dLibra connection parameters on startup.
+ * 
  * @author nowakm
- *
+ * 
  */
-public class DlibraConnectionConfigurationListener
-	implements ServletContextListener
-{
+public class DlibraConnectionConfigurationListener implements ServletContextListener {
 
-	private static final String CONNECTION_PROPERTIES_FILENAME = "connection.properties.filename";
-
-
-	@Override
-	public void contextInitialized(ServletContextEvent sce)
-	{
-		ServletContext servletContext = sce.getServletContext();
-
-		String fileName = servletContext
-				.getInitParameter(CONNECTION_PROPERTIES_FILENAME);
-		DigitalLibraryFactory.loadDigitalLibraryConfiguration(fileName);
-	}
+    /** connection properties file name. */
+    private static final String CONNECTION_PROPERTIES_FILENAME = "connection.properties.filename";
 
 
-	@Override
-	public void contextDestroyed(ServletContextEvent sce)
-	{
-		// nothing to do
-	}
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        ServletContext servletContext = sce.getServletContext();
+
+        String fileName = servletContext.getInitParameter(CONNECTION_PROPERTIES_FILENAME);
+        DigitalLibraryFactory.loadDigitalLibraryConfiguration(fileName);
+    }
+
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        // nothing to do
+    }
 }

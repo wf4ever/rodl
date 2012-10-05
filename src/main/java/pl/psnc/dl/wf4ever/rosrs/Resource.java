@@ -44,6 +44,7 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 
 /**
+ * An aggregated resource REST API resource.
  * 
  * @author Piotr Hołubowicz
  * 
@@ -51,20 +52,27 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 @Path("ROs/{ro_id}/{filePath: .+}")
 public class Resource {
 
+    /** HTTP request. */
     @Context
     private HttpServletRequest servletRequest;
 
+    /** URI info. */
     @Context
     private UriInfo uriInfo;
 
 
     /**
+     * Update an exiting resource or upload a one for which a proxy exists.
      * 
      * @param researchObjectId
+     *            RO id
      * @param filePath
+     *            file path relative to the RO URI
      * @param original
+     *            original format in case of annotation bodies
      * @param entity
-     * @return
+     *            resource content
+     * @return 201 Created or 307 Temporary Redirect
      * @throws NotFoundException
      *             could not find the resource in DL
      * @throws DigitalLibraryException
@@ -196,14 +204,23 @@ public class Resource {
 
 
     /**
+     * Get a resource.
      * 
      * @param researchObjectId
+     *            RO id
      * @param filePath
+     *            the file path
      * @param original
-     * @return
+     *            original resource in case of a format-specific URI
+     * @param request
+     *            HTTP request for cache'ing
+     * @return 200 OK or 303 See Other
      * @throws NotFoundException
+     *             could not find the resource in DL
      * @throws DigitalLibraryException
+     *             could not connect to the DL
      * @throws AccessDeniedException
+     *             access denied when updating data in DL
      */
     @GET
     public Response getResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
@@ -245,11 +262,15 @@ public class Resource {
 
 
     /**
+     * Delete a resource.
      * 
      * @param researchObjectId
+     *            RO id
      * @param filePath
+     *            the file path
      * @param original
-     * @return
+     *            original resource in case of a format-specific URI
+     * @return 204 No Content or 307 Temporary Redirect
      * @throws NotFoundException
      *             could not find the resource in DL
      * @throws DigitalLibraryException

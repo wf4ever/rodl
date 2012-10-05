@@ -24,6 +24,7 @@ import pl.psnc.dl.wf4ever.BadRequestException;
 import com.sun.jersey.api.NotFoundException;
 
 /**
+ * REST API resource for finalizing the RO state transformation.
  * 
  * @author piotrhol
  * 
@@ -31,8 +32,9 @@ import com.sun.jersey.api.NotFoundException;
 @Path("evo/finalize/")
 public class FinalizeResource implements JobsContainer {
 
+    /** logger. */
     @SuppressWarnings("unused")
-    private final static Logger logger = Logger.getLogger(FinalizeResource.class);
+    private static final Logger LOGGER = Logger.getLogger(FinalizeResource.class);
 
     /** Maximum number of concurrent jobs. */
     public static final int MAX_JOBS = 100;
@@ -65,7 +67,7 @@ public class FinalizeResource implements JobsContainer {
     /**
      * Creates a finalize of a research object.
      * 
-     * @param copy
+     * @param newStatus
      *            operation parameters
      * @return 201 Created
      * @throws BadRequestException
@@ -100,6 +102,13 @@ public class FinalizeResource implements JobsContainer {
     }
 
 
+    /**
+     * Get job status.
+     * 
+     * @param uuid
+     *            job id
+     * @return job status
+     */
     @GET
     @Path("{id}")
     public JobStatus getJob(@PathParam("id") UUID uuid) {

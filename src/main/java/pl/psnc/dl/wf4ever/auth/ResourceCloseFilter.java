@@ -6,6 +6,12 @@ import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerResponse;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
 
+/**
+ * Filter for automatic closing of SMS.
+ * 
+ * @author piotrekhol
+ * 
+ */
 public class ResourceCloseFilter implements ContainerResponseFilter {
 
     @Override

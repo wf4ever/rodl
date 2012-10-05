@@ -14,27 +14,21 @@ import com.hp.hpl.jena.shared.JenaException;
 
 /**
  * Maps <code>JenaException</code> to <code>400 (Bad Request)</code> HTTP response.
+ * 
  * @author piotrekhol
- *
+ * 
  */
 @Provider
-public class JenaExceptionMapper
-	implements ExceptionMapper<JenaException>
+public class JenaExceptionMapper implements ExceptionMapper<JenaException> {
 
-{
-
-	private final static Logger logger = Logger
-			.getLogger(JenaExceptionMapper.class);
+    /** logger. */
+    private static final Logger logger = Logger.getLogger(JenaExceptionMapper.class);
 
 
-	@Override
-	public Response toResponse(JenaException e)
-	{
-		{
-			logger.error("Caught Jena exception", e);
-			return Response.status(Status.BAD_REQUEST).type("text/plain")
-					.entity(e.getMessage()).build();
-		}
-	}
+    @Override
+    public Response toResponse(JenaException e) {
+        logger.error("Caught Jena exception", e);
+        return Response.status(Status.BAD_REQUEST).type("text/plain").entity(e.getMessage()).build();
+    }
 
 }

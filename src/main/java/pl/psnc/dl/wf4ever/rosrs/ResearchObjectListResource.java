@@ -1,12 +1,9 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.sql.SQLException;
 import java.util.Set;
 
-import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -14,6 +11,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
@@ -26,11 +24,11 @@ import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile.Role;
-import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
 /**
+ * A list of research objects REST APIs.
  * 
  * @author piotrhol
  * 
@@ -38,32 +36,27 @@ import com.sun.jersey.core.header.ContentDisposition;
 @Path("ROs/")
 public class ResearchObjectListResource {
 
+    /** logger. */
     @SuppressWarnings("unused")
-    private final static Logger logger = Logger.getLogger(ResearchObjectListResource.class);
+    private static final Logger LOGGER = Logger.getLogger(ResearchObjectListResource.class);
 
+    /** HTTP request. */
     @Context
     HttpServletRequest request;
 
+    /** URI info. */
     @Context
     UriInfo uriInfo;
 
 
     /**
-     * Returns list of relative links to research objects
+     * Returns list of relative links to research objects.
      * 
-     * @return TBD
-     * @throws SQLException
-     * @throws NamingException
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws NotFoundException
-     * @throws DigitalLibraryException
+     * @return 200 OK
      */
     @GET
     @Produces("text/plain")
-    public Response getResearchObjectList()
-            throws ClassNotFoundException, IOException, NamingException, SQLException, DigitalLibraryException,
-            NotFoundException {
+    public Response getResearchObjectList() {
         UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
 
         Set<URI> list;
@@ -87,24 +80,25 @@ public class ResearchObjectListResource {
     /**
      * Creates new RO with given RO_ID.
      * 
-     * @param researchObjectId
-     *            RO_ID in plain text (text/plain)
      * @return 201 (Created) when the RO was successfully created, 409 (Conflict) if the RO_ID is already used in the
      *         WORKSPACE_ID workspace
-     * @throws DigitalLibraryException
-     * @throws NotFoundException
-     * @throws SQLException
-     * @throws NamingException
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws ConflictException
      * @throws BadRequestException
-     * @throws IdNotFoundException
+     *             the RO id is incorrect
+     * @throws NotFoundException
+     *             problem with creating the RO in dLibra
+     * @throws DigitalLibraryException
+     *             problem with creating the RO in dLibra
+     * @throws ConflictException
+     *             problem with creating the RO in dLibra
+     * @throws UriBuilderException
+     *             problem with creating the RO in dLibra
+     * @throws IllegalArgumentException
+     *             problem with creating the RO in dLibra
      */
     @POST
     public Response createResearchObject()
-            throws NotFoundException, DigitalLibraryException, ClassNotFoundException, IOException, NamingException,
-            SQLException, ConflictException, BadRequestException {
+            throws BadRequestException, IllegalArgumentException, UriBuilderException, ConflictException,
+            DigitalLibraryException, NotFoundException {
         String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");

@@ -52,24 +52,27 @@ public class Job extends Thread {
     /** Object holding reference to the job. */
     private JobsContainer container;
 
+    /** Operations to be performed. */
     private Operation[] operations;
 
+    /** Current job status. */
     private JobStatus status;
 
+    /** Reference to the SMS used when creating the job. */
     private SemanticMetadataService originalSMS;
 
 
     /**
      * Constructor.
      * 
-     * @param service
-     *            Service URI for the converter
      * @param jobUUID
      *            job identifier assigned by its container
-     * @param token
-     *            RODL access token
+     * @param status
+     *            job status with run parameters
      * @param container
      *            the object that created this job
+     * @param operations
+     *            list of operations to perform
      */
     public Job(UUID jobUUID, JobStatus status, JobsContainer container, Operation... operations) {
         this.originalSMS = ROSRService.SMS.get();
@@ -114,6 +117,9 @@ public class Job extends Thread {
     }
 
 
+    /**
+     * Abort the job.
+     */
     public void abort() {
         this.interrupt();
     }

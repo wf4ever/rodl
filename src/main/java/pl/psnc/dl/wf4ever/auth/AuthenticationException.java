@@ -1,26 +1,33 @@
 package pl.psnc.dl.wf4ever.auth;
 
 /**
- * <p>A runtime exception representing a failure to provide correct
- * authentication credentials.</p>
+ * <p>
+ * A runtime exception representing a failure to provide correct authentication credentials.
+ * </p>
  */
 @SuppressWarnings("serial")
-public class AuthenticationException
-	extends RuntimeException
-{
+public class AuthenticationException extends RuntimeException {
 
-	public AuthenticationException(String message, String realm)
-	{
-		super(message);
-		this.realm = realm;
-	}
+    /**
+     * Constructor.
+     * 
+     * @param message
+     *            message
+     * @param realm
+     *            realm
+     */
+    public AuthenticationException(String message, String realm) {
+        super(message);
+        this.realm = realm;
+    }
 
-	private String realm = null;
+
+    /** authentication realm. */
+    private String realm = null;
 
 
-	public String getRealm()
-	{
-		return this.realm;
-	}
+    public String getRealm() {
+        return this.realm;
+    }
 
 }

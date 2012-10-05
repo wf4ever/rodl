@@ -1,19 +1,14 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 
-import javax.naming.OperationNotSupportedException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -41,7 +36,6 @@ import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dlibra.service.AccessDeniedException;
-import pl.psnc.dlibra.service.IdNotFoundException;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
@@ -53,6 +47,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.sun.jersey.api.ConflictException;
 
 /**
+ * Research Object REST API resource.
  * 
  * @author Piotr Hołubowicz
  * 
@@ -60,13 +55,17 @@ import com.sun.jersey.api.ConflictException;
 @Path("ROs/{ro_id}/")
 public class ResearchObjectResource {
 
-    private static final Logger logger = Logger.getLogger(ResearchObjectResource.class);
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(ResearchObjectResource.class);
 
-    private static final URI portalRoPage = URI.create("http://sandbox.wf4ever-project.org/portal/ro");
+    /** An application that displays the HTML version of a workflow. */
+    private static final URI RO_HTML_PORTAL = URI.create("http://sandbox.wf4ever-project.org/portal/ro");
 
+    /** HTTP request. */
     @Context
     HttpServletRequest request;
 
+    /** URI info. */
     @Context
     UriInfo uriInfo;
 
@@ -76,40 +75,43 @@ public class ResearchObjectResource {
      * 
      * @param researchObjectId
      *            RO identifier - defined by the user
-     * @return
-     * @throws UnknownHostException
-     * @throws MalformedURLException
-     * @throws RemoteException
-     * @throws IOException
-     * @throws DigitalLibraryException
-     * @throws IdNotFoundException
-     * @throws OperationNotSupportedException
-     * @throws NotFoundException
+     * @return 200 OK
      */
     @GET
     @Produces({ "application/zip", "multipart/related", "*/*" })
-    public Response getZippedRO(@PathParam("ro_id") String researchObjectId)
-            throws RemoteException, MalformedURLException, UnknownHostException, DigitalLibraryException,
-            NotFoundException {
+    public Response getZippedRO(@PathParam("ro_id") String researchObjectId) {
         return Response.seeOther(getZippedROURI(uriInfo.getBaseUriBuilder(), researchObjectId)).build();
     }
 
 
+    /**
+     * Redirect to the manifest.
+     * 
+     * @param researchObjectId
+     *            RO id
+     * @return 303 See Other
+     */
     @GET
     @Produces({ "application/rdf+xml", "application/x-turtle", "text/turtle", "application/x-trig", "application/trix",
             "text/rdf+n3" })
-    public Response getROMetadata(@PathParam("ro_id") String researchObjectId)
-            throws RemoteException, MalformedURLException, UnknownHostException, DigitalLibraryException,
-            NotFoundException {
+    public Response getROMetadata(@PathParam("ro_id") String researchObjectId) {
         return Response.seeOther(getROMetadataURI(uriInfo.getBaseUriBuilder(), researchObjectId)).build();
     }
 
 
+    /**
+     * Redirect to the HTML page of the RO.
+     * 
+     * @param researchObjectId
+     *            RO id
+     * @return 303 See Other
+     * @throws URISyntaxException
+     *             could not construct a valid redirection URI
+     */
     @GET
     @Produces({ MediaType.TEXT_HTML })
     public Response getROHtml(@PathParam("ro_id") String researchObjectId)
-            throws URISyntaxException, RemoteException, MalformedURLException, UnknownHostException,
-            DigitalLibraryException, NotFoundException {
+            throws URISyntaxException {
         URI uri = getROHtmlURI(uriInfo.getBaseUriBuilder(), researchObjectId);
         return Response.seeOther(uri).build();
     }
@@ -136,13 +138,18 @@ public class ResearchObjectResource {
      * Add a resource with no specific MIME type.
      * 
      * @param researchObjectId
+     *            RO id
      * @param content
-     * @return
+     *            resource content
+     * @return 201 Created with proxy URI
      * @throws BadRequestException
      *             annotation target is an incorrect URI
      * @throws NotFoundException
+     *             could not find the resource in DL
      * @throws DigitalLibraryException
+     *             could not connect to the DL
      * @throws AccessDeniedException
+     *             access denied when updating data in DL
      */
     @POST
     public Response addResource(@PathParam("ro_id") String researchObjectId, InputStream content)
@@ -194,11 +201,15 @@ public class ResearchObjectResource {
 
 
     /**
+     * Create a new proxy.
      * 
      * @param researchObjectId
+     *            RO id
      * @param content
-     * @return
+     *            proxy description
+     * @return 201 Created response pointing to the proxy
      * @throws BadRequestException
+     *             wrong request body
      * @throws NotFoundException
      *             could not find the resource in DL
      * @throws DigitalLibraryException
@@ -246,14 +257,21 @@ public class ResearchObjectResource {
 
 
     /**
+     * Add an annotation stub.
      * 
      * @param researchObjectId
-     * @param annotation
-     * @return
-     * @throws NotFoundException
-     * @throws DigitalLibraryException
-     * @throws AccessDeniedException
+     *            RO id
+     * @param content
+     *            annotation definition
+     * @return 201 Created response pointing to the annotation stub
      * @throws BadRequestException
+     *             wrong request body
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
      */
     @POST
     @Consumes(Constants.ANNOTATION_MIME_TYPE)
@@ -306,23 +324,63 @@ public class ResearchObjectResource {
     }
 
 
+    /**
+     * Create a URI pointing to the zipped RO.
+     * 
+     * @param baseUriBuilder
+     *            base URI builder
+     * @param researchObjectId
+     *            RO id
+     * @return the URI pointing to the zipped RO
+     */
     private static URI getZippedROURI(UriBuilder baseUriBuilder, String researchObjectId) {
         return baseUriBuilder.path("zippedROs").path(researchObjectId).path("/").build();
     }
 
 
+    /**
+     * Create a URI pointing to the HTML page of the RO.
+     * 
+     * @param baseUriBuilder
+     *            base URI builder
+     * @param researchObjectId
+     *            RO id
+     * @return the URI pointing to the HTML page of the RO
+     * @throws URISyntaxException
+     *             could not construct a valid redirection URI
+     */
     private static URI getROHtmlURI(UriBuilder baseUriBuilder, String researchObjectId)
             throws URISyntaxException {
-        return new URI(portalRoPage.getScheme(), portalRoPage.getAuthority(), portalRoPage.getPath(), "ro="
+        return new URI(RO_HTML_PORTAL.getScheme(), RO_HTML_PORTAL.getAuthority(), RO_HTML_PORTAL.getPath(), "ro="
                 + baseUriBuilder.path("ROs").path(researchObjectId).path("/").build().toString(), null);
     }
 
 
+    /**
+     * Create a URI pointing to the manifest.
+     * 
+     * @param baseUriBuilder
+     *            base URI builder
+     * @param researchObjectId
+     *            RO id
+     * @return the URI pointing to the manifest of the RO
+     */
     private static URI getROMetadataURI(UriBuilder baseUriBuilder, String researchObjectId) {
         return baseUriBuilder.path("ROs").path(researchObjectId).path("/.ro/manifest.rdf").build();
     }
 
 
+    /**
+     * Add Link headers pointing to different RO formats.
+     * 
+     * @param responseBuilder
+     *            response builder to which to add the links
+     * @param linkUriInfo
+     *            URI info
+     * @param researchObjectId
+     *            RO id
+     * @return the original response builder with the Link headers
+     */
     public static ResponseBuilder addLinkHeaders(ResponseBuilder responseBuilder, UriInfo linkUriInfo,
             String researchObjectId) {
         try {
@@ -340,7 +398,7 @@ public class ResearchObjectResource {
                         String.format(Constants.LINK_HEADER_TEMPLATE,
                             getROMetadataURI(linkUriInfo.getBaseUriBuilder(), researchObjectId), "bookmark"));
         } catch (URISyntaxException e) {
-            logger.error("Could not create RO Portal URI", e);
+            LOGGER.error("Could not create RO Portal URI", e);
             return responseBuilder.header(
                 Constants.LINK_HEADER,
                 String.format(Constants.LINK_HEADER_TEMPLATE,

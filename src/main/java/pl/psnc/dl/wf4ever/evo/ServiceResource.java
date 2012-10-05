@@ -25,6 +25,7 @@ import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 
 /**
+ * REST API resource for the root of the service.
  * 
  * @author piotrhol
  * 
@@ -32,8 +33,9 @@ import com.hp.hpl.jena.rdf.model.Resource;
 @Path("evo/")
 public class ServiceResource {
 
+    /** logger. */
     @SuppressWarnings("unused")
-    private final static Logger logger = Logger.getLogger(ServiceResource.class);
+    private static final Logger LOGGER = Logger.getLogger(ServiceResource.class);
 
     /** Context. */
     @Context
@@ -44,6 +46,11 @@ public class ServiceResource {
     private UriInfo uriInfo;
 
 
+    /**
+     * Get a service description as an RDF graph.
+     * 
+     * @return RDF service description, format subject to content-negotiation
+     */
     @GET
     public Response getServiceDescription() {
         RDFFormat format = RDFFormat.forMIMEType(request.getHeader(Constants.ACCEPT_HEADER));

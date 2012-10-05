@@ -11,41 +11,37 @@ import javax.ws.rs.ext.Provider;
 import org.apache.log4j.Logger;
 
 /**
- * Used for catching exception that were not caught by other mappers 
- * and returning <code>500 (Internal Server Error)</code> responses.
+ * Used for catching exception that were not caught by other mappers and returning
+ * <code>500 (Internal Server Error)</code> responses.
  * 
  * @author nowakm
- *
+ * 
  */
 @Provider
-public class ExceptionMapper
-	implements javax.ws.rs.ext.ExceptionMapper<Exception>
-{
+public class ExceptionMapper implements javax.ws.rs.ext.ExceptionMapper<Exception> {
 
-	private final static Logger logger = Logger
-			.getLogger(ExceptionMapper.class);
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(ExceptionMapper.class);
 
 
-	@Override
-	public Response toResponse(Exception e)
-	{
-		if (e instanceof WebApplicationException) {
-			WebApplicationException we = (WebApplicationException) e;
-			return we.getResponse();
-		}
-		logger.warn("Caught exception: " + e.getMessage(), e);
-		StringBuilder sb = new StringBuilder("");
-		sb.append(e.getMessage());
-		sb.append("\n");
+    @Override
+    public Response toResponse(Exception e) {
+        if (e instanceof WebApplicationException) {
+            WebApplicationException we = (WebApplicationException) e;
+            return we.getResponse();
+        }
+        LOGGER.warn("Caught exception: " + e.getMessage(), e);
+        StringBuilder sb = new StringBuilder("");
+        sb.append(e.getMessage());
+        sb.append("\n");
 
-		// remove these lines before going live
-		for (StackTraceElement ste : e.getStackTrace()) {
-			sb.append("\t at ");
-			sb.append(ste.toString());
-			sb.append("\n");
-		}
+        // remove these lines before going live
+        for (StackTraceElement ste : e.getStackTrace()) {
+            sb.append("\t at ");
+            sb.append(ste.toString());
+            sb.append("\n");
+        }
 
-		return Response.status(Status.INTERNAL_SERVER_ERROR).type("text/plain")
-				.entity(sb.toString()).build();
-	}
+        return Response.status(Status.INTERNAL_SERVER_ERROR).type("text/plain").entity(sb.toString()).build();
+    }
 }

@@ -1,6 +1,5 @@
 package pl.psnc.dl.wf4ever;
 
-
 /**
  * This exception indicates that the request is incorrect.
  * 
@@ -24,6 +23,14 @@ public class BadRequestException extends Exception {
     }
 
 
+    /**
+     * Constructor.
+     * 
+     * @param message
+     *            the message
+     * @param e
+     *            the original exception
+     */
     public BadRequestException(String message, Exception e) {
         super(message, e);
     }

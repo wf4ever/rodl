@@ -3,19 +3,17 @@ package pl.psnc.dl.wf4ever.migrate5to6;
 import java.sql.SQLException;
 
 import javax.naming.NamingException;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 /**
+ * A helper, temporary class for migrating content from ROSRS 5 to RODL 6.
  * 
  * @author piotrhol
  * 
@@ -23,16 +21,20 @@ import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 @Path("5to6/")
 public class Migrate5to6Resource {
 
+    /** logger. */
     @SuppressWarnings("unused")
-    private final static Logger logger = Logger.getLogger(Migrate5to6Resource.class);
-
-    @Context
-    HttpServletRequest request;
-
-    @Context
-    UriInfo uriInfo;
+    private static final Logger LOGGER = Logger.getLogger(Migrate5to6Resource.class);
 
 
+    /**
+     * Receive the request to do the migration.
+     * 
+     * @return 200 OK with a number of triples copied.
+     * @throws NamingException
+     *             could not copy
+     * @throws SQLException
+     *             could not copy
+     */
     @GET
     @Produces("text/plain")
     public Response migrate5to6()

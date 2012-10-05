@@ -18,113 +18,95 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
+ * User credentials DAO.
+ * 
  * @author Piotr Hołubowicz
- *
+ * 
  */
 @Entity
 @Table(name = "usercredentials")
 @XmlRootElement
-public class UserCredentials
-	implements Serializable
-{
+public class UserCredentials implements Serializable {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7967488547563569388L;
+    /** id. */
+    private static final long serialVersionUID = 7967488547563569388L;
 
-	public static final UserCredentials PUBLIC_USER = new UserCredentials(
-			"wf4ever_reader", "wf4ever_reader!!!");
+    /** A user credentials constant representing a request with no authentication information. */
+    public static final UserCredentials PUBLIC_USER = new UserCredentials("wf4ever_reader", "wf4ever_reader!!!");
 
-	private String userId;
+    /** user id. */
+    private String userId;
 
-	private String password;
+    /** user dLibra password. */
+    private String password;
 
-	private List<AccessToken> tokens = new ArrayList<AccessToken>();
-
-
-	/**
-	 * @param userId
-	 * @param password
-	 */
-	public UserCredentials()
-	{
-	}
+    /** access tokens owned by the user. */
+    private List<AccessToken> tokens = new ArrayList<AccessToken>();
 
 
-	/**
-	 * @param userId
-	 * @param password
-	 */
-	public UserCredentials(String userId, String password)
-		throws IllegalArgumentException
-	{
-		if (userId == null)
-			throw new IllegalArgumentException("User id cannot be null");
-		if (password == null)
-			throw new IllegalArgumentException("Password cannot be null");
-		this.userId = userId;
-		this.password = password;
-	}
+    /**
+     * Constructor.
+     */
+    public UserCredentials() {
+    }
 
 
-	/**
-	 * @return the user
-	 */
-	@Id
-	@XmlElement
-	public String getUserId()
-	{
-		return userId;
-	}
+    /**
+     * Constructor.
+     * 
+     * @param userId
+     *            user id
+     * @param password
+     *            user dLibra password
+     * @throws IllegalArgumentException
+     *             the parameters are null
+     */
+    public UserCredentials(String userId, String password)
+            throws IllegalArgumentException {
+        if (userId == null) {
+            throw new IllegalArgumentException("User id cannot be null");
+        }
+        if (password == null) {
+            throw new IllegalArgumentException("Password cannot be null");
+        }
+        this.userId = userId;
+        this.password = password;
+    }
 
 
-	/**
-	 * @param userId the user to set
-	 */
-	public void setUserId(String userId)
-	{
-		this.userId = userId;
-	}
+    @Id
+    @XmlElement
+    public String getUserId() {
+        return userId;
+    }
 
 
-	/**
-	 * @return the password
-	 */
-	@Basic
-	@XmlTransient
-	public String getPassword()
-	{
-		return password;
-	}
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
 
-	/**
-	 * @param password the password to set
-	 */
-	public void setPassword(String password)
-	{
-		this.password = password;
-	}
+    @Basic
+    @XmlTransient
+    public String getPassword() {
+        return password;
+    }
 
 
-	/**
-	 * @return the tokens
-	 */
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "user", orphanRemoval = true)
-	@XmlTransient
-	public List<AccessToken> getTokens()
-	{
-		return tokens;
-	}
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
 
-	/**
-	 * @param tokens the tokens to set
-	 */
-	public void setTokens(List<AccessToken> tokens)
-	{
-		this.tokens = tokens;
-	}
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user", orphanRemoval = true)
+    @XmlTransient
+    public List<AccessToken> getTokens() {
+        return tokens;
+    }
+
+
+    public void setTokens(List<AccessToken> tokens) {
+        this.tokens = tokens;
+    }
 
 }

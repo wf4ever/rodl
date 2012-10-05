@@ -12,11 +12,25 @@ public class OperationFailedException extends Exception {
     private static final long serialVersionUID = -7402155750808674281L;
 
 
+    /**
+     * Constructor.
+     * 
+     * @param message
+     *            message
+     */
     public OperationFailedException(String message) {
         super(message);
     }
 
 
+    /**
+     * Constructor.
+     * 
+     * @param message
+     *            message
+     * @param e
+     *            original exception
+     */
     public OperationFailedException(String message, Exception e) {
         super(message, e);
     }

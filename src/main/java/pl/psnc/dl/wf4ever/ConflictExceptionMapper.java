@@ -12,22 +12,16 @@ import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 
 /**
  * Maps <code>ConflictException</code> to <code>409 (Conflict)</code> HTTP response.
+ * 
  * @author nowakm
- *
+ * 
  */
 @Provider
-public class ConflictExceptionMapper
-	implements ExceptionMapper<ConflictException>
+public class ConflictExceptionMapper implements ExceptionMapper<ConflictException> {
 
-{
-
-	@Override
-	public Response toResponse(ConflictException e)
-	{
-		{
-			return Response.status(Status.CONFLICT).type("text/plain")
-					.entity(e.getMessage()).build();
-		}
-	}
+    @Override
+    public Response toResponse(ConflictException e) {
+        return Response.status(Status.CONFLICT).type("text/plain").entity(e.getMessage()).build();
+    }
 
 }

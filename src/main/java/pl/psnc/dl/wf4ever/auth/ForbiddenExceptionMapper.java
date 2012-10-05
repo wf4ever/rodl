@@ -6,17 +6,16 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 /**
- * <p>Maps <code>ForbiddenException</code> to a HTTP <code>403 (Forbidden)</code> response.</p>
+ * <p>
+ * Maps <code>ForbiddenException</code> to a HTTP <code>403 (Forbidden)</code> response.
+ * </p>
  */
 @Provider
-public class ForbiddenExceptionMapper
-	implements ExceptionMapper<ForbiddenException>
-{
+public class ForbiddenExceptionMapper implements ExceptionMapper<ForbiddenException> {
 
-	public Response toResponse(ForbiddenException e)
-	{
-		return Response.status(Status.FORBIDDEN).type("text/plain")
-				.entity(e.getMessage()).build();
-	}
+    @Override
+    public Response toResponse(ForbiddenException e) {
+        return Response.status(Status.FORBIDDEN).type("text/plain").entity(e.getMessage()).build();
+    }
 
 }
