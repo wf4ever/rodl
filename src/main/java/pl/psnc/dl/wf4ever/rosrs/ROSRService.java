@@ -15,11 +15,12 @@ import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.common.ResearchObject;
+import pl.psnc.dl.wf4ever.common.ResourceInfo;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
-import pl.psnc.dl.wf4ever.dlibra.ResourceInfo;
 import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dlibra.service.AccessDeniedException;
@@ -56,8 +57,8 @@ public final class ROSRService {
     /**
      * Create a new research object.
      * 
-     * @param researchObjectURI
-     *            the research object URI
+     * @param researchObject
+     *            the research object
      * @return research object URI
      * @throws ConflictException
      *             the research object id is already used
@@ -66,16 +67,16 @@ public final class ROSRService {
      * @throws DigitalLibraryException
      *             could not connect to the DL
      */
-    public static URI createResearchObject(URI researchObjectURI)
+    public static URI createResearchObject(ResearchObject researchObject)
             throws ConflictException, DigitalLibraryException, NotFoundException {
-        return createResearchObject(researchObjectURI, null, null);
+        return createResearchObject(researchObject, null, null);
     }
 
 
     /**
      * Create a new research object of a specific ROEVO type.
      * 
-     * @param researchObjectURI
+     * @param researchObject
      *            the research object URI
      * @param type
      *            ROEVO type, may be null
@@ -89,59 +90,39 @@ public final class ROSRService {
      * @throws DigitalLibraryException
      *             could not connect to the DL
      */
-    public static URI createResearchObject(URI researchObjectURI, EvoType type, URI sourceRO)
+    public static URI createResearchObject(ResearchObject researchObject, EvoType type, URI sourceRO)
             throws ConflictException, DigitalLibraryException, NotFoundException {
-        String researchObjectId = getResearchObjectId(researchObjectURI);
         InputStream manifest;
         try {
             if (type == null) {
                 LOGGER.debug(String.format("%s\t\tcreate RO start", new DateTime().toString()));
-                ROSRService.SMS.get().createResearchObject(researchObjectURI);
+                ROSRService.SMS.get().createResearchObject(researchObject.getUri());
                 LOGGER.debug(String.format("%s\t\tcreate RO end", new DateTime().toString()));
             } else {
                 switch (type) {
                     default:
                     case LIVE:
-                        ROSRService.SMS.get().createLiveResearchObject(researchObjectURI, sourceRO);
+                        ROSRService.SMS.get().createLiveResearchObject(researchObject.getUri(), sourceRO);
                         break;
                     case SNAPSHOT:
-                        ROSRService.SMS.get().createSnapshotResearchObject(researchObjectURI, sourceRO);
+                        ROSRService.SMS.get().createSnapshotResearchObject(researchObject.getUri(), sourceRO);
                         break;
                     case ARCHIVED:
-                        ROSRService.SMS.get().createArchivedResearchObject(researchObjectURI, sourceRO);
+                        ROSRService.SMS.get().createArchivedResearchObject(researchObject.getUri(), sourceRO);
                         break;
                 }
             }
-            manifest = ROSRService.SMS.get().getManifest(researchObjectURI.resolve(Constants.MANIFEST_PATH),
-                RDFFormat.RDFXML);
+            manifest = ROSRService.SMS.get().getManifest(researchObject.getManifestUri(), RDFFormat.RDFXML);
         } catch (IllegalArgumentException e) {
             // RO already existed in sms, maybe created by someone else
-            throw new ConflictException("The RO with identifier " + researchObjectId + " already exists");
+            throw new ConflictException("The RO with identifier " + researchObject.getId() + " already exists");
         }
 
-        try {
-            LOGGER.debug(String.format("%s\t\tcreate workspace start", new DateTime().toString()));
-            ROSRService.DL.get().createWorkspace(Constants.WORKSPACE_ID);
-            LOGGER.debug(String.format("%s\t\tcreate workspace end", new DateTime().toString()));
-        } catch (ConflictException e) {
-            // nothing
-            LOGGER.debug("Workspace already exists", e);
-        }
-        try {
-            LOGGER.debug(String.format("%s\t\tcreate RO start", new DateTime().toString()));
-            ROSRService.DL.get().createResearchObject(Constants.WORKSPACE_ID, researchObjectId);
-            LOGGER.debug(String.format("%s\t\tcreate RO end", new DateTime().toString()));
-        } catch (ConflictException e) {
-            // nothing
-            LOGGER.debug("RO already exists", e);
-        }
-        LOGGER.debug(String.format("%s\t\tcreate RO version start", new DateTime().toString()));
-        ROSRService.DL.get().createVersion(Constants.WORKSPACE_ID, researchObjectId, Constants.VERSION_ID, manifest,
-            Constants.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
-        LOGGER.debug(String.format("%s\t\tcreate RO version end", new DateTime().toString()));
-        ROSRService.DL.get().publishVersion(Constants.WORKSPACE_ID, researchObjectId, Constants.VERSION_ID);
-        LOGGER.debug(String.format("%s\t\tRO published", new DateTime().toString()));
-        return researchObjectURI;
+        LOGGER.debug(String.format("%s\t\tcreate RO start", new DateTime().toString()));
+        ROSRService.DL.get().createResearchObject(researchObject, manifest, ResearchObject.MANIFEST_PATH,
+            RDFFormat.RDFXML.getDefaultMIMEType());
+        LOGGER.debug(String.format("%s\t\tcreate RO end", new DateTime().toString()));
+        return researchObject.getUri();
     }
 
 
@@ -155,20 +136,13 @@ public final class ROSRService {
      * @throws NotFoundException
      *             Research Object not found neither in dLibra nor in SMS
      */
-    public static void deleteResearchObject(URI researchObject)
+    public static void deleteResearchObject(ResearchObject researchObject)
             throws DigitalLibraryException, NotFoundException {
-        String researchObjectId = getResearchObjectId(researchObject);
         try {
-            ROSRService.DL.get().deleteVersion(Constants.WORKSPACE_ID, researchObjectId, Constants.VERSION_ID);
-            if (ROSRService.DL.get().getVersionIds(Constants.WORKSPACE_ID, researchObjectId).isEmpty()) {
-                ROSRService.DL.get().deleteResearchObject(Constants.WORKSPACE_ID, researchObjectId);
-                if (ROSRService.DL.get().getResearchObjectIds(Constants.WORKSPACE_ID).isEmpty()) {
-                    ROSRService.DL.get().deleteWorkspace(Constants.WORKSPACE_ID);
-                }
-            }
+            ROSRService.DL.get().deleteResearchObject(researchObject);
         } finally {
             try {
-                ROSRService.SMS.get().removeResearchObject(researchObject);
+                ROSRService.SMS.get().removeResearchObject(researchObject.getUri());
             } catch (IllegalArgumentException e) {
                 LOGGER.warn("URI not found in SMS: " + researchObject);
             }
@@ -197,20 +171,18 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static ResponseBuilder aggregateInternalResource(URI researchObject, URI resource, InputStream entity,
-            String contentType, String original)
+    public static ResponseBuilder aggregateInternalResource(ResearchObject researchObject, URI resource,
+            InputStream entity, String contentType, String original)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         if (original != null) {
             resource = resource.resolve(original);
         }
-        String researchObjectId = getResearchObjectId(researchObject);
-        String filePath = researchObject.relativize(resource).getPath();
-        ResourceInfo resourceInfo = ROSRService.DL.get().createOrUpdateFile(Constants.WORKSPACE_ID, researchObjectId,
-            Constants.VERSION_ID, filePath, entity, contentType != null ? contentType : "text/plain");
-        ROSRService.SMS.get().addResource(researchObject, resource, resourceInfo);
+        String filePath = researchObject.getUri().relativize(resource).getPath();
+        ResourceInfo resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject, filePath, entity,
+            contentType != null ? contentType : "text/plain");
+        ROSRService.SMS.get().addResource(researchObject.getUri(), resource, resourceInfo);
         // update the manifest that describes the resource in dLibra
-        updateNamedGraphInDlibra(Constants.MANIFEST_PATH, researchObject,
-            researchObject.resolve(Constants.MANIFEST_PATH));
+        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
         return addProxy(researchObject, resource);
     }
 
@@ -230,13 +202,12 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static ResponseBuilder aggregateExternalResource(URI researchObject, URI resource)
+    public static ResponseBuilder aggregateExternalResource(ResearchObject researchObject, URI resource)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        ROSRService.SMS.get().addResource(researchObject, resource, null);
+        ROSRService.SMS.get().addResource(researchObject.getUri(), resource, null);
         ResponseBuilder builder = addProxy(researchObject, resource);
         // update the manifest that describes the resource in dLibra
-        updateNamedGraphInDlibra(Constants.MANIFEST_PATH, researchObject,
-            researchObject.resolve(Constants.MANIFEST_PATH));
+        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
         return builder;
     }
 
@@ -256,21 +227,19 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response deaggregateInternalResource(URI researchObject, URI resource)
+    public static Response deaggregateInternalResource(ResearchObject researchObject, URI resource)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        String researchObjectId = getResearchObjectId(researchObject);
-        String filePath = researchObject.relativize(resource).getPath();
-        ROSRService.DL.get().deleteFile(Constants.WORKSPACE_ID, researchObjectId, Constants.VERSION_ID, filePath);
-        if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
-            ROSRService.SMS.get().removeNamedGraph(researchObject, resource);
+        String filePath = researchObject.getUri().relativize(resource).getPath();
+        ROSRService.DL.get().deleteFile(researchObject, filePath);
+        if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject.getUri(), resource)) {
+            ROSRService.SMS.get().removeNamedGraph(researchObject.getUri(), resource);
         } else {
-            ROSRService.SMS.get().removeResource(researchObject, resource);
+            ROSRService.SMS.get().removeResource(researchObject.getUri(), resource);
         }
-        URI proxy = ROSRService.SMS.get().getProxyForResource(researchObject, resource);
+        URI proxy = ROSRService.SMS.get().getProxyForResource(researchObject.getUri(), resource);
         Response response = deleteProxy(researchObject, proxy);
         // update the manifest that describes the resource in dLibra
-        updateNamedGraphInDlibra(Constants.MANIFEST_PATH, researchObject,
-            researchObject.resolve(Constants.MANIFEST_PATH));
+        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
         return response;
     }
 
@@ -290,13 +259,12 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response deaggregateExternalResource(URI researchObject, URI proxy)
+    public static Response deaggregateExternalResource(ResearchObject researchObject, URI proxy)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        URI resource = ROSRService.SMS.get().getProxyFor(researchObject, proxy);
-        ROSRService.SMS.get().removeResource(researchObject, resource);
+        URI resource = ROSRService.SMS.get().getProxyFor(researchObject.getUri(), proxy);
+        ROSRService.SMS.get().removeResource(researchObject.getUri(), resource);
         // update the manifest that describes the resource in dLibra
-        updateNamedGraphInDlibra(Constants.MANIFEST_PATH, researchObject,
-            researchObject.resolve(Constants.MANIFEST_PATH));
+        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
         return deleteProxy(researchObject, proxy);
     }
 
@@ -315,12 +283,10 @@ public final class ROSRService {
      * @throws DigitalLibraryException
      *             could not connect to the DL
      */
-    public static boolean isInternalResource(URI researchObject, URI resource)
+    public static boolean isInternalResource(ResearchObject researchObject, URI resource)
             throws NotFoundException, DigitalLibraryException {
-        String researchObjectId = getResearchObjectId(researchObject);
-        String filePath = researchObject.relativize(resource).getPath();
-        return ROSRService.DL.get()
-                .fileExists(Constants.WORKSPACE_ID, researchObjectId, Constants.VERSION_ID, filePath);
+        String filePath = researchObject.getUri().relativize(resource).getPath();
+        return ROSRService.DL.get().fileExists(researchObject, filePath);
     }
 
 
@@ -331,7 +297,7 @@ public final class ROSRService {
      *            the RO URI
      * @return InputStream with evolution information written in TTL format
      **/
-    public static InputStream getEvoInfo(URI researchObject) {
+    public static InputStream getEvoInfo(ResearchObject researchObject) {
         ROSRService.SMS.get();
         return null;
     }
@@ -346,8 +312,8 @@ public final class ROSRService {
      *            resource for which the proxy is
      * @return 201 Created response pointing to the proxy
      */
-    private static ResponseBuilder addProxy(URI researchObject, URI proxyFor) {
-        URI proxy = ROSRService.SMS.get().addProxy(researchObject, proxyFor);
+    private static ResponseBuilder addProxy(ResearchObject researchObject, URI proxyFor) {
+        URI proxy = ROSRService.SMS.get().addProxy(researchObject.getUri(), proxyFor);
 
         String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, proxyFor.toString(),
             Constants.ORE_PROXY_FOR_HEADER);
@@ -364,8 +330,8 @@ public final class ROSRService {
      *            proxy to delete
      * @return 204 No Content
      */
-    private static Response deleteProxy(URI researchObject, URI proxy) {
-        ROSRService.SMS.get().deleteProxy(researchObject, proxy);
+    private static Response deleteProxy(ResearchObject researchObject, URI proxy) {
+        ROSRService.SMS.get().deleteProxy(researchObject.getUri(), proxy);
         return Response.noContent().build();
     }
 
@@ -390,14 +356,12 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static ResponseBuilder updateInternalResource(URI researchObject, URI resource, String entity,
+    public static ResponseBuilder updateInternalResource(ResearchObject researchObject, URI resource, String entity,
             String contentType)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        String researchObjectId = getResearchObjectId(researchObject);
-        String filePath = researchObject.relativize(resource).getPath();
-        boolean contentExisted = ROSRService.DL.get().fileExists(Constants.WORKSPACE_ID, researchObjectId,
-            Constants.VERSION_ID, filePath);
-        if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
+        String filePath = researchObject.getUri().relativize(resource).getPath();
+        boolean contentExisted = ROSRService.DL.get().fileExists(researchObject, filePath);
+        if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject.getUri(), resource)) {
             RDFFormat format = RDFFormat.forMIMEType(contentType);
             if (format == null) {
                 format = RDFFormat.forFileName(resource.getPath(), RDFFormat.RDFXML);
@@ -407,13 +371,11 @@ public final class ROSRService {
             updateNamedGraphInDlibra(filePath, researchObject, resource);
             updateROAttributesInDlibra(researchObject);
         } else {
-            ResourceInfo resourceInfo = ROSRService.DL.get().createOrUpdateFile(Constants.WORKSPACE_ID,
-                researchObjectId, Constants.VERSION_ID, filePath, new ByteArrayInputStream(entity.getBytes()),
-                contentType != null ? contentType : "text/plain");
-            ROSRService.SMS.get().addResource(researchObject, resource, resourceInfo);
+            ResourceInfo resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject, filePath,
+                new ByteArrayInputStream(entity.getBytes()), contentType != null ? contentType : "text/plain");
+            ROSRService.SMS.get().addResource(researchObject.getUri(), resource, resourceInfo);
             // update the manifest that describes the resource in dLibra
-            updateNamedGraphInDlibra(Constants.MANIFEST_PATH, researchObject,
-                researchObject.resolve(Constants.MANIFEST_PATH));
+            updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
         }
         if (contentExisted) {
             return Response.ok();
@@ -440,12 +402,11 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static ResourceInfo getResourceInfo(URI researchObject, URI resource, String original)
+    public static ResourceInfo getResourceInfo(ResearchObject researchObject, URI resource, String original)
             throws AccessDeniedException, NotFoundException, DigitalLibraryException {
-        String researchObjectId = getResearchObjectId(researchObject);
-        String filePath = researchObject.relativize(original != null ? resource.resolve(original) : resource).getPath();
-        return ROSRService.DL.get().getFileInfo(Constants.WORKSPACE_ID, researchObjectId, Constants.VERSION_ID,
-            filePath);
+        String filePath = researchObject.getUri().relativize(original != null ? resource.resolve(original) : resource)
+                .getPath();
+        return ROSRService.DL.get().getFileInfo(researchObject, filePath);
     }
 
 
@@ -460,6 +421,8 @@ public final class ROSRService {
      *            requested MIME type
      * @param original
      *            original file name in case of annotation bodies
+     * @param resInfo
+     *            resource info, if already known, or null
      * @return 200 OK with resource content
      * @throws NotFoundException
      *             could not find the resource in DL
@@ -468,17 +431,17 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static ResponseBuilder getInternalResource(URI researchObject, URI resource, String accept, String original)
+    public static ResponseBuilder getInternalResource(ResearchObject researchObject, URI resource, String accept,
+            String original, ResourceInfo resInfo)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        String researchObjectId = getResearchObjectId(researchObject);
-        String filePath = researchObject.relativize(resource).getPath();
+        String filePath = researchObject.getUri().relativize(resource).getPath();
 
         // check if request is for a specific format
         if (original != null) {
             URI originalResource = resource.resolve(original);
-            filePath = researchObject.relativize(originalResource).getPath();
+            filePath = researchObject.getUri().relativize(originalResource).getPath();
             if (ROSRService.SMS.get().containsNamedGraph(originalResource)
-                    && ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, originalResource)) {
+                    && ROSRService.SMS.get().isROMetadataNamedGraph(researchObject.getUri(), originalResource)) {
                 RDFFormat format = RDFFormat.forMIMEType(accept);
                 if (format == null) {
                     format = RDFFormat.forFileName(resource.getPath(), RDFFormat.RDFXML);
@@ -493,7 +456,7 @@ public final class ROSRService {
         }
 
         if (ROSRService.SMS.get().containsNamedGraph(resource)
-                && ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
+                && ROSRService.SMS.get().isROMetadataNamedGraph(researchObject.getUri(), resource)) {
             RDFFormat acceptFormat = RDFFormat.forMIMEType(accept);
             RDFFormat extensionFormat = RDFFormat.forFileName(resource.getPath());
             if (extensionFormat != null && (acceptFormat == null || extensionFormat == acceptFormat)) {
@@ -512,12 +475,13 @@ public final class ROSRService {
             return Response.temporaryRedirect(formatSpecificURI);
         }
 
-        String mimeType = ROSRService.DL.get().getFileMimeType(Constants.WORKSPACE_ID, researchObjectId,
-            Constants.VERSION_ID, filePath);
-        ContentDisposition cd = ContentDisposition.type(mimeType).fileName(getFilename(resource)).build();
-        InputStream body = ROSRService.DL.get().getFileContents(Constants.WORKSPACE_ID, researchObjectId,
-            Constants.VERSION_ID, filePath);
-        return Response.ok(body).type(mimeType).header("Content-disposition", cd).header("Content-type", mimeType);
+        if (resInfo == null) {
+            resInfo = getResourceInfo(researchObject, resource, original);
+        }
+        ContentDisposition cd = ContentDisposition.type(resInfo.getMimeType()).fileName(getFilename(resource)).build();
+        InputStream body = ROSRService.DL.get().getFileContents(researchObject, filePath);
+        return Response.ok(body).type(resInfo.getMimeType()).header("Content-disposition", cd)
+                .header("Content-type", resInfo.getMimeType());
     }
 
 
@@ -580,14 +544,12 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static void convertAggregatedResourceToAnnotationBody(URI researchObject, URI resource)
+    public static void convertAggregatedResourceToAnnotationBody(ResearchObject researchObject, URI resource)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        String researchObjectId = getResearchObjectId(researchObject);
-        String filePath = researchObject.relativize(resource).getPath();
-        InputStream data = ROSRService.DL.get().getFileContents(Constants.WORKSPACE_ID, researchObjectId,
-            Constants.VERSION_ID, filePath);
-        RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get().getFileMimeType(Constants.WORKSPACE_ID,
-            researchObjectId, Constants.VERSION_ID, filePath));
+        String filePath = researchObject.getUri().relativize(resource).getPath();
+        InputStream data = ROSRService.DL.get().getFileContents(researchObject, filePath);
+        RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get().getFileInfo(researchObject, filePath)
+                .getMimeType());
         ROSRService.SMS.get().addNamedGraph(resource, data, format);
         // update the named graph copy in dLibra, the manifest is not changed
         updateNamedGraphInDlibra(filePath, researchObject, resource);
@@ -604,9 +566,9 @@ public final class ROSRService {
      * @param resource
      *            URI of the resource that is converted
      */
-    public static void convertAnnotationBodyToAggregatedResource(URI researchObject, URI resource) {
-        if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
-            ROSRService.SMS.get().removeNamedGraph(researchObject, resource);
+    public static void convertAnnotationBodyToAggregatedResource(ResearchObject researchObject, URI resource) {
+        if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject.getUri(), resource)) {
+            ROSRService.SMS.get().removeNamedGraph(researchObject.getUri(), resource);
             updateROAttributesInDlibra(researchObject);
         }
     }
@@ -623,7 +585,7 @@ public final class ROSRService {
      *            list of annotated resources URIs
      * @return 201 Created response
      */
-    public static Response addAnnotation(URI researchObject, URI annotationBody, List<URI> annotationTargets) {
+    public static Response addAnnotation(ResearchObject researchObject, URI annotationBody, List<URI> annotationTargets) {
         URI annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody);
 
         String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(),
@@ -652,9 +614,9 @@ public final class ROSRService {
      *            list of annotated resources URIs
      * @return 200 OK response
      */
-    public static Response updateAnnotation(URI researchObject, URI annotation, URI annotationBody,
+    public static Response updateAnnotation(ResearchObject researchObject, URI annotation, URI annotationBody,
             List<URI> annotationTargets) {
-        ROSRService.SMS.get().updateAnnotation(researchObject, annotation, annotationTargets, annotationBody);
+        ROSRService.SMS.get().updateAnnotation(researchObject.getUri(), annotation, annotationTargets, annotationBody);
 
         String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(),
             Constants.AO_ANNOTATION_BODY_HEADER);
@@ -683,9 +645,9 @@ public final class ROSRService {
      * @throws DigitalLibraryException
      *             could not connect to the DL to check if it's internal
      */
-    public static URI getAnnotationBody(URI researchObject, URI annotation, String acceptHeader)
+    public static URI getAnnotationBody(ResearchObject researchObject, URI annotation, String acceptHeader)
             throws NotFoundException, DigitalLibraryException {
-        URI body = ROSRService.SMS.get().getAnnotationBody(researchObject, annotation);
+        URI body = ROSRService.SMS.get().getAnnotationBody(researchObject.getUri(), annotation);
         RDFFormat acceptFormat = RDFFormat.forMIMEType(acceptHeader);
         if (acceptFormat != null && isInternalResource(researchObject, body)) {
             RDFFormat extensionFormat = RDFFormat.forFileName(annotation.getPath());
@@ -717,13 +679,11 @@ public final class ROSRService {
      * @param researchObject
      *            RO URI
      */
-    private static void updateROAttributesInDlibra(URI researchObject) {
-        String researchObjectId = getResearchObjectId(researchObject);
-        Multimap<URI, Object> roAttributes = ROSRService.SMS.get().getAllAttributes(researchObject);
+    private static void updateROAttributesInDlibra(ResearchObject researchObject) {
+        Multimap<URI, Object> roAttributes = ROSRService.SMS.get().getAllAttributes(researchObject.getUri());
         roAttributes.put(URI.create("Identifier"), researchObject);
         try {
-            ROSRService.DL.get().storeAttributes(Constants.WORKSPACE_ID, researchObjectId, Constants.VERSION_ID,
-                roAttributes);
+            ROSRService.DL.get().storeAttributes(researchObject, roAttributes);
         } catch (Exception e) {
             LOGGER.error("Caught an exception when updating RO attributes, will continue", e);
         }
@@ -746,27 +706,12 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    private static void updateNamedGraphInDlibra(String filePath, URI researchObject, URI namedGraphURI)
+    private static void updateNamedGraphInDlibra(String filePath, ResearchObject researchObject, URI namedGraphURI)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        String researchObjectId = getResearchObjectId(researchObject);
         RDFFormat format = RDFFormat.forFileName(filePath, RDFFormat.RDFXML);
-        InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(namedGraphURI, researchObject,
-            format);
-        ROSRService.DL.get().createOrUpdateFile(Constants.WORKSPACE_ID, researchObjectId, Constants.VERSION_ID,
-            filePath, dataStream, format.getDefaultMIMEType());
-    }
-
-
-    /**
-     * Parse an RO URI and return its id.
-     * 
-     * @param researchObject
-     *            RO URI
-     * @return RO id
-     */
-    private static String getResearchObjectId(URI researchObject) {
-        String[] segments = researchObject.getPath().split("/");
-        return segments[segments.length - 1];
+        InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(namedGraphURI,
+            researchObject.getUri(), format);
+        ROSRService.DL.get().createOrUpdateFile(researchObject, filePath, dataStream, format.getDefaultMIMEType());
     }
 
 }
