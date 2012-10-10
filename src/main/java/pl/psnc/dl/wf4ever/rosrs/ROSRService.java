@@ -11,6 +11,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
@@ -94,7 +95,9 @@ public final class ROSRService {
         InputStream manifest;
         try {
             if (type == null) {
+                LOGGER.debug(String.format("%s\t\tcreate RO start", new DateTime().toString()));
                 ROSRService.SMS.get().createResearchObject(researchObjectURI);
+                LOGGER.debug(String.format("%s\t\tcreate RO end", new DateTime().toString()));
             } else {
                 switch (type) {
                     default:
@@ -117,20 +120,27 @@ public final class ROSRService {
         }
 
         try {
+            LOGGER.debug(String.format("%s\t\tcreate workspace start", new DateTime().toString()));
             ROSRService.DL.get().createWorkspace(Constants.WORKSPACE_ID);
+            LOGGER.debug(String.format("%s\t\tcreate workspace end", new DateTime().toString()));
         } catch (ConflictException e) {
             // nothing
             LOGGER.debug("Workspace already exists", e);
         }
         try {
+            LOGGER.debug(String.format("%s\t\tcreate RO start", new DateTime().toString()));
             ROSRService.DL.get().createResearchObject(Constants.WORKSPACE_ID, researchObjectId);
+            LOGGER.debug(String.format("%s\t\tcreate RO end", new DateTime().toString()));
         } catch (ConflictException e) {
             // nothing
             LOGGER.debug("RO already exists", e);
         }
+        LOGGER.debug(String.format("%s\t\tcreate RO version start", new DateTime().toString()));
         ROSRService.DL.get().createVersion(Constants.WORKSPACE_ID, researchObjectId, Constants.VERSION_ID, manifest,
             Constants.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
+        LOGGER.debug(String.format("%s\t\tcreate RO version end", new DateTime().toString()));
         ROSRService.DL.get().publishVersion(Constants.WORKSPACE_ID, researchObjectId, Constants.VERSION_ID);
+        LOGGER.debug(String.format("%s\t\tRO published", new DateTime().toString()));
         return researchObjectURI;
     }
 

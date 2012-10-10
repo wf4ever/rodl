@@ -15,6 +15,7 @@ import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
@@ -99,12 +100,14 @@ public class ResearchObjectListResource {
     public Response createResearchObject()
             throws BadRequestException, IllegalArgumentException, UriBuilderException, ConflictException,
             DigitalLibraryException, NotFoundException {
+        LOGGER.debug(String.format("%s\t\tInit create RO", new DateTime().toString()));
         String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
         URI researchObjectURI = ROSRService.createResearchObject(uriInfo.getAbsolutePathBuilder()
                 .path(researchObjectId).path("/").build());
+        LOGGER.debug(String.format("%s\t\tRO created", new DateTime().toString()));
 
         RDFFormat format = RDFFormat.forMIMEType(request.getHeader(Constants.ACCEPT_HEADER), RDFFormat.RDFXML);
         InputStream manifest = ROSRService.SMS.get().getNamedGraph(researchObjectURI.resolve(Constants.MANIFEST_PATH),
@@ -112,6 +115,7 @@ public class ResearchObjectListResource {
         ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType()).fileName(Constants.MANIFEST_PATH)
                 .build();
 
+        LOGGER.debug(String.format("%s\t\tReturning", new DateTime().toString()));
         return Response.created(researchObjectURI).entity(manifest).header("Content-disposition", cd).build();
     }
 }
