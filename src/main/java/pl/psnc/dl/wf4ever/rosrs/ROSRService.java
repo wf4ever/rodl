@@ -21,6 +21,8 @@ import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.ResourceInfo;
 import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
+import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dlibra.service.AccessDeniedException;
 
@@ -701,7 +703,21 @@ public final class ROSRService {
         return Response.noContent().build();
     }
 
-
+    
+    public static Response createNewResearchObjectFromZip(MemoryZipFile zip) {
+        URI tmpUri;
+        try {
+            tmpUri = new URI("");
+        } catch (URISyntaxException e) {
+            return Response.serverError().build();
+        }
+              
+        SemanticMetadataService tmpSms = new SemanticMetadataServiceImpl(ROSRService.SMS.get().getUserProfile(), tmpUri, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
+        
+        tmpSms.close();
+        return null;
+    }
+    
     /**
      * Find out all annotations of the RO and store them in dLibra as attributes.
      * 

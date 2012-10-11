@@ -14,10 +14,8 @@ import org.junit.Test;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-
 public class ManifestTest extends ResourceBase {
 
-    
     private final String filePath = "foo/bar ra.txt";
     private final String filePathEncoded = "foo/bar%20ra.txt";
     private final String rdfFilePath = "foo/bar.rdf";
@@ -25,29 +23,33 @@ public class ManifestTest extends ResourceBase {
             + "   xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" >\n" + "   <ore:Proxy>\n"
             + "   </ore:Proxy>\n" + " </rdf:RDF>";
     private URI rdfProxy;
-    
+
+
     @Override
     public void setUp()
             throws Exception {
         super.setUp();
         //add file and rdf file
     }
-    
+
+
     @Override
     public void tearDown()
             throws Exception {
         super.tearDown();
     }
-    
+
+
     //@Test
     public void testUpdateManifest() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
         ClientResponse response = webResource.uri(ro).path("/.ro/manifest.rdf")
                 .header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
-        assertEquals("Updating manifest should be protected",HttpServletResponse.SC_FORBIDDEN, response.getStatus());
+        assertEquals("Updating manifest should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         response.close();
     }
-    
+
+
     //@Test
     public void getManifest() {
         addFile(ro, filePath, accessToken);
@@ -73,7 +75,8 @@ public class ManifestTest extends ResourceBase {
         assertEquals("Should return 404 for manifest.n3", HttpStatus.SC_NOT_FOUND, response.getStatus());
         response.close();
     }
-    
+
+
     //@Test
     public void getInitialManifest() {
         String manifest = webResource.uri(ro).path("/.ro/manifest.rdf")
@@ -89,6 +92,7 @@ public class ManifestTest extends ResourceBase {
         //        assertEquals(linkHeadersR, response.getHeaders().get("Link"));
         //        response.close();
     }
+
 
     //@Test
     public void getManifestWithAnnotationBody() {
@@ -110,5 +114,4 @@ public class ManifestTest extends ResourceBase {
         //assertTrue(manifest.contains("A test"));
     }
 
-    
 }

@@ -116,7 +116,7 @@ public class CopyOperation implements Operation {
                                 + resourceURI, e);
                     }
                 }
-            } else if (resource.hasRDFType(RO.AggregatedAnnotationClass.getURI())) {
+            } else if (resource.hasRDFType(RO.AggregatedAnnotation.getURI())) {
                 Resource annBody = resource.getPropertyResourceValue(AO.body);
                 List<URI> targets = new ArrayList<>();
                 List<RDFNode> annotationTargets = resource.listPropertyValues(RO.annotatesAggregatedResource).toList();

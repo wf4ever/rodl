@@ -1,10 +1,21 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -14,6 +25,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
@@ -24,6 +36,9 @@ import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.dlibra.UserProfile.Role;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
+import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -113,5 +128,31 @@ public class ResearchObjectListResource {
                 .build();
 
         return Response.created(researchObjectURI).entity(manifest).header("Content-disposition", cd).build();
+    }
+
+
+    @POST
+    @Consumes("application/zip")
+    public Response createResearchObjectFromZip(InputStream zipStream)
+            throws BadRequestException, IllegalArgumentException, UriBuilderException, ConflictException,
+            DigitalLibraryException, NotFoundException, URISyntaxException, IOException {
+        String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
+        if (researchObjectId == null || researchObjectId.isEmpty()) {
+            throw new BadRequestException("Research object ID is null or empty");
+        }
+        UUID uuid = UUID.randomUUID(); 
+        URI researchObjectURI = ROSRService.createResearchObject(uriInfo.getAbsolutePathBuilder()
+                .path(researchObjectId).path("/").build());
+        
+        File tmpFile = File.createTempFile("tmp_ro",uuid.toString());
+        
+        BufferedInputStream inputStream = new BufferedInputStream(request.getInputStream());
+        FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
+
+        IOUtils.copy(inputStream, fileOutputStream);
+        Response response = ROSRService.createNewResearchObjectFromZip(new MemoryZipFile(tmpFile));
+        tmpFile.delete();
+        
+        return response;
     }
 }

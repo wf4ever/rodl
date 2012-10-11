@@ -28,7 +28,7 @@ public class W4ETest extends JerseyTest {
     protected final String userId2Safe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId2.getBytes()));
     protected final String username = "John Doe";
     protected final String username2 = "May Gray";
-
+    protected static final String PROJECT_PATH = System.getProperty("user.dir");
 
     public W4ETest() {
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());

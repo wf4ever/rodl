@@ -282,7 +282,7 @@ public class ResearchObjectResource {
         List<URI> targets = new ArrayList<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         model.read(content, researchObject.toString());
-        ExtendedIterator<Individual> it = model.listIndividuals(RO.AggregatedAnnotationClass);
+        ExtendedIterator<Individual> it = model.listIndividuals(RO.AggregatedAnnotation);
         if (it.hasNext()) {
             Individual aggregatedAnnotation = it.next();
             NodeIterator it2 = aggregatedAnnotation.listPropertyValues(AO.body);
