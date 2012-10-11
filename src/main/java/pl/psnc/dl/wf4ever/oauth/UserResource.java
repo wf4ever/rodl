@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,12 +25,14 @@ import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.auth.OAuthManager;
+import pl.psnc.dl.wf4ever.common.ResearchObject;
+import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
-import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
+import pl.psnc.dl.wf4ever.rosrs.ResearchObjectFactory;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
 
 /**
@@ -206,18 +207,14 @@ public class UserResource {
         OAuthManager oauth = new OAuthManager();
 
         String userId = new String(Base64.decodeBase64(urlSafeUserId));
-
-        List<String> list = ROSRService.DL.get().getWorkspaceIds();
-        for (String workspaceId : list) {
-            ROSRService.DL.get().deleteWorkspace(workspaceId);
-            Set<URI> versions = ROSRService.SMS.get().findResearchObjectsByPrefix(
-                uriInfo.getBaseUriBuilder().path("workspaces").path(workspaceId).build());
-            for (URI uri : versions) {
-                ROSRService.SMS.get().removeResearchObject(uri);
-            }
+        Set<URI> list = ROSRService.SMS.get().findResearchObjectsByCreator(
+            UserProfile.generateAbsoluteURI(null, userId));
+        for (URI uri : list) {
+            ResearchObject ro = ResearchObjectFactory.get(uri);
+            ROSRService.deleteResearchObject(ro);
         }
-        ROSRService.SMS.get().removeUser(URI.create(userId));
 
+        ROSRService.SMS.get().removeUser(URI.create(userId));
         ROSRService.DL.get().deleteUser(userId);
         oauth.deleteUserCredentials(userId);
     }

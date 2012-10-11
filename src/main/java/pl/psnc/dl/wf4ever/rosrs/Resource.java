@@ -87,12 +87,12 @@ public class Resource {
                 .path(researchObjectId).path("/").build());
         URI resource = uriInfo.getAbsolutePath();
 
-        if (ROSRService.SMS.get().isProxy(researchObject.getUri(), resource)) {
+        if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
             return Response.status(Status.TEMPORARY_REDIRECT)
-                    .location(ROSRService.SMS.get().getProxyFor(researchObject.getUri(), resource)).build();
+                    .location(ROSRService.SMS.get().getProxyFor(researchObject, resource)).build();
         }
-        if (ROSRService.SMS.get().isAggregatedResource(researchObject.getUri(), resource)) {
-            if (ROSRService.SMS.get().isAnnotation(researchObject.getUri(), resource)) {
+        if (ROSRService.SMS.get().isAggregatedResource(researchObject, resource)) {
+            if (ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
                 return Response
                         .status(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE)
                         .entity(
@@ -154,7 +154,7 @@ public class Resource {
         URI body;
         List<URI> targets = new ArrayList<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        model.read(content, researchObject.toString());
+        model.read(content, researchObject.getUri().toString());
         ExtendedIterator<Individual> it = model.listIndividuals(Constants.RO_AGGREGATED_ANNOTATION_CLASS);
         if (it.hasNext()) {
             Individual aggregatedAnnotation = it.next();
@@ -190,13 +190,13 @@ public class Resource {
             throw new BadRequestException("The entity body does not define any ro:AggregatedAnnotation.");
         }
 
-        if (!ROSRService.SMS.get().isAnnotation(researchObject.getUri(), resource)) {
+        if (!ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
             throw new ForbiddenException("You cannot create a new annotation using PUT, use POST instead.");
         }
         URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, resource, null);
         if (oldAnnotationBody == null || !oldAnnotationBody.equals(body)) {
             ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody);
-            if (ROSRService.SMS.get().isAggregatedResource(researchObject.getUri(), body)) {
+            if (ROSRService.SMS.get().isAggregatedResource(researchObject, body)) {
                 ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, body);
             }
         }
@@ -227,7 +227,8 @@ public class Resource {
     public Response getResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original, @Context Request request)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        ResearchObject researchObject = ResearchObjectFactory.get(uriInfo.getBaseUriBuilder().path("ROs")
+                .path(researchObjectId).path("/").build());
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
@@ -283,7 +284,8 @@ public class Resource {
     public Response deleteResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        ResearchObject researchObject = ResearchObjectFactory.get(uriInfo.getBaseUriBuilder().path("ROs")
+                .path(researchObjectId).path("/").build());
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
@@ -302,7 +304,7 @@ public class Resource {
         if (original != null) {
             resource = resource.resolve(original);
         }
-        if (researchObject.resolve(Constants.MANIFEST_PATH).equals(resource)) {
+        if (researchObject.getManifestUri().equals(resource)) {
             throw new ForbiddenException("Can't delete the manifest");
         }
         return ROSRService.deaggregateInternalResource(researchObject, resource);

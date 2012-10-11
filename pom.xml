@@ -48,6 +48,11 @@
 			<version>3.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
+			<groupId>pl.psnc.dl.wf4ever</groupId>
+			<artifactId>rodl-common</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
 			<version>2.1</version>
@@ -173,11 +178,6 @@
 			<artifactId>jersey-test-framework-grizzly2</artifactId>
 			<version>${jersey.version}</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>pl.psnc.dl.wf4ever</groupId>
-			<artifactId>rodl-common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<organization>
