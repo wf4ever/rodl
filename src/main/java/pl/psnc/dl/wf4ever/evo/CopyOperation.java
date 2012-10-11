@@ -14,7 +14,6 @@ import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
-import pl.psnc.dl.wf4ever.rosrs.ResearchObjectFactory;
 import pl.psnc.dlibra.service.AccessDeniedException;
 
 import com.hp.hpl.jena.ontology.Individual;
@@ -64,8 +63,8 @@ public class CopyOperation implements Operation {
         }
         status.setTarget(target);
 
-        ResearchObject targetRO = ResearchObjectFactory.get(target);
-        ResearchObject sourceRO = ResearchObjectFactory.get(status.getCopyfrom());
+        ResearchObject targetRO = ResearchObject.get(target);
+        ResearchObject sourceRO = ResearchObject.get(status.getCopyfrom());
 
         try {
             ROSRService.createResearchObject(targetRO, status.getType(), sourceRO);

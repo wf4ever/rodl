@@ -128,7 +128,7 @@ public class ResearchObjectResource {
     @DELETE
     public void deleteResearchObject(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, NotFoundException {
-        ResearchObject researchObject = ResearchObjectFactory.get(uriInfo.getAbsolutePath());
+        ResearchObject researchObject = ResearchObject.get(uriInfo.getAbsolutePath());
         ROSRService.deleteResearchObject(researchObject);
     }
 
@@ -153,7 +153,7 @@ public class ResearchObjectResource {
     @POST
     public Response addResource(@PathParam("ro_id") String researchObjectId, InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
-        ResearchObject researchObject = ResearchObjectFactory.get(uriInfo.getAbsolutePath());
+        ResearchObject researchObject = ResearchObject.get(uriInfo.getAbsolutePath());
         URI resource;
         if (request.getHeader(Constants.SLUG_HEADER) != null) {
             resource = uriInfo.getAbsolutePathBuilder().path(request.getHeader(Constants.SLUG_HEADER)).build();
@@ -220,7 +220,7 @@ public class ResearchObjectResource {
     @Consumes(Constants.PROXY_MIME_TYPE)
     public Response addProxy(@PathParam("ro_id") String researchObjectId, InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
-        ResearchObject researchObject = ResearchObjectFactory.get(uriInfo.getAbsolutePath());
+        ResearchObject researchObject = ResearchObject.get(uriInfo.getAbsolutePath());
         URI proxyFor;
         if (request.getHeader(Constants.SLUG_HEADER) != null) {
             // internal resource
@@ -276,7 +276,7 @@ public class ResearchObjectResource {
     @Consumes(Constants.ANNOTATION_MIME_TYPE)
     public Response addAnnotation(@PathParam("ro_id") String researchObjectId, InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
-        ResearchObject researchObject = ResearchObjectFactory.get(uriInfo.getAbsolutePath());
+        ResearchObject researchObject = ResearchObject.get(uriInfo.getAbsolutePath());
         URI body;
         List<URI> targets = new ArrayList<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);

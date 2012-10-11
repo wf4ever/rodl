@@ -32,7 +32,6 @@ import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
-import pl.psnc.dl.wf4ever.rosrs.ResearchObjectFactory;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
 
 /**
@@ -210,7 +209,7 @@ public class UserResource {
         Set<URI> list = ROSRService.SMS.get().findResearchObjectsByCreator(
             UserProfile.generateAbsoluteURI(null, userId));
         for (URI uri : list) {
-            ResearchObject ro = ResearchObjectFactory.get(uri);
+            ResearchObject ro = ResearchObject.get(uri);
             ROSRService.deleteResearchObject(ro);
         }
 
