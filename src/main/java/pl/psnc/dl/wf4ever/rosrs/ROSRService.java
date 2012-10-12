@@ -480,8 +480,7 @@ public final class ROSRService {
         }
         ContentDisposition cd = ContentDisposition.type(resInfo.getMimeType()).fileName(getFilename(resource)).build();
         InputStream body = ROSRService.DL.get().getFileContents(researchObject, filePath);
-        return Response.ok(body).type(resInfo.getMimeType()).header("Content-disposition", cd)
-                .header("Content-type", resInfo.getMimeType());
+        return Response.ok(body).type(resInfo.getMimeType()).header("Content-disposition", cd);
     }
 
 
