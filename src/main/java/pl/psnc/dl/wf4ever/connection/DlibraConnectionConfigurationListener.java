@@ -15,9 +15,11 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import org.hibernate.HibernateException;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-
-import pl.psnc.dl.wf4ever.common.ResearchObject;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.ServiceRegistryBuilder;
 
 /**
  * Read in the dLibra connection parameters on startup.
@@ -30,6 +32,9 @@ public class DlibraConnectionConfigurationListener implements ServletContextList
     /** connection properties file name. */
     private static final String CONNECTION_PROPERTIES_FILENAME = "connection.properties.filename";
 
+    /** session factory per request. */
+    private SessionFactory sessionFactory;
+
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -38,7 +43,7 @@ public class DlibraConnectionConfigurationListener implements ServletContextList
         String fileName = servletContext.getInitParameter(CONNECTION_PROPERTIES_FILENAME);
         DigitalLibraryFactory.loadDigitalLibraryConfiguration(fileName);
 
-        ResearchObject.configureSessionFactory(new Configuration());
+        this.sessionFactory = configureSessionFactory(new Configuration());
     }
 
 
@@ -46,4 +51,24 @@ public class DlibraConnectionConfigurationListener implements ServletContextList
     public void contextDestroyed(ServletContextEvent sce) {
         // nothing to do
     }
+
+
+    /**
+     * Initialize Hibernate's session factory.
+     * 
+     * @param configuration
+     *            Hibernate configuration
+     * @return session factory
+     * @throws HibernateException
+     *             exception when building the session factory
+     */
+    public static SessionFactory configureSessionFactory(Configuration configuration)
+            throws HibernateException {
+        configuration.configure();
+        ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties())
+                .buildServiceRegistry();
+        SessionFactory sessionFactory = configuration.buildSessionFactory(serviceRegistry);
+        return sessionFactory;
+    }
+
 }
