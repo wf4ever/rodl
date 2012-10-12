@@ -15,6 +15,10 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import org.hibernate.cfg.Configuration;
+
+import pl.psnc.dl.wf4ever.common.ResearchObject;
+
 /**
  * Read in the dLibra connection parameters on startup.
  * 
@@ -33,6 +37,8 @@ public class DlibraConnectionConfigurationListener implements ServletContextList
 
         String fileName = servletContext.getInitParameter(CONNECTION_PROPERTIES_FILENAME);
         DigitalLibraryFactory.loadDigitalLibraryConfiguration(fileName);
+
+        ResearchObject.configureSessionFactory(new Configuration());
     }
 
 
