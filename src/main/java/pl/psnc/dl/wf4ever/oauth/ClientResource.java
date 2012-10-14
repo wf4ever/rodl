@@ -11,8 +11,9 @@ import javax.ws.rs.core.UriInfo;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
-import pl.psnc.dl.wf4ever.auth.OAuthManager;
 import pl.psnc.dl.wf4ever.common.UserProfile;
+
+import com.sun.jersey.api.NotFoundException;
 
 /**
  * Client application REST API resource.
@@ -42,13 +43,12 @@ public class ClientResource {
     @GET
     public OAuthClient getClient(@PathParam("C_ID") String clientId) {
         UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        OAuthManager oauth = new OAuthManager();
 
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage clients.");
         }
 
-        return oauth.getClient(clientId);
+        return OAuthClient.findById(clientId);
     }
 
 
@@ -61,12 +61,15 @@ public class ClientResource {
     @DELETE
     public void deleteClient(@PathParam("C_ID") String clientId) {
         UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        OAuthManager oauth = new OAuthManager();
 
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage clients.");
         }
 
-        oauth.deleteClient(clientId);
+        OAuthClient client = OAuthClient.findById(clientId);
+        if (client == null) {
+            throw new NotFoundException();
+        }
+        client.delete();
     }
 }

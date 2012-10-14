@@ -3,8 +3,9 @@
  */
 package pl.psnc.dl.wf4ever.auth;
 
-import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 import javax.persistence.Basic;
 import javax.persistence.Entity;
@@ -15,6 +16,12 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
+
+import pl.psnc.dl.wf4ever.common.ActiveRecord;
+import pl.psnc.dl.wf4ever.common.HibernateUtil;
+
 /**
  * OAuth access token DAO.
  * 
@@ -24,7 +31,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "tokens")
 @XmlRootElement(name = "access-token")
-public class AccessToken implements Serializable {
+public class AccessToken extends ActiveRecord {
 
     /** id. */
     private static final long serialVersionUID = 8724845005623981779L;
@@ -39,7 +46,7 @@ public class AccessToken implements Serializable {
     private UserCredentials user;
 
     /** token creation date. */
-    private Date created;
+    private Date created = new Date();
 
     /** token last usage date. */
     private Date lastUsed;
@@ -66,6 +73,22 @@ public class AccessToken implements Serializable {
     public AccessToken(String token, OAuthClient client, UserCredentials user) {
         super();
         this.token = token;
+        this.client = client;
+        this.user = user;
+    }
+
+
+    /**
+     * Constructor. The token value will be a random UUID.
+     * 
+     * @param client
+     *            client application
+     * @param user
+     *            token owner
+     */
+    public AccessToken(OAuthClient client, UserCredentials user) {
+        super();
+        this.token = UUID.randomUUID().toString();
         this.client = client;
         this.user = user;
     }
@@ -130,6 +153,24 @@ public class AccessToken implements Serializable {
 
     public void setLastUsed(Date lastUsed) {
         this.lastUsed = lastUsed;
+    }
+
+
+    public static AccessToken findByValue(String value) {
+        return findByPrimaryKey(AccessToken.class, value);
+    }
+
+
+    @SuppressWarnings("unchecked")
+    public static List<AccessToken> findByClientOrUser(OAuthClient client, UserCredentials creds) {
+        Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(AccessToken.class);
+        if (client != null) {
+            criteria.add(Restrictions.eq("client.clientId", client.getClientId()));
+        }
+        if (creds != null) {
+            criteria.add(Restrictions.eq("user.userId", creds.getUserId()));
+        }
+        return criteria.list();
     }
 
 }

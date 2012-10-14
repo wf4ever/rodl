@@ -83,7 +83,7 @@ public class Resource {
     public Response putResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original, String entity)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        ResearchObject researchObject = ResearchObject.get(uriInfo.getBaseUriBuilder().path("ROs")
+        ResearchObject researchObject = ResearchObject.findByUri(uriInfo.getBaseUriBuilder().path("ROs")
                 .path(researchObjectId).path("/").build());
         URI resource = uriInfo.getAbsolutePath();
 
@@ -148,7 +148,7 @@ public class Resource {
     public Response updateAnnotation(@PathParam("ro_id") String researchObjectId,
             @PathParam("filePath") String filePath, @QueryParam("original") String original, InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
-        ResearchObject researchObject = ResearchObject.get(uriInfo.getBaseUriBuilder().path("ROs")
+        ResearchObject researchObject = ResearchObject.findByUri(uriInfo.getBaseUriBuilder().path("ROs")
                 .path(researchObjectId).path("/").build());
         URI resource = uriInfo.getAbsolutePath();
         URI body;
@@ -227,7 +227,7 @@ public class Resource {
     public Response getResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original, @Context Request request)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        ResearchObject researchObject = ResearchObject.get(uriInfo.getBaseUriBuilder().path("ROs")
+        ResearchObject researchObject = ResearchObject.findByUri(uriInfo.getBaseUriBuilder().path("ROs")
                 .path(researchObjectId).path("/").build());
         URI resource = uriInfo.getAbsolutePath();
 
@@ -284,7 +284,7 @@ public class Resource {
     public Response deleteResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        ResearchObject researchObject = ResearchObject.get(uriInfo.getBaseUriBuilder().path("ROs")
+        ResearchObject researchObject = ResearchObject.findByUri(uriInfo.getBaseUriBuilder().path("ROs")
                 .path(researchObjectId).path("/").build());
         URI resource = uriInfo.getAbsolutePath();
 

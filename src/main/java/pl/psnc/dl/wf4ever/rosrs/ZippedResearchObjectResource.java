@@ -45,7 +45,7 @@ public class ZippedResearchObjectResource {
     @Produces({ "application/zip", "multipart/related" })
     public Response getZippedRO(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, NotFoundException {
-        ResearchObject researchObject = ResearchObject.get(uriInfo.getAbsolutePath().resolve(
+        ResearchObject researchObject = ResearchObject.findByUri(uriInfo.getAbsolutePath().resolve(
             "../../ROs/" + researchObjectId));
         InputStream body = ROSRService.DL.get().getZippedResearchObject(researchObject);
         //TODO add all named graphs from SMS that start with the base URI

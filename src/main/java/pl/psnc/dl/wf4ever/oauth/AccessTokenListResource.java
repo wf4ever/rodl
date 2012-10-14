@@ -21,11 +21,13 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.AccessToken;
 import pl.psnc.dl.wf4ever.auth.AccessTokenList;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
-import pl.psnc.dl.wf4ever.auth.OAuthManager;
+import pl.psnc.dl.wf4ever.auth.OAuthClient;
+import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 
 /**
@@ -64,7 +66,6 @@ public class AccessTokenListResource {
     public AccessTokenList getAccessTokenList(@QueryParam("client_id") String clientId,
             @QueryParam("user_id") String userId) {
         UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        OAuthManager oauth = new OAuthManager();
 
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
@@ -72,7 +73,8 @@ public class AccessTokenListResource {
         if (userId != null) {
             userId = new String(Base64.decodeBase64(userId));
         }
-        List<AccessToken> list = oauth.getAccessTokens(clientId, userId);
+        List<AccessToken> list = AccessToken.findByClientOrUser(OAuthClient.findById(clientId),
+            UserCredentials.findByUserId(userId));
         return new AccessTokenList(list);
     }
 
@@ -84,26 +86,36 @@ public class AccessTokenListResource {
      *            text/plain with id in first line and password in second.
      * @return 201 (Created) when the access token was successfully created, 400 (Bad Request) if the user does not
      *         exist
+     * @throws BadRequestException
+     *             the body is incorrect
      */
     @POST
     @Consumes("text/plain")
     @Produces("text/plain")
-    public Response createAccessToken(String data) {
+    public Response createAccessToken(String data)
+            throws BadRequestException {
         UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        OAuthManager oauth = new OAuthManager();
 
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
         }
         String[] lines = data.split("[\\r\\n]+");
         if (lines.length < 2) {
-            return Response.status(Status.BAD_REQUEST).entity("Content is shorter than 2 lines")
-                    .header("Content-type", "text/plain").build();
+            throw new BadRequestException("Content is shorter than 2 lines");
         }
 
         try {
-            String accessToken = oauth.createAccessToken(lines[0], lines[1]).getToken();
-            URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build().resolve(accessToken);
+            OAuthClient client = OAuthClient.findById(lines[0]);
+            if (client == null) {
+                throw new BadRequestException("Client not found");
+            }
+            UserCredentials creds = UserCredentials.findByUserId(lines[1]);
+            if (creds == null) {
+                throw new BadRequestException("User not found");
+            }
+            AccessToken accessToken = new AccessToken(client, creds);
+            accessToken.save();
+            URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build().resolve(accessToken.getToken());
 
             return Response.created(resourceUri).build();
         } catch (IllegalArgumentException e) {

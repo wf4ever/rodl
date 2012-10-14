@@ -7,9 +7,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.auth.AccessToken;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
-import pl.psnc.dl.wf4ever.auth.OAuthManager;
 import pl.psnc.dl.wf4ever.common.UserProfile;
+
+import com.sun.jersey.api.NotFoundException;
 
 /**
  * The access token REST API resource.
@@ -34,12 +36,15 @@ public class AccessTokenResource {
     @DELETE
     public void deletAccessToken(@PathParam("T_ID") String token) {
         UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
-        OAuthManager oauth = new OAuthManager();
 
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
         }
 
-        oauth.deleteToken(token);
+        AccessToken accessToken = AccessToken.findByValue(token);
+        if (accessToken == null) {
+            throw new NotFoundException();
+        }
+        accessToken.delete();
     }
 }

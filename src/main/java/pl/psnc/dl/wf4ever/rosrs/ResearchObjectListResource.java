@@ -105,8 +105,8 @@ public class ResearchObjectListResource {
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
-        ResearchObject researchObject = ResearchObject.get(uriInfo.getAbsolutePathBuilder().path(researchObjectId)
-                .path("/").build());
+        ResearchObject researchObject = ResearchObject.findByUri(uriInfo.getAbsolutePathBuilder()
+                .path(researchObjectId).path("/").build());
         URI researchObjectURI = ROSRService.createResearchObject(researchObject);
         LOGGER.debug(String.format("%s\t\tRO created", new DateTime().toString()));
 

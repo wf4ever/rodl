@@ -31,7 +31,7 @@ public class EvoInfoResource {
     @GET
     @Produces("text/turtle")
     public Response evoInfoContent(@QueryParam("ro") URI researchObjectURI) {
-        ResearchObject researchObject = ResearchObject.get(researchObjectURI);
+        ResearchObject researchObject = ResearchObject.findByUri(researchObjectURI);
         //@TODO How to write the inforamtion in TTL format?
         InputStream stream = ROSRService.SMS.get().getEvoInfo(researchObject);
         return Response.ok(stream).header("Content-Type", "text/turtle").build();

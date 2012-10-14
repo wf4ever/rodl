@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever.auth;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Date;
 
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
@@ -111,17 +112,19 @@ public class SecurityFilter implements ContainerRequestFilter {
     /**
      * Find user credentials for a OAuth Bearer token.
      * 
-     * @param accessToken
+     * @param tokenValue
      *            access token
      * @return user credentials
      */
-    public UserCredentials getBearerCredentials(String accessToken) {
-        OAuthManager manager = new OAuthManager();
-        AccessToken token = manager.getAccessToken(accessToken);
-        if (token == null) {
-            return getBasicCredentials(accessToken);
+    public UserCredentials getBearerCredentials(String tokenValue) {
+        AccessToken accessToken = AccessToken.findByValue(tokenValue);
+        if (accessToken != null) {
+            accessToken.setLastUsed(new Date());
+            accessToken.save();
+            return accessToken.getUser();
+        } else {
+            return getBasicCredentials(tokenValue);
         }
-        return token.getUser();
     }
 
 
