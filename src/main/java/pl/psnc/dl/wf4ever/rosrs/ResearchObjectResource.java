@@ -129,7 +129,12 @@ public class ResearchObjectResource {
     public void deleteResearchObject(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, NotFoundException {
         ResearchObject researchObject = ResearchObject.findByUri(uriInfo.getAbsolutePath());
-        ROSRService.deleteResearchObject(researchObject);
+        if (researchObject != null) {
+            ROSRService.deleteResearchObject(researchObject);
+            researchObject.delete();
+        } else {
+            throw new com.sun.jersey.api.NotFoundException();
+        }
     }
 
 
