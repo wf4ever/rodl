@@ -133,7 +133,8 @@ public class ResearchObjectResource {
             ROSRService.deleteResearchObject(researchObject);
             researchObject.delete();
         } else {
-            throw new com.sun.jersey.api.NotFoundException();
+            researchObject = new ResearchObject(uriInfo.getAbsolutePath());
+            ROSRService.deleteResearchObject(researchObject);
         }
     }
 
