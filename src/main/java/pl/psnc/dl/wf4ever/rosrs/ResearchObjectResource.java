@@ -134,7 +134,6 @@ public class ResearchObjectResource {
             researchObject = new ResearchObject(uri);
         }
         ROSRService.deleteResearchObject(researchObject);
-        researchObject.delete();
     }
 
 

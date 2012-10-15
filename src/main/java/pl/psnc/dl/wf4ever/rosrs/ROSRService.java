@@ -145,6 +145,8 @@ public final class ROSRService {
                 ROSRService.SMS.get().removeResearchObject(researchObject);
             } catch (IllegalArgumentException e) {
                 LOGGER.warn("URI not found in SMS: " + researchObject);
+            } finally {
+                researchObject.delete();
             }
         }
     }
