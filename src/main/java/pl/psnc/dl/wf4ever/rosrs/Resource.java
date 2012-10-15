@@ -83,8 +83,11 @@ public class Resource {
     public Response putResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original, String entity)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        ResearchObject researchObject = ResearchObject.findByUri(uriInfo.getBaseUriBuilder().path("ROs")
-                .path(researchObjectId).path("/").build());
+        URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
@@ -148,8 +151,11 @@ public class Resource {
     public Response updateAnnotation(@PathParam("ro_id") String researchObjectId,
             @PathParam("filePath") String filePath, @QueryParam("original") String original, InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
-        ResearchObject researchObject = ResearchObject.findByUri(uriInfo.getBaseUriBuilder().path("ROs")
-                .path(researchObjectId).path("/").build());
+        URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
         URI resource = uriInfo.getAbsolutePath();
         URI body;
         List<URI> targets = new ArrayList<>();
@@ -227,8 +233,11 @@ public class Resource {
     public Response getResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original, @Context Request request)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        ResearchObject researchObject = ResearchObject.findByUri(uriInfo.getBaseUriBuilder().path("ROs")
-                .path(researchObjectId).path("/").build());
+        URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
@@ -284,8 +293,11 @@ public class Resource {
     public Response deleteResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        ResearchObject researchObject = ResearchObject.findByUri(uriInfo.getBaseUriBuilder().path("ROs")
-                .path(researchObjectId).path("/").build());
+        URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {

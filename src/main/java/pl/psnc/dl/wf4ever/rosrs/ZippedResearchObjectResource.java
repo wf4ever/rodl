@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
 import java.io.InputStream;
+import java.net.URI;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -45,8 +46,11 @@ public class ZippedResearchObjectResource {
     @Produces({ "application/zip", "multipart/related" })
     public Response getZippedRO(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, NotFoundException {
-        ResearchObject researchObject = ResearchObject.findByUri(uriInfo.getAbsolutePath().resolve(
-            "../../ROs/" + researchObjectId));
+        URI uri = uriInfo.getAbsolutePath().resolve("../../ROs/" + researchObjectId);
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
         InputStream body = ROSRService.DL.get().getZippedResearchObject(researchObject);
         //TODO add all named graphs from SMS that start with the base URI
         ContentDisposition cd = ContentDisposition.type("application/zip").fileName(researchObjectId + ".zip").build();
