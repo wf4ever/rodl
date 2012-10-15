@@ -40,7 +40,7 @@
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
 			<artifactId>rosrs-dlibra</artifactId>
- 			<version>1.2.1-SNAPSHOT</version>
+ 			<version>1.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
@@ -50,7 +50,7 @@
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
 			<artifactId>rodl-common</artifactId>
-			<version>0.2.0-SNAPSHOT</version>
+			<version>0.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
@@ -352,5 +352,5 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
-	<version>6.1.1-SNAPSHOT</version>
+	<version>6.2.0-SNAPSHOT</version>
 </project>
