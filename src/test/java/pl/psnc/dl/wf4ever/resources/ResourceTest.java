@@ -110,9 +110,10 @@ public class ResourceTest extends ResourceBase {
     public void createROFromZip() throws IOException {
         File file = new File(PROJECT_PATH + "/src/test/resources/ro1.zip");
         FileInputStream fileInputStream = new FileInputStream(file);
-        ClientResponse respone = webResource.path("ROs").accept("text/turtle")
+        ClientResponse response = webResource.path("ROs").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject).type("application/zip")
                 .post(ClientResponse.class,IOUtils.toByteArray(fileInputStream));
-        respone.close();
+        assertEquals("Access token should be cerated correctly",HttpServletResponse.SC_CREATED, response.getStatus());
+        response.close();
     }
 }

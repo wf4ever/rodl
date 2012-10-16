@@ -37,6 +37,8 @@ import pl.psnc.dlibra.service.AccessDeniedException;
 import com.google.common.collect.Multimap;
 import com.sun.jersey.core.header.ContentDisposition;
 
+import eu.medsea.mimeutil.MimeUtil;
+
 /**
  * Utility class for distributing the RO tasks to dLibra and SMS.
  * 
@@ -722,38 +724,43 @@ public final class ROSRService {
         } catch (ConflictException | DigitalLibraryException | NotFoundException | URISyntaxException e) {
             throw new BadRequestException("Research Object creation problem", e);
         }
-        
+
         SemanticMetadataService tmpSms = new SemanticMetadataServiceImpl(ROSRService.SMS.get().getUserProfile(),
                 tmpUri, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
-        
+
         List<AggregatedResource> aggregatedList;
         List<Annotation> annotationsList;
-        
+
         try {
             aggregatedList = tmpSms.getAggregatedResources(tmpUri);
             annotationsList = tmpSms.getAnnotations(tmpUri);
         } catch (ManifestTraversingException e) {
             throw new BadRequestException("manifest is not correct", e);
         }
-        
-        for(AggregatedResource aggregated : aggregatedList) {
-           InputStream is = zip.getEntryAsStream(PathString.removeFirstSlash(aggregated.getUri().getPath()));
-           if (is!= null) {
-               aggregateInternalResource(createdResearchObjectURI, createdResearchObjectURI.resolve(aggregated.getUri()), is, null, null);
-           }
-           else {
-               try {
-                aggregateExternalResource(createdResearchObjectURI, aggregated.getUri());
-            } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
-                //@TODO decide what to do in case og exception
-                e.printStackTrace();
+
+        for (AggregatedResource aggregated : aggregatedList) {
+            InputStream is = zip.getEntryAsStream(PathString.removeFirstSlash(aggregated.getUri().getPath()));
+            if (is != null) {
+                try {
+                    aggregateInternalResource(createdResearchObjectURI,
+                        createdResearchObjectURI.resolve(aggregated.getUri()), is,
+                        MimeUtil.getMediaType(PathString.getFileName(aggregated.getUri().getPath())), null);
+                } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                    throw new BadRequestException("manifest is not correct", e);
+                }
+            } else {
+                try {
+                    aggregateExternalResource(createdResearchObjectURI, aggregated.getUri());
+                } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                    //@TODO decide what to do in case og exception
+                    e.printStackTrace();
+                }
             }
-           }
         }
-        for(Annotation annotation : annotationsList) {
+        for (Annotation annotation : annotationsList) {
             addAnnotation(createdResearchObjectURI, annotation.getBody().getUri(), annotation.getAnnotatedToURIList());
         }
-        
+
         tmpSms.close();
         return null;
     }

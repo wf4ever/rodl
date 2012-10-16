@@ -10,5 +10,10 @@ public class PathString {
         else
             return path;
     }
+    
+    public static String getFileName(String path) {
+        String[] list = path.split("/");
+        return list[list.length-1];
+    }
 
 }
