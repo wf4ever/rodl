@@ -156,11 +156,27 @@ public class AccessToken extends ActiveRecord {
     }
 
 
+    /**
+     * Find the access token by its value.
+     * 
+     * @param value
+     *            access token value
+     * @return access token active record
+     */
     public static AccessToken findByValue(String value) {
         return findByPrimaryKey(AccessToken.class, value);
     }
 
 
+    /**
+     * Find an access token by its client id, user id or both.
+     * 
+     * @param client
+     *            client
+     * @param creds
+     *            owner
+     * @return access token active record
+     */
     @SuppressWarnings("unchecked")
     public static List<AccessToken> findByClientOrUser(OAuthClient client, UserCredentials creds) {
         Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(AccessToken.class);
