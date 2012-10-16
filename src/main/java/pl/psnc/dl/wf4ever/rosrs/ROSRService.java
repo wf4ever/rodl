@@ -5,14 +5,18 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.zip.ZipEntry;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
+import org.openjena.atlas.web.ContentType;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
@@ -20,8 +24,12 @@ import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.ResourceInfo;
 import pl.psnc.dl.wf4ever.evo.EvoType;
+import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
+import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
+import pl.psnc.dl.wf4ever.utils.URI.PathString;
 import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dlibra.service.AccessDeniedException;
@@ -623,8 +631,8 @@ public final class ROSRService {
             AO.annotatesResource);
         ResponseBuilder response = Response.created(annotation).header(Constants.LINK_HEADER, annotationBodyHeader);
         for (URI target : annotationTargets) {
-            String targetHeader = String.format(Constants.LINK_HEADER_TEMPLATE, target.toString(),
-                AO.annotatesResource);
+            String targetHeader = String
+                    .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
             response = response.header(Constants.LINK_HEADER, targetHeader);
         }
         return response.build();
@@ -653,8 +661,8 @@ public final class ROSRService {
             AO.annotatesResource);
         ResponseBuilder response = Response.ok().header(Constants.LINK_HEADER, annotationBodyHeader);
         for (URI target : annotationTargets) {
-            String targetHeader = String.format(Constants.LINK_HEADER_TEMPLATE, target.toString(),
-                AO.annotatesResource);
+            String targetHeader = String
+                    .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
             response = response.header(Constants.LINK_HEADER, targetHeader);
         }
         return response.build();
@@ -703,21 +711,54 @@ public final class ROSRService {
         return Response.noContent().build();
     }
 
-    
-    public static Response createNewResearchObjectFromZip(MemoryZipFile zip) {
+
+    public static Response createNewResearchObjectFromZip(URI freshResearchObjectURI, MemoryZipFile zip)
+            throws BadRequestException {
         URI tmpUri;
+        URI createdResearchObjectURI;
         try {
-            tmpUri = new URI("");
-        } catch (URISyntaxException e) {
-            return Response.serverError().build();
+            createdResearchObjectURI = createResearchObject(freshResearchObjectURI);
+            tmpUri = new URI("http://www.example.com/");
+        } catch (ConflictException | DigitalLibraryException | NotFoundException | URISyntaxException e) {
+            throw new BadRequestException("Research Object creation problem", e);
         }
-              
-        SemanticMetadataService tmpSms = new SemanticMetadataServiceImpl(ROSRService.SMS.get().getUserProfile(), tmpUri, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
+        
+        SemanticMetadataService tmpSms = new SemanticMetadataServiceImpl(ROSRService.SMS.get().getUserProfile(),
+                tmpUri, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
+        
+        List<AggregatedResource> aggregatedList;
+        List<Annotation> annotationsList;
+        
+        try {
+            aggregatedList = tmpSms.getAggregatedResources(tmpUri);
+            annotationsList = tmpSms.getAnnotations(tmpUri);
+        } catch (ManifestTraversingException e) {
+            throw new BadRequestException("manifest is not correct", e);
+        }
+        
+        for(AggregatedResource aggregated : aggregatedList) {
+           InputStream is = zip.getEntryAsStream(PathString.removeFirstSlash(aggregated.getUri().getPath()));
+           if (is!= null) {
+               aggregateInternalResource(createdResearchObjectURI, createdResearchObjectURI.resolve(aggregated.getUri()), is, null, null);
+           }
+           else {
+               try {
+                aggregateExternalResource(createdResearchObjectURI, aggregated.getUri());
+            } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                //@TODO decide what to do in case og exception
+                e.printStackTrace();
+            }
+           }
+        }
+        for(Annotation annotation : annotationsList) {
+            addAnnotation(createdResearchObjectURI, annotation.getBody().getUri(), annotation.getAnnotatedToURIList());
+        }
         
         tmpSms.close();
         return null;
     }
-    
+
+
     /**
      * Find out all annotations of the RO and store them in dLibra as attributes.
      * 

@@ -15,6 +15,18 @@ public class ResourceBase extends W4ETest{
     public ResourceBase() {
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
         createLinkHeaders();
+    }
+    
+    @Override
+    protected void finalize()
+            throws Throwable {
+        super.finalize();
+    }
+    
+    @Override
+    public void setUp()
+            throws Exception {
+        super.setUp();
         createUserWithAnswer(userIdSafe, username).close();
         accessToken = createAccessToken(userId);
         ro = createRO(accessToken);
@@ -22,12 +34,12 @@ public class ResourceBase extends W4ETest{
     }
     
     @Override
-    protected void finalize()
-            throws Throwable {
+    public void tearDown()
+            throws Exception {
         deleteROs();
         deleteAccessToken(accessToken);
         deleteUser(userIdSafe);
-        super.finalize();
+        super.tearDown();
     }
     
     /*

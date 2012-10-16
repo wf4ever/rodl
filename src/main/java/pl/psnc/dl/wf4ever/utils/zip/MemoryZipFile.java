@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.UnmappableCharacterException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -17,7 +18,9 @@ public class MemoryZipFile {
     ZipOutputStream zipOutputStream;
     ByteArrayOutputStream byteArrayOutputStream;
     ZipFile zipFile;
-
+    public ZipFile get() {
+        return zipFile;
+    }
 
     public MemoryZipFile() {
         byteArrayOutputStream = new ByteArrayOutputStream();
@@ -54,7 +57,7 @@ public class MemoryZipFile {
 
         try {
             return IOUtils.toByteArray(zipFile.getInputStream(zipFile.getEntry(entryName)));
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             e.printStackTrace();
             return null;
         }
@@ -65,11 +68,10 @@ public class MemoryZipFile {
         return new String(getEntry(".ro/manifest.rdf"));
     }
     
-    public InputStream getEntryAsStream(String entryName) {
+    public InputStream getEntryAsStream(String entryName) {        
         try {
             return zipFile.getInputStream(zipFile.getEntry(entryName));
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException | NullPointerException e) {
             return null;
         }
     }

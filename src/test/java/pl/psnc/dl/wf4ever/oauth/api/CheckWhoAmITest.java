@@ -16,33 +16,33 @@ public class CheckWhoAmITest extends W4ETest {
     public void setUp()
             throws Exception {
         super.setUp();
-    }
-
-
-    @Override
-    public void tearDown()
-            throws Exception {
-        super.tearDown();
-    }
-
-
-    public CheckWhoAmITest() {
-        super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
         createUserWithAnswer(userIdSafe, username).close();
         accessToken = createAccessToken(userId);
     }
 
 
     @Override
-    protected void finalize()
-            throws Throwable {
+    public void tearDown()
+            throws Exception {
         deleteAccessToken(accessToken);
         deleteUser(userIdSafe);
+        super.tearDown();
+    }
+
+
+    public CheckWhoAmITest() {
+        super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
+    }
+
+
+    @Override
+    protected void finalize()
+            throws Throwable {
         super.finalize();
     }
 
 
-    //@Test
+    @Test
     public void checkWhoAmITest() {
         String whoami = webResource.path("whoami/").header("Authorization", "Bearer " + accessToken).get(String.class);
         Assert.assertTrue(whoami.contains(userId));
@@ -50,7 +50,7 @@ public class CheckWhoAmITest extends W4ETest {
     }
 
 
-    //@Test(expected=UniformInterfaceException.class)
+    @Test(expected=UniformInterfaceException.class)
     public void checkUnauthorizedWhoIAmQuestion() {
         webResource.path("whoami/").get(Response.class);
     }

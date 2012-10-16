@@ -18,13 +18,11 @@ public class AccessTokenTest extends W4ETest {
     
     public AccessTokenTest(){
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
-        createUserWithAnswer(userIdSafe, username).close();
     }
     
     @Override
     protected void finalize()
             throws Throwable {
-        deleteUser(userIdSafe);
         super.finalize();
     }
     
@@ -32,17 +30,19 @@ public class AccessTokenTest extends W4ETest {
     public void setUp()
             throws Exception {
         super.setUp();  
+        createUserWithAnswer(userIdSafe, username).close();
     }
 
     @Override
     public void tearDown()
             throws Exception {
+        deleteUser(userIdSafe);
         super.tearDown();
     }
 
         
    
-    //@Test
+    @Test
     public void testAccessTokenCreation() {
         ClientResponse response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, clientId + "\r\n" + userId);
@@ -51,7 +51,7 @@ public class AccessTokenTest extends W4ETest {
         response.close();
     }
     
-    //@Test
+    @Test
     public void testGetAccessToken(){
         testAccessToken = createAccessToken(userId);
         String list = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)

@@ -27,7 +27,7 @@ public class UsersTest extends W4ETest {
         super.tearDown();
     }
 
-    
+
     public UsersTest() {
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
 
@@ -40,10 +40,11 @@ public class UsersTest extends W4ETest {
         super.finalize();
     }
 
-    //@Test
+
+    @Test
     public void testUserCreation() {
         ClientResponse response = createUserWithAnswer(userIdSafe, username);
-        assertEquals("DUPA",HttpServletResponse.SC_CREATED, response.getStatus());
+        assertEquals("should be reated", HttpServletResponse.SC_CREATED, response.getStatus());
         response.close();
         response = createUserWithAnswer(userId2Safe, username2);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
@@ -54,12 +55,12 @@ public class UsersTest extends W4ETest {
     }
 
 
-    //@Test
+    @Test
     public void testGetUser() {
-        
+
         ClientResponse response = createUserWithAnswer(userIdSafe, username);
         ClientResponse response2 = createUserWithAnswer(userId2Safe, username2);
-        
+
         String user = webResource.path("users/" + userIdSafe).header("Authorization", "Bearer " + adminCreds)
                 .get(String.class);
         assertTrue(user.contains(userId));
@@ -71,10 +72,10 @@ public class UsersTest extends W4ETest {
         user = webResource.path("users/" + userId2Safe).header("Authorization", "Bearer " + adminCreds)
                 .accept("application/x-turtle").get(String.class);
         assertTrue(user.contains(userId2));
-        
+
         response.close();
         response2.close();
-        
+
         deleteUser(userIdSafe);
         deleteUser(userId2Safe);
     }

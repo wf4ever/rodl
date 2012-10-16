@@ -19,7 +19,6 @@ public class AnnotationTest extends ResourceBase {
     @Override
     public void setUp()
             throws Exception {
-        // TODO Auto-generated method stub
         super.setUp();
     }
 
@@ -27,8 +26,6 @@ public class AnnotationTest extends ResourceBase {
     @Override
     public void tearDown()
             throws Exception {
-        // TODO Auto-generated method stub
-        //cleaning annotation
     }
 
 

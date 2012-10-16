@@ -40,7 +40,7 @@ public class ClientTest extends W4ETest {
         super.tearDown();
     }
 
-    //@Test
+    @Test
     public void testClientCreation() {
         ClientResponse response = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, testClientName + "\r\n" + clientRedirectionURI);
@@ -51,13 +51,13 @@ public class ClientTest extends W4ETest {
         deleteClient(testClientID);
     }
     
-    //@Test
+    @Test
     public void testGetCLients() {
         String list = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds).get(String.class);
         assertTrue("clients list should contain client id", list.contains(clientId));
     }
     
-    //@Test
+    @Test
     public void testGetClient() {
         String client = webResource.path("clients/" + clientId).header("Authorization", "Bearer " + adminCreds)
                 .get(String.class);

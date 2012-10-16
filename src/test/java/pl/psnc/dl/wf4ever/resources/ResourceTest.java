@@ -106,9 +106,9 @@ public class ResourceTest extends ResourceBase {
         response.close();
     }
 
-    @Test
+    //@Test
     public void createROFromZip() throws IOException {
-        File file = new File(PROJECT_PATH + "/src/test/resources/example_ro.zip");
+        File file = new File(PROJECT_PATH + "/src/test/resources/ro1.zip");
         FileInputStream fileInputStream = new FileInputStream(file);
         ClientResponse respone = webResource.path("ROs").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject).type("application/zip")
