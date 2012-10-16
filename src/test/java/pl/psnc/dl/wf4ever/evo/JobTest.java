@@ -3,14 +3,14 @@ package pl.psnc.dl.wf4ever.evo;
 import static org.junit.Assert.assertEquals;
 
 import java.net.URI;
+
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
-import com.sun.jersey.api.client.ClientResponse;
 
-import pl.psnc.dl.wf4ever.evo.EvoType;
-import pl.psnc.dl.wf4ever.evo.JobStatus;
 import pl.psnc.dl.wf4ever.evo.Job.State;
+
+import com.sun.jersey.api.client.ClientResponse;
 
 /**
  * @author filipwis
