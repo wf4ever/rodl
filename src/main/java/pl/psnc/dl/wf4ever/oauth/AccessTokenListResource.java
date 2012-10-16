@@ -73,8 +73,9 @@ public class AccessTokenListResource {
         if (userId != null) {
             userId = new String(Base64.decodeBase64(userId));
         }
-        List<AccessToken> list = AccessToken.findByClientOrUser(OAuthClient.findById(clientId),
-            UserCredentials.findByUserId(userId));
+        OAuthClient client = clientId != null ? OAuthClient.findById(clientId) : null;
+        UserCredentials creds = userId != null ? UserCredentials.findByUserId(userId) : null;
+        List<AccessToken> list = AccessToken.findByClientOrUser(client, creds);
         return new AccessTokenList(list);
     }
 
