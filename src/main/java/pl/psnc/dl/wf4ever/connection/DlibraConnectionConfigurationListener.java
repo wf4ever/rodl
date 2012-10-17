@@ -40,4 +40,5 @@ public class DlibraConnectionConfigurationListener implements ServletContextList
     public void contextDestroyed(ServletContextEvent sce) {
         // nothing to do
     }
+
 }

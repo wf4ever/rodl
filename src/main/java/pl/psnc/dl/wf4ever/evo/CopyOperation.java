@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import pl.psnc.dl.wf4ever.Constants;
+
+import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
@@ -64,15 +65,18 @@ public class CopyOperation implements Operation {
         }
         status.setTarget(target);
 
+        ResearchObject targetRO = ResearchObject.findByUri(target);
+        ResearchObject sourceRO = ResearchObject.findByUri(status.getCopyfrom());
+
         try {
-            ROSRService.createResearchObject(target, status.getType(), status.getCopyfrom());
+            ROSRService.createResearchObject(targetRO, status.getType(), sourceRO);
         } catch (ConflictException | DigitalLibraryException | NotFoundException e) {
             throw new OperationFailedException("Could not create the target research object", e);
         }
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(status.getCopyfrom().resolve(Constants.MANIFEST_PATH).toString());
-        Individual source = model.getIndividual(status.getCopyfrom().toString());
+        model.read(sourceRO.getManifestUri().toString());
+        Individual source = model.getIndividual(sourceRO.getUri().toString());
         if (source == null) {
             throw new OperationFailedException("The manifest does not describe the research object");
         }
@@ -81,7 +85,7 @@ public class CopyOperation implements Operation {
         for (RDFNode aggregatedResource : aggregatedResources) {
             if (Thread.interrupted()) {
                 try {
-                    ROSRService.deleteResearchObject(target);
+                    ROSRService.deleteResearchObject(targetRO);
                 } catch (DigitalLibraryException | NotFoundException e) {
                     LOGGER.error("Could not delete the target when aborting: " + target, e);
                 }
@@ -101,7 +105,7 @@ public class CopyOperation implements Operation {
                         ClientResponse response = webResource.get(ClientResponse.class);
                         URI resourcePath = status.getCopyfrom().relativize(resourceURI);
                         URI targetURI = target.resolve(resourcePath);
-                        ROSRService.aggregateInternalResource(target, targetURI, response.getEntityInputStream(),
+                        ROSRService.aggregateInternalResource(targetRO, targetURI, response.getEntityInputStream(),
                             response.getType().toString(), null);
                         changedURIs.put(resourceURI, targetURI);
                     } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
@@ -110,7 +114,7 @@ public class CopyOperation implements Operation {
                     }
                 } else {
                     try {
-                        ROSRService.aggregateExternalResource(target, resourceURI);
+                        ROSRService.aggregateExternalResource(targetRO, resourceURI);
                     } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
                         throw new OperationFailedException("Could not create aggregate external resource: "
                                 + resourceURI, e);
@@ -127,11 +131,11 @@ public class CopyOperation implements Operation {
                     }
                     targets.add(URI.create(annTarget.asResource().getURI()));
                 }
-                ROSRService.addAnnotation(target, URI.create(annBody.getURI()), targets);
+                ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets);
             }
         }
         for (Map.Entry<URI, URI> e : changedURIs.entrySet()) {
-            ROSRService.SMS.get().changeURIInManifestAndAnnotationBodies(target, e.getKey(), e.getValue());
+            ROSRService.SMS.get().changeURIInManifestAndAnnotationBodies(targetRO, e.getKey(), e.getValue());
         }
         try {
             storeHistoryInformation(status.getTarget());

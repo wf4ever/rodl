@@ -7,12 +7,10 @@ import java.net.URI;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
-import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.evo.Job.State;
 
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.test.framework.WebAppDescriptor;
 
 /**
  * @author filipwis
@@ -20,11 +18,11 @@ import com.sun.jersey.test.framework.WebAppDescriptor;
  */
 public class JobTest extends EvoTest {
 
-    
     public JobTest() {
         super();
     }
-    
+
+
     //@Test
     public final void testCopyJobCreation()
             throws InterruptedException {
@@ -70,7 +68,7 @@ public class JobTest extends EvoTest {
         JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, true);
         URI copyAndFinalizeJob = createCopyJob(status).getLocation();
         JobStatus remoteStatus = getRemoteStatus(copyAndFinalizeJob, WAIT_FOR_COPY + WAIT_FOR_FINALIZE);
-        Assert.assertEquals(remoteStatus.toString(),State.DONE, remoteStatus.getState());
+        Assert.assertEquals(remoteStatus.toString(), State.DONE, remoteStatus.getState());
         //OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         //model.read(status.getTarget().toString());
         //TODO verify correct finalized RO

@@ -1,14 +1,10 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
@@ -27,17 +23,17 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.common.ResearchObject;
+import pl.psnc.dl.wf4ever.common.UserProfile;
+import pl.psnc.dl.wf4ever.common.UserProfile.Role;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
-import pl.psnc.dl.wf4ever.dlibra.UserProfile;
-import pl.psnc.dl.wf4ever.dlibra.UserProfile.Role;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
 import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 
 import com.sun.jersey.core.header.ContentDisposition;
@@ -52,7 +48,6 @@ import com.sun.jersey.core.header.ContentDisposition;
 public class ResearchObjectListResource {
 
     /** logger. */
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = Logger.getLogger(ResearchObjectListResource.class);
 
     /** HTTP request. */
@@ -114,19 +109,26 @@ public class ResearchObjectListResource {
     public Response createResearchObject()
             throws BadRequestException, IllegalArgumentException, UriBuilderException, ConflictException,
             DigitalLibraryException, NotFoundException {
+        LOGGER.debug(String.format("%s\t\tInit create RO", new DateTime().toString()));
         String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
-        URI researchObjectURI = ROSRService.createResearchObject(uriInfo.getAbsolutePathBuilder()
-                .path(researchObjectId).path("/").build());
+        URI uri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject != null) {
+            throw new ConflictException("RO already exists");
+        }
+        researchObject = new ResearchObject(uri);
+        URI researchObjectURI = ROSRService.createResearchObject(researchObject);
+        LOGGER.debug(String.format("%s\t\tRO created", new DateTime().toString()));
 
         RDFFormat format = RDFFormat.forMIMEType(request.getHeader(Constants.ACCEPT_HEADER), RDFFormat.RDFXML);
-        InputStream manifest = ROSRService.SMS.get().getNamedGraph(researchObjectURI.resolve(Constants.MANIFEST_PATH),
-            format);
-        ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType()).fileName(Constants.MANIFEST_PATH)
-                .build();
+        InputStream manifest = ROSRService.SMS.get().getNamedGraph(researchObject.getManifestUri(), format);
+        ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType())
+                .fileName(ResearchObject.MANIFEST_PATH).build();
 
+        LOGGER.debug(String.format("%s\t\tReturning", new DateTime().toString()));
         return Response.created(researchObjectURI).entity(manifest).header("Content-disposition", cd).build();
     }
 

@@ -6,22 +6,14 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.StringBufferInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
-
-import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 
 import com.sun.jersey.api.client.ClientResponse;
 
@@ -44,7 +36,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROList() {
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue(list.contains(ro.toString()));
@@ -52,7 +44,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROWithWhitspaces() {
         URI ro3 = createRO("ro " + UUID.randomUUID().toString(), accessToken);
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
@@ -60,7 +52,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROMetadata()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -71,7 +63,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROHTML()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -85,7 +77,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROZip() {
         client().setFollowRedirects(false);
         ClientResponse response = webResource.uri(ro).accept("application/zip").get(ClientResponse.class);
@@ -106,14 +98,16 @@ public class ResourceTest extends ResourceBase {
         response.close();
     }
 
-    //@Test
-    public void createROFromZip() throws IOException {
+
+    @Test
+    public void createROFromZip()
+            throws IOException {
         File file = new File(PROJECT_PATH + "/src/test/resources/ro1.zip");
         FileInputStream fileInputStream = new FileInputStream(file);
         ClientResponse response = webResource.path("ROs").accept("text/turtle")
-                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject).type("application/zip")
-                .post(ClientResponse.class,IOUtils.toByteArray(fileInputStream));
-        assertEquals("Access token should be cerated correctly",HttpServletResponse.SC_CREATED, response.getStatus());
+                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
+                .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(fileInputStream));
+        assertEquals("Access token should be cerated correctly", HttpServletResponse.SC_CREATED, response.getStatus());
         response.close();
     }
 }

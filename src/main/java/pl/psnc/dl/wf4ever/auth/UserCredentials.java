@@ -3,7 +3,6 @@
  */
 package pl.psnc.dl.wf4ever.auth;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +16,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import pl.psnc.dl.wf4ever.common.ActiveRecord;
+
 /**
  * User credentials DAO.
  * 
@@ -26,7 +27,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "usercredentials")
 @XmlRootElement
-public class UserCredentials implements Serializable {
+public class UserCredentials extends ActiveRecord {
 
     /** id. */
     private static final long serialVersionUID = 7967488547563569388L;
@@ -107,6 +108,18 @@ public class UserCredentials implements Serializable {
 
     public void setTokens(List<AccessToken> tokens) {
         this.tokens = tokens;
+    }
+
+
+    /**
+     * Find the user credentials in the database.
+     * 
+     * @param userId
+     *            user id
+     * @return user credentials from the database or null
+     */
+    public static UserCredentials findByUserId(String userId) {
+        return findByPrimaryKey(UserCredentials.class, userId);
     }
 
 }

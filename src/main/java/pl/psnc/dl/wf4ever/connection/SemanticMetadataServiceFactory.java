@@ -18,7 +18,7 @@ import javax.naming.NamingException;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.dlibra.UserProfile;
+import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
 

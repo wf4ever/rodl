@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever.auth;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Date;
 
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
@@ -11,11 +12,11 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
-import pl.psnc.dl.wf4ever.dlibra.UserProfile;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.sun.jersey.api.container.MappableContainerException;
@@ -111,17 +112,19 @@ public class SecurityFilter implements ContainerRequestFilter {
     /**
      * Find user credentials for a OAuth Bearer token.
      * 
-     * @param accessToken
+     * @param tokenValue
      *            access token
      * @return user credentials
      */
-    public UserCredentials getBearerCredentials(String accessToken) {
-        OAuthManager manager = new OAuthManager();
-        AccessToken token = manager.getAccessToken(accessToken);
-        if (token == null) {
-            return getBasicCredentials(accessToken);
+    public UserCredentials getBearerCredentials(String tokenValue) {
+        AccessToken accessToken = AccessToken.findByValue(tokenValue);
+        if (accessToken != null) {
+            accessToken.setLastUsed(new Date());
+            accessToken.save();
+            return accessToken.getUser();
+        } else {
+            return getBasicCredentials(tokenValue);
         }
-        return token.getUser();
     }
 
 

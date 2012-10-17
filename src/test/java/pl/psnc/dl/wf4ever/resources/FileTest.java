@@ -41,7 +41,8 @@ public class FileTest extends ResourceBase {
         super.tearDown();
     }
 
-    //@Test
+
+    @Test
     public void testAddAndGetFile() {
         DateTime addFileTime = new DateTime();
         ClientResponse response = addFile(ro, filePath, accessToken);
@@ -71,7 +72,7 @@ public class FileTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testAddAndGetRDFFile() {
         DateTime addRdfFileTime = new DateTime();
         ClientResponse response = addRDFFIle(ro, rdfFileBody, rdfFilePath, accessToken);
@@ -109,7 +110,7 @@ public class FileTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void deleteFile() {
         addFile(ro, filePath, accessToken);
         ClientResponse response = webResource.uri(ro).path(filePath).header("Authorization", "Bearer " + accessToken)
@@ -118,7 +119,8 @@ public class FileTest extends ResourceBase {
         response.close();
     }
 
-    //@Test
+
+    @Test
     public void deleteRDFFile() {
         addRDFFIle(ro, rdfFileBody, rdfFilePath, accessToken);
         ClientResponse response = addRDFFIle(ro, rdfFileBody, rdfFilePath, accessToken);

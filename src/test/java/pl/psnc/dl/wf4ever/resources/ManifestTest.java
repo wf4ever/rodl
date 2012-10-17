@@ -40,7 +40,7 @@ public class ManifestTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testUpdateManifest() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
         ClientResponse response = webResource.uri(ro).path("/.ro/manifest.rdf")
@@ -50,7 +50,7 @@ public class ManifestTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void getManifest() {
         addFile(ro, filePath, accessToken);
         rdfProxy = addRDFFIle(ro, rdfFileBody, rdfFilePath, accessToken).getLocation();
@@ -77,7 +77,7 @@ public class ManifestTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void getInitialManifest() {
         String manifest = webResource.uri(ro).path("/.ro/manifest.rdf")
                 .header("Authorization", "Bearer " + accessToken).get(String.class);
@@ -94,7 +94,7 @@ public class ManifestTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void getManifestWithAnnotationBody() {
         addFile(ro, filePath, accessToken);
         rdfProxy = addRDFFIle(ro, rdfFileBody, rdfFilePath, accessToken).getLocation();

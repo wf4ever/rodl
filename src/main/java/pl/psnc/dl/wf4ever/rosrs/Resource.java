@@ -28,9 +28,10 @@ import org.apache.http.HttpStatus;
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
+import pl.psnc.dl.wf4ever.common.ResearchObject;
+import pl.psnc.dl.wf4ever.common.ResourceInfo;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
-import pl.psnc.dl.wf4ever.dlibra.ResourceInfo;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dlibra.service.AccessDeniedException;
@@ -84,7 +85,11 @@ public class Resource {
     public Response putResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original, String entity)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
@@ -102,7 +107,7 @@ public class Resource {
             if (original != null) {
                 resource = resource.resolve(original);
             }
-            if (researchObject.resolve(Constants.MANIFEST_PATH).equals(resource)) {
+            if (researchObject.getManifestUri().equals(resource)) {
                 throw new ForbiddenException("Can't update the manifest");
             }
             ResponseBuilder builder = ROSRService.updateInternalResource(researchObject, resource, entity,
@@ -148,12 +153,16 @@ public class Resource {
     public Response updateAnnotation(@PathParam("ro_id") String researchObjectId,
             @PathParam("filePath") String filePath, @QueryParam("original") String original, InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
-        URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
         URI resource = uriInfo.getAbsolutePath();
         URI body;
         List<URI> targets = new ArrayList<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        model.read(content, researchObject.toString());
+        model.read(content, researchObject.getUri().toString());
         ExtendedIterator<Individual> it = model.listIndividuals(RO.AggregatedAnnotation);
         if (it.hasNext()) {
             Individual aggregatedAnnotation = it.next();
@@ -226,7 +235,11 @@ public class Resource {
     public Response getResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original, @Context Request request)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
@@ -249,7 +262,7 @@ public class Resource {
         }
 
         ResponseBuilder builder = ROSRService.getInternalResource(researchObject, resource,
-            servletRequest.getHeader("Accept"), original);
+            servletRequest.getHeader("Accept"), original, resInfo);
 
         if (resInfo != null) {
             CacheControl cache = new CacheControl();
@@ -282,7 +295,11 @@ public class Resource {
     public Response deleteResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
             @QueryParam("original") String original)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        URI researchObject = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
@@ -301,7 +318,7 @@ public class Resource {
         if (original != null) {
             resource = resource.resolve(original);
         }
-        if (researchObject.resolve(Constants.MANIFEST_PATH).equals(resource)) {
+        if (researchObject.getManifestUri().equals(resource)) {
             throw new ForbiddenException("Can't delete the manifest");
         }
         return ROSRService.deaggregateInternalResource(researchObject, resource);

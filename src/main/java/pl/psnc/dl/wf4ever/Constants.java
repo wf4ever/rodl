@@ -21,12 +21,6 @@ public final class Constants {
     /** dLibra user request cycle key. */
     public static final String USER = "User";
 
-    /** workspace in dLibra. */
-    public static final String WORKSPACE_ID = "default";
-
-    /** version in dLibra. */
-    public static final String VERSION_ID = "v1";
-
     /** HTTP Slug header. */
     public static final String SLUG_HEADER = "Slug";
 
@@ -44,9 +38,6 @@ public final class Constants {
 
     /** See ROSR API. */
     public static final String ACCEPT_HEADER = "Accept";
-
-    /** See ROSR API. */
-    public static final String MANIFEST_PATH = ".ro/manifest.rdf";
 
     /** See ROSR API. */
     public static final String LINK_HEADER = "Link";

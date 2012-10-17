@@ -29,9 +29,10 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.common.ResearchObject;
+import pl.psnc.dl.wf4ever.common.ResourceInfo;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
-import pl.psnc.dl.wf4ever.dlibra.ResourceInfo;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
@@ -130,7 +131,12 @@ public class ResearchObjectResource {
     @DELETE
     public void deleteResearchObject(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, NotFoundException {
-        ROSRService.deleteResearchObject(uriInfo.getAbsolutePath());
+        URI uri = uriInfo.getAbsolutePath();
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
+        ROSRService.deleteResearchObject(researchObject);
     }
 
 
@@ -154,7 +160,11 @@ public class ResearchObjectResource {
     @POST
     public Response addResource(@PathParam("ro_id") String researchObjectId, InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
-        URI researchObject = uriInfo.getAbsolutePath();
+        URI uri = uriInfo.getAbsolutePath();
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
         URI resource;
         if (request.getHeader(Constants.SLUG_HEADER) != null) {
             resource = uriInfo.getAbsolutePathBuilder().path(request.getHeader(Constants.SLUG_HEADER)).build();
@@ -221,7 +231,11 @@ public class ResearchObjectResource {
     @Consumes(Constants.PROXY_MIME_TYPE)
     public Response addProxy(@PathParam("ro_id") String researchObjectId, InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
-        URI researchObject = uriInfo.getAbsolutePath();
+        URI uri = uriInfo.getAbsolutePath();
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
         URI proxyFor;
         if (request.getHeader(Constants.SLUG_HEADER) != null) {
             // internal resource
@@ -229,7 +243,7 @@ public class ResearchObjectResource {
         } else {
             // external resource
             OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-            model.read(content, researchObject.toString());
+            model.read(content, researchObject.getUri().toString());
             ExtendedIterator<Individual> it = model.listIndividuals(ORE.Proxy);
             if (it.hasNext()) {
                 NodeIterator it2 = it.next().listPropertyValues(ORE.proxyFor);
@@ -277,11 +291,15 @@ public class ResearchObjectResource {
     @Consumes(Constants.ANNOTATION_MIME_TYPE)
     public Response addAnnotation(@PathParam("ro_id") String researchObjectId, InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
-        URI researchObject = uriInfo.getAbsolutePath();
+        URI uri = uriInfo.getAbsolutePath();
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
         URI body;
         List<URI> targets = new ArrayList<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        model.read(content, researchObject.toString());
+        model.read(content, researchObject.getUri().toString());
         ExtendedIterator<Individual> it = model.listIndividuals(RO.AggregatedAnnotation);
         if (it.hasNext()) {
             Individual aggregatedAnnotation = it.next();

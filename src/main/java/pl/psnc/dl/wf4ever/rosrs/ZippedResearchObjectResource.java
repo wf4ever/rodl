@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
 import java.io.InputStream;
+import java.net.URI;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -10,7 +11,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 
@@ -45,11 +46,14 @@ public class ZippedResearchObjectResource {
     @Produces({ "application/zip", "multipart/related" })
     public Response getZippedRO(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, NotFoundException {
-        InputStream body = ROSRService.DL.get().getZippedVersion(Constants.WORKSPACE_ID, researchObjectId,
-            Constants.VERSION_ID);
+        URI uri = uriInfo.getAbsolutePath().resolve("../../ROs/" + researchObjectId);
+        ResearchObject researchObject = ResearchObject.findByUri(uri);
+        if (researchObject == null) {
+            researchObject = new ResearchObject(uri);
+        }
+        InputStream body = ROSRService.DL.get().getZippedResearchObject(researchObject);
         //TODO add all named graphs from SMS that start with the base URI
-        ContentDisposition cd = ContentDisposition.type("application/zip")
-                .fileName(researchObjectId + "-" + Constants.VERSION_ID + ".zip").build();
+        ContentDisposition cd = ContentDisposition.type("application/zip").fileName(researchObjectId + ".zip").build();
         return ResearchObjectResource.addLinkHeaders(Response.ok(body), uriInfo, researchObjectId)
                 .header("Content-disposition", cd).build();
     }
