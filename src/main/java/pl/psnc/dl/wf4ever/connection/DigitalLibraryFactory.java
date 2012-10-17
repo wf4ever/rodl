@@ -22,8 +22,7 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dlibra.helpers.DLibraDataSource;
+import pl.psnc.dl.wf4ever.dlibra.fs.FilesystemDL;
 
 /**
  * A factory class that creates a dLibra connection class.
@@ -93,11 +92,7 @@ public final class DigitalLibraryFactory {
      */
     public static DigitalLibrary getDigitalLibrary(String userLogin, String password)
             throws RemoteException, MalformedURLException, UnknownHostException {
-        try {
-            return new DLibraDataSource(host, port, workspacesDirectory, collectionId, userLogin, password);
-        } catch (DigitalLibraryException | IOException e) {
-            throw new RuntimeException(e.getMessage());
-        }
+        return new FilesystemDL("/tmp/dl/", userLogin);
     }
 
 
