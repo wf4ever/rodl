@@ -17,13 +17,13 @@ import org.openrdf.rio.RDFFormat;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.ResourceInfo;
+import pl.psnc.dl.wf4ever.dlibra.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
 import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
-import pl.psnc.dlibra.service.AccessDeniedException;
 
 import com.google.common.collect.Multimap;
 import com.sun.jersey.core.header.ContentDisposition;
@@ -66,9 +66,11 @@ public final class ROSRService {
      *             could not find the resource in DL
      * @throws DigitalLibraryException
      *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             no permissions
      */
     public static URI createResearchObject(ResearchObject researchObject)
-            throws ConflictException, DigitalLibraryException, NotFoundException {
+            throws ConflictException, DigitalLibraryException, NotFoundException, AccessDeniedException {
         return createResearchObject(researchObject, null, null);
     }
 
@@ -89,9 +91,11 @@ public final class ROSRService {
      *             could not find the resource in DL
      * @throws DigitalLibraryException
      *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             no permissions
      */
     public static URI createResearchObject(ResearchObject researchObject, EvoType type, ResearchObject sourceRO)
-            throws ConflictException, DigitalLibraryException, NotFoundException {
+            throws ConflictException, DigitalLibraryException, NotFoundException, AccessDeniedException {
         InputStream manifest;
         try {
             if (type == null) {

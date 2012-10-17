@@ -23,6 +23,7 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.common.UserProfile.Role;
+import pl.psnc.dl.wf4ever.dlibra.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
@@ -95,11 +96,13 @@ public class ResearchObjectListResource {
      *             problem with creating the RO in dLibra
      * @throws IllegalArgumentException
      *             problem with creating the RO in dLibra
+     * @throws AccessDeniedException
+     *             no permissions
      */
     @POST
     public Response createResearchObject()
             throws BadRequestException, IllegalArgumentException, UriBuilderException, ConflictException,
-            DigitalLibraryException, NotFoundException {
+            DigitalLibraryException, NotFoundException, AccessDeniedException {
         LOGGER.debug(String.format("%s\t\tInit create RO", new DateTime().toString()));
         String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
         if (researchObjectId == null || researchObjectId.isEmpty()) {
