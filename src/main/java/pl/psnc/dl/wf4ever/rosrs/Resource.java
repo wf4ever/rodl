@@ -88,7 +88,7 @@ public class Resource {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
-            researchObject = new ResearchObject(uri);
+            researchObject = ResearchObject.create(uri);
         }
         URI resource = uriInfo.getAbsolutePath();
 
@@ -156,7 +156,7 @@ public class Resource {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
-            researchObject = new ResearchObject(uri);
+            researchObject = ResearchObject.create(uri);
         }
         URI resource = uriInfo.getAbsolutePath();
         URI body;
@@ -238,7 +238,7 @@ public class Resource {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
-            researchObject = new ResearchObject(uri);
+            researchObject = ResearchObject.create(uri);
         }
         URI resource = uriInfo.getAbsolutePath();
 
@@ -298,7 +298,7 @@ public class Resource {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
-            researchObject = new ResearchObject(uri);
+            researchObject = ResearchObject.create(uri);
         }
         URI resource = uriInfo.getAbsolutePath();
 

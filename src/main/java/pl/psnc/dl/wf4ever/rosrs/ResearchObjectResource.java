@@ -134,7 +134,7 @@ public class ResearchObjectResource {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
-            researchObject = new ResearchObject(uri);
+            researchObject = ResearchObject.create(uri);
         }
         ROSRService.deleteResearchObject(researchObject);
     }
@@ -163,7 +163,7 @@ public class ResearchObjectResource {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
-            researchObject = new ResearchObject(uri);
+            researchObject = ResearchObject.create(uri);
         }
         URI resource;
         if (request.getHeader(Constants.SLUG_HEADER) != null) {
@@ -234,7 +234,7 @@ public class ResearchObjectResource {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
-            researchObject = new ResearchObject(uri);
+            researchObject = ResearchObject.create(uri);
         }
         URI proxyFor;
         if (request.getHeader(Constants.SLUG_HEADER) != null) {
@@ -294,7 +294,7 @@ public class ResearchObjectResource {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
-            researchObject = new ResearchObject(uri);
+            researchObject = ResearchObject.create(uri);
         }
         URI body;
         List<URI> targets = new ArrayList<>();

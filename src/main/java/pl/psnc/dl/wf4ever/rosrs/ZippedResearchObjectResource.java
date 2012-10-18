@@ -49,7 +49,7 @@ public class ZippedResearchObjectResource {
         URI uri = uriInfo.getAbsolutePath().resolve("../../ROs/" + researchObjectId);
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
-            researchObject = new ResearchObject(uri);
+            researchObject = ResearchObject.create(uri);
         }
         InputStream body = ROSRService.DL.get().getZippedResearchObject(researchObject);
         //TODO add all named graphs from SMS that start with the base URI
