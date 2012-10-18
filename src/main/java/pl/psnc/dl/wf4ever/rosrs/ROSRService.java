@@ -690,9 +690,9 @@ public final class ROSRService {
         URI createdResearchObjectURI;
         ResearchObject tmpRO;
         try {
-            createdResearchObjectURI = createResearchObject(new ResearchObject(freshResearchObjectURI));
-            tmpUri = new URI("http://www.example.com/ROID/");
-            tmpRO = new ResearchObject(tmpUri);
+            createdResearchObjectURI = createResearchObject(ResearchObject.create(freshResearchObjectURI));
+            tmpUri = new URI("http://www.example.com/ROs/");
+            tmpRO = ResearchObject.create(tmpUri);
         } catch (ConflictException | DigitalLibraryException | NotFoundException | URISyntaxException e) {
             throw new BadRequestException("Research Object creation problem", e);
         }
@@ -711,18 +711,21 @@ public final class ROSRService {
         }
 
         for (AggregatedResource aggregated : aggregatedList) {
-            InputStream is = zip.getEntryAsStream(PathString.removeFirstSlash(aggregated.getUri().getPath()));
+
+            String resourceName = tmpUri.relativize(aggregated.getUri()).getPath();
+            InputStream is = zip.getEntryAsStream(resourceName);
             if (is != null) {
                 try {
-                    aggregateInternalResource(new ResearchObject(createdResearchObjectURI),
-                        createdResearchObjectURI.resolve(aggregated.getUri()), is,
+                    aggregateInternalResource(ResearchObject.create(createdResearchObjectURI),
+                        createdResearchObjectURI.resolve(resourceName), is,
                         MimeUtil.getMediaType(PathString.getFileName(aggregated.getUri().getPath())), null);
                 } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
                     throw new BadRequestException("manifest is not correct", e);
                 }
             } else {
                 try {
-                    aggregateExternalResource(new ResearchObject(createdResearchObjectURI), aggregated.getUri());
+                    aggregateExternalResource(ResearchObject.create(createdResearchObjectURI),
+                        createdResearchObjectURI.resolve(resourceName));
                 } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
                     //@TODO decide what to do in case og exception
                     e.printStackTrace();
@@ -730,12 +733,12 @@ public final class ROSRService {
             }
         }
         for (Annotation annotation : annotationsList) {
-            addAnnotation(new ResearchObject(createdResearchObjectURI), annotation.getBody().getUri(),
+            addAnnotation(ResearchObject.create(createdResearchObjectURI), annotation.getBody().getUri(),
                 annotation.getAnnotatedToURIList());
         }
 
         tmpSms.close();
-        return null;
+        return Response.created(createdResearchObjectURI).build();
     }
 
 

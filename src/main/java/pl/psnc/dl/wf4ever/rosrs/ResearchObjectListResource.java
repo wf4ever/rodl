@@ -143,8 +143,6 @@ public class ResearchObjectListResource {
             throw new BadRequestException("Research object ID is null or empty");
         }
         UUID uuid = UUID.randomUUID();
-        //URI researchObjectURI = ROSRService.createResearchObject(uriInfo.getAbsolutePathBuilder()
-        //        .path(researchObjectId).path("/").build());
 
         File tmpFile = File.createTempFile("tmp_ro", uuid.toString());
 

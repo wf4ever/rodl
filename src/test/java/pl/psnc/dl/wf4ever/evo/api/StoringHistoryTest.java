@@ -4,12 +4,16 @@ import java.io.InputStream;
 import java.net.URI;
 
 import junit.framework.Assert;
+
+import org.junit.Ignore;
+
 import pl.psnc.dl.wf4ever.evo.EvoTest;
 import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.evo.JobStatus;
 
 import com.sun.jersey.api.client.ClientResponse;
 
+@Ignore
 public class StoringHistoryTest extends EvoTest {
 
     protected URI ro2;
