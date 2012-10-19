@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,6 +30,7 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.common.UserProfile.Role;
+import pl.psnc.dl.wf4ever.dlibra.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
@@ -104,11 +104,13 @@ public class ResearchObjectListResource {
      *             problem with creating the RO in dLibra
      * @throws IllegalArgumentException
      *             problem with creating the RO in dLibra
+     * @throws AccessDeniedException
+     *             no permissions
      */
     @POST
     public Response createResearchObject()
             throws BadRequestException, IllegalArgumentException, UriBuilderException, ConflictException,
-            DigitalLibraryException, NotFoundException {
+            DigitalLibraryException, NotFoundException, AccessDeniedException {
         LOGGER.debug(String.format("%s\t\tInit create RO", new DateTime().toString()));
         String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
         if (researchObjectId == null || researchObjectId.isEmpty()) {
@@ -133,11 +135,23 @@ public class ResearchObjectListResource {
     }
 
 
+    /**
+     * Create a new RO based on a ZIP sent in the request.
+     * 
+     * @param zipStream
+     *            ZIP input stream
+     * @return 201 Created
+     * @throws BadRequestException
+     *             the ZIP content is not a valid RO
+     * @throws IOException
+     *             error when unzipping
+     * @throws AccessDeniedException
+     *             no permissions
+     */
     @POST
     @Consumes("application/zip")
     public Response createResearchObjectFromZip(InputStream zipStream)
-            throws BadRequestException, IllegalArgumentException, UriBuilderException, ConflictException,
-            DigitalLibraryException, NotFoundException, URISyntaxException, IOException {
+            throws BadRequestException, IOException, AccessDeniedException {
         String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");

@@ -10,6 +10,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.common.ResearchObject;
+import pl.psnc.dl.wf4ever.dlibra.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dlibra.ConflictException;
 import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
@@ -17,7 +18,6 @@ import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
-import pl.psnc.dlibra.service.AccessDeniedException;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
@@ -70,7 +70,7 @@ public class CopyOperation implements Operation {
 
         try {
             ROSRService.createResearchObject(targetRO, status.getType(), sourceRO);
-        } catch (ConflictException | DigitalLibraryException | NotFoundException e) {
+        } catch (ConflictException | DigitalLibraryException | NotFoundException | AccessDeniedException e) {
             throw new OperationFailedException("Could not create the target research object", e);
         }
 
