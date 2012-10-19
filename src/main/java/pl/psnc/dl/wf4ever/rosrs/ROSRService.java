@@ -27,6 +27,7 @@ import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
 import pl.psnc.dl.wf4ever.utils.URI.PathString;
@@ -785,6 +786,20 @@ public final class ROSRService {
         InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(namedGraphURI, researchObject,
             format);
         ROSRService.DL.get().createOrUpdateFile(researchObject, filePath, dataStream, format.getDefaultMIMEType());
+    }
+
+
+    /**
+     * Create a new ro:Folder with the specified folder entries.
+     * 
+     * @param researchObject
+     *            research object
+     * @param folder
+     *            folder with folder entries
+     * @return folder with all fields filled in
+     */
+    public static Folder createFolder(ResearchObject researchObject, Folder folder) {
+        return SMS.get().addFolder(researchObject, folder);
     }
 
 }
