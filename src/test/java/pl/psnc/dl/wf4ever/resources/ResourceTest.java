@@ -112,7 +112,7 @@ public class ResourceTest extends ResourceBase {
                 .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(fileInputStream));
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
-        getManifest(ResearchObject.create(response.getLocation()));
+        System.out.println(getManifest(ResearchObject.create(response.getLocation())));
         response.close();
 
     }

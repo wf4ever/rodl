@@ -6,6 +6,7 @@ import java.util.List;
 import org.junit.Ignore;
 
 import pl.psnc.dl.wf4ever.W4ETest;
+import pl.psnc.dl.wf4ever.common.HibernateUtil;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 
 import com.sun.jersey.test.framework.WebAppDescriptor;
@@ -36,6 +37,7 @@ public class ResourceBase extends W4ETest {
         super.setUp();
         createUserWithAnswer(userIdSafe, username).close();
         accessToken = createAccessToken(userId);
+        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         ro = createRO(accessToken);
         ro2 = createRO(accessToken);
     }
@@ -47,6 +49,7 @@ public class ResourceBase extends W4ETest {
         deleteROs();
         deleteAccessToken(accessToken);
         deleteUser(userIdSafe);
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         super.tearDown();
     }
 
