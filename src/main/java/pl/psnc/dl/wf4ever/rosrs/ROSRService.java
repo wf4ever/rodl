@@ -686,33 +686,31 @@ public final class ROSRService {
 
     public static Response createNewResearchObjectFromZip(URI freshResearchObjectURI, MemoryZipFile zip)
             throws BadRequestException {
-        URI tmpUri;
         URI createdResearchObjectURI;
-        ResearchObject tmpRO;
+        ResearchObject createdResearchObject;
         try {
             createdResearchObjectURI = createResearchObject(ResearchObject.create(freshResearchObjectURI));
-            tmpUri = new URI("http://www.example.com/ROs/");
-            tmpRO = ResearchObject.create(tmpUri);
-        } catch (ConflictException | DigitalLibraryException | NotFoundException | URISyntaxException e) {
+            createdResearchObject = ResearchObject.create(createdResearchObjectURI);
+        } catch (ConflictException | DigitalLibraryException | NotFoundException e) {
             throw new BadRequestException("Research Object creation problem", e);
         }
 
-        SemanticMetadataService tmpSms = new SemanticMetadataServiceImpl(ROSRService.SMS.get().getUserProfile(), tmpRO,
-                zip.getManifestAsInputStream(), RDFFormat.RDFXML);
+        SemanticMetadataService tmpSms = new SemanticMetadataServiceImpl(ROSRService.SMS.get().getUserProfile(),
+                createdResearchObject, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
 
         List<AggregatedResource> aggregatedList;
         List<Annotation> annotationsList;
 
         try {
-            aggregatedList = tmpSms.getAggregatedResources(tmpRO);
-            annotationsList = tmpSms.getAnnotations(tmpRO);
+            aggregatedList = tmpSms.getAggregatedResources(createdResearchObject);
+            annotationsList = tmpSms.getAnnotations(createdResearchObject);
         } catch (ManifestTraversingException e) {
             throw new BadRequestException("manifest is not correct", e);
         }
 
         for (AggregatedResource aggregated : aggregatedList) {
 
-            String resourceName = tmpUri.relativize(aggregated.getUri()).getPath();
+            String resourceName = createdResearchObjectURI.relativize(aggregated.getUri()).getPath();
             InputStream is = zip.getEntryAsStream(resourceName);
             if (is != null) {
                 try {
