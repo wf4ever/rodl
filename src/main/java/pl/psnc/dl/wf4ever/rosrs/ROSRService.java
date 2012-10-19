@@ -29,7 +29,6 @@ import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
-import pl.psnc.dl.wf4ever.utils.URI.PathString;
 import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 
@@ -719,8 +718,8 @@ public final class ROSRService {
             if (is != null) {
                 try {
                     aggregateInternalResource(ResearchObject.create(createdResearchObjectURI),
-                        createdResearchObjectURI.resolve(resourceName), is,
-                        MimeUtil.getMediaType(PathString.getFileName(aggregated.getUri().getPath())), null);
+                        createdResearchObjectURI.resolve(resourceName), is, MimeUtil.getMimeTypes(resourceName)
+                                .toString(), null);
                 } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
                     throw new BadRequestException("manifest is not correct", e);
                 }

@@ -112,8 +112,15 @@ public class ResourceTest extends ResourceBase {
                 .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(fileInputStream));
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
-        System.out.println(getManifest(ResearchObject.create(response.getLocation())));
-        response.close();
+        String manifest = getManifest(ResearchObject.create(response.getLocation()));
 
+        assertTrue("manifest should contain ann1-body", manifest.contains("/.ro/ann1-body.ttl"));
+        assertTrue("manifest should contain res1", manifest.contains("/res1"));
+        assertTrue("manifest should contain afinalfolder", manifest.contains("/afinalfolder"));
+        assertTrue("manifest should contain res2", manifest.contains("/res2"));
+
+        String fileContent = getResourceToString(ResearchObject.create(response.getLocation()), "res1");
+        assertTrue("res1 should contain lorem ipsum", fileContent.contains("lorem ipsum"));
+        response.close();
     }
 }

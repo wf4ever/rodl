@@ -69,4 +69,10 @@ public class ResourceBase extends W4ETest {
     protected String getManifest(ResearchObject ro) {
         return webResource.uri(ro.getManifestUri()).header("Authorization", "Bearer " + accessToken).get(String.class);
     }
+
+
+    protected String getResourceToString(ResearchObject ro, String resourceRelativePath) {
+        return webResource.uri(ro.getUri()).path(resourceRelativePath).header("Authorization", "Bearer " + accessToken)
+                .get(String.class);
+    }
 }
