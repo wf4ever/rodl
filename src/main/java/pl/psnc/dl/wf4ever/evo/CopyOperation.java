@@ -133,7 +133,11 @@ public class CopyOperation implements Operation {
                     }
                     targets.add(URI.create(annTarget.asResource().getURI()));
                 }
-                ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets);
+                try {
+                    ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets);
+                } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e1) {
+                    LOGGER.error("Could not add the annotation", e1);
+                }
             }
         }
         for (Map.Entry<URI, URI> e : changedURIs.entrySet()) {
