@@ -30,9 +30,11 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.ResourceInfo;
-import pl.psnc.dl.wf4ever.dlibra.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.vocabulary.AO;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
@@ -86,7 +88,7 @@ public class Resource {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
-            researchObject = new ResearchObject(uri);
+            researchObject = ResearchObject.create(uri);
         }
         URI resource = uriInfo.getAbsolutePath();
 
@@ -154,17 +156,17 @@ public class Resource {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
-            researchObject = new ResearchObject(uri);
+            researchObject = ResearchObject.create(uri);
         }
         URI resource = uriInfo.getAbsolutePath();
         URI body;
         List<URI> targets = new ArrayList<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         model.read(content, researchObject.getUri().toString());
-        ExtendedIterator<Individual> it = model.listIndividuals(Constants.RO_AGGREGATED_ANNOTATION_CLASS);
+        ExtendedIterator<Individual> it = model.listIndividuals(RO.AggregatedAnnotation);
         if (it.hasNext()) {
             Individual aggregatedAnnotation = it.next();
-            NodeIterator it2 = aggregatedAnnotation.listPropertyValues(Constants.AO_BODY_PROPERTY);
+            NodeIterator it2 = aggregatedAnnotation.listPropertyValues(AO.body);
             if (it2.hasNext()) {
                 RDFNode bodyResource = it2.next();
                 if (bodyResource.isURIResource()) {
@@ -179,7 +181,7 @@ public class Resource {
             } else {
                 throw new BadRequestException("The ro:AggregatedAnnotation does not have a ao:body property.");
             }
-            it2 = aggregatedAnnotation.listPropertyValues(Constants.AO_ANNOTATES_RESOURCE_PROPERTY);
+            it2 = aggregatedAnnotation.listPropertyValues(AO.annotatesResource);
             while (it2.hasNext()) {
                 RDFNode targetResource = it2.next();
                 if (targetResource.isURIResource()) {
@@ -236,7 +238,7 @@ public class Resource {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
-            researchObject = new ResearchObject(uri);
+            researchObject = ResearchObject.create(uri);
         }
         URI resource = uriInfo.getAbsolutePath();
 
@@ -296,7 +298,7 @@ public class Resource {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
-            researchObject = new ResearchObject(uri);
+            researchObject = ResearchObject.create(uri);
         }
         URI resource = uriInfo.getAbsolutePath();
 

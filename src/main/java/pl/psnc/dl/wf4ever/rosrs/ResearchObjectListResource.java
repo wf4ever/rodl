@@ -1,10 +1,16 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -14,6 +20,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
@@ -23,10 +30,11 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.common.UserProfile.Role;
-import pl.psnc.dl.wf4ever.dlibra.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dlibra.ConflictException;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -113,7 +121,7 @@ public class ResearchObjectListResource {
         if (researchObject != null) {
             throw new ConflictException("RO already exists");
         }
-        researchObject = new ResearchObject(uri);
+        researchObject = ResearchObject.create(uri);
         URI researchObjectURI = ROSRService.createResearchObject(researchObject);
         LOGGER.debug(String.format("%s\t\tRO created", new DateTime().toString()));
 
@@ -124,5 +132,42 @@ public class ResearchObjectListResource {
 
         LOGGER.debug(String.format("%s\t\tReturning", new DateTime().toString()));
         return Response.created(researchObjectURI).entity(manifest).header("Content-disposition", cd).build();
+    }
+
+
+    /**
+     * Create a new RO based on a ZIP sent in the request.
+     * 
+     * @param zipStream
+     *            ZIP input stream
+     * @return 201 Created
+     * @throws BadRequestException
+     *             the ZIP content is not a valid RO
+     * @throws IOException
+     *             error when unzipping
+     * @throws AccessDeniedException
+     *             no permissions
+     */
+    @POST
+    @Consumes("application/zip")
+    public Response createResearchObjectFromZip(InputStream zipStream)
+            throws BadRequestException, IOException, AccessDeniedException {
+        String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
+        if (researchObjectId == null || researchObjectId.isEmpty()) {
+            throw new BadRequestException("Research object ID is null or empty");
+        }
+        UUID uuid = UUID.randomUUID();
+
+        File tmpFile = File.createTempFile("tmp_ro", uuid.toString());
+
+        BufferedInputStream inputStream = new BufferedInputStream(request.getInputStream());
+        FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
+
+        IOUtils.copy(inputStream, fileOutputStream);
+        Response response = ROSRService.createNewResearchObjectFromZip(
+            uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build(), new MemoryZipFile(tmpFile));
+        tmpFile.delete();
+
+        return response;
     }
 }

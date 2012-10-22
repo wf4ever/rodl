@@ -21,7 +21,7 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.UserCredentials;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibrary;
+import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dlibra.fs.FilesystemDL;
 
 /**

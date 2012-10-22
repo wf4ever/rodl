@@ -1,6 +1,3 @@
-/**
- * 
- */
 package pl.psnc.dl.wf4ever;
 
 import javax.ws.rs.core.Response;

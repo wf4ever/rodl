@@ -10,16 +10,18 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.dlibra.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dlibra.ConflictException;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
+import pl.psnc.dl.wf4ever.vocabulary.AO;
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.ontology.OntProperty;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -78,8 +80,7 @@ public class CopyOperation implements Operation {
         if (source == null) {
             throw new OperationFailedException("The manifest does not describe the research object");
         }
-        OntProperty aggregates = model.createOntProperty("http://www.openarchives.org/ore/terms/aggregates");
-        List<RDFNode> aggregatedResources = source.listPropertyValues(aggregates).toList();
+        List<RDFNode> aggregatedResources = source.listPropertyValues(ORE.aggregates).toList();
         Map<URI, URI> changedURIs = new HashMap<>();
         for (RDFNode aggregatedResource : aggregatedResources) {
             if (Thread.interrupted()) {
@@ -96,7 +97,7 @@ public class CopyOperation implements Operation {
             }
             Individual resource = aggregatedResource.as(Individual.class);
             URI resourceURI = URI.create(resource.getURI());
-            if (resource.hasRDFType("http://purl.org/wf4ever/ro#Resource")) {
+            if (resource.hasRDFType(RO.Resource.getURI())) {
                 if (isInternalResource(resourceURI, status.getCopyfrom())) {
                     try {
                         Client client = Client.create();
@@ -119,13 +120,10 @@ public class CopyOperation implements Operation {
                                 + resourceURI, e);
                     }
                 }
-            } else if (resource.hasRDFType("http://purl.org/wf4ever/ro#AggregatedAnnotation")) {
-                OntProperty annotates = model
-                        .createOntProperty("http://purl.org/wf4ever/ro#annotatesAggregatedResource");
-                OntProperty body = model.createOntProperty("http://purl.org/ao/body");
-                Resource annBody = resource.getPropertyResourceValue(body);
+            } else if (resource.hasRDFType(RO.AggregatedAnnotation.getURI())) {
+                Resource annBody = resource.getPropertyResourceValue(AO.body);
                 List<URI> targets = new ArrayList<>();
-                List<RDFNode> annotationTargets = resource.listPropertyValues(annotates).toList();
+                List<RDFNode> annotationTargets = resource.listPropertyValues(RO.annotatesAggregatedResource).toList();
                 for (RDFNode annTarget : annotationTargets) {
                     if (!annTarget.isURIResource()) {
                         LOGGER.warn("Annotation target " + annTarget.toString() + " is not a URI resource");

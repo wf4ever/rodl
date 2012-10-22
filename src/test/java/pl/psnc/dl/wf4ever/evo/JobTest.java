@@ -7,29 +7,33 @@ import java.net.URI;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.evo.Job.State;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-/**
- * @author filipwis
- * 
- */
+@Ignore
 public class JobTest extends EvoTest {
 
-    //@Test
+    public JobTest() {
+        super();
+    }
+
+
+    @Test
     public final void testCopyJobCreation()
             throws InterruptedException {
         ClientResponse response = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, false));
         URI copyJob = response.getLocation();
-        getRemoteStatus(copyJob, WAIT_FOR_COPY);
         assertEquals(response.getEntity(String.class), HttpServletResponse.SC_CREATED, response.getStatus());
+        getRemoteStatus(copyJob, WAIT_FOR_COPY);
         //to finish all operation before object will be removed
     }
 
 
-    //@Test
+    @Test
     public final void testCopyJobStatusDataIntegrity()
             throws InterruptedException {
         JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, false);
@@ -63,7 +67,7 @@ public class JobTest extends EvoTest {
         JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, true);
         URI copyAndFinalizeJob = createCopyJob(status).getLocation();
         JobStatus remoteStatus = getRemoteStatus(copyAndFinalizeJob, WAIT_FOR_COPY + WAIT_FOR_FINALIZE);
-        Assert.assertEquals(State.DONE, remoteStatus.getState());
+        Assert.assertEquals(remoteStatus.toString(), State.DONE, remoteStatus.getState());
         //OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         //model.read(status.getTarget().toString());
         //TODO verify correct finalized RO

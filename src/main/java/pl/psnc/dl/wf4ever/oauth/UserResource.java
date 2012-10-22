@@ -28,8 +28,8 @@ import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
-import pl.psnc.dl.wf4ever.dlibra.ConflictException;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
 
@@ -169,7 +169,7 @@ public class UserResource {
         UserCredentials creds = new UserCredentials(userId, password);
         creds.save();
         SemanticMetadataServiceFactory.getService(
-            new UserProfile(userId, username != null && !username.isEmpty() ? username : userId, null)).close();
+            UserProfile.create(userId, username != null && !username.isEmpty() ? username : userId, null)).close();
 
         if (created) {
             return Response.created(uriInfo.getAbsolutePath()).build();
@@ -196,13 +196,13 @@ public class UserResource {
      *             error deleting the user profile from SMS
      * @throws ClassNotFoundException
      *             error deleting the user profile from SMS
-     * @throws pl.psnc.dl.wf4ever.dlibra.NotFoundException
+     * @throws pl.psnc.dl.wf4ever.dl.NotFoundException
      *             error deleting the user profile from DL
      */
     @DELETE
     public void deleteUser(@PathParam("U_ID") String urlSafeUserId)
             throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
-            SQLException, pl.psnc.dl.wf4ever.dlibra.NotFoundException {
+            SQLException, pl.psnc.dl.wf4ever.dl.NotFoundException {
         String userId = new String(Base64.decodeBase64(urlSafeUserId));
         Set<URI> list = ROSRService.SMS.get().findResearchObjectsByCreator(
             UserProfile.generateAbsoluteURI(null, userId));
