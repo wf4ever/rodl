@@ -749,8 +749,12 @@ public final class ROSRService {
             }
         }
         for (Annotation annotation : annotationsList) {
-            addAnnotation(ResearchObject.create(createdResearchObjectURI), annotation.getBody().getUri(),
-                annotation.getAnnotatedToURIList());
+            try {
+                addAnnotation(ResearchObject.create(createdResearchObjectURI), annotation.getBody().getUri(),
+                    annotation.getAnnotatedToURIList());
+            } catch (DigitalLibraryException | NotFoundException e) {
+                LOGGER.error("Error when adding annotations", e);
+            }
         }
 
         tmpSms.close();
