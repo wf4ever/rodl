@@ -46,7 +46,7 @@ public class ZippedResearchObjectResource {
     @Produces({ "application/zip", "multipart/related" })
     public Response getZippedRO(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, NotFoundException {
-        URI uri = uriInfo.getAbsolutePath().resolve("../../ROs/" + researchObjectId);
+        URI uri = URI.create(uriInfo.getAbsolutePath().toString().replaceFirst("zippedROs", "ROs"));
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
             researchObject = ResearchObject.create(uri);

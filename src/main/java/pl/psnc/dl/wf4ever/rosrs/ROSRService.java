@@ -564,12 +564,14 @@ public final class ROSRService {
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         String filePath = researchObject.getUri().relativize(resource).getPath();
         InputStream data = ROSRService.DL.get().getFileContents(researchObject, filePath);
-        RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get().getFileInfo(researchObject, filePath)
-                .getMimeType());
-        ROSRService.SMS.get().addNamedGraph(resource, data, format);
-        // update the named graph copy in dLibra, the manifest is not changed
-        updateNamedGraphInDlibra(filePath, researchObject, resource);
-        updateROAttributesInDlibra(researchObject);
+        if (data != null) {
+            RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get().getFileInfo(researchObject, filePath)
+                    .getMimeType());
+            ROSRService.SMS.get().addNamedGraph(resource, data, format);
+            // update the named graph copy in dLibra, the manifest is not changed
+            updateNamedGraphInDlibra(filePath, researchObject, resource);
+            updateROAttributesInDlibra(researchObject);
+        }
     }
 
 
@@ -583,7 +585,7 @@ public final class ROSRService {
      *            URI of the resource that is converted
      */
     public static void convertAnnotationBodyToAggregatedResource(ResearchObject researchObject, URI resource) {
-        if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
+        if (ROSRService.SMS.get().containsNamedGraph(resource)) {
             ROSRService.SMS.get().removeNamedGraph(researchObject, resource);
             updateROAttributesInDlibra(researchObject);
         }
@@ -600,9 +602,18 @@ public final class ROSRService {
      * @param annotationTargets
      *            list of annotated resources URIs
      * @return 201 Created response
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
      */
-    public static Response addAnnotation(ResearchObject researchObject, URI annotationBody, List<URI> annotationTargets) {
+    public static Response addAnnotation(ResearchObject researchObject, URI annotationBody, List<URI> annotationTargets)
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody);
+        // update the manifest that contains the annotation in dLibra
+        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
 
         String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(),
             AO.annotatesResource);
