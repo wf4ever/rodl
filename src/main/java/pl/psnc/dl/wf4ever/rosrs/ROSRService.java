@@ -589,9 +589,18 @@ public final class ROSRService {
      * @param annotationTargets
      *            list of annotated resources URIs
      * @return 201 Created response
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
      */
-    public static Response addAnnotation(ResearchObject researchObject, URI annotationBody, List<URI> annotationTargets) {
+    public static Response addAnnotation(ResearchObject researchObject, URI annotationBody, List<URI> annotationTargets)
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody);
+        // update the manifest that contains the annotation in dLibra
+        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
 
         String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(),
             Constants.AO_ANNOTATION_BODY_HEADER);
