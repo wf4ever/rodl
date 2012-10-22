@@ -48,4 +48,7 @@ public final class Constants {
     /** See ROSR API. */
     public static final Pattern AO_LINK_HEADER_PATTERN = Pattern
             .compile("\\s*<([^>]*)>\\s*;\\s*rel\\s*=\\s*\"http://purl.org/ao/annotatesResource\"");
+
+    /** See ROSR API. */
+    public static final String FOLDER_MIME_TYPE = "application/vnd.wf4ever.folder";
 }

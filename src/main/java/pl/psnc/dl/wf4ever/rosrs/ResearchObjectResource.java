@@ -5,7 +5,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 
@@ -26,6 +28,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
@@ -34,6 +37,8 @@ import pl.psnc.dl.wf4ever.common.ResourceInfo;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.model.RO.Folder;
+import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
@@ -161,10 +166,7 @@ public class ResearchObjectResource {
     public Response addResource(@PathParam("ro_id") String researchObjectId, InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
-        ResearchObject researchObject = ResearchObject.findByUri(uri);
-        if (researchObject == null) {
-            researchObject = ResearchObject.create(uri);
-        }
+        ResearchObject researchObject = ResearchObject.create(uri);
         URI resource;
         if (request.getHeader(Constants.SLUG_HEADER) != null) {
             resource = uriInfo.getAbsolutePathBuilder().path(request.getHeader(Constants.SLUG_HEADER)).build();
@@ -232,10 +234,7 @@ public class ResearchObjectResource {
     public Response addProxy(@PathParam("ro_id") String researchObjectId, InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
-        ResearchObject researchObject = ResearchObject.findByUri(uri);
-        if (researchObject == null) {
-            researchObject = ResearchObject.create(uri);
-        }
+        ResearchObject researchObject = ResearchObject.create(uri);
         URI proxyFor;
         if (request.getHeader(Constants.SLUG_HEADER) != null) {
             // internal resource
@@ -292,20 +291,17 @@ public class ResearchObjectResource {
     public Response addAnnotation(@PathParam("ro_id") String researchObjectId, InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
-        ResearchObject researchObject = ResearchObject.findByUri(uri);
-        if (researchObject == null) {
-            researchObject = ResearchObject.create(uri);
-        }
+        ResearchObject researchObject = ResearchObject.create(uri);
         URI body;
         List<URI> targets = new ArrayList<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         model.read(content, researchObject.getUri().toString());
-        ExtendedIterator<Individual> it = model.listIndividuals(RO.AggregatedAnnotation);
-        if (it.hasNext()) {
-            Individual aggregatedAnnotation = it.next();
-            NodeIterator it2 = aggregatedAnnotation.listPropertyValues(AO.body);
-            if (it2.hasNext()) {
-                RDFNode bodyResource = it2.next();
+        List<Individual> aggregatedAnnotations = model.listIndividuals(RO.AggregatedAnnotation).toList();
+        if (!aggregatedAnnotations.isEmpty()) {
+            Individual aggregatedAnnotation = aggregatedAnnotations.get(0);
+            List<RDFNode> bodyResources = aggregatedAnnotation.listPropertyValues(AO.body).toList();
+            if (!bodyResources.isEmpty()) {
+                RDFNode bodyResource = bodyResources.get(0);
                 if (bodyResource.isURIResource()) {
                     try {
                         body = new URI(bodyResource.asResource().getURI());
@@ -318,9 +314,8 @@ public class ResearchObjectResource {
             } else {
                 throw new BadRequestException("The ro:AggregatedAnnotation does not have a ao:body property.");
             }
-            it2 = aggregatedAnnotation.listPropertyValues(AO.annotatesResource);
-            while (it2.hasNext()) {
-                RDFNode targetResource = it2.next();
+            List<RDFNode> targetResources = aggregatedAnnotation.listPropertyValues(AO.annotatesResource).toList();
+            for (RDFNode targetResource : targetResources) {
                 if (targetResource.isURIResource()) {
                     try {
                         targets.add(new URI(targetResource.asResource().getURI()));
@@ -339,6 +334,109 @@ public class ResearchObjectResource {
         }
 
         return ROSRService.addAnnotation(researchObject, body, targets);
+    }
+
+
+    /**
+     * Add an ro:Folder.
+     * 
+     * @param researchObjectId
+     *            RO id
+     * @param content
+     *            folder definition
+     * @return 201 Created response pointing to the folder
+     * @throws BadRequestException
+     *             wrong request body
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
+    @POST
+    @Consumes(Constants.FOLDER_MIME_TYPE)
+    public Response addFolder(@PathParam("ro_id") String researchObjectId, InputStream content)
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
+        URI uri = uriInfo.getAbsolutePath();
+        ResearchObject researchObject = ResearchObject.create(uri);
+        Folder folder = new Folder();
+        if (request.getHeader(Constants.SLUG_HEADER) != null) {
+            folder.setUri(uriInfo.getAbsolutePathBuilder().path(request.getHeader(Constants.SLUG_HEADER)).build());
+        } else {
+            folder.setUri(uriInfo.getAbsolutePathBuilder().path(UUID.randomUUID().toString()).build());
+        }
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+        model.read(content, researchObject.getUri().toString());
+        List<Individual> folders = model.listIndividuals(RO.Folder).toList();
+        Map<URI, FolderEntry> entries = new HashMap<>();
+        if (folders.size() == 1) {
+            Individual folderInd = folders.get(0);
+            List<RDFNode> aggregatedResources = folderInd.listPropertyValues(ORE.aggregates).toList();
+            for (RDFNode aggregatedResource : aggregatedResources) {
+                if (aggregatedResource.isURIResource()) {
+                    try {
+                        URI res = new URI(aggregatedResource.asResource().getURI());
+                        entries.put(res, new FolderEntry(res, null));
+                    } catch (URISyntaxException e) {
+                        throw new BadRequestException("Aggregated resource has an incorrect URI", e);
+                    }
+                } else {
+                    throw new BadRequestException("Aggregated resources cannot be blank nodes.");
+                }
+            }
+        } else {
+            throw new BadRequestException("The entity body must define exactly one ro:Folder.");
+        }
+        List<Individual> folderEntries = model.listIndividuals(RO.FolderEntry).toList();
+        for (Individual folderEntryInd : folderEntries) {
+            URI proxyFor;
+            if (folderEntryInd.hasProperty(ORE.proxyFor)) {
+                RDFNode proxyForNode = folderEntryInd.getPropertyValue(ORE.proxyFor);
+                if (!proxyForNode.isURIResource()) {
+                    throw new BadRequestException("Folder entry ore:proxyFor must be a URI resource.");
+                }
+                try {
+                    proxyFor = new URI(proxyForNode.asResource().getURI());
+                } catch (URISyntaxException e) {
+                    throw new BadRequestException("Folder entry proxy for URI is incorrect", e);
+                }
+            } else {
+                throw new BadRequestException("Folder entries must have the ore:proxyFor property.");
+            }
+            if (!entries.containsKey(proxyFor)) {
+                throw new BadRequestException(
+                        "Found a folder entry for a resource that is not aggregated by the folder");
+            }
+            FolderEntry folderEntry = entries.get(proxyFor);
+            if (folderEntryInd.hasProperty(RO.entryName)) {
+                RDFNode nameNode = folderEntryInd.getPropertyValue(RO.entryName);
+                if (!nameNode.isLiteral()) {
+                    throw new BadRequestException("Folder entry ro name must be a literal");
+                }
+                folderEntry.setEntryName(nameNode.asLiteral().toString());
+            }
+        }
+        for (FolderEntry folderEntry : entries.values()) {
+            if (folderEntry.getEntryName() == null) {
+                if (folderEntry.getProxyFor().getPath() != null) {
+                    String[] segments = folderEntry.getProxyFor().getPath().split("/");
+                    folderEntry.setEntryName(segments[segments.length - 1]);
+                } else {
+                    folderEntry.setEntryName(folderEntry.getProxyFor().getHost());
+                }
+            }
+        }
+        folder.setFolderEntries(new ArrayList<>(entries.values()));
+        folder = ROSRService.createFolder(researchObject, folder);
+
+        ResponseBuilder rb = Response.created(folder.getProxyUri()).type(Constants.FOLDER_MIME_TYPE);
+        rb = rb.header(Constants.LINK_HEADER, String.format(Constants.LINK_HEADER_TEMPLATE, folder.getUri().toString(),
+            "http://www.openarchives.org/ore/terms/proxyFor"));
+        rb = rb.header(Constants.LINK_HEADER, String.format(Constants.LINK_HEADER_TEMPLATE, folder.getResourceMapUri()
+                .toString().toString(), "http://www.openarchives.org/ore/terms/isDescribedBy"));
+        rb.entity(ROSRService.SMS.get().getNamedGraph(folder.getResourceMapUri(), RDFFormat.RDFXML));
+        return rb.build();
     }
 
 
