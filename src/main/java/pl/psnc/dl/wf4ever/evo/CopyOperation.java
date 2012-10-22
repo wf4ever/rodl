@@ -10,10 +10,10 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.dlibra.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dlibra.ConflictException;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;

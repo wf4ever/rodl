@@ -30,10 +30,10 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.common.UserProfile.Role;
-import pl.psnc.dl.wf4ever.dlibra.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dlibra.ConflictException;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 
 import com.sun.jersey.core.header.ContentDisposition;

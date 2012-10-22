@@ -15,8 +15,8 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.sun.jersey.api.container.MappableContainerException;
