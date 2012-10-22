@@ -30,6 +30,7 @@ public class W4ETest extends JerseyTest {
     protected final String username2 = "May Gray";
     protected static final String PROJECT_PATH = System.getProperty("user.dir");
 
+
     public W4ETest() {
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
     }
@@ -60,10 +61,13 @@ public class W4ETest extends JerseyTest {
         super.tearDown();
     }
 
-    protected void finalize() throws Throwable {
+
+    protected void finalize()
+            throws Throwable {
         deleteClient(clientId);
     }
-    
+
+
     protected String createClient(String clientName) {
         ClientResponse response = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, clientName + "\r\n" + clientRedirectionURI);
@@ -148,7 +152,8 @@ public class W4ETest extends JerseyTest {
             }
         }
     }
-    
+
+
     protected ClientResponse addAnnotation(InputStream is, URI roURI, String annotationBodyPath, String accessToken) {
         return webResource
                 .uri(roURI)
@@ -157,5 +162,24 @@ public class W4ETest extends JerseyTest {
                     "<" + webResource.uri(ro).getURI().toString() + ">; rel=\"http://purl.org/ao/annotates\"")
                 .header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
                 .post(ClientResponse.class, is);
+    }
+
+
+    /**
+     * Add a folder to the RO.
+     * 
+     * @param is
+     *            request entity
+     * @param roURI
+     *            RO URI
+     * @param folderPath
+     *            folder path
+     * @param accessToken
+     *            RODL access token
+     * @return response from server
+     */
+    protected ClientResponse addFolder(InputStream is, URI roURI, String folderPath, String accessToken) {
+        return webResource.uri(roURI).header("Slug", folderPath).header("Authorization", "Bearer " + accessToken)
+                .type("application/vnd.wf4ever.folder").post(ClientResponse.class, is);
     }
 }

@@ -1,0 +1,14 @@
+<rdf:RDF
+  xmlns:ore="http://www.openarchives.org/ore/terms/"
+  xmlns:ro="http://purl.org/wf4ever/ro#"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+  <ro:Folder>
+    <ore:aggregates rdf:resource="https://sandbox/rodl/ROs/ro1/myfolder/file1.txt" />
+    <ore:aggregates rdf:resource="https://sandbox/rodl/ROs/ro1/anotherfolder/file2.txt" />
+    <ore:aggregates rdf:resource="http://example.org" />
+  </ro:Folder>
+  <ro:FolderEntry>
+    <ro:entryName>the main file.txt</ro:entryName>
+    <ore:proxyFor rdf:resource="https://sandbox/rodl/ROs/ro1/myfolder/file1.txt" />
+  </ro:FolderEntry>
+</rdf:RDF>
