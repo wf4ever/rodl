@@ -169,7 +169,7 @@ public class UserResource {
         UserCredentials creds = new UserCredentials(userId, password);
         creds.save();
         SemanticMetadataServiceFactory.getService(
-            new UserProfile(userId, username != null && !username.isEmpty() ? username : userId, null)).close();
+            UserProfile.create(userId, username != null && !username.isEmpty() ? username : userId, null)).close();
 
         if (created) {
             return Response.created(uriInfo.getAbsolutePath()).build();
