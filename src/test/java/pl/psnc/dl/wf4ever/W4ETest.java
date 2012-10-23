@@ -61,7 +61,6 @@ public class W4ETest extends JerseyTest {
     @Override
     public void tearDown()
             throws Exception {
-        System.out.println("END");
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         super.tearDown();
     }
