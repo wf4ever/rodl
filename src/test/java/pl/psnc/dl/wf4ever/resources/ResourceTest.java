@@ -19,7 +19,6 @@ import pl.psnc.dl.wf4ever.common.ResearchObject;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-//@Ignore
 public class ResourceTest extends ResourceBase {
 
     protected String createdFromZipResourceObject = UUID.randomUUID().toString();
@@ -39,7 +38,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROList() {
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue(list.contains(ro.toString()));
@@ -47,7 +46,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROWithWhitspaces() {
         URI ro3 = createRO("ro " + UUID.randomUUID().toString(), accessToken);
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
@@ -55,7 +54,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROMetadata()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -66,7 +65,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROHTML()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -80,7 +79,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROZip() {
         client().setFollowRedirects(false);
         ClientResponse response = webResource.uri(ro).accept("application/zip").get(ClientResponse.class);
@@ -123,4 +122,22 @@ public class ResourceTest extends ResourceBase {
         assertTrue("res1 should contain lorem ipsum", fileContent.contains("lorem ipsum"));
         response.close();
     }
+
+
+    //it takes a lon long time
+    //@Test
+    public void createROFromZip2()
+            throws IOException {
+        File file = new File(PROJECT_PATH + "/src/test/resources/wf74.zip");
+        FileInputStream fileInputStream = new FileInputStream(file);
+        ClientResponse response = webResource.path("ROs").accept("text/turtle")
+                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
+                .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(fileInputStream));
+        assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
+            response.getStatus());
+        String manifest = getManifest(ResearchObject.create(response.getLocation()));
+        System.out.println(manifest);
+        response.close();
+    }
+
 }

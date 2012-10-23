@@ -6,6 +6,7 @@ import java.net.URI;
 import junit.framework.Assert;
 
 import org.junit.Ignore;
+import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.evo.EvoTest;
 import pl.psnc.dl.wf4ever.evo.EvoType;
@@ -13,16 +14,13 @@ import pl.psnc.dl.wf4ever.evo.JobStatus;
 
 import com.sun.jersey.api.client.ClientResponse;
 
+//it makes some error so it is ignored for now 
+//it is an server error (500)
 @Ignore
 public class StoringHistoryTest extends EvoTest {
 
     protected URI ro2;
     protected String newResourceFile = "newREsourceFile";
-
-
-    public StoringHistoryTest() {
-        super();
-    }
 
 
     @Override
@@ -33,7 +31,14 @@ public class StoringHistoryTest extends EvoTest {
     }
 
 
-    //@Test
+    @Override
+    public void tearDown()
+            throws Exception {
+        super.tearDown();
+    }
+
+
+    @Test
     public void testStoringHistory()
             throws InterruptedException {
         //@TODO improve the text structure

@@ -22,6 +22,20 @@ public class JobTest extends EvoTest {
     }
 
 
+    @Override
+    public void setUp()
+            throws Exception {
+        super.setUp();
+    }
+
+
+    @Override
+    public void tearDown()
+            throws Exception {
+        super.tearDown();
+    }
+
+
     @Test
     public final void testCopyJobCreation()
             throws InterruptedException {

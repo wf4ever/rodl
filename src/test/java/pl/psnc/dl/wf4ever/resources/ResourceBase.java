@@ -3,19 +3,14 @@ package pl.psnc.dl.wf4ever.resources;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Ignore;
-
 import pl.psnc.dl.wf4ever.W4ETest;
-import pl.psnc.dl.wf4ever.common.HibernateUtil;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 
 import com.sun.jersey.test.framework.WebAppDescriptor;
 
-@Ignore
 public class ResourceBase extends W4ETest {
 
     protected List<String> linkHeadersR = new ArrayList<>();
-    private final String externalResource = "http://example.com/external/resource.txt";
 
 
     public ResourceBase() {
@@ -37,7 +32,6 @@ public class ResourceBase extends W4ETest {
         super.setUp();
         createUserWithAnswer(userIdSafe, username).close();
         accessToken = createAccessToken(userId);
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         ro = createRO(accessToken);
         ro2 = createRO(accessToken);
     }
@@ -49,7 +43,6 @@ public class ResourceBase extends W4ETest {
         deleteROs();
         deleteAccessToken(accessToken);
         deleteUser(userIdSafe);
-        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         super.tearDown();
     }
 

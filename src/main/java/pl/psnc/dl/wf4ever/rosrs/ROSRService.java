@@ -687,6 +687,17 @@ public final class ROSRService {
     }
 
 
+    /**
+     * Create a new research object submitted in zip format.
+     * 
+     * @param freshResearchObjectURI
+     *            the uri of created object
+     * @param zip
+     *            the zip file
+     * @return HTTP response (created in case of success, 404 in case of error)
+     * @throws BadRequestException .
+     * @throws AccessDeniedException .
+     */
     public static Response createNewResearchObjectFromZip(URI freshResearchObjectURI, MemoryZipFile zip)
             throws BadRequestException, AccessDeniedException {
         URI createdResearchObjectURI;
