@@ -1,15 +1,23 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.UUID;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
@@ -34,8 +42,6 @@ import pl.psnc.dl.wf4ever.vocabulary.AO;
 
 import com.google.common.collect.Multimap;
 import com.sun.jersey.core.header.ContentDisposition;
-
-import eu.medsea.mimeutil.MimeUtil;
 
 /**
  * Utility class for distributing the RO tasks to dLibra and SMS.
@@ -699,7 +705,7 @@ public final class ROSRService {
      * @throws AccessDeniedException .
      */
     public static Response createNewResearchObjectFromZip(URI freshResearchObjectURI, MemoryZipFile zip)
-            throws BadRequestException, AccessDeniedException {
+            throws BadRequestException, AccessDeniedException, IOException {
         URI createdResearchObjectURI;
         ResearchObject createdResearchObject;
         try {
@@ -726,22 +732,24 @@ public final class ROSRService {
 
             String resourceName = createdResearchObjectURI.relativize(aggregated.getUri()).getPath();
             InputStream is = zip.getEntryAsStream(resourceName);
-            if (is != null) {
-                try {
+            UUID uuid = UUID.randomUUID();
+            File tmpFile = File.createTempFile("tmp_resource", uuid.toString());
+            try {
+                if (is != null) {
+                    BufferedInputStream inputStream = new BufferedInputStream(is);
+                    FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
+                    IOUtils.copy(inputStream, fileOutputStream);
+                    String mimeType = new MimetypesFileTypeMap().getContentType(tmpFile);
                     aggregateInternalResource(ResearchObject.create(createdResearchObjectURI),
-                        createdResearchObjectURI.resolve(resourceName), is, MimeUtil.getMimeTypes(resourceName)
-                                .toString(), null);
-                } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
-                    throw new BadRequestException("manifest is not correct", e);
-                }
-            } else {
-                try {
+                        createdResearchObjectURI.resolve(resourceName), new FileInputStream(tmpFile), mimeType, null);
+                } else {
                     aggregateExternalResource(ResearchObject.create(createdResearchObjectURI),
                         createdResearchObjectURI.resolve(resourceName));
-                } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
-                    //@TODO decide what to do in case og exception
-                    e.printStackTrace();
                 }
+            } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                e.printStackTrace();
+            } finally {
+                tmpFile.delete();
             }
         }
         for (Annotation annotation : annotationsList) {
