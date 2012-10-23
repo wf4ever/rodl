@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.http.HttpStatus;
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
@@ -33,6 +34,7 @@ import pl.psnc.dl.wf4ever.common.ResourceInfo;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
@@ -236,10 +238,7 @@ public class Resource {
             @QueryParam("original") String original, @Context Request request)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.findByUri(uri);
-        if (researchObject == null) {
-            researchObject = ResearchObject.create(uri);
-        }
+        ResearchObject researchObject = ResearchObject.create(uri);
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
@@ -252,6 +251,13 @@ public class Resource {
                     .location(
                         ROSRService.getAnnotationBody(researchObject, resource,
                             servletRequest.getHeader(Constants.ACCEPT_HEADER))).build();
+        }
+        if (ROSRService.SMS.get().isRoFolder(researchObject, resource)) {
+            Folder folder = new Folder();
+            folder.setUri(resource);
+            RDFFormat format = RDFFormat.forMIMEType(servletRequest.getHeader(Constants.ACCEPT_HEADER),
+                RDFFormat.RDFXML);
+            return Response.status(Status.SEE_OTHER).location(folder.getResourceMapUri(format)).build();
         }
 
         ResourceInfo resInfo = ROSRService.getResourceInfo(researchObject, resource, original);

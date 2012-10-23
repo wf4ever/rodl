@@ -457,8 +457,7 @@ public final class ROSRService {
         if (original != null) {
             URI originalResource = resource.resolve(original);
             filePath = researchObject.getUri().relativize(originalResource).getPath();
-            if (ROSRService.SMS.get().containsNamedGraph(originalResource)
-                    && ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, originalResource)) {
+            if (ROSRService.SMS.get().containsNamedGraph(originalResource)) {
                 RDFFormat format = RDFFormat.forMIMEType(accept);
                 if (format == null) {
                     format = RDFFormat.forFileName(resource.getPath(), RDFFormat.RDFXML);
@@ -472,8 +471,7 @@ public final class ROSRService {
             }
         }
 
-        if (ROSRService.SMS.get().containsNamedGraph(resource)
-                && ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
+        if (ROSRService.SMS.get().containsNamedGraph(resource)) {
             RDFFormat acceptFormat = RDFFormat.forMIMEType(accept);
             RDFFormat extensionFormat = RDFFormat.forFileName(resource.getPath());
             if (extensionFormat != null && (acceptFormat == null || extensionFormat == acceptFormat)) {
@@ -812,9 +810,18 @@ public final class ROSRService {
      * @param folder
      *            folder with folder entries
      * @return folder with all fields filled in
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
      */
-    public static Folder createFolder(ResearchObject researchObject, Folder folder) {
-        return SMS.get().addFolder(researchObject, folder);
+    public static Folder createFolder(ResearchObject researchObject, Folder folder)
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        folder = SMS.get().addFolder(researchObject, folder);
+        String path = researchObject.getUri().relativize(folder.getResourceMapUri()).toString();
+        updateNamedGraphInDlibra(path, researchObject, folder.getResourceMapUri());
+        return folder;
     }
-
 }

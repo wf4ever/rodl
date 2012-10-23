@@ -64,6 +64,27 @@ public class FolderTest extends ResourceBase {
 
 
     /**
+     * Test for dereferencing a folder.
+     */
+    @Test
+    public void getFolder() {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("folder.rdf");
+        ClientResponse response = addFolder(is, ro, folderPath, accessToken);
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        URI folderProxyURI = response.getLocation();
+        Assert.assertNotNull(folderProxyURI);
+        response.close();
+
+        response = webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken)
+                .get(ClientResponse.class);
+        assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+        assertCorrectFolderResourceMap(response.getEntityInputStream());
+
+        webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
+    }
+
+
+    /**
      * Check if folder resource map is correct.
      * 
      * @param entityInputStream
