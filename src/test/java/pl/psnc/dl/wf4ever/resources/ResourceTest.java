@@ -13,14 +13,12 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-@Ignore
 public class ResourceTest extends ResourceBase {
 
     protected String createdFromZipResourceObject = UUID.randomUUID().toString();

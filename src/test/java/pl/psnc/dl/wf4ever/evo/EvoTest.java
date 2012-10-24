@@ -1,9 +1,11 @@
 package pl.psnc.dl.wf4ever.evo;
 
 import java.net.URI;
+
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.junit.Ignore;
 
 import pl.psnc.dl.wf4ever.W4ETest;
 import pl.psnc.dl.wf4ever.evo.Job.State;
@@ -16,6 +18,7 @@ import com.sun.jersey.test.framework.WebAppDescriptor;
  * @author filipwis
  * 
  */
+@Ignore
 public class EvoTest extends W4ETest {
 
     public static final int WAIT_FOR_COPY = 2000;
@@ -50,12 +53,14 @@ public class EvoTest extends W4ETest {
         deleteUser(userId2Safe);
         super.tearDown();
     }
-    
+
+
     @Override
     protected void finalize()
             throws Throwable {
         super.finalize();
     }
+
 
     protected ClientResponse createCopyJob(JobStatus status) {
         return webResource.path("evo/copy/").header("Authorization", "Bearer " + accessToken)
