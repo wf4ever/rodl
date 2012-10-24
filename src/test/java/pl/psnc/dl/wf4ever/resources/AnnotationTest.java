@@ -29,6 +29,7 @@ public class AnnotationTest extends ResourceBase {
     @Override
     public void tearDown()
             throws Exception {
+        super.tearDown();
     }
 
 

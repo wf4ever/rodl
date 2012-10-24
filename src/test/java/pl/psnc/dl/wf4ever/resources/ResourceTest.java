@@ -40,7 +40,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROList() {
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue(list.contains(ro.toString()));
@@ -48,7 +48,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROWithWhitspaces() {
         URI ro3 = createRO("ro " + UUID.randomUUID().toString(), accessToken);
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
@@ -56,7 +56,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROMetadata()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -67,7 +67,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROHTML()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -81,7 +81,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROZip() {
         client().setFollowRedirects(false);
         ClientResponse response = webResource.uri(ro).accept("application/zip").get(ClientResponse.class);
@@ -113,9 +113,33 @@ public class ResourceTest extends ResourceBase {
                 .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(fileInputStream));
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
-        ResearchObject createdRO = ResearchObject.create(response.getLocation());
-        String manifest = getManifest(createdRO);
-        response.close();
+        String manifest = getManifest(ResearchObject.create(response.getLocation()));
 
+        assertTrue("manifest should contain ann1-body", manifest.contains("/.ro/ann1-body.ttl"));
+        assertTrue("manifest should contain res1", manifest.contains("/res1"));
+        assertTrue("manifest should contain afinalfolder", manifest.contains("/afinalfolder"));
+        assertTrue("manifest should contain res2", manifest.contains("/res2"));
+
+        String fileContent = getResourceToString(ResearchObject.create(response.getLocation()), "res1");
+        assertTrue("res1 should contain lorem ipsum", fileContent.contains("lorem ipsum"));
+        response.close();
     }
+
+
+    //it takes a lon long time
+    //@Test
+    public void createROFromZip2()
+            throws IOException {
+        File file = new File(PROJECT_PATH + "/src/test/resources/wf74.zip");
+        FileInputStream fileInputStream = new FileInputStream(file);
+        ClientResponse response = webResource.path("ROs").accept("text/turtle")
+                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
+                .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(fileInputStream));
+        assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
+            response.getStatus());
+        String manifest = getManifest(ResearchObject.create(response.getLocation()));
+        System.out.println(manifest);
+        response.close();
+    }
+
 }

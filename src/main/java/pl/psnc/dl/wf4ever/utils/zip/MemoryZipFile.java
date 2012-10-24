@@ -4,9 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -14,31 +11,60 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
 
+/**
+ * Create/Read zip file in memory.
+ * 
+ * @author pejot
+ * 
+ */
 public class MemoryZipFile {
 
-    ZipOutputStream zipOutputStream;
-    ByteArrayOutputStream byteArrayOutputStream;
-    ZipFile zipFile;
+    /** Output of loaded zip file. */
+    private ZipOutputStream zipOutputStream;
+    /** Byte array necessary to create an output stream. */
+    private ByteArrayOutputStream byteArrayOutputStream;
+    /** Read/Created zip file. */
+    private ZipFile zipFile;
 
 
-    public ZipFile get() {
-        return zipFile;
-    }
-
-
+    /**
+     * Constructor.
+     */
     public MemoryZipFile() {
         byteArrayOutputStream = new ByteArrayOutputStream();
         zipOutputStream = new ZipOutputStream(byteArrayOutputStream);
     }
 
 
+    /**
+     * Constructor.
+     * 
+     * @param file
+     *            the zip file
+     * @throws ZipException .
+     * @throws IOException .
+     */
     public MemoryZipFile(File file)
             throws ZipException, IOException {
         zipFile = new ZipFile(file);
     }
 
 
-    public void AddEntry(String fileName, byte[] data)
+    public ZipFile getZipFile() {
+        return zipFile;
+    }
+
+
+    /**
+     * Create a new file as a zipEntry.
+     * 
+     * @param fileName
+     *            entry name
+     * @param data
+     *            file content
+     * @throws IOException .
+     */
+    public void addEntry(String fileName, byte[] data)
             throws IOException {
         zipOutputStream.putNextEntry(new ZipEntry(fileName));
         zipOutputStream.write(data);
@@ -46,7 +72,14 @@ public class MemoryZipFile {
     }
 
 
-    public void AddEntry(String dirName)
+    /**
+     * Create a new directory as a zipEntry.
+     * 
+     * @param dirName
+     *            directory name
+     * @throws IOException .
+     */
+    public void addEntry(String dirName)
             throws IOException {
         zipOutputStream.putNextEntry(new ZipEntry(dirName));
     }
@@ -57,6 +90,13 @@ public class MemoryZipFile {
     }
 
 
+    /**
+     * Get a certain entry from the zip file.
+     * 
+     * @param entryName
+     *            file name
+     * @return file as a byteArray
+     */
     public byte[] getEntry(String entryName) {
 
         try {
@@ -73,6 +113,13 @@ public class MemoryZipFile {
     }
 
 
+    /**
+     * Get a certain entry as an Input Stream.
+     * 
+     * @param entryName
+     *            file name
+     * @return file content as an input stream
+     */
     public InputStream getEntryAsStream(String entryName) {
         try {
             return zipFile.getInputStream(zipFile.getEntry(entryName));
@@ -84,15 +131,5 @@ public class MemoryZipFile {
 
     public InputStream getManifestAsInputStream() {
         return getEntryAsStream(".ro/manifest.rdf");
-    }
-
-
-    private List<String> getEntriesNames() {
-        List<String> result = new ArrayList<String>();
-        Enumeration<? extends ZipEntry> entries = zipFile.entries();
-        while (entries.hasMoreElements()) {
-            result.add(entries.nextElement().getName());
-        }
-        return result;
     }
 }

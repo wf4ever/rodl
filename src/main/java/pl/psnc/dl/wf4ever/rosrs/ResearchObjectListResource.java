@@ -162,7 +162,6 @@ public class ResearchObjectListResource {
 
         BufferedInputStream inputStream = new BufferedInputStream(request.getInputStream());
         FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
-
         IOUtils.copy(inputStream, fileOutputStream);
         Response response = ROSRService.createNewResearchObjectFromZip(
             uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build(), new MemoryZipFile(tmpFile));

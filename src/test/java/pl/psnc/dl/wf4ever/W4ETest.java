@@ -7,6 +7,8 @@ import java.util.UUID;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 
+import pl.psnc.dl.wf4ever.common.HibernateUtil;
+
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.test.framework.JerseyTest;
@@ -51,6 +53,7 @@ public class W4ETest extends JerseyTest {
     @Override
     public void setUp()
             throws Exception {
+        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         super.setUp();
     }
 
@@ -58,6 +61,7 @@ public class W4ETest extends JerseyTest {
     @Override
     public void tearDown()
             throws Exception {
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         super.tearDown();
     }
 
