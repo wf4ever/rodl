@@ -46,13 +46,13 @@ public class W4ETest extends JerseyTest {
         } else {
             webResource = resource().path("rodl/");
         }
-        clientId = createClient(clientName);
     }
 
 
     @Override
     public void setUp()
             throws Exception {
+        clientId = createClient(clientName);
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         super.setUp();
     }
@@ -61,14 +61,9 @@ public class W4ETest extends JerseyTest {
     @Override
     public void tearDown()
             throws Exception {
+        deleteClient(clientId);
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         super.tearDown();
-    }
-
-
-    protected void finalize()
-            throws Throwable {
-        deleteClient(clientId);
     }
 
 

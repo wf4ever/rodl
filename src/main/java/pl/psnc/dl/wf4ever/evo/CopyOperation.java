@@ -60,98 +60,93 @@ public class CopyOperation implements Operation {
     public void execute(JobStatus status)
             throws OperationFailedException {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        URI target = status.getCopyfrom().resolve("../" + id + "/");
+        int i = 1;
+        while (ROSRService.SMS.get().containsNamedGraph(target)) {
+            target = status.getCopyfrom().resolve("../" + id + "-" + (i++) + "/");
+        }
+        status.setTarget(target);
+
+        ResearchObject targetRO = ResearchObject.create(target);
+        ResearchObject sourceRO = ResearchObject.findByUri(status.getCopyfrom());
+
         try {
-            URI target = status.getCopyfrom().resolve("../" + id + "/");
-            int i = 1;
-            while (ROSRService.SMS.get().containsNamedGraph(target)) {
-                target = status.getCopyfrom().resolve("../" + id + "-" + (i++) + "/");
-            }
-            status.setTarget(target);
-
-            ResearchObject targetRO = ResearchObject.findByUri(target);
-            ResearchObject sourceRO = ResearchObject.findByUri(status.getCopyfrom());
-
-            try {
-                ROSRService.createResearchObject(targetRO, status.getType(), sourceRO);
-            } catch (ConflictException | DigitalLibraryException | NotFoundException | AccessDeniedException e) {
-                throw new OperationFailedException("Could not create the target research object", e);
-            }
-
-            OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-            model.read(sourceRO.getManifestUri().toString());
-            Individual source = model.getIndividual(sourceRO.getUri().toString());
-            if (source == null) {
-                throw new OperationFailedException("The manifest does not describe the research object");
-            }
-            List<RDFNode> aggregatedResources = source.listPropertyValues(ORE.aggregates).toList();
-            Map<URI, URI> changedURIs = new HashMap<>();
-            for (RDFNode aggregatedResource : aggregatedResources) {
-                if (Thread.interrupted()) {
-                    try {
-                        ROSRService.deleteResearchObject(targetRO);
-                    } catch (DigitalLibraryException | NotFoundException e) {
-                        LOGGER.error("Could not delete the target when aborting: " + target, e);
-                    }
-                    return;
-                }
-                if (!aggregatedResource.isURIResource()) {
-                    LOGGER.warn("Aggregated node " + aggregatedResource.toString() + " is not a URI resource");
-                    continue;
-                }
-                Individual resource = aggregatedResource.as(Individual.class);
-                URI resourceURI = URI.create(resource.getURI());
-                if (resource.hasRDFType(RO.Resource.getURI())) {
-                    if (isInternalResource(resourceURI, status.getCopyfrom())) {
-                        try {
-                            Client client = Client.create();
-                            WebResource webResource = client.resource(resourceURI.toString());
-                            ClientResponse response = webResource.get(ClientResponse.class);
-                            URI resourcePath = status.getCopyfrom().relativize(resourceURI);
-                            URI targetURI = target.resolve(resourcePath);
-                            ROSRService.aggregateInternalResource(targetRO, targetURI, response.getEntityInputStream(),
-                                response.getType().toString(), null);
-                            changedURIs.put(resourceURI, targetURI);
-                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
-                            throw new OperationFailedException("Could not create aggregate internal resource: "
-                                    + resourceURI, e);
-                        }
-                    } else {
-                        try {
-                            ROSRService.aggregateExternalResource(targetRO, resourceURI);
-                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
-                            throw new OperationFailedException("Could not create aggregate external resource: "
-                                    + resourceURI, e);
-                        }
-                    }
-                } else if (resource.hasRDFType(RO.AggregatedAnnotation.getURI())) {
-                    Resource annBody = resource.getPropertyResourceValue(AO.body);
-                    List<URI> targets = new ArrayList<>();
-                    List<RDFNode> annotationTargets = resource.listPropertyValues(RO.annotatesAggregatedResource)
-                            .toList();
-                    for (RDFNode annTarget : annotationTargets) {
-                        if (!annTarget.isURIResource()) {
-                            LOGGER.warn("Annotation target " + annTarget.toString() + " is not a URI resource");
-                            continue;
-                        }
-                        targets.add(URI.create(annTarget.asResource().getURI()));
-                    }
-                    ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets);
-                }
-            }
-            for (Map.Entry<URI, URI> e : changedURIs.entrySet()) {
-                ROSRService.SMS.get().changeURIInManifestAndAnnotationBodies(targetRO, e.getKey(), e.getValue());
-            }
-            //try {
-            //storeHistoryInformation(status.getTarget());
-            ;
-            //} catch (URISyntaxException e) {
-            //@TODO thing about the exception handling
-            //e.printStackTrace();
-            //}
-        } finally {
-            HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+            ROSRService.createResearchObject(targetRO, status.getType(), sourceRO);
+        } catch (ConflictException | DigitalLibraryException | NotFoundException | AccessDeniedException e) {
+            throw new OperationFailedException("Could not create the target research object", e);
         }
 
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        model.read(sourceRO.getManifestUri().toString());
+        Individual source = model.getIndividual(sourceRO.getUri().toString());
+        if (source == null) {
+            throw new OperationFailedException("The manifest does not describe the research object");
+        }
+        List<RDFNode> aggregatedResources = source.listPropertyValues(ORE.aggregates).toList();
+        Map<URI, URI> changedURIs = new HashMap<>();
+        for (RDFNode aggregatedResource : aggregatedResources) {
+            if (Thread.interrupted()) {
+                try {
+                    ROSRService.deleteResearchObject(targetRO);
+                } catch (DigitalLibraryException | NotFoundException e) {
+                    LOGGER.error("Could not delete the target when aborting: " + target, e);
+                }
+                return;
+            }
+            if (!aggregatedResource.isURIResource()) {
+                LOGGER.warn("Aggregated node " + aggregatedResource.toString() + " is not a URI resource");
+                continue;
+            }
+            Individual resource = aggregatedResource.as(Individual.class);
+            URI resourceURI = URI.create(resource.getURI());
+            if (resource.hasRDFType(RO.Resource.getURI())) {
+                if (isInternalResource(resourceURI, status.getCopyfrom())) {
+                    try {
+                        Client client = Client.create();
+                        WebResource webResource = client.resource(resourceURI.toString());
+                        ClientResponse response = webResource.get(ClientResponse.class);
+                        URI resourcePath = status.getCopyfrom().relativize(resourceURI);
+                        URI targetURI = target.resolve(resourcePath);
+                        ROSRService.aggregateInternalResource(targetRO, targetURI, response.getEntityInputStream(),
+                            response.getType().toString(), null);
+                        changedURIs.put(resourceURI, targetURI);
+                    } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                        throw new OperationFailedException("Could not create aggregate internal resource: "
+                                + resourceURI, e);
+                    }
+                } else {
+                    try {
+                        ROSRService.aggregateExternalResource(targetRO, resourceURI);
+                    } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                        throw new OperationFailedException("Could not create aggregate external resource: "
+                                + resourceURI, e);
+                    }
+                }
+            } else if (resource.hasRDFType(RO.AggregatedAnnotation.getURI())) {
+                Resource annBody = resource.getPropertyResourceValue(AO.body);
+                List<URI> targets = new ArrayList<>();
+                List<RDFNode> annotationTargets = resource.listPropertyValues(RO.annotatesAggregatedResource).toList();
+                for (RDFNode annTarget : annotationTargets) {
+                    if (!annTarget.isURIResource()) {
+                        LOGGER.warn("Annotation target " + annTarget.toString() + " is not a URI resource");
+                        continue;
+                    }
+                    targets.add(URI.create(annTarget.asResource().getURI()));
+                }
+                ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets);
+            }
+        }
+        for (Map.Entry<URI, URI> e : changedURIs.entrySet()) {
+            ROSRService.SMS.get().changeURIInManifestAndAnnotationBodies(targetRO, e.getKey(), e.getValue());
+        }
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+        //try {
+        //storeHistoryInformation(status.getTarget());
+
+        //} catch (URISyntaxException e) {
+        //@TODO thing about the exception handling
+        //e.printStackTrace();
+        //}
     }
 
 
