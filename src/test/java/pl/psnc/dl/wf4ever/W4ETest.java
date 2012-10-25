@@ -49,13 +49,13 @@ public class W4ETest extends JerseyTest {
     public void setUp()
             throws Exception {
         super.setUp();
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         client().setFollowRedirects(true);
         if (resource().getURI().getHost().equals("localhost")) {
             webResource = resource();
         } else {
             webResource = resource().path("rodl/");
         }
+        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         clientId = createClient(clientName);
     }
 
