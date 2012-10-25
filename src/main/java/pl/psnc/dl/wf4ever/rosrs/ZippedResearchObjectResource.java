@@ -12,8 +12,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -46,7 +46,7 @@ public class ZippedResearchObjectResource {
     @Produces({ "application/zip", "multipart/related" })
     public Response getZippedRO(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, NotFoundException {
-        URI uri = uriInfo.getAbsolutePath().resolve("../../ROs/" + researchObjectId);
+        URI uri = URI.create(uriInfo.getAbsolutePath().toString().replaceFirst("zippedROs", "ROs"));
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject == null) {
             researchObject = ResearchObject.create(uri);

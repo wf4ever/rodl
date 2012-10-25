@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
+import org.junit.Assert;
 
 import pl.psnc.dl.wf4ever.common.HibernateUtil;
 
@@ -40,21 +42,21 @@ public class W4ETest extends JerseyTest {
 
     public W4ETest(WebAppDescriptor webAppDescriptor) {
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
-        client().setFollowRedirects(true);
-        if (resource().getURI().getHost().equals("localhost")) {
-            webResource = resource();
-        } else {
-            webResource = resource().path("rodl/");
-        }
     }
 
 
     @Override
     public void setUp()
             throws Exception {
-        clientId = createClient(clientName);
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         super.setUp();
+        client().setFollowRedirects(true);
+        if (resource().getURI().getHost().equals("localhost")) {
+            webResource = resource();
+        } else {
+            webResource = resource().path("rodl/");
+        }
+        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        clientId = createClient(clientName);
     }
 
 
@@ -93,6 +95,7 @@ public class W4ETest extends JerseyTest {
     protected String createAccessToken(String userId) {
         ClientResponse response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, clientId + "\r\n" + userId);
+        Assert.assertEquals(HttpStatus.SC_CREATED, response.getStatus());
         String accessToken = response.getLocation().resolve(".").relativize(response.getLocation()).toString();
         response.close();
         return accessToken;
@@ -161,5 +164,24 @@ public class W4ETest extends JerseyTest {
                     "<" + webResource.uri(ro).getURI().toString() + ">; rel=\"http://purl.org/ao/annotates\"")
                 .header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
                 .post(ClientResponse.class, is);
+    }
+
+
+    /**
+     * Add a folder to the RO.
+     * 
+     * @param is
+     *            request entity
+     * @param roURI
+     *            RO URI
+     * @param folderPath
+     *            folder path
+     * @param accessToken
+     *            RODL access token
+     * @return response from server
+     */
+    protected ClientResponse addFolder(InputStream is, URI roURI, String folderPath, String accessToken) {
+        return webResource.uri(roURI).header("Slug", folderPath).header("Authorization", "Bearer " + accessToken)
+                .type("application/vnd.wf4ever.folder").post(ClientResponse.class, is);
     }
 }

@@ -30,10 +30,10 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.common.UserProfile.Role;
-import pl.psnc.dl.wf4ever.dlibra.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dlibra.ConflictException;
-import pl.psnc.dl.wf4ever.dlibra.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dlibra.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 
 import com.sun.jersey.core.header.ContentDisposition;
@@ -115,6 +115,9 @@ public class ResearchObjectListResource {
         String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
+        }
+        if (researchObjectId.contains("/")) {
+            throw new BadRequestException("Research object ID cannot contain slashes, see WFE-703");
         }
         URI uri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.findByUri(uri);

@@ -47,7 +47,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROList() {
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue(list.contains(ro.toString()));
@@ -55,7 +55,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROWithWhitspaces() {
         URI ro3 = createRO("ro " + UUID.randomUUID().toString(), accessToken);
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
@@ -63,7 +63,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROMetadata()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -74,7 +74,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROHTML()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -88,7 +88,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROZip() {
         client().setFollowRedirects(false);
         ClientResponse response = webResource.uri(ro).accept("application/zip").get(ClientResponse.class);
@@ -131,7 +131,7 @@ public class ResourceTest extends ResourceBase {
         String fileContent = getResourceToString(ResearchObject.create(response.getLocation()), "res1");
 
         assertTrue("res1 should contain lorem ipsum", fileContent.contains("lorem ipsum"));
-        SemanticMetadataService sms = new SemanticMetadataServiceImpl(new UserProfile("login", "name", Role.ADMIN));
+        SemanticMetadataService sms = new SemanticMetadataServiceImpl(UserProfile.create("login", "name", Role.ADMIN));
         List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
         assertEquals("research object should contan two nnotations", annotations.size(), 2);
         response.close();

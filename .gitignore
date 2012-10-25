@@ -3,7 +3,6 @@
 /target
 /.classpath
 /rosrs.log
-.checkstyle
+/.checkstyle
 *~
 /tokens
-/src/test/resources/rdfStructure*manifest.ttl
