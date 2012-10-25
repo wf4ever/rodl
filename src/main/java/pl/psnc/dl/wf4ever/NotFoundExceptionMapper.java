@@ -5,6 +5,8 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.apache.log4j.Logger;
+
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 
 /**
@@ -16,8 +18,13 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 @Provider
 public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundException> {
 
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(NotFoundExceptionMapper.class);
+
+
     @Override
     public Response toResponse(NotFoundException e) {
+        LOGGER.error("Caught not found exception", e);
         return Response.status(Status.NOT_FOUND).type("text/plain").entity(e.getMessage()).build();
     }
 
