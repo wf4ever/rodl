@@ -45,7 +45,7 @@
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
 			<artifactId>rosrs-sms</artifactId>
-			<version>3.1.4-SNAPSHOT</version>
+			<version>3.1.4</version>
 		</dependency>
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
