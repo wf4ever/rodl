@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.URI;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.W4ETest;
@@ -12,6 +13,7 @@ import pl.psnc.dl.wf4ever.W4ETest;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 
+@Ignore
 public class ClientTest extends W4ETest {
 
     private String testClientName = "Test client name";

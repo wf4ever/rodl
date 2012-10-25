@@ -81,7 +81,6 @@ public class W4ETest extends JerseyTest {
     protected ClientResponse createUserWithAnswer(String userId, String username) {
         return webResource.path("users/" + userId).header("Authorization", "Bearer " + adminCreds)
                 .put(ClientResponse.class, username);
-
     }
 
 

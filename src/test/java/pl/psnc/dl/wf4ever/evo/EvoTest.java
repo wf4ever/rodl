@@ -11,7 +11,6 @@ import pl.psnc.dl.wf4ever.W4ETest;
 import pl.psnc.dl.wf4ever.evo.Job.State;
 
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.test.framework.WebAppDescriptor;
 
 /**
  * @author piotrhol
@@ -27,20 +26,15 @@ public class EvoTest extends W4ETest {
     protected final static Logger logger = Logger.getLogger(CopyResource.class);
 
 
-    public EvoTest() {
-        super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
-    }
-
-
     @Override
     public void setUp()
             throws Exception {
+        super.setUp();
         createUserWithAnswer(userIdSafe, username).close();
         createUserWithAnswer(userId2Safe, username2).close();
         accessToken = createAccessToken(userId);
         ro = createRO(accessToken);
         addFile(ro, filePath, accessToken);
-        super.setUp();
     }
 
 
