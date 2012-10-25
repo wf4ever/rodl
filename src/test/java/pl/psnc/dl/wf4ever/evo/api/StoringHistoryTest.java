@@ -79,13 +79,13 @@ public class StoringHistoryTest extends EvoTest {
 
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
-
+        /*
         System.out.println("-------------");
         System.out.println(snapshot1Answer);
         System.out.println("-------------");
         System.out.println(snapshot2Answer);
         System.out.println("-------------");
-
+        */
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
 
