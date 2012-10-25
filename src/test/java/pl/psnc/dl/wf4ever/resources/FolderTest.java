@@ -44,6 +44,7 @@ public class FolderTest extends ResourceBase {
     @Override
     public void tearDown()
             throws Exception {
+        super.tearDown();
     }
 
 

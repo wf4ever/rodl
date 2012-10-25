@@ -14,7 +14,7 @@ import pl.psnc.dl.wf4ever.evo.Job.State;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-
+@Ignore
 public class JobTest extends EvoTest {
 
     public JobTest() {
