@@ -13,13 +13,11 @@ import javax.ws.rs.core.EntityTag;
 
 import org.apache.http.HttpStatus;
 import org.joda.time.DateTime;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-@Ignore
 public class FileTest extends ResourceBase {
 
     private final String filePath = "foo/bar ra.txt";
@@ -46,8 +44,12 @@ public class FileTest extends ResourceBase {
 
     @Test
     public void testAddAndGetFile() {
+        ClientResponse response = webResource.uri(ro).path(filePath).header("Authorization", "Bearer " + accessToken)
+                .delete(ClientResponse.class);
+        response.close();
+
         DateTime addFileTime = new DateTime();
-        ClientResponse response = addFile(ro, filePath, accessToken);
+        response = addFile(ro, filePath, accessToken);
         assertEquals(HttpStatus.SC_CREATED, response.getStatus());
         assertNotNull(response.getLastModified());
         assertTrue(!new DateTime(response.getLastModified()).isBefore(addFileTime));

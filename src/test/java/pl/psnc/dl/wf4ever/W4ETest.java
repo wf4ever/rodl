@@ -6,6 +6,10 @@ import java.util.UUID;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
+import org.junit.Assert;
+
+import pl.psnc.dl.wf4ever.common.HibernateUtil;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -38,13 +42,6 @@ public class W4ETest extends JerseyTest {
 
     public W4ETest(WebAppDescriptor webAppDescriptor) {
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
-        client().setFollowRedirects(true);
-        if (resource().getURI().getHost().equals("localhost")) {
-            webResource = resource();
-        } else {
-            webResource = resource().path("rodl/");
-        }
-        clientId = createClient(clientName);
     }
 
 
@@ -52,19 +49,23 @@ public class W4ETest extends JerseyTest {
     public void setUp()
             throws Exception {
         super.setUp();
+        client().setFollowRedirects(true);
+        if (resource().getURI().getHost().equals("localhost")) {
+            webResource = resource();
+        } else {
+            webResource = resource().path("rodl/");
+        }
+        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        clientId = createClient(clientName);
     }
 
 
     @Override
     public void tearDown()
             throws Exception {
-        super.tearDown();
-    }
-
-
-    protected void finalize()
-            throws Throwable {
         deleteClient(clientId);
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+        super.tearDown();
     }
 
 
@@ -94,6 +95,7 @@ public class W4ETest extends JerseyTest {
     protected String createAccessToken(String userId) {
         ClientResponse response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, clientId + "\r\n" + userId);
+        Assert.assertEquals(HttpStatus.SC_CREATED, response.getStatus());
         String accessToken = response.getLocation().resolve(".").relativize(response.getLocation()).toString();
         response.close();
         return accessToken;

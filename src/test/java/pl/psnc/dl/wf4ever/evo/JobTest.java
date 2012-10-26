@@ -14,11 +14,26 @@ import pl.psnc.dl.wf4ever.evo.Job.State;
 
 import com.sun.jersey.api.client.ClientResponse;
 
+//it makas an error
 @Ignore
 public class JobTest extends EvoTest {
 
     public JobTest() {
         super();
+    }
+
+
+    @Override
+    public void setUp()
+            throws Exception {
+        super.setUp();
+    }
+
+
+    @Override
+    public void tearDown()
+            throws Exception {
+        super.tearDown();
     }
 
 
@@ -45,7 +60,7 @@ public class JobTest extends EvoTest {
     }
 
 
-    //@Test
+    @Test
     public final void testJobFinalization()
             throws InterruptedException {
         URI copyJob = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, false)).getLocation();
@@ -61,7 +76,7 @@ public class JobTest extends EvoTest {
     }
 
 
-    //@Test
+    @Test
     public final void testCopyAndFinalizationJob()
             throws InterruptedException {
         JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, true);

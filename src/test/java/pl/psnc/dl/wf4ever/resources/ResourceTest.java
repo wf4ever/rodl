@@ -8,19 +8,26 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 
+import javax.naming.NamingException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.ResearchObject;
+import pl.psnc.dl.wf4ever.common.UserProfile;
+import pl.psnc.dl.wf4ever.common.UserProfile.Role;
+import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
+import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-@Ignore
 public class ResourceTest extends ResourceBase {
 
     protected String createdFromZipResourceObject = UUID.randomUUID().toString();
@@ -40,7 +47,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROList() {
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue(list.contains(ro.toString()));
@@ -48,7 +55,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROWithWhitspaces() {
         URI ro3 = createRO("ro " + UUID.randomUUID().toString(), accessToken);
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
@@ -56,7 +63,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROMetadata()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -67,7 +74,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROHTML()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -81,7 +88,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROZip() {
         client().setFollowRedirects(false);
         ClientResponse response = webResource.uri(ro).accept("application/zip").get(ClientResponse.class);
@@ -105,7 +112,7 @@ public class ResourceTest extends ResourceBase {
 
     @Test
     public void createROFromZip()
-            throws IOException {
+            throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
         File file = new File(PROJECT_PATH + "/src/test/resources/ro1.zip");
         FileInputStream fileInputStream = new FileInputStream(file);
         ClientResponse response = webResource.path("ROs").accept("text/turtle")
@@ -113,9 +120,20 @@ public class ResourceTest extends ResourceBase {
                 .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(fileInputStream));
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
-        ResearchObject createdRO = ResearchObject.create(response.getLocation());
-        String manifest = getManifest(createdRO);
-        response.close();
+        String manifest = getManifest(ResearchObject.create(response.getLocation()));
 
+        assertTrue("manifest should contain ann1-body", manifest.contains("/.ro/ann1-body.ttl"));
+        assertTrue("manifest should contain ann-blank", manifest.contains("/.ro/ann-blank.ttl"));
+
+        assertTrue("manifest should contain res1", manifest.contains("/res1"));
+        assertTrue("manifest should contain afinalfolder", manifest.contains("/afinalfolder"));
+        assertTrue("manifest should contain res2", manifest.contains("/res2"));
+        String fileContent = getResourceToString(ResearchObject.create(response.getLocation()), "res1");
+
+        assertTrue("res1 should contain lorem ipsum", fileContent.contains("lorem ipsum"));
+        SemanticMetadataService sms = new SemanticMetadataServiceImpl(UserProfile.create("login", "name", Role.ADMIN));
+        List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
+        assertEquals("research object should contan two nnotations", annotations.size(), 2);
+        response.close();
     }
 }

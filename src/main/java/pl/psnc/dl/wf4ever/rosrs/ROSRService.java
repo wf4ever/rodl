@@ -1,15 +1,23 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.UUID;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
@@ -30,14 +38,11 @@ import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
-import pl.psnc.dl.wf4ever.utils.URI.PathString;
 import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 
 import com.google.common.collect.Multimap;
 import com.sun.jersey.core.header.ContentDisposition;
-
-import eu.medsea.mimeutil.MimeUtil;
 
 /**
  * Utility class for distributing the RO tasks to dLibra and SMS.
@@ -457,8 +462,7 @@ public final class ROSRService {
         if (original != null) {
             URI originalResource = resource.resolve(original);
             filePath = researchObject.getUri().relativize(originalResource).getPath();
-            if (ROSRService.SMS.get().containsNamedGraph(originalResource)
-                    && ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, originalResource)) {
+            if (ROSRService.SMS.get().containsNamedGraph(originalResource)) {
                 RDFFormat format = RDFFormat.forMIMEType(accept);
                 if (format == null) {
                     format = RDFFormat.forFileName(resource.getPath(), RDFFormat.RDFXML);
@@ -472,8 +476,7 @@ public final class ROSRService {
             }
         }
 
-        if (ROSRService.SMS.get().containsNamedGraph(resource)
-                && ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
+        if (ROSRService.SMS.get().containsNamedGraph(resource)) {
             RDFFormat acceptFormat = RDFFormat.forMIMEType(accept);
             RDFFormat extensionFormat = RDFFormat.forFileName(resource.getPath());
             if (extensionFormat != null && (acceptFormat == null || extensionFormat == acceptFormat)) {
@@ -700,52 +703,63 @@ public final class ROSRService {
     }
 
 
+    /**
+     * Create a new research object submitted in zip format.
+     * 
+     * @param freshResearchObjectURI
+     *            the uri of created object
+     * @param zip
+     *            the zip file
+     * @return HTTP response (created in case of success, 404 in case of error)
+     * @throws BadRequestException .
+     * @throws AccessDeniedException .
+     */
     public static Response createNewResearchObjectFromZip(URI freshResearchObjectURI, MemoryZipFile zip)
-            throws BadRequestException, AccessDeniedException {
-        URI tmpUri;
+            throws BadRequestException, AccessDeniedException, IOException {
         URI createdResearchObjectURI;
-        ResearchObject tmpRO;
+        ResearchObject createdResearchObject;
         try {
             createdResearchObjectURI = createResearchObject(ResearchObject.create(freshResearchObjectURI));
-            tmpUri = new URI("http://www.example.com/ROs/");
-            tmpRO = ResearchObject.create(tmpUri);
-        } catch (ConflictException | DigitalLibraryException | NotFoundException | URISyntaxException e) {
+            createdResearchObject = ResearchObject.create(createdResearchObjectURI);
+        } catch (ConflictException | DigitalLibraryException | NotFoundException e) {
             throw new BadRequestException("Research Object creation problem", e);
         }
 
-        SemanticMetadataService tmpSms = new SemanticMetadataServiceImpl(ROSRService.SMS.get().getUserProfile(), tmpRO,
-                zip.getManifestAsInputStream(), RDFFormat.RDFXML);
+        SemanticMetadataService tmpSms = new SemanticMetadataServiceImpl(ROSRService.SMS.get().getUserProfile(),
+                createdResearchObject, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
 
         List<AggregatedResource> aggregatedList;
         List<Annotation> annotationsList;
 
         try {
-            aggregatedList = tmpSms.getAggregatedResources(tmpRO);
-            annotationsList = tmpSms.getAnnotations(tmpRO);
+            aggregatedList = tmpSms.getAggregatedResources(createdResearchObject);
+            annotationsList = tmpSms.getAnnotations(createdResearchObject);
         } catch (ManifestTraversingException e) {
             throw new BadRequestException("manifest is not correct", e);
         }
 
         for (AggregatedResource aggregated : aggregatedList) {
 
-            String resourceName = tmpUri.relativize(aggregated.getUri()).getPath();
+            String resourceName = createdResearchObjectURI.relativize(aggregated.getUri()).getPath();
             InputStream is = zip.getEntryAsStream(resourceName);
-            if (is != null) {
-                try {
+            UUID uuid = UUID.randomUUID();
+            File tmpFile = File.createTempFile("tmp_resource", uuid.toString());
+            try {
+                if (is != null) {
+                    BufferedInputStream inputStream = new BufferedInputStream(is);
+                    FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
+                    IOUtils.copy(inputStream, fileOutputStream);
+                    String mimeType = new MimetypesFileTypeMap().getContentType(tmpFile);
                     aggregateInternalResource(ResearchObject.create(createdResearchObjectURI),
-                        createdResearchObjectURI.resolve(resourceName), is,
-                        MimeUtil.getMediaType(PathString.getFileName(aggregated.getUri().getPath())), null);
-                } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
-                    throw new BadRequestException("manifest is not correct", e);
-                }
-            } else {
-                try {
+                        createdResearchObjectURI.resolve(resourceName), new FileInputStream(tmpFile), mimeType, null);
+                } else {
                     aggregateExternalResource(ResearchObject.create(createdResearchObjectURI),
                         createdResearchObjectURI.resolve(resourceName));
-                } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
-                    //@TODO decide what to do in case og exception
-                    e.printStackTrace();
                 }
+            } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                e.printStackTrace();
+            } finally {
+                tmpFile.delete();
             }
         }
         for (Annotation annotation : annotationsList) {
@@ -812,9 +826,18 @@ public final class ROSRService {
      * @param folder
      *            folder with folder entries
      * @return folder with all fields filled in
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
      */
-    public static Folder createFolder(ResearchObject researchObject, Folder folder) {
-        return SMS.get().addFolder(researchObject, folder);
+    public static Folder createFolder(ResearchObject researchObject, Folder folder)
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        folder = SMS.get().addFolder(researchObject, folder);
+        String path = researchObject.getUri().relativize(folder.getResourceMapUri()).toString();
+        updateNamedGraphInDlibra(path, researchObject, folder.getResourceMapUri());
+        return folder;
     }
-
 }

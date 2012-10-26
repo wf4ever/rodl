@@ -4,15 +4,12 @@ import javax.ws.rs.core.Response;
 
 import junit.framework.Assert;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.W4ETest;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.test.framework.WebAppDescriptor;
 
-@Ignore
 public class CheckWhoAmITest extends W4ETest {
 
     @Override
@@ -30,18 +27,6 @@ public class CheckWhoAmITest extends W4ETest {
         deleteAccessToken(accessToken);
         deleteUser(userIdSafe);
         super.tearDown();
-    }
-
-
-    public CheckWhoAmITest() {
-        super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
-    }
-
-
-    @Override
-    protected void finalize()
-            throws Throwable {
-        super.finalize();
     }
 
 

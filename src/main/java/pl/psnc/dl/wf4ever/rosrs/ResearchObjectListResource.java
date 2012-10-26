@@ -116,6 +116,9 @@ public class ResearchObjectListResource {
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
+        if (researchObjectId.contains("/")) {
+            throw new BadRequestException("Research object ID cannot contain slashes, see WFE-703");
+        }
         URI uri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.findByUri(uri);
         if (researchObject != null) {
@@ -162,7 +165,6 @@ public class ResearchObjectListResource {
 
         BufferedInputStream inputStream = new BufferedInputStream(request.getInputStream());
         FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
-
         IOUtils.copy(inputStream, fileOutputStream);
         Response response = ROSRService.createNewResearchObjectFromZip(
             uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build(), new MemoryZipFile(tmpFile));
