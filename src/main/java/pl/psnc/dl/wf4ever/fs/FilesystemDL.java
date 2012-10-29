@@ -1,0 +1,360 @@
+package pl.psnc.dl.wf4ever.fs;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.net.URI;
+import java.nio.file.DirectoryIteratorException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+
+import pl.psnc.dl.wf4ever.common.HibernateUtil;
+import pl.psnc.dl.wf4ever.common.ResearchObject;
+import pl.psnc.dl.wf4ever.common.ResourceInfo;
+import pl.psnc.dl.wf4ever.common.UserProfile;
+import pl.psnc.dl.wf4ever.common.UserProfile.Role;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
+
+import com.google.common.collect.Multimap;
+
+/**
+ * Filesystem-based digital library.
+ * 
+ * @author piotrekhol
+ * 
+ */
+public class FilesystemDL implements DigitalLibrary {
+
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(FilesystemDL.class);
+
+    /** base path under which the files will be stored. */
+    private Path basePath;
+
+    /** signed in user. */
+    private UserProfile user;
+
+
+    /**
+     * Constructor.
+     * 
+     * @param basePath
+     *            file path under which the files will be stored
+     * @param login
+     *            user login
+     */
+    public FilesystemDL(String basePath, String login) {
+        if (basePath.endsWith("/")) {
+            this.basePath = FileSystems.getDefault().getPath(basePath);
+        } else {
+            this.basePath = FileSystems.getDefault().getPath(basePath.concat("/"));
+        }
+        UserProfile user2 = UserProfile.findByLogin(login);
+        if (user2 == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+        this.user = user2;
+    }
+
+
+    @Override
+    public UserProfile getUserProfile()
+            throws DigitalLibraryException, NotFoundException {
+        return user;
+    }
+
+
+    @Override
+    public UserProfile getUserProfile(String login) {
+        return UserProfile.findByLogin(login);
+    }
+
+
+    @Override
+    public List<String> getResourcePaths(ResearchObject ro, String folder)
+            throws DigitalLibraryException, NotFoundException {
+        Path path = getPath(ro.getUri().resolve(folder));
+        List<String> result = new ArrayList<>();
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
+            for (Path entry : stream) {
+                result.add(entry.toString());
+            }
+        } catch (DirectoryIteratorException | IOException e) {
+            // I/O error encounted during the iteration, the cause is an IOException
+            throw new DigitalLibraryException(e);
+        }
+        return result;
+    }
+
+
+    @Override
+    public InputStream getZippedFolder(ResearchObject ro, String folder)
+            throws DigitalLibraryException, NotFoundException {
+        Path path = getPath(ro.getUri().resolve(folder));
+        final List<String> paths = getResourcePaths(ro, folder);
+
+        PipedInputStream in = new PipedInputStream();
+        final PipedOutputStream out;
+        try {
+            out = new PipedOutputStream(in);
+        } catch (IOException e) {
+            throw new RuntimeException("This should never happen", e);
+        }
+        final ZipOutputStream zipOut = new ZipOutputStream(out);
+        new Thread("edition zip downloader (" + path.toString() + ")") {
+
+            @Override
+            public void run() {
+                try {
+                    for (String filePath : paths) {
+                        ZipEntry entry = new ZipEntry(filePath);
+                        zipOut.putNextEntry(entry);
+                        InputStream in = Files.newInputStream(Paths.get(filePath));
+                        try {
+                            IOUtils.copy(in, zipOut);
+                        } finally {
+                            in.close();
+                        }
+                    }
+                } catch (IOException e) {
+                    LOGGER.error("Zip transmission failed", e);
+                } finally {
+                    try {
+                        zipOut.close();
+                    } catch (Exception e) {
+                        LOGGER.warn("Could not close the ZIP file: " + e.getMessage());
+                        try {
+                            out.close();
+                        } catch (IOException e1) {
+                            LOGGER.error("Could not close the ZIP output stream", e1);
+                        }
+                    }
+                }
+            };
+        }.start();
+        return in;
+    }
+
+
+    @Override
+    public InputStream getFileContents(ResearchObject ro, String filePath)
+            throws DigitalLibraryException, NotFoundException {
+        Path path = getPath(ro.getUri().resolve(filePath));
+        try {
+            return Files.newInputStream(path);
+        } catch (NoSuchFileException e) {
+            throw new NotFoundException("File doesn't exist", e);
+        } catch (IOException e) {
+            throw new DigitalLibraryException(e);
+        }
+    }
+
+
+    @Override
+    public boolean fileExists(ResearchObject ro, String filePath)
+            throws DigitalLibraryException {
+        Path path = getPath(ro.getUri().resolve(filePath));
+        return path.toFile().exists();
+    }
+
+
+    @Override
+    public ResourceInfo createOrUpdateFile(ResearchObject ro, String filePath, InputStream inputStream, String mimeType)
+            throws DigitalLibraryException {
+        Path path = getPath(ro.getUri().resolve(filePath));
+        try {
+            Files.createDirectories(path.getParent());
+            Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
+            FileInputStream fis = new FileInputStream(path.toFile());
+            String md5 = DigestUtils.md5Hex(fis);
+
+            ResourceInfo res = ResourceInfo.create(path.toString(), path.getFileName().toString(), md5,
+                Files.size(path), "MD5", new DateTime(Files.getLastModifiedTime(path).toMillis()), mimeType);
+            res.save();
+            HibernateUtil.getSessionFactory().getCurrentSession().flush();
+            return res;
+        } catch (IOException e) {
+            throw new DigitalLibraryException(e);
+        }
+    }
+
+
+    @Override
+    public ResourceInfo getFileInfo(ResearchObject ro, String filePath) {
+        Path path = getPath(ro.getUri().resolve(filePath));
+        return ResourceInfo.findByPath(path.toString());
+    }
+
+
+    @Override
+    public void deleteFile(ResearchObject ro, String filePath)
+            throws DigitalLibraryException {
+        Path path = getPath(ro.getUri().resolve(filePath));
+        try {
+            Files.delete(path);
+            ResourceInfo res = ResourceInfo.findByPath(path.toString());
+            res.delete();
+            HibernateUtil.getSessionFactory().getCurrentSession().flush();
+        } catch (IOException e) {
+            throw new DigitalLibraryException(e);
+        }
+        try {
+            path = path.getParent();
+            while (path != null) {
+                Files.delete(path);
+                path = path.getParent();
+            }
+        } catch (IOException e) {
+            //it was non empty
+            LOGGER.debug("Tried to delete a directory", e);
+        }
+    }
+
+
+    @Override
+    public void createResearchObject(ResearchObject ro, InputStream mainFileContent, String mainFilePath,
+            String mainFileMimeType)
+            throws DigitalLibraryException, ConflictException {
+        if (fileExists(ro, mainFilePath)) {
+            throw new ConflictException("RO exists");
+        }
+        createOrUpdateFile(ro, mainFilePath, mainFileContent, mainFileMimeType);
+    }
+
+
+    @Override
+    public void deleteResearchObject(ResearchObject ro)
+            throws DigitalLibraryException, NotFoundException {
+        Path path = getPath(ro.getUri());
+        try {
+            Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                        throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                        throws IOException {
+                    if (exc == null) {
+                        Files.delete(dir);
+                        return FileVisitResult.CONTINUE;
+                    } else {
+                        throw exc;
+                    }
+                }
+
+            });
+        } catch (NoSuchFileException e) {
+            throw new NotFoundException("File doesn't exist", e);
+        } catch (IOException e) {
+            throw new DigitalLibraryException(e);
+        }
+    }
+
+
+    @Override
+    public boolean createUser(String login, String password, String username)
+            throws DigitalLibraryException {
+        UserProfile.Role role;
+        if (login.equals("wfadmin")) {
+            role = Role.ADMIN;
+        } else if (login.equals("wf4ever_reader")) {
+            role = Role.PUBLIC;
+        } else {
+            role = Role.AUTHENTICATED;
+        }
+        if (userExists(login)) {
+            return false;
+        }
+        UserProfile user2 = UserProfile.create(login, username, role);
+        user2.save();
+        HibernateUtil.getSessionFactory().getCurrentSession().flush();
+        return true;
+    }
+
+
+    @Override
+    public boolean userExists(String userId)
+            throws DigitalLibraryException {
+        return UserProfile.findByLogin(userId) != null;
+    }
+
+
+    @Override
+    public void deleteUser(String userId)
+            throws DigitalLibraryException, NotFoundException {
+        UserProfile user2 = UserProfile.findByLogin(userId);
+        if (user2 == null) {
+            throw new NotFoundException("user not found");
+        } else {
+            user2.delete();
+            HibernateUtil.getSessionFactory().getCurrentSession().flush();
+        }
+    }
+
+
+    @Override
+    public InputStream getZippedResearchObject(ResearchObject ro)
+            throws DigitalLibraryException, NotFoundException {
+        return getZippedFolder(ro, ".");
+    }
+
+
+    @Override
+    public void storeAttributes(ResearchObject ro, Multimap<URI, Object> roAttributes)
+            throws NotFoundException, DigitalLibraryException {
+        // TODO Auto-generated method stub
+
+    }
+
+
+    /**
+     * Calculate path from a resource URI.
+     * 
+     * @param uri
+     *            resource URI
+     * @return filesystem path
+     */
+    private Path getPath(URI uri) {
+        Path path = basePath;
+        if (uri.getHost() != null) {
+            path = path.resolve(uri.getHost());
+        }
+        if (uri.getPath() != null) {
+            if (uri.getPath().startsWith("/")) {
+                path = path.resolve(uri.getPath().substring(1));
+            } else {
+                path = path.resolve(uri.getPath());
+            }
+        }
+        return path;
+    }
+
+}

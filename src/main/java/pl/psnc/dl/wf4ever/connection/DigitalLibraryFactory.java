@@ -22,7 +22,7 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
-import pl.psnc.dl.wf4ever.dlibra.fs.FilesystemDL;
+import pl.psnc.dl.wf4ever.fs.FilesystemDL;
 
 /**
  * A factory class that creates a dLibra connection class.
