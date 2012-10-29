@@ -22,6 +22,8 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dlibra.helpers.DLibraDataSource;
 import pl.psnc.dl.wf4ever.fs.FilesystemDL;
 
 /**
@@ -46,6 +48,9 @@ public final class DigitalLibraryFactory {
 
     /** collection in which to publish ROs. */
     private static long collectionId;
+
+    /** use dlibra? */
+    private static boolean dlibra;
 
 
     /**
@@ -92,7 +97,15 @@ public final class DigitalLibraryFactory {
      */
     public static DigitalLibrary getDigitalLibrary(String userLogin, String password)
             throws RemoteException, MalformedURLException, UnknownHostException {
-        return new FilesystemDL("/tmp/dl/", userLogin);
+        if (dlibra) {
+            try {
+                return new DLibraDataSource(host, port, workspacesDirectory, collectionId, userLogin, password);
+            } catch (DigitalLibraryException | IOException e) {
+                throw new RuntimeException(e.getMessage());
+            }
+        } else {
+            return new FilesystemDL("/tmp/dl/", userLogin);
+        }
     }
 
 
@@ -122,6 +135,7 @@ public final class DigitalLibraryFactory {
                 LOGGER.warn("Exception when closing the properties input stream", e);
             }
         }
+        dlibra = "true".equals(properties.getProperty("dlibra", "false"));
         host = properties.getProperty("host");
         port = Integer.parseInt(properties.getProperty("port"));
         LOGGER.debug("Connection parameters: " + host + ":" + port);
