@@ -254,7 +254,7 @@ public final class ROSRService {
         String filePath = researchObject.getUri().relativize(resource).getPath();
         ROSRService.DL.get().deleteFile(researchObject, filePath);
         if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
-            ROSRService.SMS.get().removeNamedGraph(researchObject, resource);
+            ROSRService.SMS.get().removeAnnotationBody(researchObject, resource);
         } else {
             ROSRService.SMS.get().removeResource(researchObject, resource);
         }
@@ -388,7 +388,8 @@ public final class ROSRService {
             if (format == null) {
                 format = RDFFormat.forFileName(resource.getPath(), RDFFormat.RDFXML);
             }
-            ROSRService.SMS.get().addNamedGraph(resource, new ByteArrayInputStream(entity.getBytes()), format);
+            ROSRService.SMS.get().addAnnotationBody(researchObject, resource,
+                new ByteArrayInputStream(entity.getBytes()), format);
             // update the named graph copy in dLibra, the manifest is not changed
             updateNamedGraphInDlibra(filePath, researchObject, resource);
             updateROAttributesInDlibra(researchObject);
@@ -570,7 +571,8 @@ public final class ROSRService {
         if (data != null) {
             RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get().getFileInfo(researchObject, filePath)
                     .getMimeType());
-            ROSRService.SMS.get().addNamedGraph(resource, data, format);
+            ROSRService.SMS.get().removeResource(researchObject, resource);
+            ROSRService.SMS.get().addAnnotationBody(researchObject, resource, data, format);
             // update the named graph copy in dLibra, the manifest is not changed
             updateNamedGraphInDlibra(filePath, researchObject, resource);
             updateROAttributesInDlibra(researchObject);
@@ -586,11 +588,21 @@ public final class ROSRService {
      *            research object aggregating the resource
      * @param resource
      *            URI of the resource that is converted
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
      */
-    private static void convertAnnotationBodyToAggregatedResource(ResearchObject researchObject, URI resource) {
+    private static void convertAnnotationBodyToAggregatedResource(ResearchObject researchObject, URI resource)
+            throws NotFoundException, DigitalLibraryException, AccessDeniedException {
         if (ROSRService.SMS.get().containsNamedGraph(resource)
                 && !SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
-            ROSRService.SMS.get().removeNamedGraph(researchObject, resource);
+            ResourceInfo info = DL.get().getFileInfo(researchObject,
+                researchObject.getUri().relativize(resource).toString());
+            ROSRService.SMS.get().removeAnnotationBody(researchObject, resource);
+            ROSRService.SMS.get().addResource(researchObject, resource, info);
             updateROAttributesInDlibra(researchObject);
         }
     }
@@ -716,9 +728,11 @@ public final class ROSRService {
      *             could not find the resource in DL when checking if it's internal
      * @throws DigitalLibraryException
      *             could not connect to the DL to check if it's internal
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
      */
     public static Response deleteAnnotation(ResearchObject researchObject, URI annotation)
-            throws NotFoundException, DigitalLibraryException {
+            throws NotFoundException, DigitalLibraryException, AccessDeniedException {
         URI annotationBody = ROSRService.getAnnotationBody(researchObject, annotation, null);
         ROSRService.SMS.get().deleteAnnotation(researchObject, annotation);
         ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotationBody);
@@ -736,6 +750,8 @@ public final class ROSRService {
      * @return HTTP response (created in case of success, 404 in case of error)
      * @throws BadRequestException .
      * @throws AccessDeniedException .
+     * @throws IOException
+     *             error creating the temporary file
      */
     public static Response createNewResearchObjectFromZip(URI freshResearchObjectURI, MemoryZipFile zip)
             throws BadRequestException, AccessDeniedException, IOException {
