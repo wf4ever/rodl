@@ -587,8 +587,9 @@ public final class ROSRService {
      * @param resource
      *            URI of the resource that is converted
      */
-    public static void convertAnnotationBodyToAggregatedResource(ResearchObject researchObject, URI resource) {
-        if (ROSRService.SMS.get().containsNamedGraph(resource)) {
+    private static void convertAnnotationBodyToAggregatedResource(ResearchObject researchObject, URI resource) {
+        if (ROSRService.SMS.get().containsNamedGraph(resource)
+                && !SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
             ROSRService.SMS.get().removeNamedGraph(researchObject, resource);
             updateROAttributesInDlibra(researchObject);
         }
@@ -643,10 +644,25 @@ public final class ROSRService {
      * @param annotationTargets
      *            list of annotated resources URIs
      * @return 200 OK response
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
      */
     public static Response updateAnnotation(ResearchObject researchObject, URI annotation, URI annotationBody,
-            List<URI> annotationTargets) {
+            List<URI> annotationTargets)
+            throws NotFoundException, DigitalLibraryException, AccessDeniedException {
+        URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, annotation, null);
         ROSRService.SMS.get().updateAnnotation(researchObject, annotation, annotationTargets, annotationBody);
+
+        if (oldAnnotationBody == null || !oldAnnotationBody.equals(annotationBody)) {
+            ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody);
+            if (ROSRService.SMS.get().isAggregatedResource(researchObject, annotationBody)) {
+                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotationBody);
+            }
+        }
 
         String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(),
             AO.annotatesResource);
@@ -696,9 +712,16 @@ public final class ROSRService {
      * @param annotation
      *            the annotation
      * @return 204 No Content
+     * @throws NotFoundException
+     *             could not find the resource in DL when checking if it's internal
+     * @throws DigitalLibraryException
+     *             could not connect to the DL to check if it's internal
      */
-    public static Response deleteAnnotation(ResearchObject researchObject, URI annotation) {
+    public static Response deleteAnnotation(ResearchObject researchObject, URI annotation)
+            throws NotFoundException, DigitalLibraryException {
+        URI annotationBody = ROSRService.getAnnotationBody(researchObject, annotation, null);
         ROSRService.SMS.get().deleteAnnotation(researchObject, annotation);
+        ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotationBody);
         return Response.noContent().build();
     }
 

@@ -203,13 +203,6 @@ public class Resource {
         if (!ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
             throw new ForbiddenException("You cannot create a new annotation using PUT, use POST instead.");
         }
-        URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, resource, null);
-        if (oldAnnotationBody == null || !oldAnnotationBody.equals(body)) {
-            ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody);
-            if (ROSRService.SMS.get().isAggregatedResource(researchObject, body)) {
-                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, body);
-            }
-        }
         return ROSRService.updateAnnotation(researchObject, resource, body, targets);
     }
 
@@ -317,8 +310,6 @@ public class Resource {
             }
         }
         if (ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
-            URI annotationBody = ROSRService.getAnnotationBody(researchObject, resource, null);
-            ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotationBody);
             return ROSRService.deleteAnnotation(researchObject, resource);
         }
         if (original != null) {
