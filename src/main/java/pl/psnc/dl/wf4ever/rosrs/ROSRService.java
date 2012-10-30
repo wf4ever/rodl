@@ -258,11 +258,9 @@ public final class ROSRService {
         } else {
             ROSRService.SMS.get().removeResource(researchObject, resource);
         }
-        URI proxy = ROSRService.SMS.get().getProxyForResource(researchObject, resource);
-        Response response = deleteProxy(researchObject, proxy);
         // update the manifest that describes the resource in dLibra
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
-        return response;
+        return Response.noContent().build();
     }
 
 
