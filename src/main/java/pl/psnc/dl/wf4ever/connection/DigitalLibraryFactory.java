@@ -52,6 +52,9 @@ public final class DigitalLibraryFactory {
     /** use dlibra? */
     private static boolean dlibra;
 
+    /** the root folder for filesystem storage. */
+    private static String filesystemBase;
+
 
     /**
      * Private constructor.
@@ -99,12 +102,14 @@ public final class DigitalLibraryFactory {
             throws RemoteException, MalformedURLException, UnknownHostException {
         if (dlibra) {
             try {
+                LOGGER.debug("Creating a dLibra backend");
                 return new DLibraDataSource(host, port, workspacesDirectory, collectionId, userLogin, password);
             } catch (DigitalLibraryException | IOException e) {
                 throw new RuntimeException(e.getMessage());
             }
         } else {
-            return new FilesystemDL("/tmp/dl/", userLogin);
+            LOGGER.debug("Creating a filesystem backend");
+            return new FilesystemDL(filesystemBase, userLogin);
         }
     }
 
@@ -136,6 +141,8 @@ public final class DigitalLibraryFactory {
             }
         }
         dlibra = "true".equals(properties.getProperty("dlibra", "false"));
+        LOGGER.debug("Use dlibra: " + dlibra);
+
         host = properties.getProperty("host");
         port = Integer.parseInt(properties.getProperty("port"));
         LOGGER.debug("Connection parameters: " + host + ":" + port);
@@ -145,6 +152,9 @@ public final class DigitalLibraryFactory {
 
         collectionId = Long.parseLong(properties.getProperty("collectionId"));
         LOGGER.debug("Collection id: " + collectionId);
+
+        filesystemBase = properties.getProperty("filesystemBase", "/tmp/dl/");
+        LOGGER.debug("Filesystem base: " + filesystemBase);
     }
 
 }
