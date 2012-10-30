@@ -16,7 +16,6 @@ import javax.naming.NamingException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.ResearchObject;
@@ -27,9 +26,10 @@ import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
 
+import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 
-@Ignore
 public class ResourceTest extends ResourceBase {
 
     protected String createdFromZipResourceObject = UUID.randomUUID().toString();
@@ -137,5 +137,26 @@ public class ResourceTest extends ResourceBase {
         List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
         assertEquals("research object should contan two nnotations", annotations.size(), 2);
         response.close();
+    }
+
+
+    @Test
+    public void createConflictedROFromZip()
+            throws UniformInterfaceException, ClientHandlerException, IOException {
+        File file = new File(PROJECT_PATH + "/src/test/resources/ro1.zip");
+        FileInputStream fileInputStream = new FileInputStream(file);
+        ClientResponse response = webResource.path("ROs").accept("text/turtle")
+                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
+                .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(fileInputStream));
+        assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
+            response.getStatus());
+        file = new File(PROJECT_PATH + "/src/test/resources/ro1.zip");
+        fileInputStream = new FileInputStream(file);
+        response = webResource.path("ROs").accept("text/turtle").header("Authorization", "Bearer " + accessToken)
+                .header("Slug", createdFromZipResourceObject).type("application/zip")
+                .post(ClientResponse.class, IOUtils.toByteArray(fileInputStream));
+        assertEquals("Research objects with this same name should be conflicted", HttpServletResponse.SC_CONFLICT,
+            response.getStatus());
+
     }
 }

@@ -160,16 +160,16 @@ public class ResearchObjectListResource {
             throw new BadRequestException("Research object ID is null or empty");
         }
         UUID uuid = UUID.randomUUID();
-
+        if (ResearchObject.findByUri(uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build()) != null) {
+            return Response.status(409).build();
+        }
         File tmpFile = File.createTempFile("tmp_ro", uuid.toString());
-
         BufferedInputStream inputStream = new BufferedInputStream(request.getInputStream());
         FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
         IOUtils.copy(inputStream, fileOutputStream);
         Response response = ROSRService.createNewResearchObjectFromZip(
             uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build(), new MemoryZipFile(tmpFile));
         tmpFile.delete();
-
         return response;
     }
 }
