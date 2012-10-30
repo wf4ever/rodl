@@ -95,7 +95,7 @@ public class FilesystemDL implements DigitalLibrary {
     @Override
     public List<String> getResourcePaths(ResearchObject ro, String folder)
             throws DigitalLibraryException, NotFoundException {
-        Path path = getPath(ro.getUri().resolve(folder));
+        Path path = getPath(ro, folder);
         List<String> result = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
             for (Path entry : stream) {
@@ -112,7 +112,7 @@ public class FilesystemDL implements DigitalLibrary {
     @Override
     public InputStream getZippedFolder(ResearchObject ro, String folder)
             throws DigitalLibraryException, NotFoundException {
-        Path path = getPath(ro.getUri().resolve(folder));
+        Path path = getPath(ro, folder);
         final List<String> paths = getResourcePaths(ro, folder);
 
         PipedInputStream in = new PipedInputStream();
@@ -161,7 +161,7 @@ public class FilesystemDL implements DigitalLibrary {
     @Override
     public InputStream getFileContents(ResearchObject ro, String filePath)
             throws DigitalLibraryException, NotFoundException {
-        Path path = getPath(ro.getUri().resolve(filePath));
+        Path path = getPath(ro, filePath);
         try {
             return Files.newInputStream(path);
         } catch (NoSuchFileException e) {
@@ -175,7 +175,7 @@ public class FilesystemDL implements DigitalLibrary {
     @Override
     public boolean fileExists(ResearchObject ro, String filePath)
             throws DigitalLibraryException {
-        Path path = getPath(ro.getUri().resolve(filePath));
+        Path path = getPath(ro, filePath);
         return path.toFile().exists();
     }
 
@@ -183,7 +183,7 @@ public class FilesystemDL implements DigitalLibrary {
     @Override
     public ResourceInfo createOrUpdateFile(ResearchObject ro, String filePath, InputStream inputStream, String mimeType)
             throws DigitalLibraryException {
-        Path path = getPath(ro.getUri().resolve(filePath));
+        Path path = getPath(ro, filePath);
         try {
             Files.createDirectories(path.getParent());
             Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
@@ -203,7 +203,7 @@ public class FilesystemDL implements DigitalLibrary {
 
     @Override
     public ResourceInfo getFileInfo(ResearchObject ro, String filePath) {
-        Path path = getPath(ro.getUri().resolve(filePath));
+        Path path = getPath(ro, filePath);
         return ResourceInfo.findByPath(path.toString());
     }
 
@@ -211,7 +211,7 @@ public class FilesystemDL implements DigitalLibrary {
     @Override
     public void deleteFile(ResearchObject ro, String filePath)
             throws DigitalLibraryException {
-        Path path = getPath(ro.getUri().resolve(filePath));
+        Path path = getPath(ro, filePath);
         try {
             Files.delete(path);
             ResourceInfo res = ResourceInfo.findByPath(path.toString());
@@ -247,7 +247,7 @@ public class FilesystemDL implements DigitalLibrary {
     @Override
     public void deleteResearchObject(ResearchObject ro)
             throws DigitalLibraryException, NotFoundException {
-        Path path = getPath(ro.getUri());
+        Path path = getPath(ro, null);
         try {
             Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
 
@@ -338,21 +338,26 @@ public class FilesystemDL implements DigitalLibrary {
     /**
      * Calculate path from a resource URI.
      * 
-     * @param uri
-     *            resource URI
+     * @param ro
+     *            research object
+     * @param resourcePath
+     *            path or null
      * @return filesystem path
      */
-    private Path getPath(URI uri) {
+    private Path getPath(ResearchObject ro, String resourcePath) {
         Path path = basePath;
-        if (uri.getHost() != null) {
-            path = path.resolve(uri.getHost());
+        if (ro.getUri().getHost() != null) {
+            path = path.resolve(ro.getUri().getHost());
         }
-        if (uri.getPath() != null) {
-            if (uri.getPath().startsWith("/")) {
-                path = path.resolve(uri.getPath().substring(1));
+        if (ro.getUri().getPath() != null) {
+            if (ro.getUri().getPath().startsWith("/")) {
+                path = path.resolve(ro.getUri().getPath().substring(1));
             } else {
-                path = path.resolve(uri.getPath());
+                path = path.resolve(ro.getUri().getPath());
             }
+        }
+        if (resourcePath != null) {
+            path = path.resolve(resourcePath);
         }
         return path;
     }
