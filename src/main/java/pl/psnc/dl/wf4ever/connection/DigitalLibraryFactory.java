@@ -55,31 +55,22 @@ public final class DigitalLibraryFactory {
     /** the root folder for filesystem storage. */
     private static String filesystemBase;
 
+    private static String adminToken;
+
+    private static String adminUser;
+
+    private static String adminPassword;
+
+    private static String publicUser;
+
+    private static String publicPassword;
+
 
     /**
      * Private constructor.
      */
     private DigitalLibraryFactory() {
         //nope
-    }
-
-
-    /**
-     * Create a new connection to dLibra.
-     * 
-     * @param creds
-     *            user credentials
-     * @return a digital library connection
-     * @throws RemoteException
-     *             no connection to dLibra
-     * @throws MalformedURLException
-     *             the host is incorrect
-     * @throws UnknownHostException
-     *             the host does not respond
-     */
-    public static DigitalLibrary getDigitalLibrary(UserCredentials creds)
-            throws RemoteException, MalformedURLException, UnknownHostException {
-        return getDigitalLibrary(creds.getUserId(), creds.getPassword());
     }
 
 
@@ -98,18 +89,18 @@ public final class DigitalLibraryFactory {
      * @throws UnknownHostException
      *             the host does not respond
      */
-    public static DigitalLibrary getDigitalLibrary(String userLogin, String password)
+    public static DigitalLibrary getDigitalLibrary(UserCredentials creds)
             throws RemoteException, MalformedURLException, UnknownHostException {
         if (dlibra) {
             try {
                 LOGGER.debug("Creating a dLibra backend");
-                return new DLibraDataSource(host, port, workspacesDirectory, collectionId, userLogin, password);
+                return new DLibraDataSource(host, port, workspacesDirectory, collectionId, adminUser, adminPassword);
             } catch (DigitalLibraryException | IOException e) {
                 throw new RuntimeException(e.getMessage());
             }
         } else {
             LOGGER.debug("Creating a filesystem backend");
-            return new FilesystemDL(filesystemBase, userLogin);
+            return new FilesystemDL(filesystemBase, creds.getUserId());
         }
     }
 
@@ -157,4 +148,62 @@ public final class DigitalLibraryFactory {
         LOGGER.debug("Filesystem base: " + filesystemBase);
     }
 
+
+    /**
+     * Load connection details.
+     * 
+     * @param configFileName
+     *            properties file with the connection details
+     */
+    public static void loadAdminConfiguration(String configFileName) {
+        LOGGER.info("Loading admin file " + configFileName);
+        InputStream inputStream = DigitalLibraryFactory.class.getClassLoader().getResourceAsStream(configFileName);
+        if (inputStream == null) {
+            LOGGER.error("Admin file not found! ");
+            throw new RuntimeException("Admin file not found! ");
+        }
+        Properties properties = new Properties();
+        try {
+            properties.load(inputStream);
+        } catch (IOException e) {
+            LOGGER.error("Unable to read admin file", e);
+            throw new RuntimeException("Unable to read admin file", e);
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                LOGGER.warn("Exception when closing the properties input stream", e);
+            }
+        }
+        adminToken = properties.getProperty("adminToken");
+        adminUser = properties.getProperty("adminUser");
+        adminPassword = properties.getProperty("adminPassword");
+        publicUser = properties.getProperty("publicUser");
+        publicPassword = properties.getProperty("publicPassword");
+    }
+
+
+    public static String getAdminToken() {
+        return adminToken;
+    }
+
+
+    public static String getAdminUser() {
+        return adminUser;
+    }
+
+
+    public static String getAdminPassword() {
+        return adminPassword;
+    }
+
+
+    public static String getPublicUser() {
+        return publicUser;
+    }
+
+
+    public static String getPublicPassword() {
+        return publicPassword;
+    }
 }

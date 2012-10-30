@@ -20,7 +20,6 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.sun.jersey.api.container.MappableContainerException;
-import com.sun.jersey.core.util.Base64;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 
@@ -51,9 +50,7 @@ public class SecurityFilter implements ContainerRequestFilter {
     public ContainerRequest filter(ContainerRequest request) {
         try {
             UserCredentials creds = authenticate(request);
-            //HACK FIXME
-            UserCredentials superUserCreds = new UserCredentials("wfadmin", "wfadmin!!!");
-            ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary(superUserCreds));
+            ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary(creds));
             UserProfile user = ROSRService.DL.get().getUserProfile(creds.getUserId());
             ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(user));
             httpRequest.setAttribute(Constants.USER, user);
@@ -62,10 +59,6 @@ public class SecurityFilter implements ContainerRequestFilter {
             //            if (!request.getMethod().equals("GET") && user.getRole() == UserProfile.Role.PUBLIC) {
             //                throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);
             //            }
-            if (creds == UserCredentials.PUBLIC_USER) {
-                LOGGER.info("Public credentials for: " + request.getMethod() + " "
-                        + request.getAbsolutePath().toString());
-            }
         } catch (DigitalLibraryException e) {
             throw new MappableContainerException(new AuthenticationException("Incorrect login/password\r\n", REALM));
         } catch (NotFoundException | SQLException | NamingException | IOException | ClassNotFoundException e) {
@@ -91,12 +84,13 @@ public class SecurityFilter implements ContainerRequestFilter {
         // Extract authentication credentials
         String authentication = request.getHeaderValue(ContainerRequest.AUTHORIZATION);
         if (authentication == null) {
-            return UserCredentials.PUBLIC_USER;
+            return UserCredentials.getPublicUserCredentials();
+        }
+        if (authentication.equals(DigitalLibraryFactory.getAdminToken())) {
+            return UserCredentials.getAdminUserCredentials();
         }
         try {
-            if (authentication.startsWith("Basic ")) {
-                return getBasicCredentials(authentication.substring("Basic ".length()));
-            } else if (authentication.startsWith("Bearer ")) {
+            if (authentication.startsWith("Bearer ")) {
                 // this is the recommended OAuth 2.0 method
                 return getBearerCredentials(authentication.substring("Bearer ".length()));
             } else {
@@ -123,24 +117,8 @@ public class SecurityFilter implements ContainerRequestFilter {
             accessToken.save();
             return accessToken.getUser();
         } else {
-            return getBasicCredentials(tokenValue);
+            throw new MappableContainerException(new AuthenticationException("Incorrect access token\r\n", REALM));
         }
-    }
-
-
-    /**
-     * Find user credentials for a Base64 encoded token. This is a deprecated, not very secure method.
-     * 
-     * @param authentication
-     *            authentication token
-     * @return user credentials
-     */
-    public UserCredentials getBasicCredentials(String authentication) {
-        String[] values = new String(Base64.base64Decode(authentication)).split(":");
-        if (values.length != 2) {
-            throw new MappableContainerException(new AuthenticationException("Incorrect login/password\r\n", REALM));
-        }
-        return new UserCredentials(values[0], values[1]);
     }
 
 
