@@ -26,6 +26,9 @@ public class DlibraConnectionConfigurationListener implements ServletContextList
     /** connection properties file name. */
     private static final String CONNECTION_PROPERTIES_FILENAME = "connection.properties.filename";
 
+    /** profile properties file name. */
+    private static final String PROFILE_PROPERTIES_FILENAME = "profiles.properties.filename";
+
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -33,6 +36,8 @@ public class DlibraConnectionConfigurationListener implements ServletContextList
 
         String fileName = servletContext.getInitParameter(CONNECTION_PROPERTIES_FILENAME);
         DigitalLibraryFactory.loadDigitalLibraryConfiguration(fileName);
+        String profileName = servletContext.getInitParameter(PROFILE_PROPERTIES_FILENAME);
+        DigitalLibraryFactory.loadProfilesConfiguration(profileName);
     }
 
 

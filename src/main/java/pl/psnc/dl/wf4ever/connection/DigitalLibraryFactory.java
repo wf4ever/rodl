@@ -155,19 +155,19 @@ public final class DigitalLibraryFactory {
      * @param configFileName
      *            properties file with the connection details
      */
-    public static void loadAdminConfiguration(String configFileName) {
-        LOGGER.info("Loading admin file " + configFileName);
+    public static void loadProfilesConfiguration(String configFileName) {
+        LOGGER.info("Loading profiles file " + configFileName);
         InputStream inputStream = DigitalLibraryFactory.class.getClassLoader().getResourceAsStream(configFileName);
         if (inputStream == null) {
-            LOGGER.error("Admin file not found! ");
-            throw new RuntimeException("Admin file not found! ");
+            LOGGER.error("Profiles file not found! ");
+            throw new RuntimeException("Profiles file not found! ");
         }
         Properties properties = new Properties();
         try {
             properties.load(inputStream);
         } catch (IOException e) {
-            LOGGER.error("Unable to read admin file", e);
-            throw new RuntimeException("Unable to read admin file", e);
+            LOGGER.error("Unable to read profiles file", e);
+            throw new RuntimeException("Unable to read profiles file", e);
         } finally {
             try {
                 inputStream.close();

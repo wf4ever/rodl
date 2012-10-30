@@ -51,7 +51,7 @@ public class SecurityFilter implements ContainerRequestFilter {
         try {
             UserCredentials creds = authenticate(request);
             ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary(creds));
-            UserProfile user = ROSRService.DL.get().getUserProfile(creds.getUserId());
+            UserProfile user = getUserProfile(creds);
             ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(user));
             httpRequest.setAttribute(Constants.USER, user);
 
@@ -66,6 +66,18 @@ public class SecurityFilter implements ContainerRequestFilter {
         }
 
         return request;
+    }
+
+
+    private UserProfile getUserProfile(UserCredentials creds)
+            throws DigitalLibraryException, NotFoundException {
+        if (creds.getUserId().equals(DigitalLibraryFactory.getAdminUser())) {
+            return UserProfile.ADMIN;
+        }
+        if (creds.getUserId().equals(DigitalLibraryFactory.getPublicUser())) {
+            return UserProfile.PUBLIC;
+        }
+        return ROSRService.DL.get().getUserProfile(creds.getUserId());
     }
 
 
@@ -85,9 +97,6 @@ public class SecurityFilter implements ContainerRequestFilter {
         String authentication = request.getHeaderValue(ContainerRequest.AUTHORIZATION);
         if (authentication == null) {
             return UserCredentials.getPublicUserCredentials();
-        }
-        if (authentication.equals(DigitalLibraryFactory.getAdminToken())) {
-            return UserCredentials.getAdminUserCredentials();
         }
         try {
             if (authentication.startsWith("Bearer ")) {
@@ -111,6 +120,9 @@ public class SecurityFilter implements ContainerRequestFilter {
      * @return user credentials
      */
     public UserCredentials getBearerCredentials(String tokenValue) {
+        if (tokenValue.equals(DigitalLibraryFactory.getAdminToken())) {
+            return UserCredentials.getAdminUserCredentials();
+        }
         AccessToken accessToken = AccessToken.findByValue(tokenValue);
         if (accessToken != null) {
             accessToken.setLastUsed(new Date());
