@@ -306,7 +306,7 @@ public final class ROSRService {
     public static boolean isInternalResource(ResearchObject researchObject, URI resource)
             throws NotFoundException, DigitalLibraryException {
         String filePath = researchObject.getUri().relativize(resource).getPath();
-        return ROSRService.DL.get().fileExists(researchObject, filePath);
+        return !filePath.isEmpty() && ROSRService.DL.get().fileExists(researchObject, filePath);
     }
 
 
