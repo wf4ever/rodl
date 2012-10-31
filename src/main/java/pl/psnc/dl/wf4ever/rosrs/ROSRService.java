@@ -497,6 +497,9 @@ public final class ROSRService {
         if (resInfo == null) {
             resInfo = getResourceInfo(researchObject, resource, original);
         }
+        if (resInfo == null) {
+            throw new NotFoundException("Resource not found: " + resource);
+        }
         InputStream body = ROSRService.DL.get().getFileContents(researchObject, filePath);
         ContentDisposition cd = ContentDisposition.type(resInfo.getMimeType()).fileName(getFilename(resource)).build();
         return Response.ok(body).type(resInfo.getMimeType()).header("Content-disposition", cd);
