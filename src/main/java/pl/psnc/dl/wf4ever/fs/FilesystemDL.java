@@ -13,7 +13,6 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -88,14 +87,25 @@ public class FilesystemDL implements DigitalLibrary {
     }
 
 
-    @Override
-    public List<String> getResourcePaths(ResearchObject ro, String folder)
-            throws DigitalLibraryException, NotFoundException {
-        Path path = getPath(ro, folder);
-        List<String> result = new ArrayList<>();
+    /**
+     * Get resource paths for a folder path.
+     * 
+     * @param path
+     *            path to the folder
+     * @return list of resources, excluding folders
+     * @throws DigitalLibraryException
+     *             an error while traversing the filesystem
+     */
+    private List<Path> getResourcePaths(Path path)
+            throws DigitalLibraryException {
+        List<Path> result = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
             for (Path entry : stream) {
-                result.add(entry.toString());
+                if (entry.toFile().isDirectory()) {
+                    result.addAll(getResourcePaths(entry));
+                } else {
+                    result.add(entry);
+                }
             }
         } catch (DirectoryIteratorException | IOException e) {
             // I/O error encounted during the iteration, the cause is an IOException
@@ -108,8 +118,9 @@ public class FilesystemDL implements DigitalLibrary {
     @Override
     public InputStream getZippedFolder(ResearchObject ro, String folder)
             throws DigitalLibraryException, NotFoundException {
+        final Path roPath = getPath(ro, null);
         Path path = getPath(ro, folder);
-        final List<String> paths = getResourcePaths(ro, folder);
+        final List<Path> paths = getResourcePaths(path);
 
         PipedInputStream in = new PipedInputStream();
         final PipedOutputStream out;
@@ -124,10 +135,10 @@ public class FilesystemDL implements DigitalLibrary {
             @Override
             public void run() {
                 try {
-                    for (String filePath : paths) {
-                        ZipEntry entry = new ZipEntry(filePath);
+                    for (Path filePath : paths) {
+                        ZipEntry entry = new ZipEntry(roPath.relativize(filePath).normalize().toString());
                         zipOut.putNextEntry(entry);
-                        InputStream in = Files.newInputStream(Paths.get(filePath));
+                        InputStream in = Files.newInputStream(filePath);
                         try {
                             IOUtils.copy(in, zipOut);
                         } finally {
