@@ -53,6 +53,9 @@ public class SecurityFilter implements ContainerRequestFilter {
             UserCredentials creds = authenticate(request);
             DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(creds.getUserId());
             UserProfile user = DigitalLibraryFactory.getUserProfile(dl);
+            if (user == null) {
+                throw new NotFoundException("User profile not found");
+            }
             ROSRService.DL.set(dl);
             ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(user));
             httpRequest.setAttribute(Constants.USER, user);
