@@ -44,7 +44,19 @@
 
 	<servlet-mapping>
 		<servlet-name>Jersey Web Application</servlet-name>
-		<url-pattern>/*</url-pattern>
+		<url-pattern>/ROs/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>Jersey Web Application</servlet-name>
+		<url-pattern>/users/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>Jersey Web Application</servlet-name>
+		<url-pattern>/sparql/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>Jersey Web Application</servlet-name>
+		<url-pattern>/evo/*</url-pattern>
 	</servlet-mapping>
 
 </web-app>
