@@ -38,12 +38,10 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
  */
 public class FlowTests {
 
-    private String userId;
+    private static final UserProfile ADMIN = UserProfile.create("wfadmin", "John Doe", Role.ADMIN);
 
-    private static final String ADMIN_ID = "wfadmin";
-    private static final String USER_PASSWORD = "password";
-
-    private static final String USERNAME = "John Doe";
+    private static final UserProfile USER = UserProfile.create("test-" + new Date().getTime(), "test user",
+        Role.AUTHENTICATED);
 
     private DigitalLibrary dl;
 
@@ -62,6 +60,8 @@ public class FlowTests {
     private ResearchObject ro;
 
     private static final String BASE = "/tmp/testdl/";
+
+    private static final String USER_PASSWORD = "foo";
 
 
     /**
@@ -88,12 +88,9 @@ public class FlowTests {
     public void setUp()
             throws Exception {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        UserProfile admin = UserProfile.create(ADMIN_ID, "admin", Role.ADMIN);
-        admin.save();
-        userId = "test-" + new Date().getTime();
-        dl = new FilesystemDL(BASE, ADMIN_ID);
-        dl.createUser(userId, USER_PASSWORD, USERNAME);
-        dl = new FilesystemDL(BASE, userId);
+        dl = new FilesystemDL(BASE, ADMIN);
+        dl.createUser(USER.getLogin(), USER_PASSWORD, USER.getName());
+        dl = new FilesystemDL(BASE, USER);
         ro = ResearchObject.create(RO_URI);
         dl.createResearchObject(ro, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
             MAIN_FILE_MIME_TYPE);
@@ -112,10 +109,10 @@ public class FlowTests {
     public void tearDown()
             throws Exception {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        dl = new FilesystemDL(BASE, ADMIN_ID);
+        dl = new FilesystemDL(BASE, ADMIN);
         dl.deleteResearchObject(ro);
-        dl = new FilesystemDL(BASE, ADMIN_ID);
-        dl.deleteUser(userId);
+        dl = new FilesystemDL(BASE, ADMIN);
+        dl.deleteUser(USER.getLogin());
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
     }
 
@@ -160,7 +157,7 @@ public class FlowTests {
         createOrUpdateFile(files[0]);
         createOrUpdateFile(files[1]);
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        dl = new FilesystemDL(BASE, userId);
+        dl = new FilesystemDL(BASE, USER);
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         getFileContent(files[0]);
         getFileContent(files[1]);

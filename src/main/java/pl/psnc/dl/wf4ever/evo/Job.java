@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
@@ -90,8 +89,8 @@ public class Job extends Thread {
     @Override
     public void run() {
         try {
-            ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary(UserCredentials.getAdminUserCredentials()));
             UserProfile smsUser = originalSMS.getUserProfile();
+            ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary(smsUser.getLogin()));
             ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(smsUser));
             for (Operation operation : operations) {
                 operation.execute(status);

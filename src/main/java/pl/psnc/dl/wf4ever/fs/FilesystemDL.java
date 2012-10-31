@@ -62,20 +62,16 @@ public class FilesystemDL implements DigitalLibrary {
      * 
      * @param basePath
      *            file path under which the files will be stored
-     * @param login
+     * @param user
      *            user login
      */
-    public FilesystemDL(String basePath, String login) {
+    public FilesystemDL(String basePath, UserProfile user) {
         if (basePath.endsWith("/")) {
             this.basePath = FileSystems.getDefault().getPath(basePath);
         } else {
             this.basePath = FileSystems.getDefault().getPath(basePath.concat("/"));
         }
-        UserProfile user2 = UserProfile.findByLogin(login);
-        if (user2 == null) {
-            throw new IllegalArgumentException("User not found");
-        }
-        this.user = user2;
+        this.user = user;
     }
 
 
@@ -190,8 +186,9 @@ public class FilesystemDL implements DigitalLibrary {
             FileInputStream fis = new FileInputStream(path.toFile());
             String md5 = DigestUtils.md5Hex(fis);
 
+            DateTime lastModified = new DateTime(Files.getLastModifiedTime(path).toMillis());
             ResourceInfo res = ResourceInfo.create(path.toString(), path.getFileName().toString(), md5,
-                Files.size(path), "MD5", new DateTime(Files.getLastModifiedTime(path).toMillis()), mimeType);
+                Files.size(path), "MD5", lastModified, mimeType);
             res.save();
             HibernateUtil.getSessionFactory().getCurrentSession().flush();
             return res;

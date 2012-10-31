@@ -20,9 +20,10 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.auth.UserCredentials;
+import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dlibra.helpers.DLibraDataSource;
 import pl.psnc.dl.wf4ever.fs.FilesystemDL;
 
@@ -55,15 +56,23 @@ public final class DigitalLibraryFactory {
     /** the root folder for filesystem storage. */
     private static String filesystemBase;
 
+    /** admin's access token. */
     private static String adminToken;
 
+    /** dLibra admin. */
     private static String adminUser;
 
+    /** dLibra admin password. */
     private static String adminPassword;
 
+    /** dLibra public user. */
     private static String publicUser;
 
+    /** dLibra public user password. */
     private static String publicPassword;
+
+    /** the user that theoretically is logged in to dLibra, a hack. */
+    private static String dLibraUser;
 
 
     /**
@@ -75,12 +84,10 @@ public final class DigitalLibraryFactory {
 
 
     /**
-     * Create a new connection to dLibra.
+     * Create a new connection to the digital library.
      * 
-     * @param userLogin
-     *            user login in dLibra
-     * @param password
-     *            user password in dLibra
+     * @param userId
+     *            user login in digital library
      * @return a digital library connection
      * @throws RemoteException
      *             no connection to dLibra
@@ -89,19 +96,53 @@ public final class DigitalLibraryFactory {
      * @throws UnknownHostException
      *             the host does not respond
      */
-    public static DigitalLibrary getDigitalLibrary(UserCredentials creds)
+    public static DigitalLibrary getDigitalLibrary(String userId)
             throws RemoteException, MalformedURLException, UnknownHostException {
         if (dlibra) {
             try {
                 LOGGER.debug("Creating a dLibra backend");
+                dLibraUser = userId;
                 return new DLibraDataSource(host, port, workspacesDirectory, collectionId, adminUser, adminPassword);
             } catch (DigitalLibraryException | IOException e) {
                 throw new RuntimeException(e.getMessage());
             }
         } else {
             LOGGER.debug("Creating a filesystem backend");
-            return new FilesystemDL(filesystemBase, creds.getUserId());
+            UserProfile user;
+            if (userId.equals(DigitalLibraryFactory.getAdminUser())) {
+                user = UserProfile.ADMIN;
+            } else if (userId.equals(DigitalLibraryFactory.getPublicUser())) {
+                user = UserProfile.PUBLIC;
+            } else {
+                user = UserProfile.findByLogin(userId);
+            }
+            return new FilesystemDL(filesystemBase, user);
         }
+    }
+
+
+    /**
+     * Get profile of the user logged in the digital library.
+     * 
+     * This is bad design and should be fixed be removing the user credentials class (the password is never used!) and
+     * using the user profile instead.
+     * 
+     * @param dl
+     *            digital library
+     * @return user profile
+     * @throws DigitalLibraryException
+     *             dl error
+     * @throws NotFoundException
+     *             user not found
+     */
+    public static UserProfile getUserProfile(DigitalLibrary dl)
+            throws DigitalLibraryException, NotFoundException {
+        if (dl instanceof DLibraDataSource) {
+            return dl.getUserProfile(dLibraUser);
+        } else if (dl instanceof FilesystemDL) {
+            return dl.getUserProfile();
+        }
+        return null;
     }
 
 

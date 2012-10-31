@@ -137,7 +137,8 @@ public class W4ETest extends JerseyTest {
 
 
     protected void deleteUser(String userIdSafe) {
-        webResource.path("users/" + userIdSafe).header("Authorization", "Bearer " + adminCreds).delete();
+        webResource.path("users/" + userIdSafe).header("Authorization", "Bearer " + adminCreds)
+                .delete(ClientResponse.class).close();
     }
 
 

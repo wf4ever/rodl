@@ -15,6 +15,7 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
+import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
@@ -50,8 +51,9 @@ public class SecurityFilter implements ContainerRequestFilter {
     public ContainerRequest filter(ContainerRequest request) {
         try {
             UserCredentials creds = authenticate(request);
-            ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary(creds));
-            UserProfile user = getUserProfile(creds);
+            DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(creds.getUserId());
+            UserProfile user = DigitalLibraryFactory.getUserProfile(dl);
+            ROSRService.DL.set(dl);
             ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(user));
             httpRequest.setAttribute(Constants.USER, user);
 
@@ -66,18 +68,6 @@ public class SecurityFilter implements ContainerRequestFilter {
         }
 
         return request;
-    }
-
-
-    private UserProfile getUserProfile(UserCredentials creds)
-            throws DigitalLibraryException, NotFoundException {
-        if (creds.getUserId().equals(DigitalLibraryFactory.getAdminUser())) {
-            return UserProfile.ADMIN;
-        }
-        if (creds.getUserId().equals(DigitalLibraryFactory.getPublicUser())) {
-            return UserProfile.PUBLIC;
-        }
-        return ROSRService.DL.get().getUserProfile(creds.getUserId());
     }
 
 
