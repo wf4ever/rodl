@@ -135,7 +135,7 @@
 			<version>${jetty.version}</version>
 			<type>jar</type>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
@@ -229,6 +229,12 @@
 				<version>2.3.2</version>
 			</plugin>
 		</plugins>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
 	</build>
 	<reporting>
 		<plugins>
