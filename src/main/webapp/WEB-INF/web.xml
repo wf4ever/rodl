@@ -3,7 +3,7 @@
  "http://java.sun.com/dtd/web-app_2_3.dtd" >
 
 <web-app>
-	<display-name>Research Object Store and Retrieve Service</display-name>
+	<display-name>Research Object Digital Library</display-name>
 
 	<context-param>
 		<param-name>connection.properties.filename</param-name>
@@ -18,15 +18,23 @@
 		<filter-name>HibernateFilter</filter-name>
 		<filter-class>pl.psnc.dl.wf4ever.hibernate.HibernateSessionRequestFilter</filter-class>
 	</filter>
-	
+
 	<filter-mapping>
-        <filter-name>HibernateFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
-	
-	<servlet>
-		<servlet-name>Jersey Web Application</servlet-name>
-		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+		<filter-name>HibernateFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+	<filter>
+		<filter-name>Jersey Web Application</filter-name>
+		<filter-class>com.sun.jersey.spi.container.servlet.ServletContainer</filter-class>
+		<init-param>
+			<param-name>com.sun.jersey.config.property.WebPageContentRegex</param-name>
+			<param-value>/(images|js|styles|(WEB-INF/jsp))/.*</param-value>
+		</init-param>
+		<init-param>
+			<param-name>com.sun.jersey.config.property.JSPTemplatesBasePath</param-name>
+			<param-value>/WEB-INF/jsp</param-value>
+		</init-param>
 		<init-param>
 			<param-name>com.sun.jersey.config.property.packages</param-name>
 			<param-value>pl.psnc.dl.wf4ever</param-value>
@@ -39,24 +47,11 @@
 			<param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
 			<param-value>pl.psnc.dl.wf4ever.auth.ResourceCloseFilter</param-value>
 		</init-param>
-		<load-on-startup>1</load-on-startup>
-	</servlet>
+	</filter>
 
-	<servlet-mapping>
-		<servlet-name>Jersey Web Application</servlet-name>
-		<url-pattern>/ROs/*</url-pattern>
-	</servlet-mapping>
-	<servlet-mapping>
-		<servlet-name>Jersey Web Application</servlet-name>
-		<url-pattern>/users/*</url-pattern>
-	</servlet-mapping>
-	<servlet-mapping>
-		<servlet-name>Jersey Web Application</servlet-name>
-		<url-pattern>/sparql/*</url-pattern>
-	</servlet-mapping>
-	<servlet-mapping>
-		<servlet-name>Jersey Web Application</servlet-name>
-		<url-pattern>/evo/*</url-pattern>
-	</servlet-mapping>
+	<filter-mapping>
+		<filter-name>Jersey Web Application</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
 
 </web-app>
