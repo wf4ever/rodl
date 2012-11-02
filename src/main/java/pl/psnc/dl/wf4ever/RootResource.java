@@ -1,5 +1,8 @@
 package pl.psnc.dl.wf4ever;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -23,6 +26,8 @@ public class RootResource {
     @GET
     @Produces("text/html")
     public Viewable index() {
-        return new Viewable("/index");
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("version", ApplicationProperties.getVersion());
+        return new Viewable("/index", map);
     }
 }

@@ -15,6 +15,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import pl.psnc.dl.wf4ever.ApplicationProperties;
+
 /**
  * Read in the dLibra connection parameters on startup.
  * 
@@ -33,6 +35,8 @@ public class DlibraConnectionConfigurationListener implements ServletContextList
 
         String fileName = servletContext.getInitParameter(CONNECTION_PROPERTIES_FILENAME);
         DigitalLibraryFactory.loadDigitalLibraryConfiguration(fileName);
+
+        ApplicationProperties.load();
     }
 
 
