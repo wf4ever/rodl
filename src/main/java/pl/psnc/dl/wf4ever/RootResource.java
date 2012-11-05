@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Response;
 
 import com.sun.jersey.api.view.Viewable;
 
@@ -25,9 +26,9 @@ public class RootResource {
      */
     @GET
     @Produces("text/html")
-    public Viewable index() {
+    public Response index() {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("version", ApplicationProperties.getVersion());
-        return new Viewable("/index", map);
+        return Response.ok(new Viewable("/index", map)).build();
     }
 }

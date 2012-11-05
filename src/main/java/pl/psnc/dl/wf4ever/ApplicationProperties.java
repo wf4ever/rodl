@@ -59,8 +59,8 @@ public final class ApplicationProperties {
                 LOGGER.warn("Exception when closing the properties input stream", e);
             }
         }
-        name = properties.getProperty("name");
-        version = properties.getProperty("version");
+        name = properties.getProperty("application.name");
+        version = properties.getProperty("application.version");
     }
 
 
