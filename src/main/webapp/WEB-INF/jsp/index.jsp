@@ -8,10 +8,10 @@
 		User Management Service.</p>
 	<p>Useful links:</p>
 	<ol>
-		<li>ROSR service: <a href="ROs/">ROs/</a></li>
+		<li>ROSR service: <a href="${it.rosrsuri}">${it.rosrsuri}</a></li>
 		<li>ROSR API specification: <a
 			href="http://wf4ever-project.org/wiki/display/docs/RO+SRS+interface+6">http://wf4ever-project.org/wiki/display/docs/RO+SRS+interface+6</a></li>
-		<li>RO Evolution management service: <a href="evo/">evo/</a></li>
+		<li>RO Evolution management service: <a href="${it.roevosuri}">${it.roevouri}</a></li>
 		<li>RO Evolution management API specification: <a
 			href="http://wf4ever-project.org/wiki/display/docs/RO+evolution+API">http://wf4ever-project.org/wiki/display/docs/RO+evolution+API</a></li>
 		<li>RODL Portal: <a
