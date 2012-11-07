@@ -68,7 +68,7 @@ public class CopyOperation implements Operation {
             }
             status.setTarget(target);
 
-            ResearchObject targetRO = ResearchObject.findByUri(target);
+            ResearchObject targetRO = ResearchObject.create(target);
             ResearchObject sourceRO = ResearchObject.findByUri(status.getCopyfrom());
 
             try {
@@ -169,9 +169,9 @@ public class CopyOperation implements Operation {
      */
     private void storeHistoryInformation(URI freshObjectURI)
             throws URISyntaxException {
-        URI liveObjectURI = ROSRService.SMS.get().getLiveURIFromSnapshotOrArchive(freshObjectURI);
-        URI antecessorObjectURI = ROSRService.SMS.get().getPreviousSnaphotOrArchive(liveObjectURI, freshObjectURI);
-        ROSRService.SMS.get().storeAggregatedDifferences(freshObjectURI, antecessorObjectURI);
+        //URI liveObjectURI = ROSRService.SMS.get().getLiveURIFromSnapshotOrArchive(freshObjectURI);
+        //URI antecessorObjectURI = ROSRService.SMS.get().getPreviousSnaphotOrArchive(liveObjectURI, freshObjectURI);
+        //ROSRService.SMS.get().storeAggregatedDifferences(freshObjectURI, antecessorObjectURI);
     }
 
 
