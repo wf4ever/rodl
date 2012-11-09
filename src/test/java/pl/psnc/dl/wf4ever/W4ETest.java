@@ -119,7 +119,18 @@ public class W4ETest extends JerseyTest {
     protected ClientResponse addFile(URI roURI, String filePath, String accessToken) {
         return webResource.uri(roURI).header("Slug", filePath).header("Authorization", "Bearer " + accessToken)
                 .type("text/plain").post(ClientResponse.class, "lorem ipsum");
+    }
 
+
+    protected ClientResponse updateFile(URI roURI, String filePath, String accessToken) {
+        return webResource.uri(roURI).header("Slug", filePath).header("Authorization", "Bearer " + accessToken)
+                .type("text/plain").post(ClientResponse.class, "modification");
+    }
+
+
+    protected ClientResponse removeFile(URI roURI, String filePath, String accessToken) {
+        return webResource.uri(roURI).path(filePath).header("Authorization", "Bearer " + accessToken)
+                .delete(ClientResponse.class);
     }
 
 

@@ -1,7 +1,6 @@
 package pl.psnc.dl.wf4ever.evo.api;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 
 import org.junit.Test;
@@ -10,12 +9,12 @@ import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.evo.EvoTest;
 import pl.psnc.dl.wf4ever.evo.JobStatus;
 
-import com.sun.jersey.api.client.ClientResponse;
-
 public class StoringHistoryTest extends EvoTest {
 
     protected URI ro2;
+    protected String oldResourceFile = "oldREsourceFile";
     protected String newResourceFile = "newREsourceFile";
+    protected String modifiedResourceFile = "modifiedREsourceFile";
 
 
     @Override
@@ -38,57 +37,40 @@ public class StoringHistoryTest extends EvoTest {
             throws InterruptedException, IOException {
         //@TODO improve the text structure;
 
+        addFile(ro, oldResourceFile, accessToken);
+        addFile(ro, modifiedResourceFile, accessToken);
+
         JobStatus sp1Status = new JobStatus(ro, EvoType.SNAPSHOT, true);
         URI copyJob = createCopyJob(sp1Status).getLocation();
         sp1Status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
 
         addFile(ro, newResourceFile, accessToken);
-
-        InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
-        ClientResponse response = webResource.path(ro + "/.ro/manifest.rdf")
-                .header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
-        response.close();
+        removeFile(ro, oldResourceFile, accessToken);
+        //updateFile(ro, modifiedResourceFile, accessToken);
 
         JobStatus sp2Status = new JobStatus(ro, EvoType.SNAPSHOT, true);
         copyJob = createCopyJob(sp2Status).getLocation();
         sp2Status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
 
-        String roAnswer = webResource.uri(ro).path("/.ro/manifest.rdf")
+        String roManifest = webResource.uri(ro).path("/.ro/manifest.rdf")
+                .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
+        String sp1Manifest = webResource.uri(sp1Status.getTarget()).path("/.ro/manifest.rdf")
+                .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
+        String sp2Manifest = webResource.uri(sp2Status.getTarget()).path("/.ro/manifest.rdf")
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
 
-        String snapshot1Answer = webResource.uri(sp1Status.getTarget()).path("/.ro/manifest.rdf")
+        String roEvo = webResource.path("/evo/info").queryParam("ro", sp1Status.getCopyfrom().toString())
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
-        String snapshot2Answer = webResource.uri(sp2Status.getTarget()).path("/.ro/manifest.rdf")
+        String sp1Evo = webResource.path("/evo/info").queryParam("ro", sp1Status.getTarget().toString())
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
-
-        System.out.println("=============");
-        System.out.println(roAnswer);
-
-        System.out.println("=============");
-        System.out.println(snapshot1Answer);
-        System.out.println("=============");
-
-        System.out.println("=============");
-        System.out.println(snapshot2Answer);
-        System.out.println("=============");
-
-        String evoAnswer = webResource.path("/evo/info").queryParam("ro", sp1Status.getCopyfrom().toString())
-                .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
-        String evo1Answer = webResource.path("/evo/info").queryParam("ro", sp1Status.getTarget().toString())
-                .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
-        String evo2Answer = webResource.path("/evo/info").queryParam("ro", sp2Status.getTarget().toString())
+        String sp2Evo = webResource.path("/evo/info").queryParam("ro", sp2Status.getTarget().toString())
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
 
-        System.out.println(evoAnswer);
+        System.out.println(roManifest);
         System.out.println("=============");
-        System.out.println(evo1Answer);
+        System.out.println(sp1Manifest);
         System.out.println("=============");
-        System.out.println(evo2Answer);
-        System.out.println("=============");
+        System.out.println(sp2Evo);
 
-        //Assert.assertEquals("Snapshot 1 should not contain any content", snapshot1Answer, "");
-        //Assert.assertTrue("Snaphot 2 should contain the Change Specification",
-        //    snapshot2Answer.contains("ChangeSpecification"));
-        //Assert.assertTrue("Snaphot 2 should contain an Addition Class", snapshot2Answer.contains("Addition"));                               
     }
 }
