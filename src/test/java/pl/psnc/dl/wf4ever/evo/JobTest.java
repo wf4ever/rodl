@@ -1,6 +1,10 @@
 package pl.psnc.dl.wf4ever.evo;
 
+import static org.junit.Assert.assertEquals;
+
 import java.net.URI;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -9,7 +13,8 @@ import org.junit.Test;
 import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.evo.Job.State;
 
-//it makas an error
+import com.sun.jersey.api.client.ClientResponse;
+
 @Ignore
 public class JobTest extends EvoTest {
 
@@ -27,25 +32,18 @@ public class JobTest extends EvoTest {
     }
 
 
-    @Test
+    //@Test
     public final void testCopyJobCreation()
             throws InterruptedException {
-        /*
-        System.out.println("1");
         ClientResponse response = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, false));
-        System.out.println("2");
         URI copyJob = response.getLocation();
-        System.out.println("3");
         getRemoteStatus(copyJob, WAIT_FOR_COPY);
-        System.out.println("4");
         assertEquals(response.getEntity(String.class), HttpServletResponse.SC_CREATED, response.getStatus());
-        System.out.println("5");
-        */
-        //to finish all operation before object will be removed
+
     }
 
 
-    @Test
+    //@Test
     public final void testCopyJobStatusDataIntegrity()
             throws InterruptedException {
         JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, false);
