@@ -115,23 +115,21 @@ public final class ROSRService {
         InputStream manifest;
         try {
             if (type == null) {
-                LOGGER.debug(String.format("%s\t\tcreate RO start", new DateTime().toString()));
-                ROSRService.SMS.get().createResearchObject(researchObject);
-                LOGGER.debug(String.format("%s\t\tcreate RO end", new DateTime().toString()));
-            } else {
-                switch (type) {
-                    default:
-                    case LIVE:
-                        ROSRService.SMS.get().createLiveResearchObject(researchObject, sourceRO);
-                        break;
-                    case SNAPSHOT:
-                        ROSRService.SMS.get().createSnapshotResearchObject(researchObject, sourceRO);
-                        break;
-                    case ARCHIVED:
-                        ROSRService.SMS.get().createArchivedResearchObject(researchObject, sourceRO);
-                        break;
-                }
+                type = EvoType.LIVE;
             }
+            switch (type) {
+                default:
+                case LIVE:
+                    ROSRService.SMS.get().createLiveResearchObject(researchObject, sourceRO);
+                    break;
+                case SNAPSHOT:
+                    ROSRService.SMS.get().createSnapshotResearchObject(researchObject, sourceRO);
+                    break;
+                case ARCHIVED:
+                    ROSRService.SMS.get().createArchivedResearchObject(researchObject, sourceRO);
+                    break;
+            }
+
             manifest = ROSRService.SMS.get().getManifest(researchObject, RDFFormat.RDFXML);
         } catch (IllegalArgumentException e) {
             // RO already existed in sms, maybe created by someone else
@@ -141,6 +139,9 @@ public final class ROSRService {
         LOGGER.debug(String.format("%s\t\tcreate RO start", new DateTime().toString()));
         ROSRService.DL.get().createResearchObject(researchObject, manifest, ResearchObject.MANIFEST_PATH,
             RDFFormat.RDFXML.getDefaultMIMEType());
+        if (type == EvoType.LIVE) {
+            generateEvoInfo(researchObject, null, EvoType.LIVE);
+        }
         LOGGER.debug(String.format("%s\t\tcreate RO end", new DateTime().toString()));
         return researchObject.getUri();
     }
@@ -875,5 +876,16 @@ public final class ROSRService {
         String path = researchObject.getUri().relativize(folder.getResourceMapUri()).toString();
         updateNamedGraphInDlibra(path, researchObject, folder.getResourceMapUri());
         return folder;
+    }
+
+
+    public static void generateEvoInfo(ResearchObject researchObject, ResearchObject parent, EvoType type)
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        SMS.get().generateEvoInformation(researchObject, parent, type);
+        updateNamedGraphInDlibra(
+            researchObject.getUri().relativize(researchObject.getFixedEvolutionAnnotationBodyPath()).toString(),
+            researchObject, researchObject.getFixedEvolutionAnnotationBodyPath());
+        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+
     }
 }

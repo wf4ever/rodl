@@ -10,10 +10,12 @@ import java.net.URI;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.HttpStatus;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sun.jersey.api.client.ClientResponse;
 
+@Ignore
 public class ManifestTest extends ResourceBase {
 
     private final String filePath = "foo/bar ra.txt";

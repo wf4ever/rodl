@@ -1,7 +1,6 @@
 package pl.psnc.dl.wf4ever.evo;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -100,30 +99,7 @@ public class CopyOperation implements Operation {
                 }
                 Individual resource = aggregatedResource.as(Individual.class);
                 URI resourceURI = URI.create(resource.getURI());
-                if (resource.hasRDFType(RO.Resource.getURI())) {
-                    if (isInternalResource(resourceURI, status.getCopyfrom())) {
-                        try {
-                            Client client = Client.create();
-                            WebResource webResource = client.resource(resourceURI.toString());
-                            ClientResponse response = webResource.get(ClientResponse.class);
-                            URI resourcePath = status.getCopyfrom().relativize(resourceURI);
-                            URI targetURI = target.resolve(resourcePath);
-                            ROSRService.aggregateInternalResource(targetRO, targetURI, response.getEntityInputStream(),
-                                response.getType().toString(), null);
-                            changedURIs.put(resourceURI, targetURI);
-                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
-                            throw new OperationFailedException("Could not create aggregate internal resource: "
-                                    + resourceURI, e);
-                        }
-                    } else {
-                        try {
-                            ROSRService.aggregateExternalResource(targetRO, resourceURI);
-                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
-                            throw new OperationFailedException("Could not create aggregate external resource: "
-                                    + resourceURI, e);
-                        }
-                    }
-                } else if (resource.hasRDFType(RO.AggregatedAnnotation.getURI())) {
+                if (resource.hasRDFType(RO.AggregatedAnnotation.getURI())) {
                     Resource annBody = resource.getPropertyResourceValue(AO.body);
                     List<URI> targets = new ArrayList<>();
                     List<RDFNode> annotationTargets = resource.listPropertyValues(RO.annotatesAggregatedResource)
@@ -140,38 +116,42 @@ public class CopyOperation implements Operation {
                     } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e1) {
                         LOGGER.error("Could not add the annotation", e1);
                     }
+                } else {
+                    if (isInternalResource(resourceURI, status.getCopyfrom())) {
+                        try {
+                            Client client = Client.create();
+                            WebResource webResource = client.resource(resourceURI.toString());
+                            ClientResponse response = webResource.get(ClientResponse.class);
+                            URI resourcePath = status.getCopyfrom().relativize(resourceURI);
+                            URI targetURI = target.resolve(resourcePath);
+                            ROSRService.aggregateInternalResource(targetRO, targetURI, response.getEntityInputStream(),
+                                response.getType().toString(), null);
+                            //TODO improve resource type detection mechanism!!
+                            if (!resource.hasRDFType(RO.Resource)) {
+                                ROSRService.convertAggregatedResourceToAnnotationBody(targetRO, targetURI);
+                            }
+                            changedURIs.put(resourceURI, targetURI);
+                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                            throw new OperationFailedException("Could not create aggregate internal resource: "
+                                    + resourceURI, e);
+                        }
+                    } else {
+                        try {
+                            ROSRService.aggregateExternalResource(targetRO, resourceURI);
+                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                            throw new OperationFailedException("Could not create aggregate external resource: "
+                                    + resourceURI, e);
+                        }
+                    }
                 }
             }
             for (Map.Entry<URI, URI> e : changedURIs.entrySet()) {
                 ROSRService.SMS.get().changeURIInManifestAndAnnotationBodies(targetRO, e.getKey(), e.getValue());
             }
-            //try {
-            //storeHistoryInformation(status.getTarget());
-            ;
-            //} catch (URISyntaxException e) {
-            //@TODO thing about the exception handling
-            //e.printStackTrace();
-            //}
         } finally {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         }
 
-    }
-
-
-    /**
-     * Generate RO evolution history of an RO and store it.
-     * 
-     * @param freshObjectURI
-     *            RO URI
-     * @throws URISyntaxException
-     *             some URI in SMS is incorrect
-     */
-    private void storeHistoryInformation(URI freshObjectURI)
-            throws URISyntaxException {
-        //URI liveObjectURI = ROSRService.SMS.get().getLiveURIFromSnapshotOrArchive(freshObjectURI);
-        //URI antecessorObjectURI = ROSRService.SMS.get().getPreviousSnaphotOrArchive(liveObjectURI, freshObjectURI);
-        //ROSRService.SMS.get().storeAggregatedDifferences(freshObjectURI, antecessorObjectURI);
     }
 
 

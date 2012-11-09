@@ -4,12 +4,14 @@ import javax.ws.rs.core.Response;
 
 import junit.framework.Assert;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.W4ETest;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 
+@Ignore
 public class CheckWhoAmITest extends W4ETest {
 
     @Override

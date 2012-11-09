@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import junit.framework.Assert;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -28,7 +29,7 @@ import com.sun.jersey.api.client.ClientResponse;
  * @author piotrekhol
  * 
  */
-
+@Ignore
 public class FolderTest extends ResourceBase {
 
     /** folder path. */
