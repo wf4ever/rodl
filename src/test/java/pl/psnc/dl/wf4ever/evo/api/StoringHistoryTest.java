@@ -71,6 +71,5 @@ public class StoringHistoryTest extends EvoTest {
         System.out.println(sp1Manifest);
         System.out.println("=============");
         System.out.println(sp2Evo);
-
     }
 }
