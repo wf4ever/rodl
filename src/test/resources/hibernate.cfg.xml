@@ -12,9 +12,9 @@
 		<property name="connection.url">jdbc:mysql://mysql-zus-2.man.poznan.pl/wf4ever_tests_db</property>
 		<property name="connection.username">wf4ever_tests</property>
 		<property name="connection.password">biQuijiu4Ii=</property>
- 
+
 		<!-- JDBC connection pool (use the built-in) -->
-<!-- 		<property name="connection.pool_size">10</property> -->
+		<!-- <property name="connection.pool_size">10</property> -->
 
 		<!-- SQL dialect -->
 		<property name="dialect">org.hibernate.dialect.MySQLDialect</property>

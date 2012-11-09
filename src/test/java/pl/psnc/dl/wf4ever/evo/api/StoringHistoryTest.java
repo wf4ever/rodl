@@ -8,9 +8,9 @@ import junit.framework.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.common.HibernateUtil;
 import pl.psnc.dl.wf4ever.evo.EvoTest;
-import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.evo.JobStatus;
 
 import com.sun.jersey.api.client.ClientResponse;

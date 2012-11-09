@@ -5,6 +5,7 @@ import java.net.URI;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.evo.Job.State;
 
 /**

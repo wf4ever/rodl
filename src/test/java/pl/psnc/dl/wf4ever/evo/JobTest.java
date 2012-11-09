@@ -6,6 +6,7 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.evo.Job.State;
 
 //it makas an error
