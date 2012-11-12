@@ -7,7 +7,6 @@ import java.net.URI;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.EvoType;
@@ -15,7 +14,6 @@ import pl.psnc.dl.wf4ever.evo.Job.State;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-@Ignore
 public class JobTest extends EvoTest {
 
     @Override

@@ -54,7 +54,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROList() {
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue(list.contains(ro.toString()));
@@ -70,7 +70,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROMetadata()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -81,7 +81,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROHTML()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -95,7 +95,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROZip() {
         client().setFollowRedirects(false);
         ClientResponse response = webResource.uri(ro).accept("application/zip").get(ClientResponse.class);
@@ -117,7 +117,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void createROFromZip()
             throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("ro1.zip");
@@ -135,7 +135,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void createConflictedROFromZip()
             throws UniformInterfaceException, ClientHandlerException, IOException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("ro1.zip");

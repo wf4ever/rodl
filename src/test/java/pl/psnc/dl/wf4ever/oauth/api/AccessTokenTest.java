@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.W4ETest;
@@ -13,7 +12,6 @@ import pl.psnc.dl.wf4ever.W4ETest;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 
-@Ignore
 public class AccessTokenTest extends W4ETest {
 
     private static String testAccessToken;

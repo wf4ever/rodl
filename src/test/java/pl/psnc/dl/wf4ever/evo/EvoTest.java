@@ -5,7 +5,6 @@ import java.net.URI;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.junit.Ignore;
 
 import pl.psnc.dl.wf4ever.W4ETest;
 import pl.psnc.dl.wf4ever.evo.Job.State;
@@ -17,7 +16,7 @@ import com.sun.jersey.api.client.ClientResponse;
  * @author filipwis
  * 
  */
-@Ignore
+
 public class EvoTest extends W4ETest {
 
     public static final int WAIT_FOR_COPY = 2000;
