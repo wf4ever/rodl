@@ -34,6 +34,9 @@ public class FolderTest extends ResourceBase {
     /** folder path. */
     private final String folderPath = "myfolder/";
 
+    /** file path. */
+    private final String filePath = "file2.txt";
+
 
     @Override
     public void setUp()
@@ -108,6 +111,24 @@ public class FolderTest extends ResourceBase {
             Assert.assertTrue(entry.hasProperty(ORE.proxyFor));
             Assert.assertTrue(entry.hasProperty(ORE.proxyIn));
         }
+    }
+
+
+    /**
+     * Test for creating a new folder entry.
+     */
+    @Test
+    public void addFolderEntry() {
+        addFile(ro, filePath, accessToken);
+
+        InputStream is = getClass().getClassLoader().getResourceAsStream("folder.rdf");
+        ClientResponse response = addFolder(is, ro, folderPath, accessToken);
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        URI folderProxyURI = response.getLocation();
+        Assert.assertNotNull(folderProxyURI);
+        response.getHeaders().get("Link");
+        response.close();
+        webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
     }
 
 }

@@ -38,7 +38,6 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
-import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.hp.hpl.jena.ontology.Individual;
@@ -359,43 +358,9 @@ public class Resource {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.create(uri);
 
-        FolderEntry entry = assembleFolderEntry(content, researchObject);
+        FolderEntry entry = ROSRService.assembleFolderEntry(researchObject, content);
 
         return ROSRService.aggregateExternalResource(researchObject, entry.getProxyFor()).build();
     }
 
-
-    //TODO move it to ROSRService
-    private FolderEntry assembleFolderEntry(InputStream content, ResearchObject researchObject)
-            throws BadRequestException {
-        FolderEntry entry = new FolderEntry();
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        model.read(content, researchObject.getUri().toString());
-        ExtendedIterator<Individual> it = model.listIndividuals(RO.FolderEntry);
-        if (it.hasNext()) {
-            Individual entryI = it.next();
-            NodeIterator it2 = entryI.listPropertyValues(ORE.proxyFor);
-            if (it2.hasNext()) {
-                RDFNode proxyForResource = it2.next();
-                if (proxyForResource.isURIResource()) {
-                    try {
-                        entry.setProxyFor(new URI(proxyForResource.asResource().getURI()));
-                    } catch (URISyntaxException e) {
-                        throw new BadRequestException("Wrong ore:proxyFor URI", e);
-                    }
-                } else {
-                    throw new BadRequestException("The ore:proxyFor object is not an URI resource.");
-                }
-            } else {
-                throw new BadRequestException("ore:proxyFor is missing.");
-            }
-            RDFNode entryName = entryI.getPropertyValue(RO.entryName);
-            if (entryName == null) {
-                entry.setEntryName(FolderEntry.generateEntryName(entry.getProxyFor()));
-            }
-        } else {
-            throw new BadRequestException("The entity body does not define any ro:FolderEntry.");
-        }
-        return entry;
-    }
 }
