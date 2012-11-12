@@ -1,0 +1,7 @@
+@prefix dc: <http://purl.org/dc/terms/> .
+
+<http://example.org/ROs/ro1-sp2/a%20workflow.t2flow> dc:title "A test" .
+<http://example.org/ROs/ro1-sp2/a%20workflow.t2flow> dc:source <http://example.org/ROs/ro2/runme.t2flow> .
+<http://example.org/ROs/ro1-sp2/.ro/manifest.rdf> dc:license "GPL" .
+<http://workflows.org/a%20workflow.scufl> dc:description "Something interesting" .
+<http://example.org/ROs/ro1/a%20workflow.t2flow#somePartOfIt> dc:description "The key part" .

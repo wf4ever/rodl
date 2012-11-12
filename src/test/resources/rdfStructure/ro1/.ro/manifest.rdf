@@ -1,0 +1,110 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns="http://www.example.com/ROs/"
+    xmlns:ro="http://purl.org/wf4ever/ro#"
+    xmlns:roevo="http://purl.org/wf4ever/roevo#"
+    xmlns:foaf="http://xmlns.com/foaf/0.1/"
+    xmlns:ao="http://purl.org/ao/"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:dct="http://purl.org/dc/terms/"
+    xmlns:ore="http://www.openarchives.org/ore/terms/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xmlns:rdfg="http://www.w3.org/2004/03/trix/rdfg-1/"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" > 
+  <rdf:Description rdf:about="../res1">
+    <dct:creator rdf:nodeID="A0"/>
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:02:10Z</dct:created>
+    <rdf:type rdf:resource="http://purl.org/wf4ever/ro#Resource"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A1">
+    <foaf:name>RO manager</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Agent"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="../res2">
+    <dct:creator rdf:nodeID="A2"/>
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:02:10Z</dct:created>
+    <rdf:type rdf:resource="http://purl.org/wf4ever/ro#Resource"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="ann-blank-body.ttl">
+    <dct:creator rdf:nodeID="A3"/>
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2010-05-14T12:02:12Z</dct:created>
+    <rdf:type rdf:resource="http://www.w3.org/2004/03/trix/rdfg-1/Graph"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="../afinalfolder">
+    <ore:isDescribedBy rdf:resource="../afolder.ttl"/>
+    <rdf:type rdf:resource="http://purl.org/wf4ever/ro#Folder"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="ann1-body.ttl">
+    <dct:creator rdf:nodeID="A4"/>
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2010-05-14T12:02:12Z</dct:created>
+    <rdf:type rdf:resource="http://www.w3.org/2004/03/trix/rdfg-1/Graph"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="../final-agregated-resource-file">
+    <dct:creator rdf:nodeID="A5"/>
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:02:10Z</dct:created>
+    <rdf:type rdf:resource="http://purl.org/wf4ever/ro#Resource"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A5">
+    <foaf:name>Stian Soiland-Reyes</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A0">
+    <foaf:name>Stian Soiland-Reyes</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="..">
+    <ore:aggregates rdf:nodeID="A6"/>
+    <ore:aggregates rdf:resource="../ann1"/>
+    <ore:aggregates rdf:resource="../final-agregated-resource-file"/>
+    <ore:aggregates rdf:resource="../afinalfolder"/>
+    <ore:aggregates rdf:resource="../res2"/>
+    <roevo:hasSnapshot rdf:resource="http://www.example.com/ro1-sp2/"/>
+    <ore:aggregates rdf:resource="../res1"/>
+    <ore:aggregates rdf:resource="ann-blank.ttl"/>
+    <roevo:hasArchive rdf:resource="http://www.example.com/ro1-arch1/"/>
+    <roevo:hasSnapshot rdf:resource="http://www.example.com/ro1-sp1/"/>
+    <rdf:type rdf:resource="http://purl.org/wf4ever/ro#ResearchObject"/>
+    <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/Aggregation"/>
+    <ore:aggregates rdf:resource="ann1-body.ttl"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="../ann1">
+    <dct:creator rdf:nodeID="A7"/>
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:02:13Z</dct:created>
+    <ao:body rdf:resource="ann1-body.ttl"/>
+    <ro:annotatesAggregatedResource rdf:resource="../agregated-resource-file"/>
+    <rdf:type rdf:resource="http://purl.org/wf4ever/ro#AggregatedAnnotation"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A3">
+    <foaf:name>Marco Roos</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A4">
+    <foaf:name>Marco Roos</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A8">
+    <foaf:name>t2flow workflow annotation extractor</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Agent"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A6">
+    <dct:creator rdf:nodeID="A8"/>
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:02:13Z</dct:created>
+    <ao:body rdf:resource="ann-blank-body.ttl"/>
+    <ro:annotatesAggregatedResource rdf:resource="../agregated-resource-file"/>
+    <rdf:type rdf:resource="http://purl.org/wf4ever/ro#AggregatedAnnotation"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A2">
+    <foaf:name>Filip</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="manifest.rdf">
+    <dct:creator rdf:nodeID="A1"/>
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T16:01:10Z</dct:created>
+    <ore:describes rdf:resource=".."/>
+    <rdf:type rdf:resource="http://purl.org/wf4ever/ro#Manifest"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A7">
+    <foaf:name>t2flow workflow annotation extractor</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Agent"/>
+  </rdf:Description>
+</rdf:RDF>

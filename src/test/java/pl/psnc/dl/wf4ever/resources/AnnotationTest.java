@@ -48,7 +48,8 @@ public class AnnotationTest extends ResourceBase {
         addAnnotation(is, ro, annotationBodyPath, accessToken);
         String body = webResource.uri(ro).path(annotationBodyPath).header("Authorization", "Bearer " + accessToken)
                 .get(String.class);
-        assertTrue("Annotation body should contain file path: a_workflow.t2flow", body.contains("a_workflow.t2flow"));
+        assertTrue("Annotation body should contain file path: a%20workflow.t2flow",
+            body.contains("a%20workflow.t2flow"));
         assertTrue(body.contains("A test"));
 
     }

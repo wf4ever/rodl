@@ -1,0 +1,78 @@
+@base <../> .
+@prefix : <.> .
+@prefix ro: <http://purl.org/wf4ever/ro#> .
+@prefix ao: <http://purl.org/ao/> .
+@prefix ore: <http://www.openarchives.org/ore/terms/> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix roevo: <http://purl.org/wf4ever/roevo#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix rdfg: <http://www.w3.org/2004/03/trix/rdfg-1/> .
+
+<.ro/manifest.ttl> a ro:Manifest ;
+    ore:describes <.> ;
+    dct:created "2000-01-01T16:01:10Z"^^xsd:dateTime ;
+    dct:creator [ a foaf:Agent; foaf:name "RO manager" ] .
+
+<.> a ro:ResearchObject, ore:Aggregation ;
+	#moved to roevo info
+	#roevo:hasSnapshot <../ro1-sp1/> ;
+	#roevo:hasSnapshot <../ro1-sp2/> ;
+	#roevo:hasArchive <../ro1-arch1/> ;
+	ore:aggregates :ann1 ;
+	ore:aggregates _:blank ;
+	ore:aggregates :res1 ;
+	ore:aggregates :res2 ;
+	ore:aggregates <.ro/ann1-body.ttl> ;
+	ore:aggregates <.ro/ann-blank.ttl> ;
+	ore:aggregates <afinalfolder> ;
+	ore:aggregates <final-agregated-resource-file> ;
+	ore:aggregates :evo_info ;
+	ore:aggregates <.ro/evo_info.ttl> .
+
+<.ro/evo_info.ttl> a ore:AggregatedResources;
+	dct:created "2000-02-01T16:01:10Z"^^xsd:dateTime ;
+    dct:creator [ a foaf:Agent; foaf:name "RO manager" ] .
+
+:evo_info a ro:AggregatedAnnotation ;
+	dct:created "2000-02-01T16:01:10Z"^^xsd:dateTime ;
+	ao:body <.ro/evo_info.ttl> ;
+	ore:annotatesAggregatedResource <.> .
+	
+_:blank a ro:AggregatedAnnotation ;
+    ro:annotatesAggregatedResource <agregated-resource-file> ;
+    ao:body <.ro/ann-blank-body.ttl> ;
+	dct:created "2001-01-01T16:01:10Z"^^xsd:dateTime ;
+    dct:creator [ a foaf:Agent ; foaf:name "t2flow workflow annotation extractor" ] .
+
+	
+:ann1 a ro:AggregatedAnnotation ;
+    ro:annotatesAggregatedResource <agregated-resource-file> ;
+    ao:body <.ro/ann1-body.ttl> ;
+  	dct:created "2001-01-01T16:01:10Z"^^xsd:dateTime ;
+    dct:creator [ a foaf:Agent ; foaf:name "t2flow workflow annotation extractor" ] .
+    
+<.ro/ann1-body.ttl> a rdfg:Graph, ore:AggregatedResources ;
+ 	dct:created "2001-01-01T16:01:10Z"^^xsd:dateTime ;
+	dct:creator [ a foaf:Person ; foaf:name "Marco Roos" ] .
+
+<.ro/ann-blank-body.ttl> a rdfg:Graph, ore:AggregatedResources ;
+	dct:created "2001-01-01T16:01:10Z"^^xsd:dateTime ;
+	dct:creator [ a foaf:Person ; foaf:name "Marco Roos" ] .
+	
+	
+<final-agregated-resource-file> a ro:Resource, ore:AggregatedResources ;
+    dct:created "2005-01-01T16:01:10Z"^^xsd:dateTime ;
+    dct:creator [ a foaf:Person; foaf:name "Stian Soiland-Reyes" ] .
+	
+:res1 a ro:Resource, ore:AggregatedResources ;
+    dct:created "2001-01-01T16:01:10Z"^^xsd:dateTime ;
+    dct:creator [ a foaf:Person; foaf:name "Stian Soiland-Reyes" ] .
+    
+:res2 a ro:Resource, ore:AggregatedResources ;
+    dct:created "2001-01-01T16:01:10Z"^^xsd:dateTime ;
+    dct:creator [ a foaf:Person; foaf:name "Filip" ] .
+
+<afinalfolder> a ro:Folder ;
+    dct:created "2003-01-01T16:01:10Z"^^xsd:dateTime ;
+    ore:isDescribedBy <afolder.ttl> .

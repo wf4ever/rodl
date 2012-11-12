@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:rdfg="http://www.w3.org/2004/03/trix/rdfg-1/" xmlns:ro="http://purl.org/wf4ever/ro#" xmlns:ore="http://www.openarchives.org/ore/terms/" xmlns:xsd="http://www.w3.org/2001/XMLSchema#" xmlns:ao="http://purl.org/ao/" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dct="http://purl.org/dc/terms/">
+	<ro:ResearchObject rdf:about="../.">
+		<rdf:type rdf:resource="http://www.openarchives.org/ore/terms/Aggregation" />
+		<ore:aggregates>
+			<ro:Resource rdf:about="../a%20workflow.t2flow" />
+		</ore:aggregates>
+		<ore:aggregates>
+			<ro:SemanticAnnotation rdf:about="../ann1">
+				<ao:body>
+					<rdfg:Graph rdf:about="../.ro/ann1">
+						<dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2010-05-14T12:02:12Z</dct:created>
+						<dct:creator>
+							<foaf:Person>
+								<foaf:name>Marco Roos</foaf:name>
+							</foaf:Person>
+						</dct:creator>
+					</rdfg:Graph>
+				</ao:body>
+				<ro:annotatesAggregatedResource rdf:resource="../a%20workflow.t2flow" />
+				<ao:annotatesResource rdf:resource="../." />
+				<dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:02:13Z</dct:created>
+				<dct:creator>
+					<foaf:Agent>
+						<foaf:name>t2flow workflow annotation extractor</foaf:name>
+					</foaf:Agent>
+				</dct:creator>
+			</ro:SemanticAnnotation>
+		</ore:aggregates>
+		<dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:01:10Z</dct:created>
+		<dct:creator>
+			<foaf:Person>
+				<foaf:name>Stian Soiland-Reyes</foaf:name>
+			</foaf:Person>
+		</dct:creator>
+	</ro:ResearchObject>
+	<ro:Proxy rdf:about="../proxy1">
+		<ore:proxyFor rdf:resource="../a%20workflow.t2flow" />
+		<ore:proxyIn rdf:resource="../." />
+		<dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:02:10Z</dct:created>
+		<dct:creator>
+			<foaf:Person>
+				<foaf:name>Stian Soiland-Reyes</foaf:name>
+			</foaf:Person>
+		</dct:creator>
+	</ro:Proxy>
+</rdf:RDF>
