@@ -9,7 +9,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.activation.MimetypesFileTypeMap;
@@ -36,12 +39,20 @@ import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
+import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
 import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.google.common.collect.Multimap;
+import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.sun.jersey.core.header.ContentDisposition;
 
 /**
@@ -856,6 +867,89 @@ public final class ROSRService {
         InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(namedGraphURI, researchObject,
             format);
         ROSRService.DL.get().createOrUpdateFile(researchObject, filePath, dataStream, format.getDefaultMIMEType());
+    }
+
+
+    /**
+     * Create a folder instance out of an RDF/XML description.
+     * 
+     * @param researchObject
+     *            research object used as RDF base
+     * @param folderURI
+     *            folder URI
+     * @param content
+     *            RDF/XML folder description
+     * @return a folder instance
+     * @throws BadRequestException
+     *             the folder description is incorrect
+     */
+    public static Folder assembleFolder(ResearchObject researchObject, URI folderURI, InputStream content)
+            throws BadRequestException {
+        Folder folder = new Folder();
+        folder.setUri(folderURI);
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+        model.read(content, researchObject.getUri().toString());
+        List<Individual> folders = model.listIndividuals(RO.Folder).toList();
+        Map<URI, FolderEntry> entries = new HashMap<>();
+        if (folders.size() == 1) {
+            Individual folderInd = folders.get(0);
+            List<RDFNode> aggregatedResources = folderInd.listPropertyValues(ORE.aggregates).toList();
+            for (RDFNode aggregatedResource : aggregatedResources) {
+                if (aggregatedResource.isURIResource()) {
+                    try {
+                        URI res = new URI(aggregatedResource.asResource().getURI());
+                        entries.put(res, new FolderEntry(res, null));
+                    } catch (URISyntaxException e) {
+                        throw new BadRequestException("Aggregated resource has an incorrect URI", e);
+                    }
+                } else {
+                    throw new BadRequestException("Aggregated resources cannot be blank nodes.");
+                }
+            }
+        } else {
+            throw new BadRequestException("The entity body must define exactly one ro:Folder.");
+        }
+        List<Individual> folderEntries = model.listIndividuals(RO.FolderEntry).toList();
+        for (Individual folderEntryInd : folderEntries) {
+            URI proxyFor;
+            if (folderEntryInd.hasProperty(ORE.proxyFor)) {
+                RDFNode proxyForNode = folderEntryInd.getPropertyValue(ORE.proxyFor);
+                if (!proxyForNode.isURIResource()) {
+                    throw new BadRequestException("Folder entry ore:proxyFor must be a URI resource.");
+                }
+                try {
+                    proxyFor = new URI(proxyForNode.asResource().getURI());
+                } catch (URISyntaxException e) {
+                    throw new BadRequestException("Folder entry proxy for URI is incorrect", e);
+                }
+            } else {
+                throw new BadRequestException("Folder entries must have the ore:proxyFor property.");
+            }
+            if (!entries.containsKey(proxyFor)) {
+                throw new BadRequestException(
+                        "Found a folder entry for a resource that is not aggregated by the folder");
+            }
+            FolderEntry folderEntry = entries.get(proxyFor);
+            if (folderEntryInd.hasProperty(RO.entryName)) {
+                RDFNode nameNode = folderEntryInd.getPropertyValue(RO.entryName);
+                if (!nameNode.isLiteral()) {
+                    throw new BadRequestException("Folder entry ro name must be a literal");
+                }
+                folderEntry.setEntryName(nameNode.asLiteral().toString());
+            }
+        }
+        for (FolderEntry folderEntry : entries.values()) {
+            if (folderEntry.getEntryName() == null) {
+                if (folderEntry.getProxyFor().getPath() != null) {
+                    String[] segments = folderEntry.getProxyFor().getPath().split("/");
+                    folderEntry.setEntryName(segments[segments.length - 1]);
+                } else {
+                    folderEntry.setEntryName(folderEntry.getProxyFor().getHost());
+                }
+            }
+        }
+        folder.setFolderEntries(new ArrayList<>(entries.values()));
+        return folder;
     }
 
 

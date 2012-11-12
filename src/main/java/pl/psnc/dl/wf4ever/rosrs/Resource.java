@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -35,7 +36,9 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
+import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.hp.hpl.jena.ontology.Individual;
@@ -331,5 +334,68 @@ public class Resource {
         }
 
         return ROSRService.deaggregateInternalResource(researchObject, resource);
+    }
+
+
+    /**
+     * Create a new folder entry.
+     * 
+     * @param content
+     *            folder entry description
+     * @return 201 Created response pointing to the folder entry
+     * @throws BadRequestException
+     *             wrong request body
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
+    @POST
+    @Consumes(Constants.FOLDERENTRY_MIME_TYPE)
+    public Response addFolderEntry(InputStream content)
+            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
+        URI uri = uriInfo.getAbsolutePath();
+        ResearchObject researchObject = ResearchObject.create(uri);
+
+        FolderEntry entry = assembleFolderEntry(content, researchObject);
+
+        return ROSRService.aggregateExternalResource(researchObject, proxyFor).build();
+    }
+
+
+    //TODO move it to ROSRService
+    private FolderEntry assembleFolderEntry(InputStream content, ResearchObject researchObject)
+            throws BadRequestException {
+        FolderEntry entry = new FolderEntry();
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+        model.read(content, researchObject.getUri().toString());
+        ExtendedIterator<Individual> it = model.listIndividuals(RO.FolderEntry);
+        if (it.hasNext()) {
+            Individual entryI = it.next();
+            NodeIterator it2 = entryI.listPropertyValues(ORE.proxyFor);
+            if (it2.hasNext()) {
+                RDFNode proxyForResource = it2.next();
+                if (proxyForResource.isURIResource()) {
+                    try {
+                        entry.setProxyFor(new URI(proxyForResource.asResource().getURI()));
+                    } catch (URISyntaxException e) {
+                        throw new BadRequestException("Wrong ore:proxyFor URI", e);
+                    }
+                } else {
+                    throw new BadRequestException("The ore:proxyFor object is not an URI resource.");
+                }
+            } else {
+                throw new BadRequestException("ore:proxyFor is missing.");
+            }
+            RDFNode entryName = entryI.getPropertyValue(RO.entryName);
+            if (entryName == null) {
+                entry.setEntryName(FolderEntry.generateEntryName(entry.getProxyFor()));
+            }
+        } else {
+            throw new BadRequestException("The entity body does not define any ro:FolderEntry.");
+        }
+        return entry;
     }
 }

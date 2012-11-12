@@ -51,4 +51,6 @@ public final class Constants {
 
     /** See ROSR API. */
     public static final String FOLDER_MIME_TYPE = "application/vnd.wf4ever.folder";
+
+    public static final String FOLDERENTRY_MIME_TYPE = "application/vnd.wf4ever.folderentry";
 }
