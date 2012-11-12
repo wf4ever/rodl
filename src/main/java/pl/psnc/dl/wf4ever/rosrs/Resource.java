@@ -361,7 +361,7 @@ public class Resource {
 
         FolderEntry entry = assembleFolderEntry(content, researchObject);
 
-        return ROSRService.aggregateExternalResource(researchObject, proxyFor).build();
+        return ROSRService.aggregateExternalResource(researchObject, entry.getProxyFor()).build();
     }
 
 

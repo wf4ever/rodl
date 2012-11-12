@@ -687,8 +687,11 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Add a named graph describing the folder. The folder must have its URI set. The folder entries must have their
-     * proxyFor and RO name set. The folder entry URI will be generated automatically, overriding any existing value.
+     * Add a named graph describing the folder and aggregate it by the RO. The folder must have its URI set. The folder
+     * entries must have their proxyFor and RO name set. The folder entry URIs will be generated automatically if not
+     * set.
+     * 
+     * If there is no root folder in the RO, the new folder will be the root folder of the RO.
      * 
      * @param researchObject
      *            research object
@@ -723,4 +726,37 @@ public interface SemanticMetadataService {
      */
     Annotation findAnnotationForBody(ResearchObject researchObject, URI body);
 
+
+    /**
+     * Find a folder description.
+     * 
+     * @param researchObject
+     *            research object which aggregates the folder
+     * @param folderURI
+     *            folder URI
+     * @return a folder instance or null if not found
+     */
+    Folder getFolder(ResearchObject researchObject, URI folderURI);
+
+
+    /**
+     * Update the named graph with the folder resource map. The folder must have its URI set. The folder entries must
+     * have their proxyFor and RO name set. The folder entry URIs will be generated automatically if not set.
+     * 
+     * Note that the URIs are immutable. Subject to update are: list of folder entries, names of folder entries.
+     * 
+     * @param researchObject
+     * @param folder
+     */
+    void updateFolder(ResearchObject researchObject, Folder folder);
+
+
+    /**
+     * Find the root folder of the RO.
+     * 
+     * @param researchObject
+     *            research object
+     * @return root folder or null if not defined
+     */
+    Folder getRootFolder(ResearchObject researchObject);
 }

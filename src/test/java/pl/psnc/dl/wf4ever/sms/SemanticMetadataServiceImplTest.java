@@ -1213,8 +1213,8 @@ public class SemanticMetadataServiceImplTest {
             sms.addNamedGraph(annotationBody1URI, is, RDFFormat.TURTLE);
 
             int cnt = sms.changeURIInManifestAndAnnotationBodies(researchObject, workflowURI, resourceFakeURI);
-            // 1 aggregates, 1 ann target, 1 type, 2 dcterms, 1 proxy, 3 in ann body
-            Assert.assertEquals("9 URIs should be changed", 9, cnt);
+            // 1 aggregates, 1 ann target, 1 type, 2 dcterms, 3 in ann body
+            Assert.assertEquals("6 URIs should be changed", 9, cnt);
         } finally {
             sms.close();
         }
@@ -1370,13 +1370,21 @@ public class SemanticMetadataServiceImplTest {
             Assert.assertEquals(folder.getUri(), folder2.getUri());
             Assert.assertNotNull(folder2.getProxyUri());
 
+            OntModel manifestModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+            manifestModel.read(sms.getManifest(researchObject, RDFFormat.RDFXML), null);
+            Individual roInd = manifestModel.getIndividual(researchObject.getUri().toString());
+            Assert.assertNotNull(roInd);
+            Individual folderInd = manifestModel.getIndividual(folder2.getUri().toString());
+            Assert.assertNotNull(folderInd);
+            Assert.assertTrue(manifestModel.contains(roInd, RO.rootFolder, folderInd));
+
             OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
             model.read(sms.getNamedGraph(folder2.getResourceMapUri(), RDFFormat.RDFXML), null);
 
             Resource manifestRes = model.getResource(researchObject.getManifestUri().toString());
             Assert.assertNotNull(manifestRes);
 
-            Individual roInd = model.getIndividual(researchObject.getUri().toString());
+            roInd = model.getIndividual(researchObject.getUri().toString());
             Assert.assertNotNull(roInd);
             Assert.assertTrue(roInd.hasRDFType(RO.ResearchObject));
             Assert.assertTrue(model.contains(roInd, ORE.isDescribedBy, manifestRes));
@@ -1384,7 +1392,7 @@ public class SemanticMetadataServiceImplTest {
             Resource folderRMRes = model.getResource(folder2.getResourceMapUri().toString());
             Assert.assertNotNull(folderRMRes);
 
-            Individual folderInd = model.getIndividual(folder2.getUri().toString());
+            folderInd = model.getIndividual(folder2.getUri().toString());
             Assert.assertNotNull(folderInd);
             Assert.assertTrue(folderInd.hasRDFType(RO.Folder));
             Assert.assertTrue(folderInd.hasRDFType(ORE.Aggregation));
@@ -1406,6 +1414,110 @@ public class SemanticMetadataServiceImplTest {
                 Assert.assertTrue(model.contains(entryInd, ORE.proxyIn, folderInd));
                 Assert.assertTrue(model.contains(entryInd, RO.entryName, name));
             }
+        } finally {
+            sms.close();
+        }
+    }
+
+
+    @Test
+    public void testGetFolder()
+            throws ClassNotFoundException, IOException, NamingException, SQLException {
+        Folder folder = new Folder();
+        folder.setUri(FOLDER_URI);
+
+        SemanticMetadataService sms = new SemanticMetadataServiceImpl(userProfile, false);
+        try {
+            sms.createResearchObject(researchObject);
+            sms.addResource(researchObject, workflowURI, workflowInfo);
+            sms.addResource(researchObject, workflow2URI, workflowInfo);
+            sms.addResource(researchObject, resourceFakeURI, resourceFakeInfo);
+
+            folder.getFolderEntries().add(new FolderEntry(workflowURI, "workflow1"));
+            folder.getFolderEntries().add(new FolderEntry(resourceFakeURI, "a resource"));
+
+            Folder folder2 = sms.addFolder(researchObject, folder);
+
+            Folder folder3 = sms.getFolder(researchObject, folder2.getUri());
+            Assert.assertEquals(folder2.getUri(), folder3.getUri());
+            Assert.assertEquals(folder2.getProxyUri(), folder3.getProxyUri());
+            Assert.assertEquals(folder2.getResourceMapUri(), folder3.getResourceMapUri());
+            Assert.assertEquals(folder2.getFolderEntries().size(), folder3.getFolderEntries().size());
+            for (FolderEntry entry : folder3.getFolderEntries()) {
+                Assert.assertTrue(folder2.getFolderEntries().contains(entry));
+            }
+        } finally {
+            sms.close();
+        }
+    }
+
+
+    @Test
+    public void testUpdateFolder()
+            throws ClassNotFoundException, IOException, NamingException, SQLException {
+        Folder folder = new Folder();
+        folder.setUri(FOLDER_URI);
+
+        SemanticMetadataService sms = new SemanticMetadataServiceImpl(userProfile, false);
+        try {
+            sms.createResearchObject(researchObject);
+            sms.addResource(researchObject, workflowURI, workflowInfo);
+            sms.addResource(researchObject, workflow2URI, workflowInfo);
+            sms.addResource(researchObject, resourceFakeURI, resourceFakeInfo);
+
+            folder.getFolderEntries().add(new FolderEntry(workflowURI, "workflow1"));
+            folder.getFolderEntries().add(new FolderEntry(resourceFakeURI, "a resource"));
+
+            Folder folder2 = sms.addFolder(researchObject, folder);
+            Folder folder3 = sms.getFolder(researchObject, folder2.getUri());
+
+            FolderEntry entry1 = folder2.getFolderEntries().get(0);
+            FolderEntry entry2 = folder2.getFolderEntries().get(1);
+            folder2.getFolderEntries().remove(entry1);
+            entry2.setEntryName("foo");
+            FolderEntry entry3 = new FolderEntry(workflow2URI, "workflow2");
+            folder2.getFolderEntries().add(entry3);
+
+            sms.updateFolder(researchObject, folder2);
+
+            Folder folder4 = sms.getFolder(researchObject, folder2.getUri());
+            Assert.assertEquals(folder3.getUri(), folder4.getUri());
+            Assert.assertEquals(folder3.getProxyUri(), folder4.getProxyUri());
+            Assert.assertEquals(folder3.getResourceMapUri(), folder4.getResourceMapUri());
+            Assert.assertEquals(folder3.getFolderEntries().size(), folder4.getFolderEntries().size());
+            for (FolderEntry entry : folder4.getFolderEntries()) {
+                Assert.assertTrue(!entry.equals(entry1));
+                if (entry.equals(entry2)) {
+                    Assert.assertEquals(entry2.getEntryName(), entry.getEntryName());
+                } else {
+                    Assert.assertEquals(entry3, entry);
+                }
+            }
+        } finally {
+            sms.close();
+        }
+    }
+
+
+    @Test
+    public void testGetRootFolder()
+            throws ClassNotFoundException, IOException, NamingException, SQLException {
+        Folder folder = new Folder();
+        folder.setUri(FOLDER_URI);
+
+        SemanticMetadataService sms = new SemanticMetadataServiceImpl(userProfile, false);
+        try {
+            sms.createResearchObject(researchObject);
+            sms.addResource(researchObject, workflowURI, workflowInfo);
+            sms.addResource(researchObject, workflow2URI, workflowInfo);
+            sms.addResource(researchObject, resourceFakeURI, resourceFakeInfo);
+
+            folder.getFolderEntries().add(new FolderEntry(workflowURI, "workflow1"));
+            folder.getFolderEntries().add(new FolderEntry(resourceFakeURI, "a resource"));
+
+            Assert.assertNull(sms.getRootFolder(researchObject));
+            Folder folder2 = sms.addFolder(researchObject, folder);
+            Assert.assertEquals(folder2, sms.getRootFolder(researchObject));
         } finally {
             sms.close();
         }

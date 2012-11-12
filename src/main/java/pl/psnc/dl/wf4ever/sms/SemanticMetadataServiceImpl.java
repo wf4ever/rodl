@@ -1605,6 +1605,9 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         Individual resource = manifestModel.createIndividual(folder.getUri().toString(), RO.Folder);
         resource.addRDFType(RO.Resource);
         manifestModel.add(ro, ORE.aggregates, resource);
+        if (!ro.hasProperty(RO.rootFolder)) {
+            manifestModel.add(ro, RO.rootFolder, resource);
+        }
         URI proxyURI = generateProxyURI(researchObject);
         Individual proxy = manifestModel.createIndividual(proxyURI.toString(), ORE.Proxy);
         manifestModel.add(proxy, ORE.proxyIn, ro);
@@ -1623,17 +1626,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         folderModel.add(folderInd, ORE.isDescribedBy, folderRMRes);
 
         for (FolderEntry entry : folder.getFolderEntries()) {
-            entry.setUri(folder.getUri().resolve("entries/" + UUID.randomUUID()));
-            Individual entryInd = folderModel.createIndividual(entry.getUri().toString(), RO.FolderEntry);
-            entryInd.addRDFType(ORE.Proxy);
-            //FIXME we should check if the resource is really aggregated and what classes it has
-            Individual resInd = folderModel.createIndividual(entry.getProxyFor().toString(), RO.Resource);
-            folderModel.add(folderInd, ORE.aggregates, resInd);
-            folderModel.add(resInd, ORE.isAggregatedBy, folderInd);
-            folderModel.add(entryInd, ORE.proxyFor, resInd);
-            folderModel.add(entryInd, ORE.proxyIn, folderInd);
-            Literal name = folderModel.createLiteral(entry.getEntryName());
-            folderModel.add(entryInd, RO.entryName, name);
+            addFolderEntry(folder, folderInd, entry);
         }
         return folder;
     }
@@ -1809,4 +1802,79 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         }
     }
 
+
+    @Override
+    public Folder getRootFolder(ResearchObject researchObject) {
+        OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+        Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
+        Resource r = ro.getPropertyResourceValue(RO.rootFolder);
+        if (r == null) {
+            return null;
+        } else {
+            return getFolder(researchObject, URI.create(r.getURI()));
+        }
+    }
+
+
+    @Override
+    public Folder getFolder(ResearchObject researchObject, URI folderURI) {
+        Folder folder = new Folder();
+        folder.setUri(folderURI);
+        if (!containsNamedGraph(folder.getResourceMapUri())) {
+            return null;
+        }
+        URI proxyURI = getProxyForResource(researchObject, folder.getUri());
+        folder.setProxyUri(proxyURI);
+        OntModel model = createOntModelForNamedGraph(folder.getResourceMapUri());
+        List<Individual> entries = model.listIndividuals(RO.FolderEntry).toList();
+        for (Individual entryI : entries) {
+            String proxyIn = entryI.getPropertyResourceValue(ORE.proxyIn).getURI();
+            if (!proxyIn.equals(folder.getUri().toString())) {
+                continue;
+            }
+            FolderEntry entry = new FolderEntry();
+            entry.setUri(URI.create(entryI.getURI()));
+            entry.setProxyIn(URI.create(proxyIn));
+            String proxyFor = entryI.getPropertyResourceValue(ORE.proxyFor).getURI();
+            entry.setProxyFor(URI.create(proxyFor));
+            String name = entryI.getPropertyValue(RO.entryName).asLiteral().getString();
+            entry.setEntryName(name);
+            folder.getFolderEntries().add(entry);
+        }
+
+        return folder;
+    }
+
+
+    @Override
+    public void updateFolder(ResearchObject researchObject, Folder folder) {
+        OntModel folderModel = createOntModelForNamedGraph(folder.getResourceMapUri());
+        Individual folderInd = folderModel.createIndividual(folder.getUri().toString(), RO.Folder);
+        List<Individual> entries = folderModel.listIndividuals(RO.FolderEntry).toList();
+        for (Individual entry : entries) {
+            entry.remove();
+        }
+
+        for (FolderEntry entry : folder.getFolderEntries()) {
+            addFolderEntry(folder, folderInd, entry);
+        }
+    }
+
+
+    private void addFolderEntry(Folder folder, Individual folderInd, FolderEntry entry) {
+        OntModel folderModel = folderInd.getOntModel();
+        if (entry.getUri() == null) {
+            entry.setUri(folder.getUri().resolve("entries/" + UUID.randomUUID()));
+        }
+        Individual entryInd = folderModel.createIndividual(entry.getUri().toString(), RO.FolderEntry);
+        entryInd.addRDFType(ORE.Proxy);
+        //FIXME we should check if the resource is really aggregated and what classes it has
+        Individual resInd = folderModel.createIndividual(entry.getProxyFor().toString(), RO.Resource);
+        folderModel.add(folderInd, ORE.aggregates, resInd);
+        folderModel.add(resInd, ORE.isAggregatedBy, folderInd);
+        folderModel.add(entryInd, ORE.proxyFor, resInd);
+        folderModel.add(entryInd, ORE.proxyIn, folderInd);
+        Literal name = folderModel.createLiteral(entry.getEntryName());
+        folderModel.add(entryInd, RO.entryName, name);
+    }
 }
