@@ -20,11 +20,17 @@ import org.junit.Test;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.common.UserProfile.Role;
+import pl.psnc.dl.wf4ever.common.util.SafeURI;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
+import pl.psnc.dl.wf4ever.vocabulary.AO;
 
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -48,7 +54,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    @Test
+    //@Test
     public void testGetROList() {
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue(list.contains(ro.toString()));
@@ -56,7 +62,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    @Test
+    //@Test
     public void testGetROWithWhitspaces() {
         URI ro3 = createRO("ro " + UUID.randomUUID().toString(), accessToken);
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
@@ -64,7 +70,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    @Test
+    //@Test
     public void testGetROMetadata()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -75,7 +81,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    @Test
+    //@Test
     public void testGetROHTML()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -89,7 +95,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    @Test
+    //@Test
     public void testGetROZip() {
         client().setFollowRedirects(false);
         ClientResponse response = webResource.uri(ro).accept("application/zip").get(ClientResponse.class);
@@ -111,7 +117,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    @Test
+    //@Test
     public void createROFromZip()
             throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("ro1.zip");
@@ -121,23 +127,15 @@ public class ResourceTest extends ResourceBase {
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
 
-        //assertTrue("manifest should contain ann1-body", manifest.contains("/.ro/ann1-body.ttl"));
-        //assertTrue("manifest should contain ann-blank", manifest.contains("/.ro/ann-blank.ttl"));
-
-        //assertTrue("manifest should contain res1", manifest.contains("/res1"));
-        //assertTrue("manifest should contain afinalfolder", manifest.contains("/afinalfolder"));
-        //assertTrue("manifest should contain res2", manifest.contains("/res2"));
-        //String fileContent = getResourceToString(ResearchObject.create(response.getLocation()), "res1");
-
-        //assertTrue("res1 should contain lorem ipsum", fileContent.contains("lorem ipsum"));
         SemanticMetadataService sms = new SemanticMetadataServiceImpl(UserProfile.create("login", "name", Role.ADMIN));
         List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
-        //assertEquals("research object should contan two nnotations", annotations.size(), 2);
+        assertEquals("research object should contain two annotations", annotations.size(), 3);
+
         response.close();
     }
 
 
-    @Test
+    //@Test
     public void createConflictedROFromZip()
             throws UniformInterfaceException, ClientHandlerException, IOException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("ro1.zip");
@@ -153,5 +151,37 @@ public class ResourceTest extends ResourceBase {
         assertEquals("Research objects with this same name should be conflicted", HttpServletResponse.SC_CONFLICT,
             response.getStatus());
 
+    }
+
+
+    @Test
+    public void updateEvoInfo() {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
+        ClientResponse response = webResource.uri(ro).path("/.ro/evo_info")
+                .header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
+        assertEquals("Updating evo_info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
+        response.close();
+        ResearchObject researchObject = ResearchObject.create(ro);
+        OntModel manifestModel = ModelFactory.createOntologyModel();
+        manifestModel.read(researchObject.getManifestUri().toString());
+
+        Resource bodyR = manifestModel.createResource(SafeURI.URItoString(researchObject
+                .getFixedEvolutionAnnotationBodyPath()));
+        StmtIterator it = manifestModel.listStatements(null, AO.body, bodyR);
+        if (it.hasNext()) {
+            Annotation ann = new Annotation(URI.create(it.next().getSubject().getURI()));
+            System.out.println(ann.getUri().toString());
+            response = webResource.uri(ann.getUri()).header("Authorization", "Bearer " + accessToken)
+                    .delete(ClientResponse.class);
+
+            response.close();
+        } else {
+            assertTrue("Can not find annotation", false);
+        }
+        assertEquals("Removing evo info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
+        response = webResource.uri(researchObject.getFixedEvolutionAnnotationBodyPath())
+                .header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
+        assertEquals("Removing evo info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
+        response.close();
     }
 }
