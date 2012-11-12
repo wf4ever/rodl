@@ -14,7 +14,7 @@
     dct:creator [ a foaf:Agent; foaf:name "RO manager" ] .
 
 <.> a ro:ResearchObject, ore:Aggregation ;
-    ore:aggregates <a%20workflow.t2flow>, :ann1, <afolder> ;
+    ore:aggregates <a%20workflow.t2flow>, :ann1, <afolder/> ;
     ore:isDescribedBy <.ro/manifest.rdf> ;
     dct:created "2011-12-02T15:01:10Z"^^xsd:dateTime ;
     dct:creator [ a foaf:Person; foaf:name "Stian Soiland-Reyes" ] .

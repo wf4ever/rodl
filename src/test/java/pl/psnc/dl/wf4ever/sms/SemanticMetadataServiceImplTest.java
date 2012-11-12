@@ -1213,8 +1213,8 @@ public class SemanticMetadataServiceImplTest {
             sms.addNamedGraph(annotationBody1URI, is, RDFFormat.TURTLE);
 
             int cnt = sms.changeURIInManifestAndAnnotationBodies(researchObject, workflowURI, resourceFakeURI);
-            // 1 aggregates, 1 ann target, 1 type, 2 dcterms, 3 in ann body
-            Assert.assertEquals("6 URIs should be changed", 9, cnt);
+            // 1 aggregates, 1 ann target, 1 type, 2 dcterms, 1 proxy, 3 in ann body
+            Assert.assertEquals("9 URIs should be changed", 9, cnt);
         } finally {
             sms.close();
         }
