@@ -3,9 +3,8 @@ package pl.psnc.dl.wf4ever.resources;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
@@ -49,7 +48,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROList() {
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue(list.contains(ro.toString()));
@@ -57,7 +56,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROWithWhitspaces() {
         URI ro3 = createRO("ro " + UUID.randomUUID().toString(), accessToken);
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
@@ -65,7 +64,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROMetadata()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -76,7 +75,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROHTML()
             throws URISyntaxException {
         client().setFollowRedirects(false);
@@ -90,7 +89,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROZip() {
         client().setFollowRedirects(false);
         ClientResponse response = webResource.uri(ro).accept("application/zip").get(ClientResponse.class);
@@ -113,28 +112,14 @@ public class ResourceTest extends ResourceBase {
 
 
     @Test
-    public void getManifest()
-            throws URISyntaxException {
-        System.out.println(getManifest(ResearchObject.create(new URI("http://localhost:8082/ROs/test-rap1/"))));
-    }
-
-
-    //@Test
     public void createROFromZip()
             throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
-        File file = new File(PROJECT_PATH + "/src/test/resources/test-rap1.zip");
-        FileInputStream fileInputStream = new FileInputStream(file);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("ro1.zip");
         ClientResponse response = webResource.path("ROs").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
-                .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(fileInputStream));
+                .type("application/zip").post(ClientResponse.class, is);
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
-
-        String manifest = getManifest(ResearchObject.create(response.getLocation()));
-        System.out.println("========");
-        System.out.println(response.getLocation());
-        System.out.println(manifest);
-        System.out.println("========");
 
         //assertTrue("manifest should contain ann1-body", manifest.contains("/.ro/ann1-body.ttl"));
         //assertTrue("manifest should contain ann-blank", manifest.contains("/.ro/ann-blank.ttl"));
@@ -152,21 +137,19 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void createConflictedROFromZip()
             throws UniformInterfaceException, ClientHandlerException, IOException {
-        File file = new File(PROJECT_PATH + "/src/test/resources/ro1.zip");
-        FileInputStream fileInputStream = new FileInputStream(file);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("ro1.zip");
         ClientResponse response = webResource.path("ROs").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
-                .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(fileInputStream));
+                .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(is));
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
-        file = new File(PROJECT_PATH + "/src/test/resources/ro1.zip");
-        fileInputStream = new FileInputStream(file);
+        is = getClass().getClassLoader().getResourceAsStream("ro1.zip");
         response = webResource.path("ROs").accept("text/turtle").header("Authorization", "Bearer " + accessToken)
                 .header("Slug", createdFromZipResourceObject).type("application/zip")
-                .post(ClientResponse.class, IOUtils.toByteArray(fileInputStream));
+                .post(ClientResponse.class, IOUtils.toByteArray(is));
         assertEquals("Research objects with this same name should be conflicted", HttpServletResponse.SC_CONFLICT,
             response.getStatus());
 
