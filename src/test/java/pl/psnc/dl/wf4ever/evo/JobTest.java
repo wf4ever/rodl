@@ -7,7 +7,6 @@ import java.net.URI;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.EvoType;
@@ -15,7 +14,6 @@ import pl.psnc.dl.wf4ever.evo.Job.State;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-@Ignore
 public class JobTest extends EvoTest {
 
     @Override
@@ -32,7 +30,7 @@ public class JobTest extends EvoTest {
     }
 
 
-    //@Test
+    @Test
     public final void testCopyJobCreation()
             throws InterruptedException {
         ClientResponse response = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, false));
@@ -43,7 +41,7 @@ public class JobTest extends EvoTest {
     }
 
 
-    //@Test
+    @Test
     public final void testCopyJobStatusDataIntegrity()
             throws InterruptedException {
         JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, false);

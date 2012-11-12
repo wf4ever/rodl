@@ -1,5 +1,8 @@
 package pl.psnc.dl.wf4ever.evo.api;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.net.URI;
 
@@ -46,7 +49,6 @@ public class StoringHistoryTest extends EvoTest {
 
         addFile(ro, newResourceFile, accessToken);
         removeFile(ro, oldResourceFile, accessToken);
-        //updateFile(ro, modifiedResourceFile, accessToken);
 
         JobStatus sp2Status = new JobStatus(ro, EvoType.SNAPSHOT, true);
         copyJob = createCopyJob(sp2Status).getLocation();
@@ -66,10 +68,12 @@ public class StoringHistoryTest extends EvoTest {
         String sp2Evo = webResource.path("/evo/info").queryParam("ro", sp2Status.getTarget().toString())
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
 
-        System.out.println(roManifest);
-        System.out.println("=============");
-        System.out.println(sp1Manifest);
-        System.out.println("=============");
-        System.out.println(sp2Evo);
+        assertFalse("live should not contain any changes", roEvo.contains("Addition"));
+        assertFalse("live should not contain any changes", roEvo.contains("Removal"));
+        assertFalse("sp1 should not contain any changes", sp1Evo.contains("Addition"));
+        assertFalse("sp1 should not contain any changes", sp1Evo.contains("Removal"));
+        assertTrue("sp2 should contain Additon", sp2Evo.contains("Addition"));
+        assertTrue("sp2 should contain Removal", sp2Evo.contains("Removal"));
+
     }
 }

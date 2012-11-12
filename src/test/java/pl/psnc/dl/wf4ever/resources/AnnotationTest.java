@@ -7,12 +7,10 @@ import java.io.InputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sun.jersey.api.client.ClientResponse;
 
-@Ignore
 public class AnnotationTest extends ResourceBase {
 
     private final String annotationBodyPath = ".ro/ann1.ttl";
