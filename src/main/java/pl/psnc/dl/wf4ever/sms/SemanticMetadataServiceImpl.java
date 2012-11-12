@@ -1762,6 +1762,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    @Override
     public Annotation findAnnotationForBody(ResearchObject researchObject, URI body) {
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
         Resource bodyR = manifestModel.createResource(body.toString());
