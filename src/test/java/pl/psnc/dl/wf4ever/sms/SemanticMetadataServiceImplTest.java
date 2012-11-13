@@ -1412,6 +1412,14 @@ public class SemanticMetadataServiceImplTest {
     }
 
 
+    @Test
+    public void testForAnnotationFromBody() {
+        Annotation annotation = testStructure.sms.findAnnotationForBody(testStructure.ro1,
+            testStructure.ro1.getFixedEvolutionAnnotationBodyPath());
+        System.out.println(annotation.getUri());
+    }
+
+
     /***** HELPERS *****/
 
     private Boolean isChangeInTheChangesList(String relatedObjectURI, String rdfClass, OntModel model,

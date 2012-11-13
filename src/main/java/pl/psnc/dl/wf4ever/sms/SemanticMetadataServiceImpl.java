@@ -31,6 +31,7 @@ import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.ResourceInfo;
 import pl.psnc.dl.wf4ever.common.UserProfile;
+import pl.psnc.dl.wf4ever.common.util.SafeURI;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -1765,7 +1766,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     @Override
     public Annotation findAnnotationForBody(ResearchObject researchObject, URI body) {
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
-        Resource bodyR = manifestModel.createResource(body.toString());
+        Resource bodyR = manifestModel.createResource(SafeURI.URItoString(body));
         StmtIterator it = manifestModel.listStatements(null, AO.body, bodyR);
         if (!it.hasNext()) {
             return null;
