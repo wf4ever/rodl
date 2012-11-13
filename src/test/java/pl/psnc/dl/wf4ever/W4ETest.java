@@ -72,6 +72,7 @@ public class W4ETest extends JerseyTest {
     protected String createClient(String clientName) {
         ClientResponse response = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, clientName + "\r\n" + clientRedirectionURI);
+        Assert.assertEquals(HttpStatus.SC_CREATED, response.getStatus());
         String clientId = response.getLocation().resolve(".").relativize(response.getLocation()).toString();
         response.close();
         return clientId;
@@ -146,7 +147,8 @@ public class W4ETest extends JerseyTest {
 
 
     protected void deleteUser(String userIdSafe) {
-        webResource.path("users/" + userIdSafe).header("Authorization", "Bearer " + adminCreds).delete();
+        webResource.path("users/" + userIdSafe).header("Authorization", "Bearer " + adminCreds)
+                .delete(ClientResponse.class).close();
     }
 
 
