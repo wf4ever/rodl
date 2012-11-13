@@ -142,6 +142,7 @@ public final class ROSRService {
         if (type == EvoType.LIVE) {
             generateEvoInfo(researchObject, null, EvoType.LIVE);
         }
+        researchObject.save();
         LOGGER.debug(String.format("%s\t\tcreate RO end", new DateTime().toString()));
         return researchObject.getUri();
     }

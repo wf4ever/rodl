@@ -200,7 +200,7 @@
 		<url>http://dl.psnc.pl/</url>
 	</organization>
 	<build>
-		<finalName>rodl-experimental</finalName>
+		<finalName>rodl</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

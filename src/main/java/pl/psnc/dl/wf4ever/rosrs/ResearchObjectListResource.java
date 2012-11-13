@@ -125,6 +125,7 @@ public class ResearchObjectListResource {
             throw new ConflictException("RO already exists");
         }
         researchObject = ResearchObject.create(uri);
+        researchObject.save();
         URI researchObjectURI = ROSRService.createResearchObject(researchObject);
         LOGGER.debug(String.format("%s\t\tRO created", new DateTime().toString()));
 
