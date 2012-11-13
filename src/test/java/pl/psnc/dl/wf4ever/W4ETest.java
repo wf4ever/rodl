@@ -196,4 +196,21 @@ public class W4ETest extends JerseyTest {
         return webResource.uri(roURI).header("Slug", folderPath).header("Authorization", "Bearer " + accessToken)
                 .type("application/vnd.wf4ever.folder").post(ClientResponse.class, is);
     }
+
+
+    /**
+     * Add a folder entry to a folder.
+     * 
+     * @param is
+     *            request entity
+     * @param folderUri
+     *            URI of the folder to which the entry will be added
+     * @param accessToken
+     *            RODL access token
+     * @return response from server
+     */
+    protected ClientResponse addFolderEntry(InputStream is, URI folderUri, String accessToken) {
+        return webResource.uri(folderUri).header("Authorization", "Bearer " + accessToken)
+                .type("application/vnd.wf4ever.folderentry").post(ClientResponse.class, is);
+    }
 }

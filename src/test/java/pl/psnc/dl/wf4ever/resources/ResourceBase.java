@@ -129,7 +129,7 @@ public class ResourceBase extends W4ETest {
      *            header values
      * @return Multimap, key is rel, values are URIs
      */
-    protected Multimap<String, URI> getLinkHeader(List<String> values) {
+    protected Multimap<String, URI> getLinkHeaders(List<String> values) {
         Multimap<String, URI> result = HashMultimap.<String, URI> create();
         Pattern uriPattern = Pattern.compile("\\s*<([^>]*)>\\s*");
         Pattern relPattern = Pattern.compile("\\s*rel\\s*=\\s*\"?(.*?)\"?\\s*$");
@@ -170,7 +170,7 @@ public class ResourceBase extends W4ETest {
             " <http://example.org/fie> ; par = fie ",
             " <http://example.org/fum> ; rel = \"http://example.org/rel/fum\" ",
             " <http://example.org/fas;far> ; rel = \"http://example.org/rel/fas\" ");
-        Multimap<String, URI> result = getLinkHeader(links);
+        Multimap<String, URI> result = getLinkHeaders(links);
         Assert.assertTrue(result.get("foo").contains(URI.create("http://example.org/foo")));
         Assert.assertTrue(result.get("bar").contains(URI.create("http://example.org/bar")));
         Assert.assertTrue(result.get("bas").contains(URI.create("http://example.org/bas")));

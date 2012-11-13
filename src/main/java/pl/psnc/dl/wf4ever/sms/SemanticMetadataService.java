@@ -694,7 +694,7 @@ public interface SemanticMetadataService {
      * If there is no root folder in the RO, the new folder will be the root folder of the RO.
      * 
      * @param researchObject
-     *            research object
+     *            RO
      * @param folder
      *            folder
      * @return an updated folder
@@ -730,13 +730,11 @@ public interface SemanticMetadataService {
     /**
      * Find a folder description.
      * 
-     * @param researchObject
-     *            research object which aggregates the folder
      * @param folderURI
      *            folder URI
      * @return a folder instance or null if not found
      */
-    Folder getFolder(ResearchObject researchObject, URI folderURI);
+    Folder getFolder(URI folderURI);
 
 
     /**
@@ -745,10 +743,10 @@ public interface SemanticMetadataService {
      * 
      * Note that the URIs are immutable. Subject to update are: list of folder entries, names of folder entries.
      * 
-     * @param researchObject
      * @param folder
+     *            the new folder
      */
-    void updateFolder(ResearchObject researchObject, Folder folder);
+    void updateFolder(Folder folder);
 
 
     /**
@@ -759,4 +757,5 @@ public interface SemanticMetadataService {
      * @return root folder or null if not defined
      */
     Folder getRootFolder(ResearchObject researchObject);
+
 }

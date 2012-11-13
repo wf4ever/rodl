@@ -356,11 +356,12 @@ public class Resource {
     public Response addFolderEntry(InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
-        ResearchObject researchObject = ResearchObject.create(uri);
+        Folder folder = ROSRService.SMS.get().getFolder(uri);
 
-        FolderEntry entry = ROSRService.assembleFolderEntry(researchObject, content);
+        FolderEntry entry = ROSRService.assembleFolderEntry(folder, content);
+        folder.getFolderEntries().add(entry);
+        ROSRService.SMS.get().updateFolder(folder);
 
-        return ROSRService.aggregateExternalResource(researchObject, entry.getProxyFor()).build();
+        return Response.created(entry.getUri()).build();
     }
-
 }

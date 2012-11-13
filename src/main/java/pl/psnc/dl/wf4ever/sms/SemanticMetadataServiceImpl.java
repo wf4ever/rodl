@@ -1602,6 +1602,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         if (ro == null) {
             throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
         }
+        folder.setAggregationUri(researchObject.getUri());
         Individual resource = manifestModel.createIndividual(folder.getUri().toString(), RO.Folder);
         resource.addRDFType(RO.Resource);
         manifestModel.add(ro, ORE.aggregates, resource);
@@ -1766,6 +1767,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    @Override
     public boolean addAnnotationBody(ResearchObject researchObject, URI graphURI, InputStream inputStream,
             RDFFormat rdfFormat) {
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
@@ -1811,21 +1813,38 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         if (r == null) {
             return null;
         } else {
-            return getFolder(researchObject, URI.create(r.getURI()));
+            return getFolder(URI.create(r.getURI()));
         }
     }
 
 
     @Override
-    public Folder getFolder(ResearchObject researchObject, URI folderURI) {
+    public Folder getFolder(URI folderURI) {
         Folder folder = new Folder();
         folder.setUri(folderURI);
         if (!containsNamedGraph(folder.getResourceMapUri())) {
             return null;
         }
-        URI proxyURI = getProxyForResource(researchObject, folder.getUri());
-        folder.setProxyUri(proxyURI);
         OntModel model = createOntModelForNamedGraph(folder.getResourceMapUri());
+        Individual folderI = model.getIndividual(folder.getUri().toString());
+        List<RDFNode> aggregations = folderI.listPropertyValues(ORE.isAggregatedBy).toList();
+        Individual ro = null;
+        for (RDFNode node : aggregations) {
+            if (node.isURIResource() && node.as(Individual.class).hasRDFType(RO.ResearchObject)) {
+                ro = node.as(Individual.class);
+                break;
+            }
+        }
+        // this would work if we turned inference on
+        //        ObjectProperty aggregatedByRO = model.createObjectProperty(RO.NAMESPACE.concat("aggregatedByRO"), true);
+        //        aggregatedByRO.addSuperProperty(ORE.isAggregatedBy);
+        //        aggregatedByRO.addRange(RO.ResearchObject);
+        //        Resource ro = folderI.getPropertyResourceValue(aggregatedByRO);
+        URI roURI = URI.create(ro.getURI());
+        folder.setAggregationUri(roURI);
+        URI proxyURI = getProxyForResource(ResearchObject.create(roURI), folder.getUri());
+        folder.setProxyUri(proxyURI);
+
         List<Individual> entries = model.listIndividuals(RO.FolderEntry).toList();
         for (Individual entryI : entries) {
             String proxyIn = entryI.getPropertyResourceValue(ORE.proxyIn).getURI();
@@ -1847,7 +1866,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     @Override
-    public void updateFolder(ResearchObject researchObject, Folder folder) {
+    public void updateFolder(Folder folder) {
         OntModel folderModel = createOntModelForNamedGraph(folder.getResourceMapUri());
         Individual folderInd = folderModel.createIndividual(folder.getUri().toString(), RO.Folder);
         List<Individual> entries = folderModel.listIndividuals(RO.FolderEntry).toList();

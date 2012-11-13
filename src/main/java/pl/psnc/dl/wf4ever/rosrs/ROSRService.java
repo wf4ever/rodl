@@ -992,19 +992,19 @@ public final class ROSRService {
     /**
      * Create a folder entry instance out of an RDF/XML description.
      * 
-     * @param researchObject
-     *            research object used as RDF base
+     * @param folder
+     *            folder used as RDF base
      * @param content
      *            RDF/XML folder description
      * @return a folder instance
      * @throws BadRequestException
      *             the folder description is incorrect
      */
-    public static FolderEntry assembleFolderEntry(ResearchObject researchObject, InputStream content)
+    public static FolderEntry assembleFolderEntry(Folder folder, InputStream content)
             throws BadRequestException {
         FolderEntry entry = new FolderEntry();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        model.read(content, researchObject.getUri().toString());
+        model.read(content, folder.getUri().toString());
         ExtendedIterator<Individual> it = model.listIndividuals(RO.FolderEntry);
         if (it.hasNext()) {
             Individual entryI = it.next();
@@ -1026,6 +1026,8 @@ public final class ROSRService {
             RDFNode entryName = entryI.getPropertyValue(RO.entryName);
             if (entryName == null) {
                 entry.setEntryName(FolderEntry.generateEntryName(entry.getProxyFor()));
+            } else {
+                entry.setEntryName(entryName.asLiteral().getString());
             }
         } else {
             throw new BadRequestException("The entity body does not define any ro:FolderEntry.");

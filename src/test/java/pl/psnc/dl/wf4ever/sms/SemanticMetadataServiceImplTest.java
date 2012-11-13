@@ -1438,9 +1438,10 @@ public class SemanticMetadataServiceImplTest {
 
             Folder folder2 = sms.addFolder(researchObject, folder);
 
-            Folder folder3 = sms.getFolder(researchObject, folder2.getUri());
+            Folder folder3 = sms.getFolder(folder2.getUri());
             Assert.assertEquals(folder2.getUri(), folder3.getUri());
             Assert.assertEquals(folder2.getProxyUri(), folder3.getProxyUri());
+            Assert.assertEquals(folder2.getAggregationUri(), folder3.getAggregationUri());
             Assert.assertEquals(folder2.getResourceMapUri(), folder3.getResourceMapUri());
             Assert.assertEquals(folder2.getFolderEntries().size(), folder3.getFolderEntries().size());
             for (FolderEntry entry : folder3.getFolderEntries()) {
@@ -1469,7 +1470,7 @@ public class SemanticMetadataServiceImplTest {
             folder.getFolderEntries().add(new FolderEntry(resourceFakeURI, "a resource"));
 
             Folder folder2 = sms.addFolder(researchObject, folder);
-            Folder folder3 = sms.getFolder(researchObject, folder2.getUri());
+            Folder folder3 = sms.getFolder(folder2.getUri());
 
             FolderEntry entry1 = folder2.getFolderEntries().get(0);
             FolderEntry entry2 = folder2.getFolderEntries().get(1);
@@ -1478,11 +1479,12 @@ public class SemanticMetadataServiceImplTest {
             FolderEntry entry3 = new FolderEntry(workflow2URI, "workflow2");
             folder2.getFolderEntries().add(entry3);
 
-            sms.updateFolder(researchObject, folder2);
+            sms.updateFolder(folder2);
 
-            Folder folder4 = sms.getFolder(researchObject, folder2.getUri());
+            Folder folder4 = sms.getFolder(folder2.getUri());
             Assert.assertEquals(folder3.getUri(), folder4.getUri());
             Assert.assertEquals(folder3.getProxyUri(), folder4.getProxyUri());
+            Assert.assertEquals(folder3.getAggregationUri(), folder4.getAggregationUri());
             Assert.assertEquals(folder3.getResourceMapUri(), folder4.getResourceMapUri());
             Assert.assertEquals(folder3.getFolderEntries().size(), folder4.getFolderEntries().size());
             for (FolderEntry entry : folder4.getFolderEntries()) {
