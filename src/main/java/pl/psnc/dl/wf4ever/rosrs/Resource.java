@@ -362,6 +362,11 @@ public class Resource {
         folder.getFolderEntries().add(entry);
         ROSRService.SMS.get().updateFolder(folder);
 
-        return Response.created(entry.getUri()).build();
+        return Response
+                .created(entry.getUri())
+                .header(
+                    "Link",
+                    String.format(Constants.LINK_HEADER_TEMPLATE, entry.getProxyFor(),
+                        "http://www.openarchives.org/ore/terms/proxyFor")).build();
     }
 }
