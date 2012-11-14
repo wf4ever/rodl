@@ -59,6 +59,7 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.query.ResultSetFormatter;
+import com.hp.hpl.jena.query.Syntax;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -96,6 +97,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     private final Connection connection;
 
     private final UserMetadata user;
+    private static final Syntax SPARQL_SYNTAX = Syntax.syntaxARQ;
 
 
     public SemanticMetadataServiceImpl(UserMetadata user)
@@ -118,7 +120,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             this.connection = null;
             graphset = new NamedGraphSetImpl();
         }
-        W4E.defaultModel.setNsPrefixes(W4E.standardNamespaces);
+        W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
         createUserProfile(user);
     }
 
@@ -129,7 +131,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         this.connection = null;
 
         graphset = new NamedGraphSetImpl();
-        W4E.defaultModel.setNsPrefixes(W4E.standardNamespaces);
+        W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
         createUserProfile(userMetadata);
 
         createResearchObject(researchObject);
@@ -530,7 +532,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         NamedGraph namedGraph = getOrCreateGraph(graphset, namedGraphURI);
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM,
             ModelFactory.createModelForGraph(namedGraph));
-        ontModel.addSubModel(W4E.defaultModel);
+        ontModel.addSubModel(W4E.DEFAULT_MODEL);
         return ontModel;
     }
 
@@ -643,7 +645,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
     private OntModel createOntModelForAllNamedGraphs(OntModelSpec spec) {
         OntModel ontModel = ModelFactory.createOntologyModel(spec, graphset.asJenaModel("sms"));
-        ontModel.addSubModel(W4E.defaultModel);
+        ontModel.addSubModel(W4E.DEFAULT_MODEL);
         return ontModel;
     }
 
@@ -682,7 +684,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             throw new NullPointerException("Query cannot be null");
         Query query = null;
         try {
-            query = QueryFactory.create(queryS, W4E.sparqlSyntax);
+            query = QueryFactory.create(queryS, SPARQL_SYNTAX);
         } catch (Exception e) {
             throw new IllegalArgumentException("Wrong query syntax: " + e.getMessage());
         }
