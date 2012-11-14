@@ -15,8 +15,8 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.ResourceInfo;
-import pl.psnc.dl.wf4ever.common.UserProfile;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -43,7 +43,7 @@ public interface SemanticMetadataService {
      * 
      * @return the user of the service
      */
-    UserProfile getUserProfile();
+    UserMetadata getUserProfile();
 
 
     /**
@@ -135,7 +135,7 @@ public interface SemanticMetadataService {
      *            resource metadata
      * @return true if a new resource is added, false if it existed
      */
-    boolean addResource(ResearchObject researchObject, URI resourceURI, ResourceInfo resourceInfo);
+    boolean addResource(ResearchObject researchObject, URI resourceURI, ResourceMetadata resourceInfo);
 
 
     /**

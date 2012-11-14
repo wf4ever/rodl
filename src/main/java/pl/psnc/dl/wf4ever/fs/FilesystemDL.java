@@ -27,14 +27,17 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.common.HibernateUtil;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.ResourceInfo;
 import pl.psnc.dl.wf4ever.common.UserProfile;
-import pl.psnc.dl.wf4ever.common.UserProfile.Role;
+import pl.psnc.dl.wf4ever.dao.ResourceInfoDAO;
+import pl.psnc.dl.wf4ever.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.DigitalPublication;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 
 import com.google.common.collect.Multimap;
 
@@ -52,9 +55,6 @@ public class FilesystemDL implements DigitalLibrary {
     /** base path under which the files will be stored. */
     private Path basePath;
 
-    /** signed in user. */
-    private UserProfile user;
-
 
     /**
      * Constructor.
@@ -64,26 +64,12 @@ public class FilesystemDL implements DigitalLibrary {
      * @param user
      *            user login
      */
-    public FilesystemDL(String basePath, UserProfile user) {
+    public FilesystemDL(String basePath, UserMetadata user) {
         if (basePath.endsWith("/")) {
             this.basePath = FileSystems.getDefault().getPath(basePath);
         } else {
             this.basePath = FileSystems.getDefault().getPath(basePath.concat("/"));
         }
-        this.user = user;
-    }
-
-
-    @Override
-    public UserProfile getUserProfile()
-            throws DigitalLibraryException, NotFoundException {
-        return user;
-    }
-
-
-    @Override
-    public UserProfile getUserProfile(String login) {
-        return UserProfile.findByLogin(login);
     }
 
 
@@ -116,7 +102,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public InputStream getZippedFolder(ResearchObject ro, String folder)
+    public InputStream getZippedFolder(DigitalPublication ro, String folder)
             throws DigitalLibraryException, NotFoundException {
         final Path roPath = getPath(ro, null);
         Path path = getPath(ro, folder);
@@ -166,7 +152,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public InputStream getFileContents(ResearchObject ro, String filePath)
+    public InputStream getFileContents(DigitalPublication ro, String filePath)
             throws DigitalLibraryException, NotFoundException {
         Path path = getPath(ro, filePath);
         try {
@@ -180,7 +166,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public boolean fileExists(ResearchObject ro, String filePath)
+    public boolean fileExists(DigitalPublication ro, String filePath)
             throws DigitalLibraryException {
         Path path = getPath(ro, filePath);
         return path.toFile().exists();
@@ -188,7 +174,8 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public ResourceInfo createOrUpdateFile(ResearchObject ro, String filePath, InputStream inputStream, String mimeType)
+    public ResourceInfo createOrUpdateFile(DigitalPublication ro, String filePath, InputStream inputStream,
+            String mimeType)
             throws DigitalLibraryException {
         Path path = getPath(ro, filePath);
         try {
@@ -198,9 +185,10 @@ public class FilesystemDL implements DigitalLibrary {
             String md5 = DigestUtils.md5Hex(fis);
 
             DateTime lastModified = new DateTime(Files.getLastModifiedTime(path).toMillis());
-            ResourceInfo res = ResourceInfo.create(path.toString(), path.getFileName().toString(), md5,
-                Files.size(path), "MD5", lastModified, mimeType);
-            res.save();
+            ResourceInfoDAO dao = new ResourceInfoDAO();
+            ResourceInfo res = dao.create(path.toString(), path.getFileName().toString(), md5, Files.size(path), "MD5",
+                lastModified, mimeType);
+            dao.save(res);
             HibernateUtil.getSessionFactory().getCurrentSession().flush();
             return res;
         } catch (IOException e) {
@@ -210,20 +198,22 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public ResourceInfo getFileInfo(ResearchObject ro, String filePath) {
+    public ResourceInfo getFileInfo(DigitalPublication ro, String filePath) {
         Path path = getPath(ro, filePath);
-        return ResourceInfo.findByPath(path.toString());
+        ResourceInfoDAO dao = new ResourceInfoDAO();
+        return dao.findByPath(path.toString());
     }
 
 
     @Override
-    public void deleteFile(ResearchObject ro, String filePath)
+    public void deleteFile(DigitalPublication ro, String filePath)
             throws DigitalLibraryException {
         Path path = getPath(ro, filePath);
         try {
             Files.delete(path);
-            ResourceInfo res = ResourceInfo.findByPath(path.toString());
-            res.delete();
+            ResourceInfoDAO dao = new ResourceInfoDAO();
+            ResourceInfo res = dao.findByPath(path.toString());
+            dao.delete(res);
             HibernateUtil.getSessionFactory().getCurrentSession().flush();
         } catch (IOException e) {
             throw new DigitalLibraryException(e);
@@ -242,7 +232,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public void createResearchObject(ResearchObject ro, InputStream mainFileContent, String mainFilePath,
+    public void createResearchObject(DigitalPublication ro, InputStream mainFileContent, String mainFilePath,
             String mainFileMimeType)
             throws DigitalLibraryException, ConflictException {
         if (fileExists(ro, mainFilePath)) {
@@ -253,7 +243,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public void deleteResearchObject(ResearchObject ro)
+    public void deleteResearchObject(DigitalPublication ro)
             throws DigitalLibraryException, NotFoundException {
         Path path = getPath(ro, null);
         try {
@@ -301,42 +291,52 @@ public class FilesystemDL implements DigitalLibrary {
         if (userExists(login)) {
             return false;
         }
-        UserProfile user2 = UserProfile.create(login, username, role);
-        user2.save();
+        UserProfileDAO dao = new UserProfileDAO();
+        UserProfile user2 = dao.create(login, username, role);
+        dao.save(user2);
         HibernateUtil.getSessionFactory().getCurrentSession().flush();
         return true;
     }
 
 
     @Override
+    public UserMetadata getUserProfile(String login) {
+        UserProfileDAO dao = new UserProfileDAO();
+        return dao.findByLogin(login);
+    }
+
+
+    @Override
     public boolean userExists(String userId)
             throws DigitalLibraryException {
-        return UserProfile.findByLogin(userId) != null;
+        UserProfileDAO dao = new UserProfileDAO();
+        return dao.findByLogin(userId) != null;
     }
 
 
     @Override
     public void deleteUser(String userId)
             throws DigitalLibraryException, NotFoundException {
-        UserProfile user2 = UserProfile.findByLogin(userId);
+        UserProfileDAO dao = new UserProfileDAO();
+        UserProfile user2 = dao.findByLogin(userId);
         if (user2 == null) {
             throw new NotFoundException("user not found");
         } else {
-            user2.delete();
+            dao.delete(user2);
             HibernateUtil.getSessionFactory().getCurrentSession().flush();
         }
     }
 
 
     @Override
-    public InputStream getZippedResearchObject(ResearchObject ro)
+    public InputStream getZippedResearchObject(DigitalPublication ro)
             throws DigitalLibraryException, NotFoundException {
         return getZippedFolder(ro, ".");
     }
 
 
     @Override
-    public void storeAttributes(ResearchObject ro, Multimap<URI, Object> roAttributes)
+    public void storeAttributes(DigitalPublication ro, Multimap<URI, Object> roAttributes)
             throws NotFoundException, DigitalLibraryException {
         // TODO Auto-generated method stub
 
@@ -352,7 +352,7 @@ public class FilesystemDL implements DigitalLibrary {
      *            path or null
      * @return filesystem path
      */
-    private Path getPath(ResearchObject ro, String resourcePath) {
+    private Path getPath(DigitalPublication ro, String resourcePath) {
         Path path = basePath;
         if (ro.getUri().getHost() != null) {
             path = path.resolve(ro.getUri().getHost());

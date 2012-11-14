@@ -23,14 +23,14 @@ import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.HibernateUtil;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.ResourceInfo;
-import pl.psnc.dl.wf4ever.common.UserProfile;
-import pl.psnc.dl.wf4ever.common.UserProfile.Role;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 
 /**
  * @author piotrek
@@ -38,10 +38,10 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
  */
 public class FlowTests {
 
-    private static final UserProfile ADMIN = UserProfile.create("wfadmin", "John Doe", Role.ADMIN);
+    private static final UserMetadata ADMIN = new UserMetadata("wfadmin", "John Doe", Role.ADMIN);
 
-    private static final UserProfile USER = UserProfile.create("test-" + new Date().getTime(), "test user",
-        Role.AUTHENTICATED);
+    private static final UserMetadata USER = new UserMetadata("test-" + new Date().getTime(), "test user",
+            Role.AUTHENTICATED);
 
     private DigitalLibrary dl;
 
@@ -246,7 +246,7 @@ public class FlowTests {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         try {
             InputStream f = file.open();
-            ResourceInfo r1 = dl.createOrUpdateFile(ro, file.path, f, file.mimeType);
+            ResourceMetadata r1 = dl.createOrUpdateFile(ro, file.path, f, file.mimeType);
             f.close();
             assertNotNull(r1);
         } finally {
@@ -276,7 +276,7 @@ public class FlowTests {
             throws DigitalLibraryException, IOException, NotFoundException, AccessDeniedException {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         try {
-            ResourceInfo r1 = dl.createOrUpdateFile(ro, path, new ByteArrayInputStream(new byte[0]), "text/plain");
+            ResourceMetadata r1 = dl.createOrUpdateFile(ro, path, new ByteArrayInputStream(new byte[0]), "text/plain");
             assertNotNull(r1);
         } finally {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();

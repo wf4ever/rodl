@@ -26,13 +26,13 @@ import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.HibernateUtil;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.UserProfile;
-import pl.psnc.dl.wf4ever.common.UserProfile.Role;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -49,10 +49,10 @@ public class BasicTest {
 
     private static final String MAIN_FILE_PATH = "mainFile.txt";
 
-    private static final UserProfile ADMIN = UserProfile.create("wfadmin", "John Doe", Role.ADMIN);
+    private static final UserMetadata ADMIN = new UserMetadata("wfadmin", "John Doe", Role.ADMIN);
 
-    private static final UserProfile USER = UserProfile.create("test-" + new Date().getTime(), "test user",
-        Role.AUTHENTICATED);
+    private static final UserMetadata USER = new UserMetadata("test-" + new Date().getTime(), "test user",
+            Role.AUTHENTICATED);
 
     private static final URI RO_URI = URI.create("http://example.org/ROs/foobar/");
 
@@ -137,7 +137,7 @@ public class BasicTest {
         assertTrue(dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName()));
         assertFalse(dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName()));
         DigitalLibrary dl = new FilesystemDL(BASE, USER);
-        UserProfile user = dl.getUserProfile();
+        UserMetadata user = dl.getUserProfile(USER.getLogin());
         Assert.assertEquals("User login is equal", USER.getLogin(), user.getLogin());
         Assert.assertEquals("User name is equal", USER.getName(), user.getName());
     }

@@ -30,6 +30,7 @@ import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
 
@@ -149,12 +150,14 @@ public class UserResource {
      *             error storing user profile in SMS
      * @throws ClassNotFoundException
      *             error storing user profile in SMS
+     * @throws pl.psnc.dl.wf4ever.dl.NotFoundException
+     *             not found
      */
     @PUT
     @Consumes("text/plain")
     public Response createUser(@PathParam("U_ID") String urlSafeUserId, String username)
             throws DigitalLibraryException, ConflictException, ClassNotFoundException, IOException, NamingException,
-            SQLException {
+            SQLException, pl.psnc.dl.wf4ever.dl.NotFoundException {
         String userId = new String(Base64.decodeBase64(urlSafeUserId));
 
         try {
@@ -168,8 +171,8 @@ public class UserResource {
             username != null && !username.isEmpty() ? username : userId);
         UserCredentials creds = new UserCredentials(userId, password);
         creds.save();
-        SemanticMetadataServiceFactory.getService(
-            UserProfile.create(userId, username != null && !username.isEmpty() ? username : userId, null)).close();
+        UserMetadata user = ROSRService.DL.get().getUserProfile(userId);
+        SemanticMetadataServiceFactory.getService(user).close();
 
         if (created) {
             return Response.created(uriInfo.getAbsolutePath()).build();

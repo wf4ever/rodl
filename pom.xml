@@ -41,12 +41,12 @@
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
 			<artifactId>rosrs-dlibra</artifactId>
-			<version>1.2.3</version>
+			<version>1.2.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
 			<artifactId>rodl-common</artifactId>
-			<version>0.3.2</version>
+			<version>0.3.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
@@ -188,11 +188,6 @@
 			<artifactId>jersey-test-framework-grizzly2</artifactId>
 			<version>${jersey.version}</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-server-linking</artifactId>
-			<version>${jersey.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>de.fuberlin.wiwss.ng4j</groupId>

@@ -50,10 +50,6 @@
 			<param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
 			<param-value>pl.psnc.dl.wf4ever.auth.ResourceCloseFilter</param-value>
 		</init-param>
-		<init-param>
-			<param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
-			<param-value>com.sun.jersey.server.linking.LinkFilter</param-value>
-		</init-param>
 	</filter>
 
 	<filter-mapping>

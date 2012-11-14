@@ -36,9 +36,9 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.HibernateUtil;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.ResourceInfo;
-import pl.psnc.dl.wf4ever.common.UserProfile;
-import pl.psnc.dl.wf4ever.common.UserProfile.Role;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -94,7 +94,7 @@ public class SemanticMetadataServiceImplTest {
 
     private static ResearchObject wrongResearchObjectURI;
 
-    private static UserProfile userProfile;
+    private static UserMetadata userProfile;
 
     private final static URI workflowURI = URI.create("http://example.org/ROs/ro1/a%20workflow.t2flow");
 
@@ -103,15 +103,15 @@ public class SemanticMetadataServiceImplTest {
 
     private final static URI workflow2URI = URI.create("http://example.org/ROs/ro2/runme.t2flow");
 
-    private static ResourceInfo workflowInfo;
+    private static ResourceMetadata workflowInfo;
 
     private final static URI ann1URI = URI.create("http://example.org/ROs/ro1/ann1");
 
-    private static ResourceInfo ann1Info;
+    private static ResourceMetadata ann1Info;
 
     private final static URI resourceFakeURI = URI.create("http://example.org/ROs/ro1/xyz");
 
-    private static ResourceInfo resourceFakeInfo;
+    private static ResourceMetadata resourceFakeInfo;
 
     private final static URI FOLDER_URI = URI.create("http://example.org/ROs/ro1/afolder/");
 
@@ -136,11 +136,11 @@ public class SemanticMetadataServiceImplTest {
         snapshotResearchObjectURI = ResearchObject.create(URI.create("http://example.org/ROs/sp1/"));
         archiveResearchObjectURI = ResearchObject.create(URI.create("http://example.org/ROs/arch1/"));
         wrongResearchObjectURI = ResearchObject.create(URI.create("http://wrong.example.org/ROs/wrongRo/"));
-        userProfile = UserProfile.create("jank", "Jan Kowalski", Role.AUTHENTICATED);
-        workflowInfo = ResourceInfo.create("a%20workflow.t2flow", "a%20workflow.t2flow", "ABC123455666344E", 646365L,
-            "SHA1", null, "application/vnd.taverna.t2flow+xml");
-        ann1Info = ResourceInfo.create("ann1", "ann1", "A0987654321EDCB", 6L, "MD5", null, "application/rdf+xml");
-        resourceFakeInfo = ResourceInfo.create("xyz", "xyz", "A0987654321EDCB", 6L, "MD5", null, "text/plain");
+        userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED);
+        workflowInfo = new ResourceMetadata("a%20workflow.t2flow", "a%20workflow.t2flow", "ABC123455666344E", 646365L,
+                "SHA1", null, "application/vnd.taverna.t2flow+xml");
+        ann1Info = new ResourceMetadata("ann1", "ann1", "A0987654321EDCB", 6L, "MD5", null, "application/rdf+xml");
+        resourceFakeInfo = new ResourceMetadata("xyz", "xyz", "A0987654321EDCB", 6L, "MD5", null, "text/plain");
     }
 
 
@@ -591,11 +591,11 @@ public class SemanticMetadataServiceImplTest {
 
     /**
      * @param model
-     * @param resourceInfo
+     * @param ann1Info2
      * @param resourceURI
      * @throws URISyntaxException
      */
-    private void verifyResource(SemanticMetadataService sms, OntModel model, URI resourceURI, ResourceInfo resourceInfo)
+    private void verifyResource(SemanticMetadataService sms, OntModel model, URI resourceURI, ResourceMetadata ann1Info2)
             throws URISyntaxException {
         Individual resource = model.getIndividual(resourceURI.toString());
         Assert.assertNotNull("Resource cannot be null", resource);
@@ -621,12 +621,12 @@ public class SemanticMetadataServiceImplTest {
         Literal nameLiteral = resource.getPropertyValue(RO.name).asLiteral();
         Assert.assertNotNull("Resource must contain ro:name", nameLiteral);
         Assert.assertEquals("Name type is xsd:string", XSDDatatype.XSDstring, nameLiteral.getDatatype());
-        Assert.assertEquals("Name is valid", resourceInfo.getName(), nameLiteral.asLiteral().getString());
+        Assert.assertEquals("Name is valid", ann1Info2.getName(), nameLiteral.asLiteral().getString());
 
         Literal filesizeLiteral = resource.getPropertyValue(RO.filesize).asLiteral();
         Assert.assertNotNull("Resource must contain ro:filesize", filesizeLiteral);
         Assert.assertEquals("Filesize type is xsd:long", XSDDatatype.XSDlong, filesizeLiteral.getDatatype());
-        Assert.assertEquals("Filesize is valid", resourceInfo.getSizeInBytes(), filesizeLiteral.asLiteral().getLong());
+        Assert.assertEquals("Filesize is valid", ann1Info2.getSizeInBytes(), filesizeLiteral.asLiteral().getLong());
 
         Resource checksumResource = resource.getPropertyValue(RO.checksum).asResource();
         Assert.assertNotNull("Resource must contain ro:checksum", checksumResource);
@@ -634,8 +634,8 @@ public class SemanticMetadataServiceImplTest {
         Pattern p = Pattern.compile("urn:(\\w+):([0-9a-fA-F]+)");
         Matcher m = p.matcher(checksumURN.toString());
         Assert.assertTrue("Checksum can be parsed", m.matches());
-        Assert.assertEquals("Digest method is correct", resourceInfo.getDigestMethod(), m.group(1));
-        Assert.assertEquals("Checksum is correct", resourceInfo.getChecksum(), m.group(2));
+        Assert.assertEquals("Digest method is correct", ann1Info2.getDigestMethod(), m.group(1));
+        Assert.assertEquals("Checksum is correct", ann1Info2.getChecksum(), m.group(2));
     }
 
 

@@ -12,6 +12,7 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
 import pl.psnc.dl.wf4ever.common.UserProfile;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 
 import com.sun.jersey.api.NotFoundException;
 
@@ -42,7 +43,7 @@ public class ClientResource {
      */
     @GET
     public OAuthClient getClient(@PathParam("C_ID") String clientId) {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
 
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage clients.");
@@ -60,7 +61,7 @@ public class ClientResource {
      */
     @DELETE
     public void deleteClient(@PathParam("C_ID") String clientId) {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
 
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage clients.");

@@ -29,9 +29,9 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.ResourceInfo;
-import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -95,16 +95,16 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
     private final Connection connection;
 
-    private final UserProfile user;
+    private final UserMetadata user;
 
 
-    public SemanticMetadataServiceImpl(UserProfile user)
+    public SemanticMetadataServiceImpl(UserMetadata user)
             throws IOException, NamingException, SQLException, ClassNotFoundException {
         this(user, true);
     }
 
 
-    public SemanticMetadataServiceImpl(UserProfile user, boolean useDb)
+    public SemanticMetadataServiceImpl(UserMetadata user, boolean useDb)
             throws IOException, NamingException, SQLException, ClassNotFoundException {
         this.user = user;
 
@@ -123,26 +123,26 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
-    public SemanticMetadataServiceImpl(UserProfile user, ResearchObject researchObject, InputStream manifest,
+    public SemanticMetadataServiceImpl(UserMetadata userMetadata, ResearchObject researchObject, InputStream manifest,
             RDFFormat rdfFormat) {
-        this.user = user;
+        this.user = userMetadata;
         this.connection = null;
 
         graphset = new NamedGraphSetImpl();
         W4E.defaultModel.setNsPrefixes(W4E.standardNamespaces);
-        createUserProfile(user);
+        createUserProfile(userMetadata);
 
         createResearchObject(researchObject);
         updateManifest(researchObject, manifest, rdfFormat);
     }
 
 
-    private void createUserProfile(UserProfile user) {
-        if (!containsNamedGraph(user.getUri())) {
-            OntModel userModel = createOntModelForNamedGraph(user.getUri());
+    private void createUserProfile(UserMetadata user2) {
+        if (!containsNamedGraph(user2.getUri())) {
+            OntModel userModel = createOntModelForNamedGraph(user2.getUri());
             userModel.removeAll();
-            Individual agent = userModel.createIndividual(user.getUri().toString(), FOAF.Agent);
-            userModel.add(agent, FOAF.name, user.getName());
+            Individual agent = userModel.createIndividual(user2.getUri().toString(), FOAF.Agent);
+            userModel.add(agent, FOAF.name, user2.getName());
         }
     }
 
@@ -176,7 +176,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     @Override
-    public UserProfile getUserProfile() {
+    public UserMetadata getUserProfile() {
         return user;
     }
 
@@ -310,7 +310,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     @Override
-    public boolean addResource(ResearchObject researchObject, URI resourceURI, ResourceInfo resourceInfo) {
+    public boolean addResource(ResearchObject researchObject, URI resourceURI, ResourceMetadata resourceInfo) {
         resourceURI = resourceURI.normalize();
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());

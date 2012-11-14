@@ -10,6 +10,7 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.AccessToken;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.common.UserProfile;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 
 import com.sun.jersey.api.NotFoundException;
 
@@ -35,7 +36,7 @@ public class AccessTokenResource {
      */
     @DELETE
     public void deletAccessToken(@PathParam("T_ID") String token) {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
 
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
