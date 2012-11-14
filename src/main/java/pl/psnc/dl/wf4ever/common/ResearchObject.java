@@ -69,7 +69,7 @@ public class ResearchObject extends ActiveRecord implements DigitalPublication {
      * @param uri
      *            RO URI
      */
-    protected ResearchObject(URI uri) {
+    public ResearchObject(URI uri) {
         this();
         setUri(uri.normalize());
     }

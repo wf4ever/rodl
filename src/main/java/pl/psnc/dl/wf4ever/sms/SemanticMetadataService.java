@@ -467,6 +467,23 @@ public interface SemanticMetadataService {
 
 
     /**
+     * Add an annotation to the research object.
+     * 
+     * @param researchObject
+     *            research object
+     * @param annotationTargets
+     *            a list of annotated resources
+     * @param annotationBody
+     *            the annotation body
+     * @param annotationUUID
+     *            annotation prefix
+     * @return URI of the annotation
+     */
+    URI addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody,
+            String annotationUUID);
+
+
+    /**
      * Update an existing annotation.
      * 
      * @param researchObject
@@ -625,9 +642,11 @@ public interface SemanticMetadataService {
      *            Old URI
      * @param newURI
      *            New URI
+     * @param withBodies
+     *            Change bodies in case of true, change only manifest otherwise
      * @return number of changed triples
      */
-    int changeURIInManifestAndAnnotationBodies(ResearchObject researchObject, URI oldURI, URI newURI);
+    int changeURIInManifestAndAnnotationBodies(ResearchObject researchObject, URI oldURI, URI newURI, Boolean withBodies);
 
 
     /**
@@ -749,5 +768,4 @@ public interface SemanticMetadataService {
      * @return root folder or null if not defined
      */
     Folder getRootFolder(ResearchObject researchObject);
-
 }
