@@ -69,6 +69,7 @@ import com.hp.hpl.jena.rdf.model.ResIterator;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.shared.JenaException;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 
 import de.fuberlin.wiwiss.ng4j.NamedGraph;
@@ -1414,9 +1415,21 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         Resource patternBody = patternSource.getProperty(AO.body).getResource();
         Resource comparedBody = comparedSource.getProperty(AO.body).getResource();
         OntModel patternModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        patternModel.read(patternBody.getURI());
+        RDFFormat patternFormat = RDFFormat.forFileName(patternBody.getURI(), RDFFormat.RDFXML);
+        try {
+            patternModel.read(patternBody.getURI(), patternBody.getURI(), patternFormat.getName().toUpperCase());
+        } catch (JenaException e) {
+            log.warn("Could not read annotation body " + patternBody.getURI() + ", assuming unchanged. ", e);
+            return true;
+        }
         OntModel comparedModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        comparedModel.read(comparedBody.getURI());
+        RDFFormat comparedFormat = RDFFormat.forFileName(comparedBody.getURI(), RDFFormat.RDFXML);
+        try {
+            comparedModel.read(comparedBody.getURI(), comparedBody.getURI(), comparedFormat.getName().toUpperCase());
+        } catch (JenaException e) {
+            log.warn("Could not read annotation body " + comparedBody.getURI() + ", assuming unchanged. ", e);
+            return true;
+        }
 
         List<Statement> patternList = patternModel.listStatements().toList();
         List<Statement> comparedList = comparedModel.listStatements().toList();
