@@ -646,6 +646,44 @@ public final class ROSRService {
 
 
     /**
+     * Add and aggregate a new annotation to the research object.
+     * 
+     * @param researchObject
+     *            the research object
+     * @param annotationBody
+     *            annotation body URI
+     * @param annotationTargets
+     *            list of annotated resources URIs
+     * @param annotationPrefix
+     *            the prefix of annotation URI
+     * @return 201 Created response
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
+    public static Response addAnnotation(ResearchObject researchObject, URI annotationBody,
+            List<URI> annotationTargets, String annotationPrefix)
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        URI annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody,
+            annotationPrefix);
+        // update the manifest that contains the annotation in dLibra
+        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+
+        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(), AO.body);
+        ResponseBuilder response = Response.created(annotation).header(Constants.LINK_HEADER, annotationBodyHeader);
+        for (URI target : annotationTargets) {
+            String targetHeader = String
+                    .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
+            response = response.header(Constants.LINK_HEADER, targetHeader);
+        }
+        return response.build();
+    }
+
+
+    /**
      * Update the annotation targets and the annotation body of an annotation. This method does not add/delete the
      * annotation body to the triplestore.
      * 
@@ -890,6 +928,10 @@ public final class ROSRService {
             researchObject.getUri().relativize(researchObject.getFixedEvolutionAnnotationBodyPath()).toString(),
             researchObject, researchObject.getFixedEvolutionAnnotationBodyPath());
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
-
+        if (parent != null) {
+            updateNamedGraphInDlibra(researchObject.getUri().relativize(parent.getFixedEvolutionAnnotationBodyPath())
+                    .toString(), parent, parent.getFixedEvolutionAnnotationBodyPath());
+            updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, parent, parent.getManifestUri());
+        }
     }
 }

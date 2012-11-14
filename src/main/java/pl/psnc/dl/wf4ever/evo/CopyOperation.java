@@ -84,6 +84,7 @@ public class CopyOperation implements Operation {
             }
             List<RDFNode> aggregatedResources = source.listPropertyValues(ORE.aggregates).toList();
             Map<URI, URI> changedURIs = new HashMap<>();
+            changedURIs.put(sourceRO.getManifestUri(), targetRO.getManifestUri());
             for (RDFNode aggregatedResource : aggregatedResources) {
                 if (Thread.interrupted()) {
                     try {
@@ -112,7 +113,13 @@ public class CopyOperation implements Operation {
                         targets.add(URI.create(annTarget.asResource().getURI()));
                     }
                     try {
-                        ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets);
+                        try {
+                            String[] tmpURITable = resource.getURI().split("/");
+                            ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets,
+                                tmpURITable[tmpURITable.length - 1]);
+                        } catch (IndexOutOfBoundsException e) {
+                            ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets);
+                        }
                     } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e1) {
                         LOGGER.error("Could not add the annotation", e1);
                     }
@@ -146,7 +153,10 @@ public class CopyOperation implements Operation {
                 }
             }
             for (Map.Entry<URI, URI> e : changedURIs.entrySet()) {
-                ROSRService.SMS.get().changeURIInManifestAndAnnotationBodies(targetRO, e.getKey(), e.getValue());
+                ROSRService.SMS.get().changeURIInManifestAndAnnotationBodies(targetRO, e.getKey(), e.getValue(), false);
+            }
+            for (Map.Entry<URI, URI> e : changedURIs.entrySet()) {
+                ROSRService.SMS.get().changeURIInManifestAndAnnotationBodies(targetRO, e.getKey(), e.getValue(), true);
             }
         } finally {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();

@@ -1076,7 +1076,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
             is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
             sms.addNamedGraph(annotationBody1URI, is, RDFFormat.TURTLE);
 
-            int cnt = sms.changeURIInManifestAndAnnotationBodies(researchObject, workflowURI, resourceFakeURI);
+            int cnt = sms.changeURIInManifestAndAnnotationBodies(researchObject, workflowURI, resourceFakeURI, true);
             // 1 aggregates, 1 ann target, 1 type, 2 dcterms, 1 proxy, 3 in ann body
             Assert.assertEquals("9 URIs should be changed", 9, cnt);
         } finally {

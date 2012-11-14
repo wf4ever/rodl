@@ -922,10 +922,17 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
     @Override
     public URI addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody) {
+        return addAnnotation(researchObject, annotationTargets, annotationBody, null);
+    }
+
+
+    @Override
+    public URI addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody,
+            String annotationUUID) {
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
         Resource researchObjectR = manifestModel.createResource(researchObject.getUri().toString());
         Resource body = manifestModel.createResource(annotationBody.normalize().toString());
-        URI annotationURI = generateAnnotationURI(researchObject);
+        URI annotationURI = generateAnnotationURI(researchObject, annotationUUID);
         Individual annotation = manifestModel.createIndividual(annotationURI.toString(), RO.AggregatedAnnotation);
         manifestModel.add(researchObjectR, ORE.aggregates, annotation);
         manifestModel.add(annotation, AO.body, body);
@@ -940,8 +947,16 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    private static URI generateAnnotationURI(ResearchObject researchObject, String uuid) {
+        if (uuid == null) {
+            uuid = UUID.randomUUID().toString();
+        }
+        return researchObject.getUri().resolve(".ro/annotations/" + uuid);
+    }
+
+
     private static URI generateAnnotationURI(ResearchObject researchObject) {
-        return researchObject.getUri().resolve(".ro/annotations/" + UUID.randomUUID());
+        return generateAnnotationURI(researchObject, null);
     }
 
 
@@ -1150,8 +1165,6 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         if (oldRO == null) {
             return "";
         }
-        Individual freshROIndividual = getIndividual(freshRO);
-        Individual oldROIndividual = getIndividual(oldRO);
 
         List<RDFNode> freshAggreagted = getAggregatedWithNoEvoAndBody(freshRO);
         List<RDFNode> oldAggreagted = getAggregatedWithNoEvoAndBody(oldRO);
@@ -1215,12 +1228,6 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
     private String generateRandomUriRelatedToResource(ResearchObject ro, String description) {
         return ro.getUri().resolve(description) + "/" + UUID.randomUUID().toString();
-    }
-
-
-    private List<RDFNode> removeChangesAnnotations(List<RDFNode> list, OntModel model, Individual individual) {
-        List<RDFNode> result = new ArrayList<RDFNode>();
-        return result;
     }
 
 
@@ -1406,9 +1413,9 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         Resource patternBody = patternSource.getProperty(AO.body).getResource();
         Resource comparedBody = comparedSource.getProperty(AO.body).getResource();
         OntModel patternModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        patternModel.read(patternBody.getURI(), "TTL");
+        patternModel.read(patternBody.getURI());
         OntModel comparedModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        comparedModel.read(comparedBody.getURI(), "TTL");
+        comparedModel.read(comparedBody.getURI());
 
         List<Statement> patternList = patternModel.listStatements().toList();
         List<Statement> comparedList = comparedModel.listStatements().toList();
@@ -1440,22 +1447,27 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     private Boolean isStatementInList(Statement statement, List<Statement> list, URI patternURI, URI comparedURI)
             throws URISyntaxException {
         for (Statement listStatement : list) {
-            if (compareRelativesURI(new URI(statement.getSubject().asResource().getURI()), new URI(listStatement
-                    .getSubject().asResource().getURI()), patternURI, comparedURI)) {
-                if (compareRelativesURI(new URI(statement.getPredicate().asResource().getURI()), new URI(listStatement
-                        .getPredicate().asResource().getURI()), patternURI, comparedURI)) {
-                    if (statement.getObject().isResource() && listStatement.getObject().isResource()) {
-                        if (compareRelativesURI(new URI(statement.getObject().asResource().getURI()), new URI(
-                                listStatement.getObject().asResource().getURI()), patternURI, comparedURI)) {
-                            return true;
+            try {
+                if (compareRelativesURI(new URI(statement.getSubject().asResource().getURI()), new URI(listStatement
+                        .getSubject().asResource().getURI()), patternURI, comparedURI)) {
+                    if (compareRelativesURI(new URI(statement.getPredicate().asResource().getURI()), new URI(
+                            listStatement.getPredicate().asResource().getURI()), patternURI, comparedURI)) {
+                        if (statement.getObject().isResource() && listStatement.getObject().isResource()) {
+                            if (compareRelativesURI(new URI(statement.getObject().asResource().getURI()), new URI(
+                                    listStatement.getObject().asResource().getURI()), patternURI, comparedURI)) {
+                                return true;
+                            }
                         }
-                    }
-                    if (listStatement.getObject().isLiteral() && statement.getObject().isLiteral()) {
-                        if (compareTwoLiterals(listStatement.getObject().asLiteral(), statement.getObject().asLiteral())) {
-                            return true;
+                        if (listStatement.getObject().isLiteral() && statement.getObject().isLiteral()) {
+                            if (compareTwoLiterals(listStatement.getObject().asLiteral(), statement.getObject()
+                                    .asLiteral())) {
+                                return true;
+                            }
                         }
                     }
                 }
+            } finally {
+                continue;
             }
         }
         return false;
@@ -1480,13 +1492,16 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     @Override
-    public int changeURIInManifestAndAnnotationBodies(ResearchObject researchObject, URI oldURI, URI newURI) {
+    public int changeURIInManifestAndAnnotationBodies(ResearchObject researchObject, URI oldURI, URI newURI,
+            Boolean withBodies) {
         int cnt = changeURIInNamedGraph(researchObject.getManifestUri(), oldURI, newURI);
-        OntModel model = createOntModelForNamedGraph(researchObject.getManifestUri());
-        List<RDFNode> bodies = model.listObjectsOfProperty(AO.body).toList();
-        for (RDFNode body : bodies) {
-            URI bodyURI = URI.create(body.asResource().getURI());
-            cnt += changeURIInNamedGraph(bodyURI, oldURI, newURI);
+        if (withBodies) {
+            OntModel model = createOntModelForNamedGraph(researchObject.getManifestUri());
+            List<RDFNode> bodies = model.listObjectsOfProperty(AO.body).toList();
+            for (RDFNode body : bodies) {
+                URI bodyURI = URI.create(body.asResource().getURI());
+                cnt += changeURIInNamedGraph(bodyURI, oldURI, newURI);
+            }
         }
         return cnt;
     }
@@ -1780,8 +1795,10 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         if (ro == null) {
             throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
         }
-        Resource resource = manifestModel.createResource(graphURI.toString());
+        Resource resource = manifestModel.createIndividual(graphURI.toString(), ORE.AggregatedResource);
         manifestModel.add(ro, ORE.aggregates, resource);
+        manifestModel.add(resource, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
+        manifestModel.add(resource, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
         return addNamedGraph(graphURI, inputStream, rdfFormat);
     }
 
