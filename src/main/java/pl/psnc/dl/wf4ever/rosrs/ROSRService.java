@@ -142,6 +142,7 @@ public final class ROSRService {
         if (type == EvoType.LIVE) {
             generateEvoInfo(researchObject, null, EvoType.LIVE);
         }
+        researchObject.save();
         LOGGER.debug(String.format("%s\t\tcreate RO end", new DateTime().toString()));
         return researchObject.getUri();
     }
@@ -307,7 +308,7 @@ public final class ROSRService {
     public static boolean isInternalResource(ResearchObject researchObject, URI resource)
             throws NotFoundException, DigitalLibraryException {
         String filePath = researchObject.getUri().relativize(resource).getPath();
-        return ROSRService.DL.get().fileExists(researchObject, filePath);
+        return !filePath.isEmpty() && ROSRService.DL.get().fileExists(researchObject, filePath);
     }
 
 
@@ -498,8 +499,11 @@ public final class ROSRService {
         if (resInfo == null) {
             resInfo = getResourceInfo(researchObject, resource, original);
         }
-        ContentDisposition cd = ContentDisposition.type(resInfo.getMimeType()).fileName(getFilename(resource)).build();
+        if (resInfo == null) {
+            throw new NotFoundException("Resource not found: " + resource);
+        }
         InputStream body = ROSRService.DL.get().getFileContents(researchObject, filePath);
+        ContentDisposition cd = ContentDisposition.type(resInfo.getMimeType()).fileName(getFilename(resource)).build();
         return Response.ok(body).type(resInfo.getMimeType()).header("Content-disposition", cd);
     }
 

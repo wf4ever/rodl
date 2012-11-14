@@ -256,10 +256,12 @@ public class Resource {
         }
 
         ResourceInfo resInfo = ROSRService.getResourceInfo(researchObject, resource, original);
-        ResponseBuilder rb = request.evaluatePreconditions(resInfo.getLastModified().toDate(),
-            new EntityTag(resInfo.getChecksum()));
-        if (rb != null) {
-            return rb.build();
+        if (resInfo != null) {
+            ResponseBuilder rb = request.evaluatePreconditions(resInfo.getLastModified().toDate(), new EntityTag(
+                    resInfo.getChecksum()));
+            if (rb != null) {
+                return rb.build();
+            }
         }
 
         ResponseBuilder builder = ROSRService.getInternalResource(researchObject, resource,

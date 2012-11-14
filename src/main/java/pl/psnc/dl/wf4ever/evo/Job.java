@@ -89,8 +89,8 @@ public class Job extends Thread {
     @Override
     public void run() {
         try {
-            ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary("wfadmin", "wfadmin!!!"));
             UserProfile smsUser = originalSMS.getUserProfile();
+            ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary(smsUser.getLogin()));
             ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(smsUser));
             for (Operation operation : operations) {
                 operation.execute(status);

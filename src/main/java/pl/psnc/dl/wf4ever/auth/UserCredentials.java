@@ -17,6 +17,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import pl.psnc.dl.wf4ever.common.ActiveRecord;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 
 /**
  * User credentials DAO.
@@ -31,9 +32,6 @@ public class UserCredentials extends ActiveRecord {
 
     /** id. */
     private static final long serialVersionUID = 7967488547563569388L;
-
-    /** A user credentials constant representing a request with no authentication information. */
-    public static final UserCredentials PUBLIC_USER = new UserCredentials("wf4ever_reader", "wf4ever_reader!!!");
 
     /** user id. */
     private String userId;
@@ -122,4 +120,13 @@ public class UserCredentials extends ActiveRecord {
         return findByPrimaryKey(UserCredentials.class, userId);
     }
 
+
+    public static UserCredentials getPublicUserCredentials() {
+        return new UserCredentials(DigitalLibraryFactory.getPublicUser(), DigitalLibraryFactory.getPublicPassword());
+    }
+
+
+    public static UserCredentials getAdminUserCredentials() {
+        return new UserCredentials(DigitalLibraryFactory.getAdminUser(), DigitalLibraryFactory.getAdminPassword());
+    }
 }
