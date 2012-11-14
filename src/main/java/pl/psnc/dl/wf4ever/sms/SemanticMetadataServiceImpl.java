@@ -642,8 +642,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     private OntModel createOntModelForAllNamedGraphs(OntModelSpec spec) {
-        OntModel ontModel = ModelFactory.createOntologyModel(spec,
-            graphset.asJenaModel(W4E.DEFAULT_NAMED_GRAPH_URI.toString()));
+        OntModel ontModel = ModelFactory.createOntologyModel(spec, graphset.asJenaModel("sms"));
         ontModel.addSubModel(W4E.defaultModel);
         return ontModel;
     }
@@ -1459,12 +1458,6 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             }
         }
         return false;
-    }
-
-
-    @Override
-    public String getDefaultManifestPath() {
-        return W4E.DEFAULT_MANIFEST_PATH;
     }
 
 

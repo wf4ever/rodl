@@ -606,14 +606,6 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Get the default path to the manifest of RO
-     * 
-     * @return default manifest path
-     */
-    String getDefaultManifestPath();
-
-
-    /**
      * Get individual of the resource object.
      * 
      * @param ro
