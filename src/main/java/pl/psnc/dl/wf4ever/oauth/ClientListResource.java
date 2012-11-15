@@ -22,6 +22,7 @@ import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
 import pl.psnc.dl.wf4ever.auth.OAuthClientList;
 import pl.psnc.dl.wf4ever.common.UserProfile;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 
 /**
  * OAuth client list REST API resource.
@@ -49,7 +50,7 @@ public class ClientListResource {
     @GET
     @Produces("text/xml")
     public OAuthClientList getClientList() {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
 
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
@@ -70,7 +71,7 @@ public class ClientListResource {
     @Consumes("text/plain")
     @Produces("text/plain")
     public Response createClient(String data) {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
 
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");

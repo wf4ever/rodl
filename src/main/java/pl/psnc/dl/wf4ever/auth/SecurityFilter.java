@@ -12,12 +12,12 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.sun.jersey.api.container.MappableContainerException;
@@ -52,7 +52,7 @@ public class SecurityFilter implements ContainerRequestFilter {
         try {
             UserCredentials creds = authenticate(request);
             DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(creds.getUserId());
-            UserProfile user = DigitalLibraryFactory.getUserProfile(dl);
+            UserMetadata user = DigitalLibraryFactory.getUserProfile(dl);
             if (user == null) {
                 throw new NotFoundException("User profile not found");
             }

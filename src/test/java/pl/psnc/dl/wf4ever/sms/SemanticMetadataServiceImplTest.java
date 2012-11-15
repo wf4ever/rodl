@@ -30,8 +30,8 @@ import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.ResourceInfo;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -456,11 +456,11 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
     /**
      * @param model
-     * @param resourceInfo
+     * @param ann1Info2
      * @param resourceURI
      * @throws URISyntaxException
      */
-    private void verifyResource(SemanticMetadataService sms, OntModel model, URI resourceURI, ResourceInfo resourceInfo)
+    private void verifyResource(SemanticMetadataService sms, OntModel model, URI resourceURI, ResourceMetadata ann1Info2)
             throws URISyntaxException {
         Individual resource = model.getIndividual(resourceURI.toString());
         Assert.assertNotNull("Resource cannot be null", resource);
@@ -486,12 +486,12 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Literal nameLiteral = resource.getPropertyValue(RO.name).asLiteral();
         Assert.assertNotNull("Resource must contain ro:name", nameLiteral);
         Assert.assertEquals("Name type is xsd:string", XSDDatatype.XSDstring, nameLiteral.getDatatype());
-        Assert.assertEquals("Name is valid", resourceInfo.getName(), nameLiteral.asLiteral().getString());
+        Assert.assertEquals("Name is valid", ann1Info2.getName(), nameLiteral.asLiteral().getString());
 
         Literal filesizeLiteral = resource.getPropertyValue(RO.filesize).asLiteral();
         Assert.assertNotNull("Resource must contain ro:filesize", filesizeLiteral);
         Assert.assertEquals("Filesize type is xsd:long", XSDDatatype.XSDlong, filesizeLiteral.getDatatype());
-        Assert.assertEquals("Filesize is valid", resourceInfo.getSizeInBytes(), filesizeLiteral.asLiteral().getLong());
+        Assert.assertEquals("Filesize is valid", ann1Info2.getSizeInBytes(), filesizeLiteral.asLiteral().getLong());
 
         Resource checksumResource = resource.getPropertyValue(RO.checksum).asResource();
         Assert.assertNotNull("Resource must contain ro:checksum", checksumResource);
@@ -499,8 +499,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Pattern p = Pattern.compile("urn:(\\w+):([0-9a-fA-F]+)");
         Matcher m = p.matcher(checksumURN.toString());
         Assert.assertTrue("Checksum can be parsed", m.matches());
-        Assert.assertEquals("Digest method is correct", resourceInfo.getDigestMethod(), m.group(1));
-        Assert.assertEquals("Checksum is correct", resourceInfo.getChecksum(), m.group(2));
+        Assert.assertEquals("Digest method is correct", ann1Info2.getDigestMethod(), m.group(1));
+        Assert.assertEquals("Checksum is correct", ann1Info2.getChecksum(), m.group(2));
     }
 
 
@@ -1075,26 +1075,26 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
             sms.updateManifest(researchObject, is, RDFFormat.TURTLE);
             is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
             sms.addNamedGraph(annotationBody1URI, is, RDFFormat.TURTLE);
-            int cnt = sms.changeURIInManifestAndAnnotationBodies(researchObject, workflowURI, resourceFakeURI);
-            // 1 aggregates, 1 ann target, 1 type, 2 dcterms, 3 in ann body
-            Assert.assertEquals("6 URIs should be changed", 9, cnt);
+            int cnt = sms.changeURIInManifestAndAnnotationBodies(researchObject, workflowURI, resourceFakeURI, true);
+            // 1 aggregates, 1 ann target, 1 type, 2 dcterms, 1 proxy, 3 in ann body
+            Assert.assertEquals("9 URIs should be changed", 9, cnt);
         } finally {
             sms.close();
         }
     }
 
 
+    /*
     @Test
-    public final void testChangeURIInManifestAndAnnotationBodies2()
+    public final void testChangeURIInManifestAndAnnotationBodies3()
             throws ClassNotFoundException, IOException, NamingException, SQLException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        testStructure.sms.addNamedGraph(annotationBody1URI, is, RDFFormat.TURTLE);
+        testStructure.sms.addNamedGraph(testStructure.messRO.getUri().resolve(".ro/ann1"), is, RDFFormat.TURTLE);
         int cnt = testStructure.sms.changeURIInManifestAndAnnotationBodies(testStructure.messRO, testStructure.messRO
-                .getUri().resolve("a%20workflow.t2flow"), URI.create("http://www.example.com/complete_new_uri"));
-        // 1 aggregates, 1 ann target, 1 type, 2 dcterms, 1 proxy, 3 in ann body
+                .getUri().resolve("a%20workflow.t2flow"), URI.create("http://www.example.com/complete_new_uri"), true);
         Assert.assertEquals("9 URIs should be changed", 9, cnt);
     }
-
+     */
 
     /**
      * SMS should be able to load Ontology.
@@ -1325,7 +1325,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      * Annotation should be found in easy way based on annotation body.
      */
     @Test
-<<<<<<< HEAD
     public void testGetFolder()
             throws ClassNotFoundException, IOException, NamingException, SQLException {
         Folder folder = new Folder();

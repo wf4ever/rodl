@@ -134,6 +134,9 @@ public class FolderTest extends ResourceBase {
         is = getClass().getClassLoader().getResourceAsStream("folderEntry.rdf");
         response = addFolderEntry(is, folderURI, accessToken);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        links = getLinkHeaders(response.getHeaders().get("Link"));
+        Assert.assertEquals(URI.create("https://sandbox/rodl/ROs/ro1/file2.txt"),
+            links.get("http://www.openarchives.org/ore/terms/proxyFor").iterator().next());
         response.close();
 
         response = webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken)

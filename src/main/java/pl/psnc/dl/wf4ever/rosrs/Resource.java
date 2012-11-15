@@ -31,10 +31,10 @@ import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.ResourceInfo;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
@@ -118,7 +118,7 @@ public class Resource {
             }
             ResponseBuilder builder = ROSRService.updateInternalResource(researchObject, resource, entity,
                 servletRequest.getContentType());
-            ResourceInfo resInfo = ROSRService.getResourceInfo(researchObject, resource, original);
+            ResourceMetadata resInfo = ROSRService.getResourceInfo(researchObject, resource, original);
             if (resInfo != null) {
                 CacheControl cache = new CacheControl();
                 cache.setMustRevalidate(true);
@@ -257,7 +257,7 @@ public class Resource {
             return Response.status(Status.SEE_OTHER).location(folder.getResourceMapUri(format)).build();
         }
 
-        ResourceInfo resInfo = ROSRService.getResourceInfo(researchObject, resource, original);
+        ResourceMetadata resInfo = ROSRService.getResourceInfo(researchObject, resource, original);
         if (resInfo != null) {
             ResponseBuilder rb = request.evaluatePreconditions(resInfo.getLastModified().toDate(), new EntityTag(
                     resInfo.getChecksum()));
@@ -362,6 +362,11 @@ public class Resource {
         folder.getFolderEntries().add(entry);
         ROSRService.SMS.get().updateFolder(folder);
 
-        return Response.created(entry.getUri()).build();
+        return Response
+                .created(entry.getUri())
+                .header(
+                    "Link",
+                    String.format(Constants.LINK_HEADER_TEMPLATE, entry.getProxyFor(),
+                        "http://www.openarchives.org/ore/terms/proxyFor")).build();
     }
 }

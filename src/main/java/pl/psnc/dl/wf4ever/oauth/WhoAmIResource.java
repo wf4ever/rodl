@@ -14,7 +14,8 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.AuthenticationException;
 import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.common.UserProfile;
-import pl.psnc.dl.wf4ever.common.UserProfile.Role;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
 
@@ -79,7 +80,7 @@ public class WhoAmIResource {
      * @return 200 OK with user metadata serialized in RDF
      */
     private Response getUser(RDFFormat rdfFormat) {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
         if (user.getRole() == Role.PUBLIC) {
             throw new AuthenticationException("Only authenticated users can use this resource", SecurityFilter.REALM);
         }

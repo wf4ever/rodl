@@ -21,9 +21,11 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.common.UserProfile;
+import pl.psnc.dl.wf4ever.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dlibra.helpers.DLibraDataSource;
 import pl.psnc.dl.wf4ever.fs.FilesystemDL;
 
@@ -74,6 +76,9 @@ public final class DigitalLibraryFactory {
     /** the user that theoretically is logged in to dLibra, a hack. */
     private static String dLibraUser;
 
+    /** user that is logged in. */
+    private static UserMetadata user;
+
 
     /**
      * Private constructor.
@@ -108,13 +113,14 @@ public final class DigitalLibraryFactory {
             }
         } else {
             LOGGER.debug("Creating a filesystem backend");
-            UserProfile user;
             if (userId.equals(DigitalLibraryFactory.getAdminUser())) {
                 user = UserProfile.ADMIN;
             } else if (userId.equals(DigitalLibraryFactory.getPublicUser())) {
                 user = UserProfile.PUBLIC;
             } else {
-                user = UserProfile.findByLogin(userId);
+                UserProfileDAO dao = new UserProfileDAO();
+                user = dao.findByLogin(userId);
+
             }
             return new FilesystemDL(filesystemBase, user);
         }
@@ -135,12 +141,12 @@ public final class DigitalLibraryFactory {
      * @throws NotFoundException
      *             user not found
      */
-    public static UserProfile getUserProfile(DigitalLibrary dl)
+    public static UserMetadata getUserProfile(DigitalLibrary dl)
             throws DigitalLibraryException, NotFoundException {
         if (dl instanceof DLibraDataSource) {
-            return dl.getUserProfile(dLibraUser);
+            return ((DLibraDataSource) dl).getUserProfile(dLibraUser);
         } else if (dl instanceof FilesystemDL) {
-            return dl.getUserProfile();
+            return user;
         }
         return null;
     }

@@ -18,7 +18,7 @@ import javax.naming.NamingException;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.common.UserProfile;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
 
@@ -58,7 +58,7 @@ public final class SemanticMetadataServiceFactory {
      * @throws SQLException
      *             could not create the SMS
      */
-    public static SemanticMetadataService getService(UserProfile user)
+    public static SemanticMetadataService getService(UserMetadata user)
             throws ClassNotFoundException, IOException, NamingException, SQLException {
         return new SemanticMetadataServiceImpl(user);
     }

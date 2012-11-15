@@ -19,11 +19,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.common.HibernateUtil;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.ResourceInfo;
-import pl.psnc.dl.wf4ever.common.UserProfile;
-import pl.psnc.dl.wf4ever.common.UserProfile.Role;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
@@ -44,7 +43,7 @@ public class SemanticMetadataServiceBaseTest {
 
     protected static ResearchObject wrongResearchObjectURI;
 
-    protected static UserProfile userProfile;
+    protected static UserMetadata userProfile;
 
     protected final static URI workflowURI = URI.create("http://example.org/ROs/ro1/a%20workflow.t2flow");
 
@@ -53,15 +52,15 @@ public class SemanticMetadataServiceBaseTest {
 
     protected final static URI workflow2URI = URI.create("http://example.org/ROs/ro2/runme.t2flow");
 
-    protected static ResourceInfo workflowInfo;
+    protected static ResourceMetadata workflowInfo;
 
     protected final static URI ann1URI = URI.create("http://example.org/ROs/ro1/ann1");
 
-    protected static ResourceInfo ann1Info;
+    protected static ResourceMetadata ann1Info;
 
     protected final static URI resourceFakeURI = URI.create("http://example.org/ROs/ro1/xyz");
 
-    protected static ResourceInfo resourceFakeInfo;
+    protected static ResourceMetadata resourceFakeInfo;
 
     protected final static URI FOLDER_URI = URI.create("http://example.org/ROs/ro1/afolder/");
 
@@ -80,17 +79,18 @@ public class SemanticMetadataServiceBaseTest {
     @BeforeClass
     public static void setUpBeforeClass()
             throws Exception {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        researchObject = ResearchObject.create(URI.create("http://example.org/ROs/ro1/"));
-        researchObject2URI = ResearchObject.create(URI.create("http://example.org/ROs/ro2/"));
-        snapshotResearchObjectURI = ResearchObject.create(URI.create("http://example.org/ROs/sp1/"));
-        archiveResearchObjectURI = ResearchObject.create(URI.create("http://example.org/ROs/arch1/"));
-        wrongResearchObjectURI = ResearchObject.create(URI.create("http://wrong.example.org/ROs/wrongRo/"));
-        userProfile = UserProfile.create("jank", "Jan Kowalski", Role.AUTHENTICATED);
-        workflowInfo = ResourceInfo.create("a%20workflow.t2flow", "a%20workflow.t2flow", "ABC123455666344E", 646365L,
-            "SHA1", null, "application/vnd.taverna.t2flow+xml");
-        ann1Info = ResourceInfo.create("ann1", "ann1", "A0987654321EDCB", 6L, "MD5", null, "application/rdf+xml");
-        resourceFakeInfo = ResourceInfo.create("xyz", "xyz", "A0987654321EDCB", 6L, "MD5", null, "text/plain");
+
+        researchObject = new ResearchObject(URI.create("http://example.org/ROs/ro1/"));
+        researchObject2URI = new ResearchObject(URI.create("http://example.org/ROs/ro2/"));
+        snapshotResearchObjectURI = new ResearchObject(URI.create("http://example.org/ROs/sp1/"));
+        archiveResearchObjectURI = new ResearchObject(URI.create("http://example.org/ROs/arch1/"));
+        wrongResearchObjectURI = new ResearchObject(URI.create("http://wrong.example.org/ROs/wrongRo/"));
+        userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED);
+        workflowInfo = new ResourceMetadata("a%20workflow.t2flow", "a%20workflow.t2flow", "ABC123455666344E", 646365L,
+                "SHA1", null, "application/vnd.taverna.t2flow+xml");
+        ann1Info = new ResourceMetadata("ann1", "ann1", "A0987654321EDCB", 6L, "MD5", null, "application/rdf+xml");
+        resourceFakeInfo = new ResourceMetadata("xyz", "xyz", "A0987654321EDCB", 6L, "MD5", null, "text/plain");
+
     }
 
 
@@ -101,7 +101,6 @@ public class SemanticMetadataServiceBaseTest {
     public static void tearDownAfterClass()
             throws Exception {
         cleanData();
-        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
     }
 
 
@@ -193,7 +192,6 @@ public class SemanticMetadataServiceBaseTest {
         public ResearchObject arch1;
         public ResearchObject wrongRO;
         public ResearchObject messRO;
-
         public SemanticMetadataService sms;
 
 
@@ -205,6 +203,7 @@ public class SemanticMetadataServiceBaseTest {
             arch1 = ResearchObject.create(getResourceURI("ro1-arch1/"));
             wrongRO = ResearchObject.create(getResourceURI("wrong-ro/"));
             messRO = ResearchObject.create(getResourceURI("mess-ro/"));
+
             File file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/ro1/.ro/manifest.ttl");
             FileInputStream is = new FileInputStream(file);
             sms = new SemanticMetadataServiceImpl(userProfile, ro1, is, RDFFormat.TURTLE);
@@ -244,14 +243,6 @@ public class SemanticMetadataServiceBaseTest {
             is = new FileInputStream(file);
             sms.addNamedGraph(wrongRO.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
 
-            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/wrong-ro/.ro/manifest.ttl");
-            is = new FileInputStream(file);
-            sms.createResearchObject(wrongRO);
-            sms.updateManifest(wrongRO, is, RDFFormat.TURTLE);
-            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/wrong-ro/.ro/evo_info.ttl");
-            is = new FileInputStream(file);
-            sms.addNamedGraph(wrongRO.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
-
             file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/mess-ro/.ro/manifest.ttl");
             is = new FileInputStream(file);
             sms.createResearchObject(messRO);
@@ -259,6 +250,7 @@ public class SemanticMetadataServiceBaseTest {
             file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/mess-ro/.ro/evo_info.ttl");
             is = new FileInputStream(file);
             sms.addNamedGraph(messRO.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
+
         }
     }
 

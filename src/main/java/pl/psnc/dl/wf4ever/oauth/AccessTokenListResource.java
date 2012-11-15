@@ -29,6 +29,7 @@ import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
 import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.common.UserProfile;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 
 /**
  * REST API access tokens resource.
@@ -65,9 +66,9 @@ public class AccessTokenListResource {
     @Produces("text/xml")
     public AccessTokenList getAccessTokenList(@QueryParam("client_id") String clientId,
             @QueryParam("user_id") String userId) {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
 
-        if (user.getRole() != UserProfile.Role.ADMIN) {
+        if (user.getRole() != UserMetadata.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
         }
         if (userId != null) {
@@ -95,7 +96,7 @@ public class AccessTokenListResource {
     @Produces("text/plain")
     public Response createAccessToken(String data)
             throws BadRequestException {
-        UserProfile user = (UserProfile) request.getAttribute(Constants.USER);
+        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
 
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");

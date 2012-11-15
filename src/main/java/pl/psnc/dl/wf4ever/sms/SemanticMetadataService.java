@@ -15,8 +15,8 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.ResourceInfo;
-import pl.psnc.dl.wf4ever.common.UserProfile;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -43,7 +43,7 @@ public interface SemanticMetadataService {
      * 
      * @return the user of the service
      */
-    UserProfile getUserProfile();
+    UserMetadata getUserProfile();
 
 
     /**
@@ -135,7 +135,7 @@ public interface SemanticMetadataService {
      *            resource metadata
      * @return true if a new resource is added, false if it existed
      */
-    boolean addResource(ResearchObject researchObject, URI resourceURI, ResourceInfo resourceInfo);
+    boolean addResource(ResearchObject researchObject, URI resourceURI, ResourceMetadata resourceInfo);
 
 
     /**
@@ -467,6 +467,23 @@ public interface SemanticMetadataService {
 
 
     /**
+     * Add an annotation to the research object.
+     * 
+     * @param researchObject
+     *            research object
+     * @param annotationTargets
+     *            a list of annotated resources
+     * @param annotationBody
+     *            the annotation body
+     * @param annotationUUID
+     *            annotation prefix
+     * @return URI of the annotation
+     */
+    URI addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody,
+            String annotationUUID);
+
+
+    /**
      * Update an existing annotation.
      * 
      * @param researchObject
@@ -606,14 +623,6 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Get the default path to the manifest of RO
-     * 
-     * @return default manifest path
-     */
-    String getDefaultManifestPath();
-
-
-    /**
      * Get individual of the resource object.
      * 
      * @param ro
@@ -633,9 +642,11 @@ public interface SemanticMetadataService {
      *            Old URI
      * @param newURI
      *            New URI
+     * @param withBodies
+     *            Change bodies in case of true, change only manifest otherwise
      * @return number of changed triples
      */
-    int changeURIInManifestAndAnnotationBodies(ResearchObject researchObject, URI oldURI, URI newURI);
+    int changeURIInManifestAndAnnotationBodies(ResearchObject researchObject, URI oldURI, URI newURI, Boolean withBodies);
 
 
     /**
@@ -757,5 +768,4 @@ public interface SemanticMetadataService {
      * @return root folder or null if not defined
      */
     Folder getRootFolder(ResearchObject researchObject);
-
 }

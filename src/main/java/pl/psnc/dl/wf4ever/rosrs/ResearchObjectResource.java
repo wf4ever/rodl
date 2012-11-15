@@ -31,10 +31,10 @@ import org.openrdf.rio.RDFFormat;
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.ResourceInfo;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -197,7 +197,7 @@ public class ResearchObjectResource {
             if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
                 ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
             }
-            ResourceInfo resInfo = ROSRService.getResourceInfo(researchObject, resource, null);
+            ResourceMetadata resInfo = ROSRService.getResourceInfo(researchObject, resource, null);
             if (resInfo != null) {
                 CacheControl cache = new CacheControl();
                 cache.setMustRevalidate(true);

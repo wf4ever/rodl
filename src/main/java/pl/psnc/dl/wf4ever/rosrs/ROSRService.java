@@ -29,12 +29,12 @@ import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.ResourceInfo;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -215,7 +215,7 @@ public final class ROSRService {
             resource = resource.resolve(original);
         }
         String filePath = researchObject.getUri().relativize(resource).getPath();
-        ResourceInfo resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject, filePath, entity,
+        ResourceMetadata resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject, filePath, entity,
             contentType != null ? contentType : "text/plain");
         ROSRService.SMS.get().addResource(researchObject, resource, resourceInfo);
         // update the manifest that describes the resource in dLibra
@@ -407,7 +407,7 @@ public final class ROSRService {
             updateNamedGraphInDlibra(filePath, researchObject, resource);
             updateROAttributesInDlibra(researchObject);
         } else {
-            ResourceInfo resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject, filePath,
+            ResourceMetadata resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject, filePath,
                 new ByteArrayInputStream(entity.getBytes()), contentType != null ? contentType : "text/plain");
             ROSRService.SMS.get().addResource(researchObject, resource, resourceInfo);
             // update the manifest that describes the resource in dLibra
@@ -438,7 +438,7 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static ResourceInfo getResourceInfo(ResearchObject researchObject, URI resource, String original)
+    public static ResourceMetadata getResourceInfo(ResearchObject researchObject, URI resource, String original)
             throws AccessDeniedException, NotFoundException, DigitalLibraryException {
         String filePath = researchObject.getUri().relativize(original != null ? resource.resolve(original) : resource)
                 .getPath();
@@ -468,7 +468,7 @@ public final class ROSRService {
      *             access denied when updating data in DL
      */
     public static ResponseBuilder getInternalResource(ResearchObject researchObject, URI resource, String accept,
-            String original, ResourceInfo resInfo)
+            String original, ResourceMetadata resInfo)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         String filePath = researchObject.getUri().relativize(resource).getPath();
 
@@ -615,7 +615,7 @@ public final class ROSRService {
             throws NotFoundException, DigitalLibraryException, AccessDeniedException {
         if (ROSRService.SMS.get().containsNamedGraph(resource)
                 && !SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
-            ResourceInfo info = DL.get().getFileInfo(researchObject,
+            ResourceMetadata info = DL.get().getFileInfo(researchObject,
                 researchObject.getUri().relativize(resource).toString());
             ROSRService.SMS.get().removeAnnotationBody(researchObject, resource);
             ROSRService.SMS.get().addResource(researchObject, resource, info);
@@ -644,6 +644,44 @@ public final class ROSRService {
     public static Response addAnnotation(ResearchObject researchObject, URI annotationBody, List<URI> annotationTargets)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody);
+        // update the manifest that contains the annotation in dLibra
+        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+
+        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(), AO.body);
+        ResponseBuilder response = Response.created(annotation).header(Constants.LINK_HEADER, annotationBodyHeader);
+        for (URI target : annotationTargets) {
+            String targetHeader = String
+                    .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
+            response = response.header(Constants.LINK_HEADER, targetHeader);
+        }
+        return response.build();
+    }
+
+
+    /**
+     * Add and aggregate a new annotation to the research object.
+     * 
+     * @param researchObject
+     *            the research object
+     * @param annotationBody
+     *            annotation body URI
+     * @param annotationTargets
+     *            list of annotated resources URIs
+     * @param annotationPrefix
+     *            the prefix of annotation URI
+     * @return 201 Created response
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
+    public static Response addAnnotation(ResearchObject researchObject, URI annotationBody,
+            List<URI> annotationTargets, String annotationPrefix)
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        URI annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody,
+            annotationPrefix);
         // update the manifest that contains the annotation in dLibra
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
 
@@ -986,6 +1024,11 @@ public final class ROSRService {
             researchObject.getUri().relativize(researchObject.getFixedEvolutionAnnotationBodyPath()).toString(),
             researchObject, researchObject.getFixedEvolutionAnnotationBodyPath());
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+        if (parent != null) {
+            updateNamedGraphInDlibra(researchObject.getUri().relativize(parent.getFixedEvolutionAnnotationBodyPath())
+                    .toString(), parent, parent.getFixedEvolutionAnnotationBodyPath());
+            updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, parent, parent.getManifestUri());
+        }
     }
 
 

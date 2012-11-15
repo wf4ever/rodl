@@ -29,9 +29,9 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.ResourceInfo;
-import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -59,6 +59,7 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.query.ResultSetFormatter;
+import com.hp.hpl.jena.query.Syntax;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -68,6 +69,7 @@ import com.hp.hpl.jena.rdf.model.ResIterator;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.shared.JenaException;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 
 import de.fuberlin.wiwiss.ng4j.NamedGraph;
@@ -95,16 +97,17 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
     private final Connection connection;
 
-    private final UserProfile user;
+    private final UserMetadata user;
+    private static final Syntax SPARQL_SYNTAX = Syntax.syntaxARQ;
 
 
-    public SemanticMetadataServiceImpl(UserProfile user)
+    public SemanticMetadataServiceImpl(UserMetadata user)
             throws IOException, NamingException, SQLException, ClassNotFoundException {
         this(user, true);
     }
 
 
-    public SemanticMetadataServiceImpl(UserProfile user, boolean useDb)
+    public SemanticMetadataServiceImpl(UserMetadata user, boolean useDb)
             throws IOException, NamingException, SQLException, ClassNotFoundException {
         this.user = user;
 
@@ -118,31 +121,31 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             this.connection = null;
             graphset = new NamedGraphSetImpl();
         }
-        W4E.defaultModel.setNsPrefixes(W4E.standardNamespaces);
+        W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
         createUserProfile(user);
     }
 
 
-    public SemanticMetadataServiceImpl(UserProfile user, ResearchObject researchObject, InputStream manifest,
+    public SemanticMetadataServiceImpl(UserMetadata userMetadata, ResearchObject researchObject, InputStream manifest,
             RDFFormat rdfFormat) {
-        this.user = user;
+        this.user = userMetadata;
         this.connection = null;
 
         graphset = new NamedGraphSetImpl();
-        W4E.defaultModel.setNsPrefixes(W4E.standardNamespaces);
-        createUserProfile(user);
+        W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
+        createUserProfile(userMetadata);
 
         createResearchObject(researchObject);
         updateManifest(researchObject, manifest, rdfFormat);
     }
 
 
-    private void createUserProfile(UserProfile user) {
-        if (!containsNamedGraph(user.getUri())) {
-            OntModel userModel = createOntModelForNamedGraph(user.getUri());
+    private void createUserProfile(UserMetadata user2) {
+        if (!containsNamedGraph(user2.getUri())) {
+            OntModel userModel = createOntModelForNamedGraph(user2.getUri());
             userModel.removeAll();
-            Individual agent = userModel.createIndividual(user.getUri().toString(), FOAF.Agent);
-            userModel.add(agent, FOAF.name, user.getName());
+            Individual agent = userModel.createIndividual(user2.getUri().toString(), FOAF.Agent);
+            userModel.add(agent, FOAF.name, user2.getName());
         }
     }
 
@@ -176,7 +179,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     @Override
-    public UserProfile getUserProfile() {
+    public UserMetadata getUserProfile() {
         return user;
     }
 
@@ -310,7 +313,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     @Override
-    public boolean addResource(ResearchObject researchObject, URI resourceURI, ResourceInfo resourceInfo) {
+    public boolean addResource(ResearchObject researchObject, URI resourceURI, ResourceMetadata resourceInfo) {
         resourceURI = resourceURI.normalize();
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
@@ -530,14 +533,14 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         NamedGraph namedGraph = getOrCreateGraph(graphset, namedGraphURI);
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM,
             ModelFactory.createModelForGraph(namedGraph));
-        ontModel.addSubModel(W4E.defaultModel);
+        ontModel.addSubModel(W4E.DEFAULT_MODEL);
         return ontModel;
     }
 
 
     private NamedGraph getOrCreateGraph(NamedGraphSet graphset, URI namedGraphURI) {
-        return graphset.containsGraph(namedGraphURI.toString()) ? graphset.getGraph(namedGraphURI.toString())
-                : graphset.createGraph(namedGraphURI.toString());
+        return graphset.containsGraph(SafeURI.URItoString(namedGraphURI)) ? graphset.getGraph(SafeURI
+                .URItoString(namedGraphURI)) : graphset.createGraph(SafeURI.URItoString(namedGraphURI));
     }
 
 
@@ -642,9 +645,8 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     private OntModel createOntModelForAllNamedGraphs(OntModelSpec spec) {
-        OntModel ontModel = ModelFactory.createOntologyModel(spec,
-            graphset.asJenaModel(W4E.DEFAULT_NAMED_GRAPH_URI.toString()));
-        ontModel.addSubModel(W4E.defaultModel);
+        OntModel ontModel = ModelFactory.createOntologyModel(spec, graphset.asJenaModel("sms"));
+        ontModel.addSubModel(W4E.DEFAULT_MODEL);
         return ontModel;
     }
 
@@ -673,7 +675,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
     @Override
     public boolean containsNamedGraph(URI graphURI) {
-        return graphset.containsGraph(graphURI.toString());
+        return graphset.containsGraph(SafeURI.URItoString(graphURI));
     }
 
 
@@ -683,7 +685,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             throw new NullPointerException("Query cannot be null");
         Query query = null;
         try {
-            query = QueryFactory.create(queryS, W4E.sparqlSyntax);
+            query = QueryFactory.create(queryS, SPARQL_SYNTAX);
         } catch (Exception e) {
             throw new IllegalArgumentException("Wrong query syntax: " + e.getMessage());
         }
@@ -922,10 +924,17 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
     @Override
     public URI addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody) {
+        return addAnnotation(researchObject, annotationTargets, annotationBody, null);
+    }
+
+
+    @Override
+    public URI addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody,
+            String annotationUUID) {
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
         Resource researchObjectR = manifestModel.createResource(researchObject.getUri().toString());
         Resource body = manifestModel.createResource(annotationBody.normalize().toString());
-        URI annotationURI = generateAnnotationURI(researchObject);
+        URI annotationURI = generateAnnotationURI(researchObject, annotationUUID);
         Individual annotation = manifestModel.createIndividual(annotationURI.toString(), RO.AggregatedAnnotation);
         manifestModel.add(researchObjectR, ORE.aggregates, annotation);
         manifestModel.add(annotation, AO.body, body);
@@ -940,8 +949,16 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    private static URI generateAnnotationURI(ResearchObject researchObject, String uuid) {
+        if (uuid == null) {
+            uuid = UUID.randomUUID().toString();
+        }
+        return researchObject.getUri().resolve(".ro/annotations/" + uuid);
+    }
+
+
     private static URI generateAnnotationURI(ResearchObject researchObject) {
-        return researchObject.getUri().resolve(".ro/annotations/" + UUID.randomUUID());
+        return generateAnnotationURI(researchObject, null);
     }
 
 
@@ -1148,7 +1165,6 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         if (oldRO == null) {
             return "";
         }
-
         if (freshRO == null) {
             throw new IllegalArgumentException("Fresh object can not be null");
         }
@@ -1252,12 +1268,6 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
     private String generateRandomUriRelatedToResource(ResearchObject ro, String description) {
         return ro.getUri().resolve(description) + "/" + UUID.randomUUID().toString();
-    }
-
-
-    private List<RDFNode> removeChangesAnnotations(List<RDFNode> list, OntModel model, Individual individual) {
-        List<RDFNode> result = new ArrayList<RDFNode>();
-        return result;
     }
 
 
@@ -1443,9 +1453,21 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         Resource patternBody = patternSource.getProperty(AO.body).getResource();
         Resource comparedBody = comparedSource.getProperty(AO.body).getResource();
         OntModel patternModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        patternModel.read(patternBody.getURI(), "TTL");
+        RDFFormat patternFormat = RDFFormat.forFileName(patternBody.getURI(), RDFFormat.RDFXML);
+        try {
+            patternModel.read(patternBody.getURI(), patternBody.getURI(), patternFormat.getName().toUpperCase());
+        } catch (JenaException e) {
+            log.warn("Could not read annotation body " + patternBody.getURI() + ", assuming unchanged. ", e);
+            return true;
+        }
         OntModel comparedModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        comparedModel.read(comparedBody.getURI(), "TTL");
+        RDFFormat comparedFormat = RDFFormat.forFileName(comparedBody.getURI(), RDFFormat.RDFXML);
+        try {
+            comparedModel.read(comparedBody.getURI(), comparedBody.getURI(), comparedFormat.getName().toUpperCase());
+        } catch (JenaException e) {
+            log.warn("Could not read annotation body " + comparedBody.getURI() + ", assuming unchanged. ", e);
+            return true;
+        }
 
         List<Statement> patternList = patternModel.listStatements().toList();
         List<Statement> comparedList = comparedModel.listStatements().toList();
@@ -1477,31 +1499,30 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     private Boolean isStatementInList(Statement statement, List<Statement> list, URI patternURI, URI comparedURI)
             throws URISyntaxException {
         for (Statement listStatement : list) {
-            if (compareRelativesURI(new URI(statement.getSubject().asResource().getURI()), new URI(listStatement
-                    .getSubject().asResource().getURI()), patternURI, comparedURI)) {
-                if (compareRelativesURI(new URI(statement.getPredicate().asResource().getURI()), new URI(listStatement
-                        .getPredicate().asResource().getURI()), patternURI, comparedURI)) {
-                    if (statement.getObject().isResource() && listStatement.getObject().isResource()) {
-                        if (compareRelativesURI(new URI(statement.getObject().asResource().getURI()), new URI(
-                                listStatement.getObject().asResource().getURI()), patternURI, comparedURI)) {
-                            return true;
+            try {
+                if (compareRelativesURI(new URI(statement.getSubject().asResource().getURI()), new URI(listStatement
+                        .getSubject().asResource().getURI()), patternURI, comparedURI)) {
+                    if (compareRelativesURI(new URI(statement.getPredicate().asResource().getURI()), new URI(
+                            listStatement.getPredicate().asResource().getURI()), patternURI, comparedURI)) {
+                        if (statement.getObject().isResource() && listStatement.getObject().isResource()) {
+                            if (compareRelativesURI(new URI(statement.getObject().asResource().getURI()), new URI(
+                                    listStatement.getObject().asResource().getURI()), patternURI, comparedURI)) {
+                                return true;
+                            }
                         }
-                    }
-                    if (listStatement.getObject().isLiteral() && statement.getObject().isLiteral()) {
-                        if (compareTwoLiterals(listStatement.getObject().asLiteral(), statement.getObject().asLiteral())) {
-                            return true;
+                        if (listStatement.getObject().isLiteral() && statement.getObject().isLiteral()) {
+                            if (compareTwoLiterals(listStatement.getObject().asLiteral(), statement.getObject()
+                                    .asLiteral())) {
+                                return true;
+                            }
                         }
                     }
                 }
+            } finally {
+                continue;
             }
         }
         return false;
-    }
-
-
-    @Override
-    public String getDefaultManifestPath() {
-        return W4E.DEFAULT_MANIFEST_PATH;
     }
 
 
@@ -1517,13 +1538,16 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     @Override
-    public int changeURIInManifestAndAnnotationBodies(ResearchObject researchObject, URI oldURI, URI newURI) {
+    public int changeURIInManifestAndAnnotationBodies(ResearchObject researchObject, URI oldURI, URI newURI,
+            Boolean withBodies) {
         int cnt = changeURIInNamedGraph(researchObject.getManifestUri(), oldURI, newURI);
-        OntModel model = createOntModelForNamedGraph(researchObject.getManifestUri());
-        List<RDFNode> bodies = model.listObjectsOfProperty(AO.body).toList();
-        for (RDFNode body : bodies) {
-            URI bodyURI = URI.create(body.asResource().getURI());
-            cnt += changeURIInNamedGraph(bodyURI, oldURI, newURI);
+        if (withBodies) {
+            OntModel model = createOntModelForNamedGraph(researchObject.getManifestUri());
+            List<RDFNode> bodies = model.listObjectsOfProperty(AO.body).toList();
+            for (RDFNode body : bodies) {
+                URI bodyURI = URI.create(body.asResource().getURI());
+                cnt += changeURIInNamedGraph(bodyURI, oldURI, newURI);
+            }
         }
         return cnt;
     }
@@ -1813,8 +1837,10 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         if (ro == null) {
             throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
         }
-        Resource resource = manifestModel.createResource(graphURI.toString());
+        Resource resource = manifestModel.createIndividual(graphURI.toString(), ORE.AggregatedResource);
         manifestModel.add(ro, ORE.aggregates, resource);
+        manifestModel.add(resource, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
+        manifestModel.add(resource, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
         return addNamedGraph(graphURI, inputStream, rdfFormat);
     }
 

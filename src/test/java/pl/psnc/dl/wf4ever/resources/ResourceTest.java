@@ -18,9 +18,9 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.UserProfile;
-import pl.psnc.dl.wf4ever.common.UserProfile.Role;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
@@ -127,7 +127,7 @@ public class ResourceTest extends ResourceBase {
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
 
-        SemanticMetadataService sms = new SemanticMetadataServiceImpl(UserProfile.create("login", "name", Role.ADMIN));
+        SemanticMetadataService sms = new SemanticMetadataServiceImpl(new UserMetadata("login", "name", Role.ADMIN));
         List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
         assertEquals("research object should contain two annotations", annotations.size(), 3);
 
