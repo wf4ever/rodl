@@ -30,7 +30,7 @@ public class Folder extends Resource {
 
     /**
      * Return a URI of an RDF graph that describes the folder. If folder URI is null, return null. If folder URI path is
-     * empty, return folder.ttl (i.e. example.com becomes example.com/folder.rdf). Otherwise use the last path segment
+     * empty, return folder.rdf (i.e. example.com becomes example.com/folder.rdf). Otherwise use the last path segment
      * (i.e. example.com/foobar/ becomes example.com/foobar/foobar.rdf). RDF/XML file extension is used.
      * 
      * @return RDF graph URI or null if folder URI is null
@@ -52,10 +52,12 @@ public class Folder extends Resource {
             return null;
         }
         String base;
-        if (uri.getPath() == null) {
+        if (uri.getPath() == null || uri.getPath().isEmpty()) {
+            base = "/folder";
+        } else if (uri.getPath().equals("/")) {
             base = "folder";
         } else {
-            String[] segments = uri.getPath().split("/");
+            String[] segments = uri.getRawPath().split("/");
             base = segments[segments.length - 1];
         }
         if (format == null || format.equals(RDFFormat.RDFXML)) {

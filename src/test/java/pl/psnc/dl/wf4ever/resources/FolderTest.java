@@ -35,6 +35,9 @@ public class FolderTest extends ResourceBase {
     /** folder path. */
     private final String folderPath = "myfolder/";
 
+    /** folder path. */
+    private final String folderWithSpacesPath = "my folder/";
+
     /** file path. */
     private final String filePath = "file2.txt";
 
@@ -63,6 +66,15 @@ public class FolderTest extends ResourceBase {
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         assertCorrectFolderResourceMap(response.getEntityInputStream());
         URI folderProxyURI = response.getLocation();
+        Assert.assertNotNull(folderProxyURI);
+        response.close();
+        webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
+
+        is = getClass().getClassLoader().getResourceAsStream("folder.rdf");
+        response = addFolder(is, ro, folderWithSpacesPath, accessToken);
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        assertCorrectFolderResourceMap(response.getEntityInputStream());
+        folderProxyURI = response.getLocation();
         Assert.assertNotNull(folderProxyURI);
         response.close();
         webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
