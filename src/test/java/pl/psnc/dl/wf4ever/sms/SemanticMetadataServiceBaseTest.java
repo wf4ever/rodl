@@ -191,6 +191,9 @@ public class SemanticMetadataServiceBaseTest {
         public ResearchObject sp1;
         public ResearchObject sp2;
         public ResearchObject arch1;
+        public ResearchObject wrongRO;
+        public ResearchObject messRO;
+
         public SemanticMetadataService sms;
 
 
@@ -200,6 +203,8 @@ public class SemanticMetadataServiceBaseTest {
             sp1 = ResearchObject.create(getResourceURI("ro1-sp1/"));
             sp2 = ResearchObject.create(getResourceURI("ro1-sp2/"));
             arch1 = ResearchObject.create(getResourceURI("ro1-arch1/"));
+            wrongRO = ResearchObject.create(getResourceURI("wrong-ro/"));
+            messRO = ResearchObject.create(getResourceURI("mess-ro/"));
             File file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/ro1/.ro/manifest.ttl");
             FileInputStream is = new FileInputStream(file);
             sms = new SemanticMetadataServiceImpl(userProfile, ro1, is, RDFFormat.TURTLE);
@@ -230,6 +235,30 @@ public class SemanticMetadataServiceBaseTest {
             file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/ro1-arch1/.ro/evo_info.ttl");
             is = new FileInputStream(file);
             sms.addNamedGraph(arch1.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
+
+            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/wrong-ro/.ro/manifest.ttl");
+            is = new FileInputStream(file);
+            sms.createResearchObject(wrongRO);
+            sms.updateManifest(wrongRO, is, RDFFormat.TURTLE);
+            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/wrong-ro/.ro/evo_info.ttl");
+            is = new FileInputStream(file);
+            sms.addNamedGraph(wrongRO.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
+
+            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/wrong-ro/.ro/manifest.ttl");
+            is = new FileInputStream(file);
+            sms.createResearchObject(wrongRO);
+            sms.updateManifest(wrongRO, is, RDFFormat.TURTLE);
+            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/wrong-ro/.ro/evo_info.ttl");
+            is = new FileInputStream(file);
+            sms.addNamedGraph(wrongRO.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
+
+            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/mess-ro/.ro/manifest.ttl");
+            is = new FileInputStream(file);
+            sms.createResearchObject(messRO);
+            sms.updateManifest(messRO, is, RDFFormat.TURTLE);
+            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/mess-ro/.ro/evo_info.ttl");
+            is = new FileInputStream(file);
+            sms.addNamedGraph(messRO.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
         }
     }
 

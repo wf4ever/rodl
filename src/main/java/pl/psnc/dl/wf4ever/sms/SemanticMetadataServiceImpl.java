@@ -1109,8 +1109,9 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
         while (snaphotsIterator.hasNext()) {
             URI tmpURI = new URI(snaphotsIterator.next().getObject().toString());
-            if (tmpURI == freshSnapshotOrArchive.getUri())
+            if (tmpURI == freshSnapshotOrArchive.getUri()) {
                 continue;
+            }
             RDFNode node = getIndividual(ResearchObject.create(tmpURI)).getProperty(ROEVO.snapshottedAtTime)
                     .getObject();
             DateTime tmpTime = new DateTime(node.asLiteral().getValue().toString());
@@ -1144,14 +1145,19 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     public String storeAggregatedDifferences(ResearchObject freshRO, ResearchObject oldRO)
             throws URISyntaxException, IOException {
 
-        if (freshRO == null) {
-            throw new NullPointerException("Frsh object URI can not be null");
-        }
         if (oldRO == null) {
             return "";
         }
-        Individual freshROIndividual = getIndividual(freshRO);
-        Individual oldROIndividual = getIndividual(oldRO);
+
+        if (freshRO == null) {
+            throw new IllegalArgumentException("Fresh object can not be null");
+        }
+        if (freshRO == oldRO) {
+            throw new IllegalArgumentException("Fresh and old RO can not be this same");
+        }
+        if (compareTwoResearchObjectDateOfCreation(freshRO, oldRO) <= 0) {
+            throw new IllegalArgumentException("Fresh RO can not be older them old RO");
+        }
 
         List<RDFNode> freshAggreagted = getAggregatedWithNoEvoAndBody(freshRO);
         List<RDFNode> oldAggreagted = getAggregatedWithNoEvoAndBody(oldRO);
@@ -1170,6 +1176,37 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             changeSpecificationIndividual, Direction.DELETED);
         return result;
 
+    }
+
+
+    private int compareTwoResearchObjectDateOfCreation(ResearchObject first, ResearchObject second) {
+        DateTime dateFirst = null;
+        DateTime dateSecond = null;
+        Individual firstIndividual = getIndividual(first);
+        Individual secondIndividual = getIndividual(second);
+
+        if (isSnapshot(first)) {
+            dateFirst = new DateTime(firstIndividual.getPropertyValue(ROEVO.snapshottedAtTime).asLiteral().getValue()
+                    .toString());
+        } else if (isArchive(first)) {
+            dateFirst = new DateTime(firstIndividual.getPropertyValue(ROEVO.archivedAtTime).asLiteral().getValue()
+                    .toString());
+        } else {
+            dateFirst = new DateTime(firstIndividual.getPropertyValue(DCTerms.created).asLiteral().getValue()
+                    .toString());
+        }
+
+        if (isSnapshot(second)) {
+            dateSecond = new DateTime(secondIndividual.getPropertyValue(ROEVO.snapshottedAtTime).asLiteral().getValue()
+                    .toString());
+        } else if (isArchive(second)) {
+            dateSecond = new DateTime(secondIndividual.getPropertyValue(ROEVO.archivedAtTime).asLiteral().getValue()
+                    .toString());
+        } else {
+            dateSecond = new DateTime(secondIndividual.getPropertyValue(DCTerms.created).asLiteral().getValue()
+                    .toString());
+        }
+        return dateFirst.compareTo(dateSecond);
     }
 
 
@@ -1494,8 +1531,9 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
     private int changeURIInNamedGraph(URI graph, URI oldURI, URI newURI) {
         OntModel model = createOntModelForNamedGraph(graph);
-        Resource oldResource = model.createResource(oldURI.toString());
-        Resource newResource = model.createResource(newURI.toString());
+        Resource oldResource = model.createResource(SafeURI.URItoString(oldURI));
+        Resource newResource = model.createResource(SafeURI.URItoString(newURI));
+
         List<Statement> s1 = model.listStatements(oldResource, null, (RDFNode) null).toList();
         for (Statement s : s1) {
             model.remove(s.getSubject(), s.getPredicate(), s.getObject());

@@ -9,8 +9,4 @@
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix rdfg: <http://www.w3.org/2004/03/trix/rdfg-1/> .
     
-<.> a roevo:LiveRO;
-	roevo:hasSnapshot <../ro1-sp1/> ;
-	roevo:hasSnapshot <../ro1-sp2/> ;
-	roevo:hasArchive <../ro1-arch1/> .
-	
+<.> a roevo:LiveRO .
