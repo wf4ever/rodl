@@ -539,8 +539,8 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     private NamedGraph getOrCreateGraph(NamedGraphSet graphset, URI namedGraphURI) {
-        return graphset.containsGraph(SafeURI.URItoString(namedGraphURI)) ? graphset.getGraph(SafeURI
-                .URItoString(namedGraphURI)) : graphset.createGraph(SafeURI.URItoString(namedGraphURI));
+        return graphset.containsGraph(namedGraphURI.toString()) ? graphset.getGraph(namedGraphURI.toString())
+                : graphset.createGraph(namedGraphURI.toString());
     }
 
 
