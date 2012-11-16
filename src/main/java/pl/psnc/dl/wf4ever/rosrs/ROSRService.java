@@ -1013,6 +1013,7 @@ public final class ROSRService {
         folder = SMS.get().addFolder(researchObject, folder);
         String path = researchObject.getUri().relativize(folder.getResourceMapUri()).toString();
         updateNamedGraphInDlibra(path, researchObject, folder.getResourceMapUri());
+        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
         return folder;
     }
 
@@ -1076,6 +1077,27 @@ public final class ROSRService {
             throw new BadRequestException("The entity body does not define any ro:FolderEntry.");
         }
         return entry;
+    }
+
+
+    /**
+     * Update a folder.
+     * 
+     * @param folder
+     *            the folder
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
+    public static void updateFolder(Folder folder)
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        ROSRService.SMS.get().updateFolder(folder);
+        ResearchObject researchObject = ResearchObject.create(folder.getAggregationUri());
+        updateNamedGraphInDlibra(researchObject.getUri().relativize(folder.getResourceMapUri()).toString(),
+            researchObject, folder.getResourceMapUri());
     }
 
 }

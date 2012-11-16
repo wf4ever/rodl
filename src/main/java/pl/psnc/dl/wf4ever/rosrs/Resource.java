@@ -360,7 +360,7 @@ public class Resource {
 
         FolderEntry entry = ROSRService.assembleFolderEntry(folder, content);
         folder.getFolderEntries().add(entry);
-        ROSRService.SMS.get().updateFolder(folder);
+        ROSRService.updateFolder(folder);
 
         return Response
                 .created(entry.getUri())
