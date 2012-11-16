@@ -5,8 +5,6 @@ package pl.psnc.dl.wf4ever.sms;
 
 import static org.junit.Assert.fail;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -130,9 +128,9 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public final void testCreateResearchObject()
             throws IOException {
-        testStructure.sms.createResearchObject(researchObject);
+        test.sms.createResearchObject(researchObject);
         try {
-            testStructure.sms.createResearchObject(researchObject);
+            test.sms.createResearchObject(researchObject);
             fail("Should throw an exception");
         } catch (IllegalArgumentException e) {
             // good
@@ -976,72 +974,76 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     }
 
 
+    /**
+     * getAnnotation should return annotation body. TODO explain scenario! what in case body does not exists?
+     */
     @Test
-    public final void testGetAnnotationBody()
-            throws ClassNotFoundException, IOException, NamingException, SQLException {
-        SemanticMetadataService sms = new SemanticMetadataServiceImpl(userProfile, false);
-        try {
-            sms.createResearchObject(researchObject);
-            sms.addResource(researchObject, workflowURI, workflowInfo);
-            URI ann = sms.addAnnotation(researchObject, Arrays.asList(workflowURI, workflow2URI), annotationBody1URI);
-            URI annBody = sms.getAnnotationBody(researchObject, ann);
-            Assert.assertEquals("Annotation body retrieved correctly", annotationBody1URI, annBody);
-        } finally {
-            sms.close();
-        }
+    public final void testGetAnnotationBody() {
+        URI ann = test.sms.addAnnotation(test.annotatedRO, Arrays.asList(workflowURI, workflow2URI),
+            URI.create("http://www.example.com/somewhere/"));
+        URI annBody = test.sms.getAnnotationBody(test.annotatedRO, ann);
+        Assert.assertEquals("Annotation body retrieved correctly", URI.create("http://www.example.com/somewhere/"),
+            annBody);
     }
 
 
+    /**
+     * deleteAnnotation should properly delete annotation. TODO explain scnenario! what in case annotation does not
+     * exists?
+     */
     @Test
-    public final void testDeleteAnnotation()
-            throws ClassNotFoundException, IOException, NamingException, SQLException {
-        SemanticMetadataService sms = new SemanticMetadataServiceImpl(userProfile, false);
-        try {
-            sms.createResearchObject(researchObject);
-            sms.addResource(researchObject, workflowURI, workflowInfo);
-            URI ann = sms.addAnnotation(researchObject, Arrays.asList(workflowURI, workflow2URI), annotationBody1URI);
-            sms.deleteAnnotation(researchObject, ann);
+    public final void testDeleteAnnotation() {
+        URI ann = test.sms
+                .addAnnotation(test.annotatedRO, Arrays.asList(workflowURI, workflow2URI), annotationBody1URI);
+        test.sms.deleteAnnotation(test.annotatedRO, ann);
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        model.read(test.sms.getManifest(test.annotatedRO, RDFFormat.RDFXML), null);
+        Resource annotation = model.createResource(ann.toString());
+        Assert.assertFalse("No annotation statements", model.listStatements(annotation, null, (RDFNode) null).hasNext());
+        Assert.assertFalse("No annotation statements", model.listStatements(null, null, annotation).hasNext());
 
-            OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-            model.read(sms.getManifest(researchObject, RDFFormat.RDFXML), null);
-            Resource annotation = model.createResource(ann.toString());
-            Assert.assertFalse("No annotation statements", model.listStatements(annotation, null, (RDFNode) null)
-                    .hasNext());
-            Assert.assertFalse("No annotation statements", model.listStatements(null, null, annotation).hasNext());
-        } finally {
-            sms.close();
-        }
     }
 
 
+    /**
+     * isSnaphot method should properly identify archives.
+     */
     @Test
-    public final void testIsSnapshot()
-            throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
-        Assert.assertTrue("snapshot does not recognized", testStructure.sms.isSnapshot(testStructure.sp1));
-        Assert.assertFalse("snapshot wrongly recognized", testStructure.sms.isSnapshot(testStructure.ro1));
-        Assert.assertFalse("snapshot wrongly recognized", testStructure.sms.isSnapshot(testStructure.arch1));
+    public final void testIsSnapshot() {
+        Assert.assertTrue("snapshot does not recognized", test.sms.isSnapshot(test.sp1));
+        Assert.assertFalse("snapshot wrongly recognized", test.sms.isSnapshot(test.ro1));
+        Assert.assertFalse("snapshot wrongly recognized", test.sms.isSnapshot(test.arch1));
     }
 
 
+    /**
+     * isArchive method should properly identify archives.
+     */
     @Test
-    public final void testIsArchive()
-            throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
-        Assert.assertTrue("archive does not recognized", testStructure.sms.isArchive(testStructure.arch1));
-        Assert.assertFalse("archive does not recognized", testStructure.sms.isArchive(testStructure.ro1));
-        Assert.assertFalse("archive does not recognized", testStructure.sms.isArchive(testStructure.sp1));
+    public final void testIsArchive() {
+        Assert.assertTrue("archive does not recognized", test.sms.isArchive(test.arch1));
+        Assert.assertFalse("archive does not recognized", test.sms.isArchive(test.ro1));
+        Assert.assertFalse("archive does not recognized", test.sms.isArchive(test.sp1));
     }
 
 
+    /**
+     * getPreviousSnaphotOrArchiveMethod should return previous snapshot or null in case previous does not exists.
+     * 
+     * @throws URISyntaxException
+     */
     @Test
-    public final void testGetPreviousSnaphotOrArchive()
-            throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
-        URI sp1Antecessor = testStructure.sms.getPreviousSnaphotOrArchive(testStructure.ro1, testStructure.sp1);
-        URI sp2Antecessor = testStructure.sms.getPreviousSnaphotOrArchive(testStructure.ro1, testStructure.sp2);
+    public final void testGetPreviousSnaphotOrArchive() {
+        URI sp1Antecessor = test.sms.getPreviousSnaphotOrArchive(test.ro1, test.sp1);
+        URI sp2Antecessor = test.sms.getPreviousSnaphotOrArchive(test.ro1, test.sp2);
         Assert.assertNull("wrong antecessor URI", sp1Antecessor);
-        Assert.assertEquals("wrong antecessor URI", sp2Antecessor, testStructure.sp1.getUri());
+        Assert.assertEquals("wrong antecessor URI", sp2Antecessor, test.sp1.getUri());
     }
 
 
+    /**
+     * getIndividual should return mix of manifest and roevo info file.
+     */
     @Test
     public final void testGetIndividual()
             throws URISyntaxException, ClassNotFoundException, IOException, NamingException, SQLException {
@@ -1049,52 +1051,64 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         model.read(getResourceURI("ro1/").resolve(".ro/manifest.ttl").toString(), "TTL");
         model.read(getResourceURI("ro1/").resolve(".ro/evo_info.ttl").toString(), "TTL");
         Individual source = model.getIndividual(getResourceURI("ro1/").toString());
-        Individual source2 = testStructure.sms.getIndividual(testStructure.ro1);
+        Individual source2 = test.sms.getIndividual(test.ro1);
         Assert.assertEquals("wrong individual returned", source, source2);
     }
 
 
+    /**
+     * Get liveROfromSnaphotOrArchive method should find a live RO in case where live RO exists.
+     */
     @Test
     public final void testGetLiveROfromSnapshotOrArchive()
             throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
-        URI liveFromRO = testStructure.sms.getLiveURIFromSnapshotOrArchive(testStructure.ro1);
-        URI liveFromSP = testStructure.sms.getLiveURIFromSnapshotOrArchive(testStructure.sp1);
-        URI liveFromARCH = testStructure.sms.getLiveURIFromSnapshotOrArchive(testStructure.arch1);
-        Assert.assertNull("live RO does not have a parent RO", liveFromRO);
-        Assert.assertEquals("wrong parent URI", liveFromSP, testStructure.ro1.getUri());
-        Assert.assertEquals("wrong parent URI", liveFromARCH, testStructure.ro1.getUri());
+        URI liveFromSP = test.sms.getLiveURIFromSnapshotOrArchive(test.sp1);
+        URI liveFromARCH = test.sms.getLiveURIFromSnapshotOrArchive(test.arch1);
+        Assert.assertEquals("wrong parent URI", liveFromSP, test.ro1.getUri());
+        Assert.assertEquals("wrong parent URI", liveFromARCH, test.ro1.getUri());
     }
 
 
+    /**
+     * Get liveROfromSnaphotOrArchive method should return null in case live RO does no exists.
+     */
+    @Test
+    public final void testGetLiveROfromSnapshotOrArchiveWhereLiveRODoesNotExists()
+            throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
+        URI liveFromRO = test.sms.getLiveURIFromSnapshotOrArchive(test.ro1);
+        Assert.assertNull("live RO does not have a parent RO", liveFromRO);
+    }
+
+
+    /**
+     * changeURIInManifestAndAnnotationsBodies should change URIs in manifest in bodies if bodies parameter equals true.
+     */
     @Test
     public final void testChangeURIInManifestAndAnnotationBodies()
             throws ClassNotFoundException, IOException, NamingException, SQLException {
-        SemanticMetadataService sms = new SemanticMetadataServiceImpl(userProfile, false);
-        try {
-            InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
-            sms.updateManifest(researchObject, is, RDFFormat.TURTLE);
-            is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
-            sms.addNamedGraph(annotationBody1URI, is, RDFFormat.TURTLE);
-            int cnt = sms.changeURIInManifestAndAnnotationBodies(researchObject, workflowURI, resourceFakeURI, true);
-            // 1 aggregates, 1 ann target, 1 type, 2 dcterms, 1 proxy, 3 in ann body
-            Assert.assertEquals("9 URIs should be changed", 9, cnt);
-        } finally {
-            sms.close();
-        }
-    }
-
-
-    /*
-    @Test
-    public final void testChangeURIInManifestAndAnnotationBodies3()
-            throws ClassNotFoundException, IOException, NamingException, SQLException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        testStructure.sms.addNamedGraph(testStructure.messRO.getUri().resolve(".ro/ann1"), is, RDFFormat.TURTLE);
-        int cnt = testStructure.sms.changeURIInManifestAndAnnotationBodies(testStructure.messRO, testStructure.messRO
-                .getUri().resolve("a%20workflow.t2flow"), URI.create("http://www.example.com/complete_new_uri"), true);
+        test.sms.addNamedGraph(test.annotatedRO.getUri().resolve(".ro/ann1"), is, RDFFormat.TURTLE);
+        int cnt = test.sms.changeURIInManifestAndAnnotationBodies(test.annotatedRO,
+            test.annotatedRO.getUri().resolve("a%20workflow.t2flow"),
+            URI.create("http://www.example.com/complete_new_uri"), true);
         Assert.assertEquals("9 URIs should be changed", 9, cnt);
     }
+
+
+    /**
+     * changeURIInManifestAndAnnotationsBodies should change URIs only in manifest if bodies parameter equals false.
      */
+    @Test
+    public final void testChangeURIInManifest()
+            throws ClassNotFoundException, IOException, NamingException, SQLException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
+        test.sms.addNamedGraph(test.annotatedRO.getUri().resolve(".ro/ann1"), is, RDFFormat.TURTLE);
+        int cnt = test.sms.changeURIInManifestAndAnnotationBodies(test.annotatedRO,
+            test.annotatedRO.getUri().resolve("a%20workflow.t2flow"),
+            URI.create("http://www.example.com/complete_new_uri"), false);
+        Assert.assertEquals("6 URIs should be changed", 6, cnt);
+    }
+
 
     /**
      * SMS should be able to load Ontology.
@@ -1103,8 +1117,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public final void testSMSConstructor()
             throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
         URI fakeURI = new URI("http://www.example.com/ROs/");
-        File file = new File(PROJECT_PATH + "/src/test/resources/manifest.rdf");
-        FileInputStream is = new FileInputStream(file);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.rdf");
         SemanticMetadataService sms = new SemanticMetadataServiceImpl(userProfile, ResearchObject.create(fakeURI), is,
                 RDFFormat.RDFXML);
         try {
@@ -1125,17 +1138,15 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public final void testGetAggregatedResources()
             throws URISyntaxException, FileNotFoundException, ManifestTraversingException {
-        List<AggregatedResource> list = testStructure.sms.getAggregatedResources(testStructure.ro1);
-        Assert.assertTrue(list.contains(new AggregatedResource(testStructure.ro1.getUri().resolve(
+        List<AggregatedResource> list = test.sms.getAggregatedResources(test.ro1);
+        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve(
             "final-agregated-resource-file"))));
-        Assert.assertTrue(list
-                .contains(new AggregatedResource(testStructure.ro1.getUri().resolve(".ro/ann-blank.ttl"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(testStructure.ro1.getUri().resolve("res2"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(testStructure.ro1.getUri().resolve("res1"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(testStructure.ro1.getUri().resolve(".ro/evo_info.ttl"))));
-        Assert.assertTrue(list
-                .contains(new AggregatedResource(testStructure.ro1.getUri().resolve(".ro/ann1-body.ttl"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(testStructure.ro1.getUri().resolve("afinalfolder"))));
+        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve(".ro/ann-blank.ttl"))));
+        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve("res2"))));
+        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve("res1"))));
+        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve(".ro/evo_info.ttl"))));
+        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve(".ro/ann1-body.ttl"))));
+        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve("afinalfolder"))));
 
     }
 
@@ -1146,7 +1157,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public final void getAnnotations()
             throws FileNotFoundException, URISyntaxException, ManifestTraversingException {
-        List<Annotation> list = testStructure.sms.getAnnotations(testStructure.ro1);
+        List<Annotation> list = test.sms.getAnnotations(test.ro1);
         int cnt = 0;
         Boolean evo = true;
         Boolean ann = true;
@@ -1177,17 +1188,15 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public final void testROevo()
             throws URISyntaxException, IOException {
 
-        testStructure.sms.storeAggregatedDifferences(testStructure.sp2, testStructure.sp1);
+        test.sms.storeAggregatedDifferences(test.sp2, test.sp1);
 
-        Individual evoInfoSource = testStructure.sms.getIndividual(testStructure.sp2);
+        Individual evoInfoSource = test.sms.getIndividual(test.sp2);
         List<RDFNode> nodes = evoInfoSource.getPropertyValue(ROEVO.wasChangedBy).as(Individual.class)
                 .listPropertyValues(ROEVO.hasChange).toList();
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(testStructure.sms.getNamedGraph(testStructure.sp2.getManifestUri(), RDFFormat.RDFXML), null);
-        model.read(
-            testStructure.sms.getNamedGraph(testStructure.sp2.getFixedEvolutionAnnotationBodyPath(), RDFFormat.RDFXML),
-            null);
+        model.read(test.sms.getNamedGraph(test.sp2.getManifestUri(), RDFFormat.RDFXML), null);
+        model.read(test.sms.getNamedGraph(test.sp2.getFixedEvolutionAnnotationBodyPath(), RDFFormat.RDFXML), null);
 
         Assert.assertTrue(isChangeInTheChangesList(getResourceURI("ro1-sp2/ann3").toString(),
             ROEVO.Addition.toString(), model, nodes));
@@ -1214,7 +1223,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test(expected = IllegalArgumentException.class)
     public final void testStoreROhistoryWithWrongParametrs()
             throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
-        testStructure.sms.storeAggregatedDifferences(null, testStructure.sp1);
+        test.sms.storeAggregatedDifferences(null, test.sp1);
     }
 
 
@@ -1224,7 +1233,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test(expected = IllegalArgumentException.class)
     public final void testStoreROhistoryWithParametersGivenConversely()
             throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
-        System.out.println(testStructure.sms.storeAggregatedDifferences(testStructure.sp1, testStructure.sp2));
+        System.out.println(test.sms.storeAggregatedDifferences(test.sp1, test.sp2));
     }
 
 
@@ -1234,7 +1243,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test(expected = IllegalArgumentException.class)
     public final void testStoreROhistoryBetweenTwoTheSameObjects()
             throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
-        testStructure.sms.storeAggregatedDifferences(testStructure.sp1, testStructure.sp1);
+        test.sms.storeAggregatedDifferences(test.sp1, test.sp1);
     }
 
 
@@ -1244,13 +1253,15 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public final void testStoreROhistoryWithNoAccenestor()
             throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
-        String resultSp1 = testStructure.sms.storeAggregatedDifferences(testStructure.sp1, null);
-        String resultLive = testStructure.sms.storeAggregatedDifferences(testStructure.ro1, null);
+        String resultSp1 = test.sms.storeAggregatedDifferences(test.sp1, null);
+        String resultLive = test.sms.storeAggregatedDifferences(test.ro1, null);
         Assert.assertEquals("", resultSp1);
         Assert.assertEquals("", resultLive);
     }
 
 
+    //TODO
+    //Explain scenario
     @Test
     public void testAddFolder()
             throws ClassNotFoundException, IOException, NamingException, SQLException {
@@ -1357,6 +1368,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     }
 
 
+    //TODO
+    //Explain scenario
     @Test
     public void testUpdateFolder()
             throws ClassNotFoundException, IOException, NamingException, SQLException {
@@ -1405,6 +1418,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     }
 
 
+    //TODO
+    //Explain scenario
     @Test
     public void testGetRootFolder()
             throws ClassNotFoundException, IOException, NamingException, SQLException {
@@ -1432,8 +1447,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
     @Test
     public void testAnnotationForBody() {
-        Annotation annotation = testStructure.sms.findAnnotationForBody(testStructure.ro1,
-            testStructure.ro1.getFixedEvolutionAnnotationBodyPath());
+        Annotation annotation = test.sms
+                .findAnnotationForBody(test.ro1, test.ro1.getFixedEvolutionAnnotationBodyPath());
         Assert.assertNotNull("Annotation should not be null", annotation);
     }
 
@@ -1444,7 +1459,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public void testAnnotationForBodyInCaseAnnotationDoesNotExists()
             throws URISyntaxException {
-        Annotation annotation = testStructure.sms.findAnnotationForBody(testStructure.wrongRO,
+        Annotation annotation = test.sms.findAnnotationForBody(test.wrongRO,
             getResourceURI("wrong-ro/.ro/ann-body1.ttl"));
         Assert.assertNull("Annotation should not be null", annotation);
     }
@@ -1456,7 +1471,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public void testAnnotationForBodyInCaseBodyDoesNotExists()
             throws URISyntaxException {
-        Annotation annotation = testStructure.sms.findAnnotationForBody(testStructure.wrongRO,
+        Annotation annotation = test.sms.findAnnotationForBody(test.wrongRO,
             getResourceURI("wrong-ro/.ro/ann-body2.ttl"));
         Assert.assertNull("Annotation should not be null", annotation);
     }

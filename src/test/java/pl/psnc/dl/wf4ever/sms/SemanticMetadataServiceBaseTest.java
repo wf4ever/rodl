@@ -1,9 +1,8 @@
 package pl.psnc.dl.wf4ever.sms;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
@@ -11,7 +10,6 @@ import java.util.List;
 
 import javax.naming.NamingException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -66,11 +64,7 @@ public class SemanticMetadataServiceBaseTest {
 
     protected final static URI annotationBody1URI = URI.create("http://example.org/ROs/ro1/.ro/ann1");
 
-    protected static final String PROJECT_PATH = System.getProperty("user.dir");
-
-    protected static final String FILE_SEPARATOR = System.getProperty("file.separator");
-
-    protected TestStructure testStructure;
+    protected TestStructure test;
 
 
     /**
@@ -111,7 +105,7 @@ public class SemanticMetadataServiceBaseTest {
     public void setUp()
             throws Exception {
         cleanData();
-        testStructure = new TestStructure();
+        test = new TestStructure();
     }
 
 
@@ -177,6 +171,8 @@ public class SemanticMetadataServiceBaseTest {
 
     protected URI getResourceURI(String resourceName)
             throws URISyntaxException {
+        String PROJECT_PATH = System.getProperty("user.dir");
+        String FILE_SEPARATOR = System.getProperty("file.separator");
         String result = PROJECT_PATH;
         result += FILE_SEPARATOR + "src" + FILE_SEPARATOR + "test" + FILE_SEPARATOR + "resources" + FILE_SEPARATOR
                 + "rdfStructure" + FILE_SEPARATOR + resourceName;
@@ -191,7 +187,7 @@ public class SemanticMetadataServiceBaseTest {
         public ResearchObject sp2;
         public ResearchObject arch1;
         public ResearchObject wrongRO;
-        public ResearchObject messRO;
+        public ResearchObject annotatedRO;
         public SemanticMetadataService sms;
 
 
@@ -202,74 +198,44 @@ public class SemanticMetadataServiceBaseTest {
             sp2 = ResearchObject.create(getResourceURI("ro1-sp2/"));
             arch1 = ResearchObject.create(getResourceURI("ro1-arch1/"));
             wrongRO = ResearchObject.create(getResourceURI("wrong-ro/"));
-            messRO = ResearchObject.create(getResourceURI("mess-ro/"));
+            annotatedRO = ResearchObject.create(URI.create("http://www.example.com/annotatedRO/"));
 
-            File file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/ro1/.ro/manifest.ttl");
-            FileInputStream is = new FileInputStream(file);
+            InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1/.ro/manifest.ttl");
             sms = new SemanticMetadataServiceImpl(userProfile, ro1, is, RDFFormat.TURTLE);
-            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/ro1/.ro/evo_info.ttl");
-            is = new FileInputStream(file);
+
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1/.ro/evo_info.ttl");
             sms.addNamedGraph(ro1.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
 
-            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/ro1-sp1/.ro/manifest.ttl");
-            is = new FileInputStream(file);
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1-sp1/.ro/manifest.ttl");
             sms.createResearchObject(sp1);
             sms.updateManifest(sp1, is, RDFFormat.TURTLE);
-            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/ro1-sp1/.ro/evo_info.ttl");
-            is = new FileInputStream(file);
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1-sp1/.ro/evo_info.ttl");
             sms.addNamedGraph(sp1.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
 
-            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/ro1-sp2/.ro/manifest.ttl");
-            is = new FileInputStream(file);
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1-sp2/.ro/manifest.ttl");
             sms.createResearchObject(sp2);
             sms.updateManifest(sp2, is, RDFFormat.TURTLE);
-            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/ro1-sp2/.ro/evo_info.ttl");
-            is = new FileInputStream(file);
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1-sp2/.ro/evo_info.ttl");
             sms.addNamedGraph(sp2.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
 
-            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/ro1-arch1/.ro/manifest.ttl");
-            is = new FileInputStream(file);
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1-arch1/.ro/manifest.ttl");
             sms.createResearchObject(arch1);
             sms.updateManifest(arch1, is, RDFFormat.TURTLE);
-            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/ro1-arch1/.ro/evo_info.ttl");
-            is = new FileInputStream(file);
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1-arch1/.ro/evo_info.ttl");
             sms.addNamedGraph(arch1.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
 
-            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/wrong-ro/.ro/manifest.ttl");
-            is = new FileInputStream(file);
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/wrong-ro/.ro/manifest.ttl");
             sms.createResearchObject(wrongRO);
             sms.updateManifest(wrongRO, is, RDFFormat.TURTLE);
-            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/wrong-ro/.ro/evo_info.ttl");
-            is = new FileInputStream(file);
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/wrong-ro/.ro/evo_info.ttl");
             sms.addNamedGraph(wrongRO.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
 
-            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/mess-ro/.ro/manifest.ttl");
-            is = new FileInputStream(file);
-            sms.createResearchObject(messRO);
-            sms.updateManifest(messRO, is, RDFFormat.TURTLE);
-            file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/mess-ro/.ro/evo_info.ttl");
-            is = new FileInputStream(file);
-            sms.addNamedGraph(messRO.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
-
-        }
-    }
-
-
-    //not a real test.
-    //@Test
-    public final void generateRDF()
-            throws URISyntaxException, IOException {
-        URI fakeURI = new URI("http://www.example.com/ROs/");
-        File file = new File(PROJECT_PATH + "/src/test/resources/rdfStructure/ro1/.ro/manifest.ttl");
-        FileInputStream is = new FileInputStream(file);
-        SemanticMetadataService sms = new SemanticMetadataServiceImpl(userProfile, ResearchObject.create(fakeURI), is,
-                RDFFormat.TURTLE);
-        try {
-            ResearchObject researchObject = ResearchObject.create(fakeURI);
-            System.out.println(IOUtils.toString(sms.getNamedGraphWithRelativeURIs(researchObject.getManifestUri(),
-                researchObject, RDFFormat.RDFXML)));
-        } finally {
-            sms.close();
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.ttl");
+            sms.createResearchObject(annotatedRO);
+            sms.updateManifest(annotatedRO, is, RDFFormat.TURTLE);
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/evo_info.ttl");
+            sms.addNamedGraph(annotatedRO.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
+            sms.addResource(annotatedRO, workflowURI, workflowInfo);
         }
     }
 }

@@ -601,10 +601,8 @@ public interface SemanticMetadataService {
      * @param freshSnaphotOrArchive
      *            currently processed snapshot or archive
      * @return the URI of the current snapshot or archive predecessor
-     * @throws URISyntaxException .
      */
-    URI getPreviousSnaphotOrArchive(ResearchObject liveRo, ResearchObject freshSnaphotOrArchive)
-            throws URISyntaxException;
+    URI getPreviousSnaphotOrArchive(ResearchObject liveRo, ResearchObject freshSnaphotOrArchive);
 
 
     /**

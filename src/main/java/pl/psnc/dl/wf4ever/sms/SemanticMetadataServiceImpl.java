@@ -130,7 +130,6 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             RDFFormat rdfFormat) {
         this.user = userMetadata;
         this.connection = null;
-
         graphset = new NamedGraphSetImpl();
         W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
         createUserProfile(userMetadata);
@@ -1102,8 +1101,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     @Override
-    public URI getPreviousSnaphotOrArchive(ResearchObject liveRO, ResearchObject freshSnapshotOrArchive)
-            throws URISyntaxException {
+    public URI getPreviousSnaphotOrArchive(ResearchObject liveRO, ResearchObject freshSnapshotOrArchive) {
         Individual liveSource = getIndividual(liveRO);
         StmtIterator snaphotsIterator;
         snaphotsIterator = liveSource.listProperties(ROEVO.hasSnapshot);
@@ -1125,7 +1123,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         URI result = null;
 
         while (snaphotsIterator.hasNext()) {
-            URI tmpURI = new URI(snaphotsIterator.next().getObject().toString());
+            URI tmpURI = URI.create(snaphotsIterator.next().getObject().toString());
             if (tmpURI == freshSnapshotOrArchive.getUri()) {
                 continue;
             }
@@ -1139,7 +1137,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             }
         }
         while (archiveItertator.hasNext()) {
-            URI tmpURI = new URI(archiveItertator.next().getObject().toString());
+            URI tmpURI = URI.create(archiveItertator.next().getObject().toString());
             RDFNode node = getIndividual(ResearchObject.create(tmpURI)).getProperty(ROEVO.archivedAtTime).getObject();
             DateTime tmpTime = new DateTime(node.asLiteral().getValue().toString());
             if ((tmpTime.compareTo(freshTime) == -1)
