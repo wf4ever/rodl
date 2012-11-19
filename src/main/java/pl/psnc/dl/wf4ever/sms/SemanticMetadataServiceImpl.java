@@ -783,8 +783,9 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         // generates super-attributes
         OntModel model = createOntModelForAllNamedGraphs(OntModelSpec.OWL_MEM);
         Resource subject = model.getResource(subjectURI.toString());
-        if (subject == null)
+        if (subject == null) {
             return attributes;
+        }
         StmtIterator it = model.listStatements(subject, null, (RDFNode) null);
         while (it.hasNext()) {
             Statement s = it.next();
