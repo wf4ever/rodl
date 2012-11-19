@@ -51,7 +51,6 @@ import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 
 import de.fuberlin.wiwiss.ng4j.NamedGraphSet;
@@ -64,58 +63,6 @@ import de.fuberlin.wiwiss.ng4j.impl.NamedGraphSetImpl;
  * 
  */
 public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBaseTest {
-
-    /**
-     * Test method for
-     * {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#SemanticMetadataServiceImpl(pl.psnc.dl.wf4ever.dlibra.UserProfile)}
-     * .
-     * 
-     * @throws SQLException
-     * @throws NamingException
-     * @throws IOException
-     * @throws ClassNotFoundException
-     */
-    @Test
-    public final void testSemanticMetadataServiceImpl()
-            throws ClassNotFoundException, IOException, NamingException, SQLException {
-        SemanticMetadataService sms = new SemanticMetadataServiceImpl(userProfile, true);
-        ResearchObject researchObject = ResearchObject.create(URI.create("http://www.example.com/testSMSImpl1/"));
-        sms.removeResearchObject(researchObject);
-        sms.createResearchObject(researchObject);
-        try {
-            sms.addResource(researchObject, researchObject.getUri().resolve(WORKFLOW_PATH), workflowInfo);
-            sms.addResource(researchObject, researchObject.getUri().resolve(ANNOTATION_PATH), ann1Info);
-        } finally {
-            sms.removeResearchObject(researchObject);
-            sms.close();
-        }
-        researchObject = ResearchObject.create(URI.create("http://www.example.com/testSMSImpl2/"));
-        SemanticMetadataService sms2 = new SemanticMetadataServiceImpl(userProfile, true);
-        sms2.removeResearchObject(researchObject);
-        sms2.createResearchObject(researchObject);
-        try {
-            OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-
-            model.read(sms2.getManifest(researchObject, RDFFormat.RDFXML), "");
-            Individual manifest = model.getIndividual(researchObject.getManifestUri().toString());
-            Individual ro = model.getIndividual(researchObject.getUri().toString());
-            Assert.assertNotNull("Manifest must contain ro:Manifest", manifest);
-            Assert.assertNotNull("Manifest must contain ro:ResearchObject", ro);
-            Assert.assertTrue("Manifest must be a ro:Manifest", manifest.hasRDFType(RO.NAMESPACE + "Manifest"));
-            Assert.assertTrue("RO must be a ro:ResearchObject", ro.hasRDFType(RO.NAMESPACE + "ResearchObject"));
-
-            Literal createdLiteral = manifest.getPropertyValue(DCTerms.created).asLiteral();
-            Assert.assertNotNull("Manifest must contain dcterms:created", createdLiteral);
-
-            //          Resource creatorResource = manifest.getPropertyResourceValue(DCTerms.creator);
-            //          Assert.assertNotNull("Manifest must contain dcterms:creator", creatorResource);
-        } finally {
-            sms2.removeResearchObject(researchObject);
-            sms2.close();
-        }
-
-    }
-
 
     /**
      * Test method for {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#createResearchObject(java.net.URI)} .
@@ -168,9 +115,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
         Assert.assertTrue("New creator has been added", creators.contains("Stian Soiland-Reyes"));
         Assert.assertTrue("Old creator has been deleted", !creators.contains(userProfile.getName()));
-        for (Statement s : model.listStatements().toList()) {
-            System.out.println(s.toString());
-        }
+
         Assert.assertTrue(
             "RO must aggregate resources",
             model.contains(ro, ORE.aggregates,
@@ -326,7 +271,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      * {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#removeResource(java.net.URI, java.net.URI)} .
      */
     @Test
-    public final void testRemoveResourceWithNoHardcodeVars() {
+    public final void testRemoveResource() {
         test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
         test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
         test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH));
@@ -334,7 +279,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH));
         test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH));
 
-        InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.ttl");
         test.sms.updateManifest(test.emptyRO, is, RDFFormat.TURTLE);
         test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH));
         Assert.assertNull("There should be no annotation body after a resource is deleted",
@@ -368,9 +313,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(test.sms.getResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), RDFFormat.RDFXML),
             test.emptyRO.getUri().toString());
-        for (Statement s : model.listStatements().toList()) {
-            System.out.println(s.toString());
-        }
         verifyResource(test.sms, model, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
         verifyTriple(model, test.emptyRO.getUri().resolve(WORKFLOW_PATH), URI.create("http://purl.org/dc/terms/title"),
             "A test");
@@ -482,7 +424,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testIsROMetadataNamedGraph() {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
         test.sms.addNamedGraph(test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH).resolve("fake"), is,
             RDFFormat.TURTLE);
 
@@ -558,7 +500,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         String askTrueQuery = IOUtils.toString(is, "UTF-8");
         xml = IOUtils.toString(test.sms.executeSparql(askTrueQuery, SemanticMetadataService.SPARQL_XML)
                 .getInputStream(), "UTF-8");
-        System.out.println(test.annotatedRO.getUri().resolve(WORKFLOW_PATH).toString());
         Assert.assertTrue("XML looks correct", xml.contains("true"));
         is = getClass().getClassLoader().getResourceAsStream("sparql/direct-annotations-ask-false.sparql");
         String askFalseQuery = IOUtils.toString(is, "UTF-8");
@@ -604,11 +545,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(test.sms.getNamedGraphWithRelativeURIs(test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH),
             test.annotatedRO, RDFFormat.RDFXML), "", "RDF/XML");
-        System.out.println("****");
-        for (Statement s : model.listStatements().toList()) {
-            System.out.println(s.toString());
-        }
-        System.out.println("****");
         //FIXME this does not work correctly, for some reason ".." is stripped when reading the model
         verifyTriple(model, /* "../a_workflow.t2flow" */"a%20workflow.t2flow",
             URI.create("http://purl.org/dc/terms/title"), "A test");
@@ -854,28 +790,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
 
     /**
-     * SMS should be able to load Ontology.
-     */
-    @Test
-    public final void testSMSConstructor()
-            throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
-        URI fakeURI = new URI("http://www.example.com/ROs/");
-        InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.rdf");
-        SemanticMetadataService sms = new SemanticMetadataServiceImpl(userProfile, ResearchObject.create(fakeURI), is,
-                RDFFormat.RDFXML);
-        try {
-            String manifest = IOUtils.toString(sms.getManifest(
-                ResearchObject.create(new URI("http://www.example.com/ROs/")), RDFFormat.RDFXML));
-            Assert.assertTrue(manifest.contains("http://www.example.com/ROs/"));
-            Assert.assertTrue(manifest.contains("Marco Roos"));
-            Assert.assertTrue(manifest.contains("t2flow workflow annotation extractor"));
-        } finally {
-            sms.close();
-        }
-    }
-
-
-    /**
      * getAggregatedResource function should return the complete list of aggregated resources.
      * 
      * @throws ManifestTraversingException
@@ -980,7 +894,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test(expected = IllegalArgumentException.class)
     public final void testStoreROhistoryWithParametersGivenConversely()
             throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
-        System.out.println(test.sms.storeAggregatedDifferences(test.sp1, test.sp2));
+        test.sms.storeAggregatedDifferences(test.sp1, test.sp2);
     }
 
 
