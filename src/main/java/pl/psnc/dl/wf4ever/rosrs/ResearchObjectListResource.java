@@ -120,12 +120,7 @@ public class ResearchObjectListResource {
             throw new BadRequestException("Research object ID cannot contain slashes, see WFE-703");
         }
         URI uri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.findByUri(uri);
-        if (researchObject != null) {
-            throw new ConflictException("RO already exists");
-        }
-        researchObject = ResearchObject.create(uri);
-        researchObject.save();
+        ResearchObject researchObject = ResearchObject.create(uri);
         URI researchObjectURI = ROSRService.createResearchObject(researchObject);
         LOGGER.debug(String.format("%s\t\tRO created", new DateTime().toString()));
 
@@ -151,25 +146,28 @@ public class ResearchObjectListResource {
      *             error when unzipping
      * @throws AccessDeniedException
      *             no permissions
+     * @throws ConflictException
+     *             RO already exists
      */
     @POST
     @Consumes("application/zip")
     public Response createResearchObjectFromZip(InputStream zipStream)
-            throws BadRequestException, IOException, AccessDeniedException {
+            throws BadRequestException, IOException, AccessDeniedException, ConflictException {
         String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
+        ResearchObject ro = ResearchObject.create(uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/")
+                .build());
         UUID uuid = UUID.randomUUID();
-        if (ResearchObject.findByUri(uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build()) != null) {
-            return Response.status(409).build();
+        if (ROSRService.SMS.get().containsNamedGraph(ro.getManifestUri())) {
+            throw new ConflictException("RO already exists");
         }
         File tmpFile = File.createTempFile("tmp_ro", uuid.toString());
         BufferedInputStream inputStream = new BufferedInputStream(request.getInputStream());
         FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
         IOUtils.copy(inputStream, fileOutputStream);
-        Response response = ROSRService.createNewResearchObjectFromZip(
-            uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build(), new MemoryZipFile(tmpFile));
+        Response response = ROSRService.createNewResearchObjectFromZip(ro.getUri(), new MemoryZipFile(tmpFile));
         tmpFile.delete();
         return response;
     }

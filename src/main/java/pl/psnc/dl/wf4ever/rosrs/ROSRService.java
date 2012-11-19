@@ -150,12 +150,11 @@ public final class ROSRService {
         }
 
         LOGGER.debug(String.format("%s\t\tcreate RO start", new DateTime().toString()));
-        ROSRService.DL.get().createResearchObject(researchObject, manifest, ResearchObject.MANIFEST_PATH,
+        ROSRService.DL.get().createResearchObject(researchObject.getUri(), manifest, ResearchObject.MANIFEST_PATH,
             RDFFormat.RDFXML.getDefaultMIMEType());
         if (type == EvoType.LIVE) {
             generateEvoInfo(researchObject, null, EvoType.LIVE);
         }
-        researchObject.save();
         LOGGER.debug(String.format("%s\t\tcreate RO end", new DateTime().toString()));
         return researchObject.getUri();
     }
@@ -174,14 +173,12 @@ public final class ROSRService {
     public static void deleteResearchObject(ResearchObject researchObject)
             throws DigitalLibraryException, NotFoundException {
         try {
-            ROSRService.DL.get().deleteResearchObject(researchObject);
+            ROSRService.DL.get().deleteResearchObject(researchObject.getUri());
         } finally {
             try {
                 ROSRService.SMS.get().removeResearchObject(researchObject);
             } catch (IllegalArgumentException e) {
                 LOGGER.warn("URI not found in SMS: " + researchObject.getUri());
-            } finally {
-                researchObject.delete();
             }
         }
     }
@@ -215,8 +212,8 @@ public final class ROSRService {
             resource = resource.resolve(original);
         }
         String filePath = researchObject.getUri().relativize(resource).getPath();
-        ResourceMetadata resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject, filePath, entity,
-            contentType != null ? contentType : "text/plain");
+        ResourceMetadata resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath,
+            entity, contentType != null ? contentType : "text/plain");
         ROSRService.SMS.get().addResource(researchObject, resource, resourceInfo);
         // update the manifest that describes the resource in dLibra
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
@@ -267,7 +264,7 @@ public final class ROSRService {
     public static Response deaggregateInternalResource(ResearchObject researchObject, URI resource)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         String filePath = researchObject.getUri().relativize(resource).getPath();
-        ROSRService.DL.get().deleteFile(researchObject, filePath);
+        ROSRService.DL.get().deleteFile(researchObject.getUri(), filePath);
         if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
             ROSRService.SMS.get().removeAnnotationBody(researchObject, resource);
         } else {
@@ -321,7 +318,7 @@ public final class ROSRService {
     public static boolean isInternalResource(ResearchObject researchObject, URI resource)
             throws NotFoundException, DigitalLibraryException {
         String filePath = researchObject.getUri().relativize(resource).getPath();
-        return !filePath.isEmpty() && ROSRService.DL.get().fileExists(researchObject, filePath);
+        return !filePath.isEmpty() && ROSRService.DL.get().fileExists(researchObject.getUri(), filePath);
     }
 
 
@@ -395,7 +392,7 @@ public final class ROSRService {
             String contentType)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         String filePath = researchObject.getUri().relativize(resource).getPath();
-        boolean contentExisted = ROSRService.DL.get().fileExists(researchObject, filePath);
+        boolean contentExisted = ROSRService.DL.get().fileExists(researchObject.getUri(), filePath);
         if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
             RDFFormat format = RDFFormat.forMIMEType(contentType);
             if (format == null) {
@@ -407,7 +404,7 @@ public final class ROSRService {
             updateNamedGraphInDlibra(filePath, researchObject, resource);
             updateROAttributesInDlibra(researchObject);
         } else {
-            ResourceMetadata resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject, filePath,
+            ResourceMetadata resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath,
                 new ByteArrayInputStream(entity.getBytes()), contentType != null ? contentType : "text/plain");
             ROSRService.SMS.get().addResource(researchObject, resource, resourceInfo);
             // update the manifest that describes the resource in dLibra
@@ -442,7 +439,7 @@ public final class ROSRService {
             throws AccessDeniedException, NotFoundException, DigitalLibraryException {
         String filePath = researchObject.getUri().relativize(original != null ? resource.resolve(original) : resource)
                 .getPath();
-        return ROSRService.DL.get().getFileInfo(researchObject, filePath);
+        return ROSRService.DL.get().getFileInfo(researchObject.getUri(), filePath);
     }
 
 
@@ -515,7 +512,7 @@ public final class ROSRService {
         if (resInfo == null) {
             throw new NotFoundException("Resource not found: " + resource);
         }
-        InputStream body = ROSRService.DL.get().getFileContents(researchObject, filePath);
+        InputStream body = ROSRService.DL.get().getFileContents(researchObject.getUri(), filePath);
         ContentDisposition cd = ContentDisposition.type(resInfo.getMimeType()).fileName(getFilename(resource)).build();
         return Response.ok(body).type(resInfo.getMimeType()).header("Content-disposition", cd);
     }
@@ -583,10 +580,10 @@ public final class ROSRService {
     public static void convertAggregatedResourceToAnnotationBody(ResearchObject researchObject, URI resource)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         String filePath = researchObject.getUri().relativize(resource).getPath();
-        InputStream data = ROSRService.DL.get().getFileContents(researchObject, filePath);
+        InputStream data = ROSRService.DL.get().getFileContents(researchObject.getUri(), filePath);
         if (data != null) {
-            RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get().getFileInfo(researchObject, filePath)
-                    .getMimeType());
+            RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get()
+                    .getFileInfo(researchObject.getUri(), filePath).getMimeType());
             ROSRService.SMS.get().removeResource(researchObject, resource);
             ROSRService.SMS.get().addAnnotationBody(researchObject, resource, data, format);
             // update the named graph copy in dLibra, the manifest is not changed
@@ -615,7 +612,7 @@ public final class ROSRService {
             throws NotFoundException, DigitalLibraryException, AccessDeniedException {
         if (ROSRService.SMS.get().containsNamedGraph(resource)
                 && !SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
-            ResourceMetadata info = DL.get().getFileInfo(researchObject,
+            ResourceMetadata info = DL.get().getFileInfo(researchObject.getUri(),
                 researchObject.getUri().relativize(resource).toString());
             ROSRService.SMS.get().removeAnnotationBody(researchObject, resource);
             ROSRService.SMS.get().addResource(researchObject, resource, info);
@@ -878,7 +875,7 @@ public final class ROSRService {
         Multimap<URI, Object> roAttributes = ROSRService.SMS.get().getAllAttributes(researchObject.getUri());
         roAttributes.put(URI.create("Identifier"), researchObject);
         try {
-            ROSRService.DL.get().storeAttributes(researchObject, roAttributes);
+            ROSRService.DL.get().storeAttributes(researchObject.getUri(), roAttributes);
         } catch (Exception e) {
             LOGGER.error("Caught an exception when updating RO attributes, will continue", e);
         }
@@ -906,7 +903,8 @@ public final class ROSRService {
         RDFFormat format = RDFFormat.forFileName(filePath, RDFFormat.RDFXML);
         InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(namedGraphURI, researchObject,
             format);
-        ROSRService.DL.get().createOrUpdateFile(researchObject, filePath, dataStream, format.getDefaultMIMEType());
+        ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, dataStream,
+            format.getDefaultMIMEType());
     }
 
 

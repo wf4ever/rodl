@@ -210,7 +210,7 @@ public class UserResource {
         Set<URI> list = ROSRService.SMS.get().findResearchObjectsByCreator(
             UserProfile.generateAbsoluteURI(null, userId));
         for (URI uri : list) {
-            ResearchObject ro = ResearchObject.findByUri(uri);
+            ResearchObject ro = ResearchObject.create(uri);
             ROSRService.deleteResearchObject(ro);
         }
 

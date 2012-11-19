@@ -134,10 +134,7 @@ public class ResearchObjectResource {
     public void deleteResearchObject(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
-        ResearchObject researchObject = ResearchObject.findByUri(uri);
-        if (researchObject == null) {
-            researchObject = ResearchObject.create(uri);
-        }
+        ResearchObject researchObject = ResearchObject.create(uri);
         ROSRService.deleteResearchObject(researchObject);
     }
 

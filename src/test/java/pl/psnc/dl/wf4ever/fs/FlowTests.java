@@ -22,7 +22,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.HibernateUtil;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
@@ -57,8 +56,6 @@ public class FlowTests {
 
     private static final URI RO_URI = URI.create("http://example.org/ROs/foobar/");
 
-    private ResearchObject ro;
-
     private static final String BASE = "/tmp/testdl/";
 
     private static final String USER_PASSWORD = "foo";
@@ -91,8 +88,7 @@ public class FlowTests {
         dl = new FilesystemDL(BASE, ADMIN);
         dl.createUser(USER.getLogin(), USER_PASSWORD, USER.getName());
         dl = new FilesystemDL(BASE, USER);
-        ro = ResearchObject.create(RO_URI);
-        dl.createResearchObject(ro, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
+        dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
             MAIN_FILE_MIME_TYPE);
 
         files[0] = new FileRecord("file1.txt", "file1.txt", "text/plain");
@@ -110,7 +106,7 @@ public class FlowTests {
             throws Exception {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         dl = new FilesystemDL(BASE, ADMIN);
-        dl.deleteResearchObject(ro);
+        dl.deleteResearchObject(RO_URI);
         dl = new FilesystemDL(BASE, ADMIN);
         dl.deleteUser(USER.getLogin());
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
@@ -170,7 +166,7 @@ public class FlowTests {
             throws DigitalLibraryException, IOException {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         try {
-            dl.getFileContents(ro, path).close();
+            dl.getFileContents(RO_URI, path).close();
             fail("Deleted file doesn't throw IdNotFoundException");
         } catch (NotFoundException e) {
             // good
@@ -184,7 +180,7 @@ public class FlowTests {
             throws DigitalLibraryException, NotFoundException {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         try {
-            Assert.assertTrue(dl.fileExists(ro, path));
+            Assert.assertTrue(dl.fileExists(RO_URI, path));
         } finally {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         }
@@ -195,7 +191,7 @@ public class FlowTests {
             throws DigitalLibraryException, NotFoundException {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         try {
-            dl.deleteFile(ro, path);
+            dl.deleteFile(RO_URI, path);
         } finally {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         }
@@ -206,7 +202,7 @@ public class FlowTests {
             throws DigitalLibraryException, IOException, NotFoundException {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         try {
-            InputStream zip = dl.getZippedFolder(ro, path);
+            InputStream zip = dl.getZippedFolder(RO_URI, path);
             assertNotNull(zip);
             zip.close();
         } finally {
@@ -219,10 +215,10 @@ public class FlowTests {
             throws DigitalLibraryException, IOException, NotFoundException, AccessDeniedException {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         try {
-            InputStream f = dl.getFileContents(ro, file.path);
+            InputStream f = dl.getFileContents(RO_URI, file.path);
             assertNotNull(f);
             f.close();
-            assertEquals(file.mimeType, dl.getFileInfo(ro, file.path).getMimeType());
+            assertEquals(file.mimeType, dl.getFileInfo(RO_URI, file.path).getMimeType());
         } finally {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         }
@@ -233,7 +229,7 @@ public class FlowTests {
             throws DigitalLibraryException, NotFoundException {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         try {
-            InputStream zip1 = dl.getZippedResearchObject(ro);
+            InputStream zip1 = dl.getZippedResearchObject(RO_URI);
             assertNotNull(zip1);
         } finally {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
@@ -246,7 +242,7 @@ public class FlowTests {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         try {
             InputStream f = file.open();
-            ResourceMetadata r1 = dl.createOrUpdateFile(ro, file.path, f, file.mimeType);
+            ResourceMetadata r1 = dl.createOrUpdateFile(RO_URI, file.path, f, file.mimeType);
             f.close();
             assertNotNull(r1);
         } finally {
@@ -260,7 +256,7 @@ public class FlowTests {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         InputStream f = file.open();
         try {
-            dl.createOrUpdateFile(ro, file.path, f, file.mimeType);
+            dl.createOrUpdateFile(RO_URI, file.path, f, file.mimeType);
             fail("Should throw an exception when creating file");
         } catch (Exception e) {
             // good
@@ -276,7 +272,8 @@ public class FlowTests {
             throws DigitalLibraryException, IOException, NotFoundException, AccessDeniedException {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         try {
-            ResourceMetadata r1 = dl.createOrUpdateFile(ro, path, new ByteArrayInputStream(new byte[0]), "text/plain");
+            ResourceMetadata r1 = dl.createOrUpdateFile(RO_URI, path, new ByteArrayInputStream(new byte[0]),
+                "text/plain");
             assertNotNull(r1);
         } finally {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();

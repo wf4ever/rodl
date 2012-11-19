@@ -25,7 +25,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.HibernateUtil;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
@@ -56,8 +55,6 @@ public class BasicTest {
 
     private static final URI RO_URI = URI.create("http://example.org/ROs/foobar/");
 
-    private ResearchObject ro;
-
     private static final String BASE = "/tmp/testdl/";
 
     private static final String USER_PASSWORD = "foo";
@@ -70,7 +67,6 @@ public class BasicTest {
     public void setUp()
             throws Exception {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        ro = ResearchObject.create(RO_URI);
         Files.createDirectories(Paths.get(BASE));
     }
 
@@ -80,7 +76,7 @@ public class BasicTest {
             throws IOException {
         try {
             DigitalLibrary dl = new FilesystemDL(BASE, ADMIN);
-            dl.deleteResearchObject(ro);
+            dl.deleteResearchObject(RO_URI);
         } catch (Exception e) {
 
         }
@@ -118,9 +114,9 @@ public class BasicTest {
         DigitalLibrary dlA = new FilesystemDL(BASE, ADMIN);
         assertTrue(dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName()));
         DigitalLibrary dl = new FilesystemDL(BASE, USER);
-        dl.createResearchObject(ro, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
+        dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
             MAIN_FILE_MIME_TYPE);
-        InputStream in = dl.getFileContents(ro, MAIN_FILE_PATH);
+        InputStream in = dl.getFileContents(RO_URI, MAIN_FILE_PATH);
         try {
             String file = IOUtils.toString(in);
             assertEquals("Manifest is properly saved", MAIN_FILE_CONTENT, file);
@@ -149,10 +145,10 @@ public class BasicTest {
         DigitalLibrary dlA = new FilesystemDL(BASE, ADMIN);
         dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName());
         DigitalLibrary dl = new FilesystemDL(BASE, USER);
-        dl.createResearchObject(ro, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
+        dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
             MAIN_FILE_MIME_TYPE);
         try {
-            dl.createResearchObject(ro, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
+            dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
                 MAIN_FILE_MIME_TYPE);
             fail("Should throw conflict exception");
         } catch (ConflictException e) {
@@ -169,12 +165,12 @@ public class BasicTest {
         DigitalLibrary dlA = new FilesystemDL(BASE, ADMIN);
         dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName());
         DigitalLibrary dl = new FilesystemDL(BASE, USER);
-        dl.createResearchObject(ro, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
+        dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
             MAIN_FILE_MIME_TYPE);
         Multimap<URI, Object> atts = HashMultimap.create();
         atts.put(URI.create("a"), "foo");
         atts.put(URI.create("a"), "bar");
         atts.put(URI.create("b"), "lorem ipsum");
-        dl.storeAttributes(ro, atts);
+        dl.storeAttributes(RO_URI, atts);
     }
 }

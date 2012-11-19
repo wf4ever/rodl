@@ -68,7 +68,7 @@ public class CopyOperation implements Operation {
             status.setTarget(target);
 
             ResearchObject targetRO = ResearchObject.create(target);
-            ResearchObject sourceRO = ResearchObject.findByUri(status.getCopyfrom());
+            ResearchObject sourceRO = ResearchObject.create(status.getCopyfrom());
 
             try {
                 ROSRService.createResearchObject(targetRO, status.getType(), sourceRO);

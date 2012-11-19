@@ -90,10 +90,7 @@ public class Resource {
             @QueryParam("original") String original, String entity)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.findByUri(uri);
-        if (researchObject == null) {
-            researchObject = ResearchObject.create(uri);
-        }
+        ResearchObject researchObject = ResearchObject.create(uri);
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
@@ -160,10 +157,7 @@ public class Resource {
             @PathParam("filePath") String filePath, @QueryParam("original") String original, InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.findByUri(uri);
-        if (researchObject == null) {
-            researchObject = ResearchObject.create(uri);
-        }
+        ResearchObject researchObject = ResearchObject.create(uri);
         URI resource = uriInfo.getAbsolutePath();
         URI body;
         List<URI> targets = new ArrayList<>();
@@ -301,10 +295,7 @@ public class Resource {
             @QueryParam("original") String original)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.findByUri(uri);
-        if (researchObject == null) {
-            researchObject = ResearchObject.create(uri);
-        }
+        ResearchObject researchObject = ResearchObject.create(uri);
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
