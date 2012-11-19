@@ -5,10 +5,7 @@ import java.net.URI;
 public class SafeURI {
 
     public static String URItoString(URI uri) {
-        if (uri.getScheme().equals("file")) {
-            return "file://" + uri.toString().split("file:")[1];
-        }
-        return uri.toString();
+        return URItoString(uri.toString());
     }
 
 

@@ -816,21 +816,21 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      * @throws ManifestTraversingException
      */
     @Test
-    public final void getAnnotations()
+    public final void testGetAnnotations()
             throws ManifestTraversingException {
         List<Annotation> list = test.sms.getAnnotations(test.ro1);
         int cnt = 0;
         Boolean evo = true;
         Boolean ann = true;
         Boolean blank = true;
-        URI annUri = URI.create("file:///home/pejot/code/rosrs/src/test/resources/rdfStructure/ro1/ann1");
-        URI evoUri = URI.create("file:///home/pejot/code/rosrs/src/test/resources/rdfStructure/ro1/evo_info");
-
         for (Annotation a : list) {
-            if (SafeURI.URItoString(annUri).equals(SafeURI.URItoString(a.getUri())) && ann) {
+            if (SafeURI.URItoString(test.ro1.getUri().resolve(ANNOTATION_PATH)).equals(SafeURI.URItoString(a.getUri()))
+                    && ann) {
                 ann = false;
                 cnt++;
-            } else if (SafeURI.URItoString(evoUri).equals(SafeURI.URItoString(a.getUri())) && evo) {
+            } else if (SafeURI.URItoString(test.ro1.getUri().resolve(EVO_ANNOTATION)).equals(
+                SafeURI.URItoString(a.getUri()))
+                    && evo) {
                 evo = false;
                 cnt++;
             } else if (blank) {
