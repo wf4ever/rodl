@@ -57,6 +57,7 @@ public class SemanticMetadataServiceBaseTest {
     protected final static String FOLDER_PATH = "afolder/";
     protected final static String ANNOTATION_BODY_PATH = ".ro/ann1";
     protected final static String ANNOTATION_PATH = "ann1";
+    protected final static String EVO_ANNOTATION = "evo_info";
 
     protected TestStructure test;
 
