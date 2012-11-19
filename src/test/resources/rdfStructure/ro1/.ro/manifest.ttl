@@ -8,6 +8,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix rdfg: <http://www.w3.org/2004/03/trix/rdfg-1/> .
+@prefix dc: <http://purl.org/dc/terms/> .
 
 <.ro/manifest.ttl> a ro:Manifest ;
     ore:describes <.> ;
@@ -28,7 +29,9 @@
 	ore:aggregates <afinalfolder> ;
 	ore:aggregates <final-agregated-resource-file> ;
 	ore:aggregates :evo_info ;
-	ore:aggregates <.ro/evo_info.ttl> .
+	ore:aggregates <.ro/evo_info.ttl> ;
+	ore:aggregates <http://www.example.com/empty> .
+	
 
 <.ro/evo_info.ttl> a ore:AggregatedResources;
 	dct:created "2000-02-01T16:01:10Z"^^xsd:dateTime ;
@@ -41,14 +44,15 @@
 	
 _:blank a ro:AggregatedAnnotation ;
     ro:annotatesAggregatedResource <agregated-resource-file> ;
-    ao:body <.ro/ann-blank-body.ttl> ;
+    #ao:body <.ro/ann-blank-body.ttl> ;
+	ao:body <http://www.example.com/empty> ;	
 	dct:created "2001-01-01T16:01:10Z"^^xsd:dateTime ;
     dct:creator [ a foaf:Agent ; foaf:name "t2flow workflow annotation extractor" ] .
 
 	
 :ann1 a ro:AggregatedAnnotation ;
     ro:annotatesAggregatedResource <agregated-resource-file> ;
-    ao:body <.ro/ann1-body.ttl> ;
+   	ao:body <.ro/ann1-body.ttl> ;
   	dct:created "2001-01-01T16:01:10Z"^^xsd:dateTime ;
     dct:creator [ a foaf:Agent ; foaf:name "t2flow workflow annotation extractor" ] .
     
@@ -76,3 +80,6 @@ _:blank a ro:AggregatedAnnotation ;
 <afinalfolder> a ro:Folder ;
     dct:created "2003-01-01T16:01:10Z"^^xsd:dateTime ;
     ore:isDescribedBy <afolder.ttl> .
+
+
+    

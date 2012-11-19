@@ -11,11 +11,11 @@ PREFIX ro: <http://purl.org/wf4ever/ro#>
 PREFIX ore: <http://www.openarchives.org/ore/terms/>
 
 ASK { 
-	?ann ro:annotatesAggregatedResource <http://example.org/ROs/ro1/a%20workflow.t2flow> ;
+	?ann ro:annotatesAggregatedResource <http://www.example.org/annotatedRO/a%20workflow.t2flow> ;
 	       a ro:AggregatedAnnotation ;
 	       ao:body ?graph .
 	GRAPH ?graph {
-		<http://example.org/ROs/ro1/a%20workflow.t2flow> dcterms:creator "Dohn Joe" .
+		<http://www.example.org/annotatedRO/a%20workflow.t2flow> dcterms:creator "Dohn Joe" .
 	}
 }
 

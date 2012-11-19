@@ -6,7 +6,7 @@ public class SafeURI {
 
     public static String URItoString(URI uri) {
         if (uri.getScheme().equals("file")) {
-            return "file://" + uri.getPath();
+            return "file://" + uri.toString().split("file:")[1];
         }
         return uri.toString();
     }
