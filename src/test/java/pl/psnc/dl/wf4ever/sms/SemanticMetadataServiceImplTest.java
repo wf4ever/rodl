@@ -824,8 +824,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Boolean ann = true;
         Boolean blank = true;
         for (Annotation a : list) {
-            System.out.println(SafeURI.URItoString(test.ro1.getUri().resolve(ANNOTATION_PATH)));
-            System.out.println(SafeURI.URItoString(a.getUri()));
             if (SafeURI.URItoString(test.ro1.getUri().resolve(ANNOTATION_PATH)).equals(SafeURI.URItoString(a.getUri()))
                     && ann) {
                 ann = false;
