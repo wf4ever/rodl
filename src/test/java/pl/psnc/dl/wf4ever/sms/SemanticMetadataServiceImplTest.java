@@ -83,8 +83,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         sms.removeResearchObject(researchObject);
         sms.createResearchObject(researchObject);
         try {
-            sms.addResource(researchObject, workflowURI, workflowInfo);
-            sms.addResource(researchObject, ann1URI, ann1Info);
+            sms.addResource(researchObject, researchObject.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+            sms.addResource(researchObject, researchObject.getUri().resolve(ANNOTATION_PATH), ann1Info);
         } finally {
             sms.removeResearchObject(researchObject);
             sms.close();
@@ -134,8 +134,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testUpdateManifest() {
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, resourceFakeURI, resourceFakeInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
 
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.ttl");
         test.sms.updateManifest(test.emptyRO, is, RDFFormat.TURTLE);
@@ -174,15 +174,17 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Assert.assertTrue(
             "RO must aggregate resources",
             model.contains(ro, ORE.aggregates,
-                model.createResource(test.emptyRO.getUri().resolve(WORKLOW_PATH).toString())));
+                model.createResource(test.emptyRO.getUri().resolve(WORKFLOW_PATH).toString())));
         Assert.assertTrue(
             "RO must aggregate resources",
             model.contains(ro, ORE.aggregates,
-                model.createResource(test.emptyRO.getUri().resolve(ANNOTATION1_PATH).toString())));
-        Assert.assertTrue("RO must not aggregate previous resources",
-            !model.contains(ro, ORE.aggregates, model.createResource(resourceFakeURI.toString())));
+                model.createResource(test.emptyRO.getUri().resolve(ANNOTATION_PATH).toString())));
+        Assert.assertTrue(
+            "RO must not aggregate previous resources",
+            !model.contains(ro, ORE.aggregates,
+                model.createResource(test.emptyRO.getUri().resolve(FAKE_PATH).toString())));
         validateProxy(model, manifest, test.emptyRO.getUri().toString() + "proxy1",
-            test.emptyRO.getUri().resolve(WORKLOW_PATH).toString());
+            test.emptyRO.getUri().resolve(WORKFLOW_PATH).toString());
     }
 
 
@@ -204,18 +206,17 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testRemoveManifest() {
-        test.sms.addResource(test.emptyRO, workflowURI, workflowInfo);
-        test.sms.addResource(test.emptyRO, ann1URI, ann1Info);
-        InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
-        test.sms.addNamedGraph(annotationBody1URI, is, RDFFormat.TURTLE);
-
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
+        test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), is, RDFFormat.TURTLE);
         test.sms.removeResearchObject(test.emptyRO);
 
         //Should not throw an exception
         test.sms.removeResearchObject(test.emptyRO);
 
         Assert.assertNotNull("Get other named graph must not return null",
-            test.sms.getNamedGraph(annotationBody1URI, RDFFormat.RDFXML));
+            test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), RDFFormat.RDFXML));
     }
 
 
@@ -294,11 +295,11 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
         Quad sampleAgg = new Quad(Node.createURI(test.annotatedRO.getManifestUri().toString()),
                 Node.createURI(test.annotatedRO.getUri().toString()), Node.createURI(ORE.aggregates.getURI()),
-                Node.createURI(test.annotatedRO.getUri().resolve(WORKLOW_PATH).toString()));
+                Node.createURI(test.annotatedRO.getUri().resolve(WORKFLOW_PATH).toString()));
         Assert.assertTrue("Contains a sample aggregation", graphset.containsQuad(sampleAgg));
 
-        Quad sampleAnn = new Quad(Node.createURI(test.annotatedRO.getUri().resolve(ANNOTATION1_BODY_PATH).toString()),
-                Node.createURI(test.annotatedRO.getUri().resolve(WORKLOW_PATH).toString()),
+        Quad sampleAnn = new Quad(Node.createURI(test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH).toString()),
+                Node.createURI(test.annotatedRO.getUri().resolve(WORKFLOW_PATH).toString()),
                 Node.createURI("http://purl.org/dc/terms/license"), Node.createLiteral("GPL"));
         Assert.assertTrue("Contains a sample annotation", graphset.containsQuad(sampleAnn));
     }
@@ -312,10 +313,11 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public final void testAddResource()
             throws ClassNotFoundException, IOException, NamingException, SQLException {
-        Assert.assertTrue(test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKLOW_PATH), workflowInfo));
-        Assert.assertTrue(test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION1_BODY_PATH),
+        Assert.assertTrue(test.sms
+                .addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo));
+        Assert.assertTrue(test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH),
             ann1Info));
-        Assert.assertFalse(test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKLOW_PATH), null));
+        Assert.assertFalse(test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), null));
     }
 
 
@@ -325,24 +327,24 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testRemoveResourceWithNoHardcodeVars() {
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION1_PATH), ann1Info);
-        test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKLOW_PATH));
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
+        test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH));
         // no longer throws exceptions
-        test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKLOW_PATH));
-        test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION1_PATH));
+        test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH));
+        test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH));
 
         InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
         test.sms.updateManifest(test.emptyRO, is, RDFFormat.TURTLE);
-        test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKLOW_PATH));
+        test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH));
         Assert.assertNull("There should be no annotation body after a resource is deleted",
-            test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION1_PATH), RDFFormat.RDFXML));
+            test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_PATH), RDFFormat.RDFXML));
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         model.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
         Assert.assertFalse(model.listStatements(null, null,
-            model.createResource(test.emptyRO.getUri().resolve(ANNOTATION1_PATH).toString())).hasNext());
+            model.createResource(test.emptyRO.getUri().resolve(ANNOTATION_PATH).toString())).hasNext());
         Assert.assertFalse(model.listStatements(
-            model.createResource(test.emptyRO.getUri().resolve(ANNOTATION1_PATH).toString()), null, (RDFNode) null)
+            model.createResource(test.emptyRO.getUri().resolve(ANNOTATION_PATH).toString()), null, (RDFNode) null)
                 .hasNext());
     }
 
@@ -357,30 +359,30 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public final void testGetResource()
             throws URISyntaxException {
         Assert.assertNull("Returns null when resource does not exist",
-            test.sms.getResource(test.emptyRO, workflowURI, RDFFormat.RDFXML));
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION1_PATH), ann1Info);
+            test.sms.getResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), RDFFormat.RDFXML));
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION1_BODY_PATH), is, RDFFormat.TURTLE);
+        test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), is, RDFFormat.TURTLE);
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(test.sms.getResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKLOW_PATH), RDFFormat.RDFXML),
+        model.read(test.sms.getResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), RDFFormat.RDFXML),
             test.emptyRO.getUri().toString());
         for (Statement s : model.listStatements().toList()) {
             System.out.println(s.toString());
         }
-        verifyResource(test.sms, model, test.emptyRO.getUri().resolve(WORKLOW_PATH), workflowInfo);
-        verifyTriple(model, test.emptyRO.getUri().resolve(WORKLOW_PATH), URI.create("http://purl.org/dc/terms/title"),
+        verifyResource(test.sms, model, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        verifyTriple(model, test.emptyRO.getUri().resolve(WORKFLOW_PATH), URI.create("http://purl.org/dc/terms/title"),
             "A test");
-        verifyTriple(model, test.emptyRO.getUri().resolve(WORKLOW_PATH), URI.create("http://purl.org/dc/terms/title"),
+        verifyTriple(model, test.emptyRO.getUri().resolve(WORKFLOW_PATH), URI.create("http://purl.org/dc/terms/title"),
             "An alternative title");
-        verifyTriple(model, test.emptyRO.getUri().resolve(WORKLOW_PATH),
+        verifyTriple(model, test.emptyRO.getUri().resolve(WORKFLOW_PATH),
             URI.create("http://purl.org/dc/terms/license"), "GPL");
 
         model.read(
-            test.sms.getResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION1_PATH), RDFFormat.TURTLE),
-            null, "TTL");
-        verifyResource(test.sms, model, test.emptyRO.getUri().resolve(ANNOTATION1_PATH), ann1Info);
+            test.sms.getResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH), RDFFormat.TURTLE), null,
+            "TTL");
+        verifyResource(test.sms, model, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
     }
 
 
@@ -391,18 +393,18 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testGetNamedGraph() {
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION1_PATH), ann1Info);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION1_BODY_PATH), is, RDFFormat.TURTLE);
+        test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), is, RDFFormat.TURTLE);
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION1_BODY_PATH), RDFFormat.TURTLE),
-            null, "TTL");
+        model.read(test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), RDFFormat.TURTLE), null,
+            "TTL");
 
-        verifyTriple(model, test.emptyRO.getUri().resolve(WORKLOW_PATH), URI.create("http://purl.org/dc/terms/title"),
+        verifyTriple(model, test.emptyRO.getUri().resolve(WORKFLOW_PATH), URI.create("http://purl.org/dc/terms/title"),
             "A test");
-        verifyTriple(model, test.emptyRO.getUri().resolve(WORKLOW_PATH),
+        verifyTriple(model, test.emptyRO.getUri().resolve(WORKFLOW_PATH),
             URI.create("http://purl.org/dc/terms/license"), "GPL");
         verifyTriple(model, URI.create("http://workflows.org/a%20workflow.scufl"),
             URI.create("http://purl.org/dc/terms/description"), "Something interesting");
@@ -417,8 +419,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testFindManifests() {
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION1_PATH), ann1Info);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
 
         Set<URI> result = test.sms.findResearchObjectsByPrefix(test.emptyRO.getUri().resolve(".."));
         Assert.assertTrue("Find with base of RO", result.contains(test.emptyRO.getUri()));
@@ -452,8 +454,9 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Assert.assertTrue("<afolder> is an ro:Folder",
             test.sms.isRoFolder(test.emptyRO, test.emptyRO.getUri().resolve(FOLDER_PATH)));
         Assert.assertTrue("<ann1> is not an ro:Folder",
-            !test.sms.isRoFolder(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION1_PATH)));
-        Assert.assertTrue("Fake resource is not an ro:Folder", !test.sms.isRoFolder(test.emptyRO, resourceFakeURI));
+            !test.sms.isRoFolder(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH)));
+        Assert.assertTrue("Fake resource is not an ro:Folder",
+            !test.sms.isRoFolder(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH)));
         Assert.assertTrue("<afolder> is not an ro:Folder according to other RO",
             !test.sms.isRoFolder(test.emptyRO2, test.emptyRO.getUri().resolve(FOLDER_PATH)));
     }
@@ -466,10 +469,10 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testAddNamedGraph() {
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION1_BODY_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION1_PATH), ann1Info);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        Assert.assertTrue(test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION1_BODY_PATH), is,
+        Assert.assertTrue(test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), is,
             RDFFormat.TURTLE));
     }
 
@@ -480,21 +483,21 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public final void testIsROMetadataNamedGraph() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
-        test.sms.addNamedGraph(test.annotatedRO.getUri().resolve(ANNOTATION1_BODY_PATH).resolve("fake"), is,
+        test.sms.addNamedGraph(test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH).resolve("fake"), is,
             RDFFormat.TURTLE);
 
         Assert.assertTrue("Annotation body is an RO metadata named graph",
-            test.sms.isROMetadataNamedGraph(test.annotatedRO, test.annotatedRO.getUri().resolve(ANNOTATION1_BODY_PATH)));
+            test.sms.isROMetadataNamedGraph(test.annotatedRO, test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH)));
         Assert.assertTrue(
             "An random named graph is not an RO metadata named graph",
-            !test.sms.isROMetadataNamedGraph(test.annotatedRO, test.annotatedRO.getUri().resolve(ANNOTATION1_BODY_PATH)
+            !test.sms.isROMetadataNamedGraph(test.annotatedRO, test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH)
                     .resolve("fake")));
         Assert.assertTrue("Manifest is an RO metadata named graph",
             test.sms.isROMetadataNamedGraph(test.annotatedRO, test.annotatedRO.getManifestUri()));
         Assert.assertTrue("A resource is not an RO metadata named graph",
-            !test.sms.isROMetadataNamedGraph(test.emptyRO, workflowURI));
+            !test.sms.isROMetadataNamedGraph(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH)));
         Assert.assertTrue("A fake resource is not an RO metadata named graph",
-            !test.sms.isROMetadataNamedGraph(test.annotatedRO, resourceFakeURI));
+            !test.sms.isROMetadataNamedGraph(test.annotatedRO, test.emptyRO.getUri().resolve(FAKE_PATH)));
     }
 
 
@@ -504,42 +507,42 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testRemoveNamedGraph() {
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION1_PATH), ann1Info);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION1_BODY_PATH), is, RDFFormat.TURTLE);
+        test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), is, RDFFormat.TURTLE);
         Assert.assertNotNull("A named graph exists",
-            test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION1_BODY_PATH), RDFFormat.RDFXML));
-        test.sms.removeNamedGraph(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION1_BODY_PATH));
+            test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), RDFFormat.RDFXML));
+        test.sms.removeNamedGraph(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH));
         Assert.assertNull("A deleted named graph no longer exists",
-            test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION1_BODY_PATH), RDFFormat.RDFXML));
+            test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), RDFFormat.RDFXML));
     }
 
 
     @Test
     public final void testExecuteSparql()
             throws IOException {
-        String describeQuery = String.format("DESCRIBE <%s>", test.annotatedRO.getUri().resolve(WORKLOW_PATH)
+        String describeQuery = String.format("DESCRIBE <%s>", test.annotatedRO.getUri().resolve(WORKFLOW_PATH)
                 .toString());
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         QueryResult res = test.sms.executeSparql(describeQuery, RDFFormat.RDFXML);
         model.read(res.getInputStream(), null, "RDF/XML");
-        Individual resource = model.getIndividual(test.annotatedRO.getUri().resolve(WORKLOW_PATH).toString());
+        Individual resource = model.getIndividual(test.annotatedRO.getUri().resolve(WORKFLOW_PATH).toString());
         Assert.assertNotNull("Resource cannot be null", resource);
         Assert.assertTrue(
-            String.format("Resource %s must be a ro:Resource", test.annotatedRO.getUri().resolve(WORKLOW_PATH)),
+            String.format("Resource %s must be a ro:Resource", test.annotatedRO.getUri().resolve(WORKFLOW_PATH)),
             resource.hasRDFType(RO.NAMESPACE + "Resource"));
 
-        InputStream is = getClass().getClassLoader().getResourceAsStream("direct-annotations-construct.sparql");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("sparql/direct-annotations-construct.sparql");
         String constructQuery = IOUtils.toString(is, "UTF-8");
         model.removeAll();
         model.read(test.sms.executeSparql(constructQuery, RDFFormat.RDFXML).getInputStream(), null, "RDF/XML");
         Assert.assertTrue("Construct contains triple 1", model.contains(
-            model.createResource(test.annotatedRO.getUri().resolve(WORKLOW_PATH).toString()), DCTerms.title, "A test"));
+            model.createResource(test.annotatedRO.getUri().resolve(WORKFLOW_PATH).toString()), DCTerms.title, "A test"));
         Assert.assertTrue("Construct contains triple 2", model.contains(
-            model.createResource(test.annotatedRO.getUri().resolve(WORKLOW_PATH).toString()), DCTerms.license, "GPL"));
+            model.createResource(test.annotatedRO.getUri().resolve(WORKFLOW_PATH).toString()), DCTerms.license, "GPL"));
 
-        is = getClass().getClassLoader().getResourceAsStream("direct-annotations-select.sparql");
+        is = getClass().getClassLoader().getResourceAsStream("sparql/direct-annotations-select.sparql");
         String selectQuery = IOUtils.toString(is, "UTF-8");
         String xml = IOUtils.toString(test.sms.executeSparql(selectQuery, SemanticMetadataService.SPARQL_XML)
                 .getInputStream(), "UTF-8");
@@ -551,13 +554,13 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         // FIXME make more in-depth JSON validation
         Assert.assertTrue("JSON looks correct", json.contains("Marco Roos"));
 
-        is = getClass().getClassLoader().getResourceAsStream("direct-annotations-ask-true.sparql");
+        is = getClass().getClassLoader().getResourceAsStream("sparql/direct-annotations-ask-true.sparql");
         String askTrueQuery = IOUtils.toString(is, "UTF-8");
         xml = IOUtils.toString(test.sms.executeSparql(askTrueQuery, SemanticMetadataService.SPARQL_XML)
                 .getInputStream(), "UTF-8");
-        System.out.println(test.annotatedRO.getUri().resolve(WORKLOW_PATH).toString());
+        System.out.println(test.annotatedRO.getUri().resolve(WORKFLOW_PATH).toString());
         Assert.assertTrue("XML looks correct", xml.contains("true"));
-        is = getClass().getClassLoader().getResourceAsStream("direct-annotations-ask-false.sparql");
+        is = getClass().getClassLoader().getResourceAsStream("sparql/direct-annotations-ask-false.sparql");
         String askFalseQuery = IOUtils.toString(is, "UTF-8");
         xml = IOUtils.toString(test.sms.executeSparql(askFalseQuery, SemanticMetadataService.SPARQL_XML)
                 .getInputStream(), "UTF-8");
@@ -578,7 +581,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public final void testGetAllAttributes()
             throws ClassNotFoundException, IOException, NamingException, SQLException {
-        Multimap<URI, Object> atts = test.sms.getAllAttributes(test.annotatedRO.getUri().resolve(WORKLOW_PATH));
+        Multimap<URI, Object> atts = test.sms.getAllAttributes(test.simpleAnnotatedRO.getUri().resolve(WORKFLOW_PATH));
         Assert.assertEquals(6, atts.size());
         Assert.assertTrue("Attributes contain type",
             atts.containsValue(URI.create("http://purl.org/wf4ever/ro#Resource")));
@@ -599,7 +602,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public void testGetNamedGraphWithRelativeURIs() {
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(test.sms.getNamedGraphWithRelativeURIs(test.annotatedRO.getUri().resolve(ANNOTATION1_BODY_PATH),
+        model.read(test.sms.getNamedGraphWithRelativeURIs(test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH),
             test.annotatedRO, RDFFormat.RDFXML), "", "RDF/XML");
         System.out.println("****");
         for (Statement s : model.listStatements().toList()) {
@@ -609,11 +612,11 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         //FIXME this does not work correctly, for some reason ".." is stripped when reading the model
         verifyTriple(model, /* "../a_workflow.t2flow" */"a%20workflow.t2flow",
             URI.create("http://purl.org/dc/terms/title"), "A test");
-        verifyTriple(model, URI.create("a%20workflow.t2flow"), URI.create("http://purl.org/dc/terms/license"), "GPL");
-        verifyTriple(model, URI.create("http://workflows.org/a%20workflow.scufl"),
-            URI.create("http://purl.org/dc/terms/description"), "Something interesting");
+        verifyTriple(model, URI.create(WORKFLOW_PATH), URI.create(DCTerms.license.getURI()), "GPL");
+        verifyTriple(model, URI.create(WORKFLOW_ORG_WORFLOW_SCUF_PATH), URI.create(DCTerms.description.getURI()),
+            "Something interesting");
         verifyTriple(model, /* "../a_workflow.t2flow#somePartOfIt" */"a%20workflow.t2flow#somePartOfIt",
-            URI.create("http://purl.org/dc/terms/description"), "The key part");
+            URI.create(DCTerms.description.getURI()), "The key part");
     }
 
 
@@ -637,35 +640,45 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
     @Test
     public final void testIsAggregatedResource() {
-        test.sms.addResource(test.emptyRO, workflowURI, workflowInfo);
-        Assert.assertTrue("Is aggregated", test.sms.isAggregatedResource(test.emptyRO, workflowURI));
-        Assert.assertFalse("Is not aggregated", test.sms.isAggregatedResource(test.emptyRO, workflow2URI));
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        Assert.assertTrue("Is aggregated",
+            test.sms.isAggregatedResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH)));
+        Assert.assertFalse("Is not aggregated",
+            test.sms.isAggregatedResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2)));
     }
 
 
     @Test
     public final void testIsAnnotation() {
-        test.sms.addResource(test.emptyRO, workflowURI, workflowInfo);
-        URI ann = test.sms.addAnnotation(test.emptyRO, Arrays.asList(workflowURI), annotationBody1URI);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        URI ann = test.sms.addAnnotation(test.emptyRO, Arrays.asList(test.emptyRO.getUri().resolve(ANNOTATION_PATH)),
+            test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH));
         Assert.assertTrue("Annotation is an annotation", test.sms.isAnnotation(test.emptyRO, ann));
-        Assert.assertFalse("Workflow is not an annotation", test.sms.isAnnotation(test.emptyRO, workflowURI));
-        Assert.assertFalse("2nd workflow is not an annotation", test.sms.isAnnotation(test.emptyRO, workflow2URI));
+        Assert.assertFalse("Workflow is not an annotation",
+            test.sms.isAnnotation(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH)));
+        Assert.assertFalse("2nd workflow is not an annotation",
+            test.sms.isAnnotation(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2)));
     }
 
 
     @Test
     public final void testAddAnnotation() {
-        test.sms.addResource(test.emptyRO, workflowURI, workflowInfo);
-        URI ann = test.sms.addAnnotation(test.emptyRO, Arrays.asList(workflowURI, workflow2URI), annotationBody1URI);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        URI ann = test.sms
+                .addAnnotation(
+                    test.emptyRO,
+                    Arrays.asList(test.emptyRO.getUri().resolve(WORKFLOW_PATH),
+                        test.emptyRO.getUri().resolve(WORKFLOW_PATH_2)),
+                    test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH));
         Assert.assertNotNull("Ann URI is not null", ann);
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
         Resource researchObjectR = model.getResource(test.emptyRO.getUri().toString());
         Resource annotation = model.getResource(ann.toString());
-        Resource workflow = model.getResource(workflowURI.toString());
-        Resource workflow2 = model.getResource(workflow2URI.toString());
-        Resource abody = model.getResource(annotationBody1URI.toString());
+        Resource workflow = model.getResource(test.emptyRO.getUri().resolve(WORKFLOW_PATH).toString());
+        Resource workflow2 = model.getResource(test.emptyRO.getUri().resolve(WORKFLOW_PATH_2).toString());
+        Resource abody = model.getResource(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH).toString());
 
         Assert.assertTrue(model.contains(researchObjectR, ORE.aggregates, annotation));
         Assert.assertTrue(model.contains(annotation, RO.annotatesAggregatedResource, workflow));
@@ -676,17 +689,23 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
     @Test
     public final void testUpdateAnnotation() {
-        test.sms.addResource(test.emptyRO, workflowURI, workflowInfo);
-        URI ann = test.sms.addAnnotation(test.emptyRO, Arrays.asList(workflowURI, workflow2URI), annotationBody1URI);
-        test.sms.updateAnnotation(test.emptyRO, ann, Arrays.asList(workflowURI, test.emptyRO.getUri()), workflow2URI);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        URI ann = test.sms
+                .addAnnotation(
+                    test.emptyRO,
+                    Arrays.asList(test.emptyRO.getUri().resolve(WORKFLOW_PATH),
+                        test.emptyRO.getUri().resolve(WORKFLOW_PATH_2)),
+                    test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH));
+        test.sms.updateAnnotation(test.emptyRO, ann, Arrays.asList(test.emptyRO.getUri().resolve(WORKFLOW_PATH),
+            test.emptyRO.getUri()), test.emptyRO.getUri().resolve(WORKFLOW_PATH_2));
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
         Resource researchObjectR = model.getResource(test.emptyRO.getUri().toString());
         Resource annotation = model.getResource(ann.toString());
-        Resource workflow = model.getResource(workflowURI.toString());
-        Resource workflow2 = model.getResource(workflow2URI.toString());
-        Resource abody = model.getResource(annotationBody1URI.toString());
+        Resource workflow = model.getResource(test.emptyRO.getUri().resolve(WORKFLOW_PATH).toString());
+        Resource workflow2 = model.getResource(test.emptyRO.getUri().resolve(WORKFLOW_PATH_2).toString());
+        Resource abody = model.getResource(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH).toString());
 
         Assert.assertTrue(model.contains(researchObjectR, ORE.aggregates, annotation));
         Assert.assertTrue(model.contains(annotation, RO.annotatesAggregatedResource, workflow));
@@ -702,11 +721,13 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testGetAnnotationBody() {
-        URI ann = test.sms.addAnnotation(test.annotatedRO, Arrays.asList(workflowURI, workflow2URI),
-            URI.create("http://www.example.com/somewhere/"));
+        URI somewhere = URI.create("http://www.example.com/somewhere/");
+        URI ann = test.sms.addAnnotation(
+            test.annotatedRO,
+            Arrays.asList(test.annotatedRO.getUri().resolve(WORKFLOW_PATH),
+                test.annotatedRO.getUri().resolve(WORKFLOW_PATH_2)), somewhere);
         URI annBody = test.sms.getAnnotationBody(test.annotatedRO, ann);
-        Assert.assertEquals("Annotation body retrieved correctly", URI.create("http://www.example.com/somewhere/"),
-            annBody);
+        Assert.assertEquals("Annotation body retrieved correctly", somewhere, annBody);
     }
 
 
@@ -716,8 +737,11 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testDeleteAnnotation() {
-        URI ann = test.sms
-                .addAnnotation(test.annotatedRO, Arrays.asList(workflowURI, workflow2URI), annotationBody1URI);
+        URI ann = test.sms.addAnnotation(
+            test.annotatedRO,
+            Arrays.asList(test.annotatedRO.getUri().resolve(WORKFLOW_PATH),
+                test.annotatedRO.getUri().resolve(WORKFLOW_PATH_2)),
+            test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH));
         test.sms.deleteAnnotation(test.annotatedRO, ann);
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(test.sms.getManifest(test.annotatedRO, RDFFormat.RDFXML), null);
@@ -771,9 +795,9 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public final void testGetIndividual()
             throws URISyntaxException, ClassNotFoundException, IOException, NamingException, SQLException {
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(getResourceURI("ro1/").resolve(".ro/manifest.ttl").toString(), "TTL");
-        model.read(getResourceURI("ro1/").resolve(".ro/evo_info.ttl").toString(), "TTL");
-        Individual source = model.getIndividual(getResourceURI("ro1/").toString());
+        model.read(SafeURI.URItoString(test.ro1.getUri().resolve(".ro/manifest.ttl")), "TTL");
+        model.read(SafeURI.URItoString(test.ro1.getFixedEvolutionAnnotationBodyPath()), "TTL");
+        Individual source = model.getIndividual(test.ro1.getUriString());
         Individual source2 = test.sms.getIndividual(test.ro1);
         Assert.assertEquals("wrong individual returned", source, source2);
     }
@@ -810,8 +834,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public final void testChangeURIInManifestAndAnnotationBodies()
             throws ClassNotFoundException, IOException, NamingException, SQLException {
         int cnt = test.sms.changeURIInManifestAndAnnotationBodies(test.annotatedRO,
-            test.annotatedRO.getUri().resolve("a%20workflow.t2flow"),
-            URI.create("http://www.example.com/complete_new_uri"), true);
+            test.annotatedRO.getUri().resolve(WORKFLOW_PATH), URI.create("http://www.example.com/complete_new_uri"),
+            true);
         Assert.assertEquals("9 URIs should be changed", 9, cnt);
     }
 
@@ -823,8 +847,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public final void testChangeURIInManifest()
             throws ClassNotFoundException, IOException, NamingException, SQLException {
         int cnt = test.sms.changeURIInManifestAndAnnotationBodies(test.annotatedRO,
-            test.annotatedRO.getUri().resolve("a%20workflow.t2flow"),
-            URI.create("http://www.example.com/complete_new_uri"), false);
+            test.annotatedRO.getUri().resolve(WORKFLOW_PATH), URI.create("http://www.example.com/complete_new_uri"),
+            false);
         Assert.assertEquals("6 URIs should be changed", 6, cnt);
     }
 
@@ -989,14 +1013,14 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public void testAddFolder() {
 
         Folder folder = new Folder();
-        folder.setUri(FOLDER_URI);
+        folder.setUri(test.emptyRO.getUri().resolve(FOLDER_PATH));
 
-        test.sms.addResource(test.emptyRO, workflowURI, workflowInfo);
-        test.sms.addResource(test.emptyRO, workflow2URI, workflowInfo);
-        test.sms.addResource(test.emptyRO, resourceFakeURI, resourceFakeInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
 
-        folder.getFolderEntries().add(new FolderEntry(workflowURI, "workflow1"));
-        folder.getFolderEntries().add(new FolderEntry(resourceFakeURI, "a resource"));
+        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
+        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
 
         Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
         Assert.assertEquals(folder.getUri(), folder2.getUri());
@@ -1056,14 +1080,14 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public void testGetFolder() {
         Folder folder = new Folder();
-        folder.setUri(FOLDER_URI);
+        folder.setUri(test.emptyRO.getUri().resolve(FOLDER_PATH));
 
-        test.sms.addResource(test.emptyRO, workflowURI, workflowInfo);
-        test.sms.addResource(test.emptyRO, workflow2URI, workflowInfo);
-        test.sms.addResource(test.emptyRO, resourceFakeURI, resourceFakeInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
 
-        folder.getFolderEntries().add(new FolderEntry(workflowURI, "workflow1"));
-        folder.getFolderEntries().add(new FolderEntry(resourceFakeURI, "a resource"));
+        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
+        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
         Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
         Folder folder3 = test.sms.getFolder(folder2.getUri());
 
@@ -1084,13 +1108,13 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public void testUpdateFolder() {
         Folder folder = new Folder();
-        folder.setUri(FOLDER_URI);
-        test.sms.addResource(test.emptyRO, workflowURI, workflowInfo);
-        test.sms.addResource(test.emptyRO, workflow2URI, workflowInfo);
-        test.sms.addResource(test.emptyRO, resourceFakeURI, resourceFakeInfo);
+        folder.setUri(test.emptyRO.getUri().resolve(FOLDER_PATH));
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
 
-        folder.getFolderEntries().add(new FolderEntry(workflowURI, "workflow1"));
-        folder.getFolderEntries().add(new FolderEntry(resourceFakeURI, "a resource"));
+        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
+        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
 
         Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
         Folder folder3 = test.sms.getFolder(folder2.getUri());
@@ -1099,7 +1123,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         FolderEntry entry2 = folder2.getFolderEntries().get(1);
         folder2.getFolderEntries().remove(entry1);
         entry2.setEntryName("foo");
-        FolderEntry entry3 = new FolderEntry(workflow2URI, "workflow2");
+        FolderEntry entry3 = new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), "workflow2");
         folder2.getFolderEntries().add(entry3);
 
         test.sms.updateFolder(folder2);
@@ -1126,13 +1150,13 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public void testGetRootFolder() {
         Folder folder = new Folder();
-        folder.setUri(FOLDER_URI);
-        test.sms.addResource(test.emptyRO, workflowURI, workflowInfo);
-        test.sms.addResource(test.emptyRO, workflow2URI, workflowInfo);
-        test.sms.addResource(test.emptyRO, resourceFakeURI, resourceFakeInfo);
+        folder.setUri(test.emptyRO.getUri().resolve(FOLDER_PATH));
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
 
-        folder.getFolderEntries().add(new FolderEntry(workflowURI, "workflow1"));
-        folder.getFolderEntries().add(new FolderEntry(resourceFakeURI, "a resource"));
+        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
+        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
 
         Assert.assertNull(test.sms.getRootFolder(test.emptyRO));
         Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
@@ -1155,7 +1179,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public void testAnnotationForBodyInCaseAnnotationDoesNotExists()
             throws URISyntaxException {
         Annotation annotation = test.sms.findAnnotationForBody(test.wrongRO,
-            getResourceURI("wrong-ro/.ro/ann-body1.ttl"));
+            test.wrongRO.getUri().resolve(ANNOTATION_BODY_PATH));
         Assert.assertNull("Annotation should not be null", annotation);
     }
 
@@ -1167,7 +1191,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public void testAnnotationForBodyInCaseBodyDoesNotExists()
             throws URISyntaxException {
         Annotation annotation = test.sms.findAnnotationForBody(test.wrongRO,
-            getResourceURI("wrong-ro/.ro/ann-body2.ttl"));
+            test.wrongRO.getUri().resolve("annotated-does-not-exist"));
         Assert.assertNull("Annotation should not be null", annotation);
     }
 }

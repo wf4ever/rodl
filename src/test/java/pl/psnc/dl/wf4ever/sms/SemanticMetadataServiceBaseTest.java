@@ -45,34 +45,18 @@ public class SemanticMetadataServiceBaseTest {
     protected static final Logger log = Logger.getLogger(SemanticMetadataServiceImplTest.class);
 
     protected static UserMetadata userProfile;
-
-    protected final static URI workflowURI = URI.create("http://example.org/ROs/ro1/a%20workflow.t2flow");
-
-    protected static String WORKLOW_PATH = "a%20workflow.t2flow";
-
-    protected final static URI workflowPartURI = URI
-            .create("http://example.org/ROs/ro1/a%20workflow.t2flow#somePartOfIt");
-
-    protected final static String WORKFLOW_PART_PATH = "a%20workflow.t2flow#somePartOfIt";
-
-    protected final static URI workflow2URI = URI.create("http://example.org/ROs/ro2/runme.t2flow");
-
     protected static ResourceMetadata workflowInfo;
-
-    protected final static URI ann1URI = URI.create("http://example.org/ROs/ro1/ann1");
-
     protected static ResourceMetadata ann1Info;
-
-    protected final static URI resourceFakeURI = URI.create("http://example.org/ROs/ro1/xyz");
-
     protected static ResourceMetadata resourceFakeInfo;
 
-    protected final static URI FOLDER_URI = URI.create("http://example.org/ROs/ro1/afolder/");
-    protected final static URI annotationBody1URI = URI.create("http://example.org/ROs/ro1/.ro/ann1");
+    protected static String WORKFLOW_PATH = "a%20workflow.t2flow";
+    protected static String WORKFLOW_ORG_WORFLOW_SCUF_PATH = "http://workflows.org/a%20workflow.scufl";
+    protected final static String WORKFLOW_PART_PATH = "a%20workflow.t2flow#somePartOfIt";
+    protected final static String WORKFLOW_PATH_2 = "runme.t2flow";
+    protected final static String FAKE_PATH = "fake";
     protected final static String FOLDER_PATH = "afolder/";
-
-    protected final static String ANNOTATION1_BODY_PATH = ".ro/ann1";
-    protected final static String ANNOTATION1_PATH = "ann1";
+    protected final static String ANNOTATION_BODY_PATH = ".ro/ann1";
+    protected final static String ANNOTATION_PATH = "ann1";
 
     protected TestStructure test;
 
@@ -247,6 +231,7 @@ public class SemanticMetadataServiceBaseTest {
         public ResearchObject arch1;
         public ResearchObject wrongRO;
         public ResearchObject annotatedRO;
+        public ResearchObject simpleAnnotatedRO;
         public SemanticMetadataService sms;
         ResearchObject emptyRO;
         ResearchObject emptyRO2;
@@ -260,6 +245,7 @@ public class SemanticMetadataServiceBaseTest {
             arch1 = ResearchObject.create(getResourceURI("ro1-arch1/"));
             wrongRO = ResearchObject.create(getResourceURI("wrong-ro/"));
             annotatedRO = ResearchObject.create(URI.create("http://www.example.com/annotatedRO/"));
+            simpleAnnotatedRO = ResearchObject.create(URI.create("http://www.example.com/simpleAnnotatedRO/"));
 
             InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1/.ro/manifest.ttl");
             sms = new SemanticMetadataServiceImpl(userProfile, ro1, is, RDFFormat.TURTLE);
@@ -301,9 +287,18 @@ public class SemanticMetadataServiceBaseTest {
             sms.updateManifest(annotatedRO, is, RDFFormat.TURTLE);
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/evo_info.ttl");
             sms.addNamedGraph(annotatedRO.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
-            sms.addResource(annotatedRO, workflowURI, workflowInfo);
+            //sms.addResource(annotatedRO, annotatedRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
             sms.addNamedGraph(annotatedRO.getUri().resolve(".ro/ann1"), is, RDFFormat.TURTLE);
+
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.ttl");
+            sms.createResearchObject(simpleAnnotatedRO);
+            sms.updateManifest(simpleAnnotatedRO, is, RDFFormat.TURTLE);
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/evo_info.ttl");
+            sms.addNamedGraph(simpleAnnotatedRO.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
+            //sms.addResource(annotatedRO, annotatedRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
+            sms.addNamedGraph(simpleAnnotatedRO.getUri().resolve(".ro/ann1"), is, RDFFormat.TURTLE);
         }
     }
 }
