@@ -34,7 +34,6 @@ import pl.psnc.dl.wf4ever.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.DigitalPublication;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
@@ -102,7 +101,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public InputStream getZippedFolder(DigitalPublication ro, String folder)
+    public InputStream getZippedFolder(URI ro, String folder)
             throws DigitalLibraryException, NotFoundException {
         final Path roPath = getPath(ro, null);
         Path path = getPath(ro, folder);
@@ -152,7 +151,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public InputStream getFileContents(DigitalPublication ro, String filePath)
+    public InputStream getFileContents(URI ro, String filePath)
             throws DigitalLibraryException, NotFoundException {
         Path path = getPath(ro, filePath);
         try {
@@ -166,7 +165,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public boolean fileExists(DigitalPublication ro, String filePath)
+    public boolean fileExists(URI ro, String filePath)
             throws DigitalLibraryException {
         Path path = getPath(ro, filePath);
         return path.toFile().exists();
@@ -174,8 +173,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public ResourceInfo createOrUpdateFile(DigitalPublication ro, String filePath, InputStream inputStream,
-            String mimeType)
+    public ResourceInfo createOrUpdateFile(URI ro, String filePath, InputStream inputStream, String mimeType)
             throws DigitalLibraryException {
         Path path = getPath(ro, filePath);
         try {
@@ -198,7 +196,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public ResourceInfo getFileInfo(DigitalPublication ro, String filePath) {
+    public ResourceInfo getFileInfo(URI ro, String filePath) {
         Path path = getPath(ro, filePath);
         ResourceInfoDAO dao = new ResourceInfoDAO();
         return dao.findByPath(path.toString());
@@ -206,7 +204,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public void deleteFile(DigitalPublication ro, String filePath)
+    public void deleteFile(URI ro, String filePath)
             throws DigitalLibraryException {
         Path path = getPath(ro, filePath);
         try {
@@ -232,8 +230,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public void createResearchObject(DigitalPublication ro, InputStream mainFileContent, String mainFilePath,
-            String mainFileMimeType)
+    public void createResearchObject(URI ro, InputStream mainFileContent, String mainFilePath, String mainFileMimeType)
             throws DigitalLibraryException, ConflictException {
         if (fileExists(ro, mainFilePath)) {
             throw new ConflictException("RO exists");
@@ -243,7 +240,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public void deleteResearchObject(DigitalPublication ro)
+    public void deleteResearchObject(URI ro)
             throws DigitalLibraryException, NotFoundException {
         Path path = getPath(ro, null);
         try {
@@ -329,14 +326,14 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public InputStream getZippedResearchObject(DigitalPublication ro)
+    public InputStream getZippedResearchObject(URI ro)
             throws DigitalLibraryException, NotFoundException {
         return getZippedFolder(ro, ".");
     }
 
 
     @Override
-    public void storeAttributes(DigitalPublication ro, Multimap<URI, Object> roAttributes)
+    public void storeAttributes(URI ro, Multimap<URI, Object> roAttributes)
             throws NotFoundException, DigitalLibraryException {
         // TODO Auto-generated method stub
 
@@ -352,16 +349,16 @@ public class FilesystemDL implements DigitalLibrary {
      *            path or null
      * @return filesystem path
      */
-    private Path getPath(DigitalPublication ro, String resourcePath) {
+    private Path getPath(URI ro, String resourcePath) {
         Path path = basePath;
-        if (ro.getUri().getHost() != null) {
-            path = path.resolve(ro.getUri().getHost());
+        if (ro.getHost() != null) {
+            path = path.resolve(ro.getHost());
         }
-        if (ro.getUri().getPath() != null) {
-            if (ro.getUri().getPath().startsWith("/")) {
-                path = path.resolve(ro.getUri().getPath().substring(1));
+        if (ro.getPath() != null) {
+            if (ro.getPath().startsWith("/")) {
+                path = path.resolve(ro.getPath().substring(1));
             } else {
-                path = path.resolve(ro.getUri().getPath());
+                path = path.resolve(ro.getPath());
             }
         }
         if (resourcePath != null) {

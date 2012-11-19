@@ -40,7 +40,7 @@
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
 			<artifactId>rosrs-dlibra</artifactId>
-			<version>1.3.0</version>
+			<version>1.3.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
@@ -187,11 +187,6 @@
 			<artifactId>jersey-test-framework-grizzly2</artifactId>
 			<version>${jersey.version}</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>de.fuberlin.wiwss.ng4j</groupId>
-			<artifactId>ng4j</artifactId>
-			<version>0.9.4</version>
 		</dependency>
 		<dependency>
 			<groupId>de.fuberlin.wiwss.ng4j</groupId>
