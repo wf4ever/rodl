@@ -58,7 +58,7 @@ public class FolderTest extends ResourceBase {
      */
     @Test
     public void testAddFolder() {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("folder.rdf");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
         ClientResponse response = addFolder(is, ro, folderPath, accessToken);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         assertCorrectFolderResourceMap(response.getEntityInputStream());
@@ -74,7 +74,7 @@ public class FolderTest extends ResourceBase {
      */
     @Test
     public void testGetFolder() {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("folder.rdf");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
         ClientResponse response = addFolder(is, ro, folderPath, accessToken);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         URI folderProxyURI = response.getLocation();
@@ -122,7 +122,7 @@ public class FolderTest extends ResourceBase {
     public void testAddFolderEntry() {
         addFile(ro, filePath, accessToken);
 
-        InputStream is = getClass().getClassLoader().getResourceAsStream("folder.rdf");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
         ClientResponse response = addFolder(is, ro, folderPath, accessToken);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         URI folderProxyURI = response.getLocation();
@@ -131,7 +131,7 @@ public class FolderTest extends ResourceBase {
         response.close();
 
         URI folderURI = links.get("http://www.openarchives.org/ore/terms/proxyFor").iterator().next();
-        is = getClass().getClassLoader().getResourceAsStream("folderEntry.rdf");
+        is = getClass().getClassLoader().getResourceAsStream("singleFiles/folderEntry.rdf");
         response = addFolderEntry(is, folderURI, accessToken);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         links = getLinkHeaders(response.getHeaders().get("Link"));
