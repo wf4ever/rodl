@@ -33,7 +33,7 @@ public class AnnotationTest extends ResourceBase {
 
     @Test
     public void addAnnotationBody() {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
         ClientResponse response = addAnnotation(is, ro, annotationBodyPath, accessToken);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         response.close();
@@ -44,7 +44,7 @@ public class AnnotationTest extends ResourceBase {
 
     @Test
     public void getAnnotationBody() {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
         addAnnotation(is, ro, annotationBodyPath, accessToken);
         String body = webResource.uri(ro).path(annotationBodyPath).header("Authorization", "Bearer " + accessToken)
                 .get(String.class);
@@ -57,7 +57,7 @@ public class AnnotationTest extends ResourceBase {
 
     @Test
     public void deleteAnnotationBody() {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("annotationBody.ttl");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
         addAnnotation(is, ro, annotationBodyPath, accessToken);
         ClientResponse response = webResource.uri(ro).path(annotationBodyURIRDF).queryParam("original", "ann1.ttl")
                 .header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);

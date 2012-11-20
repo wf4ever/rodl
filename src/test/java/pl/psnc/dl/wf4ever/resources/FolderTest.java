@@ -70,7 +70,7 @@ public class FolderTest extends ResourceBase {
         response.close();
         webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
 
-        is = getClass().getClassLoader().getResourceAsStream("folder.rdf");
+        is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
         response = addFolder(is, ro, folderWithSpacesPath, accessToken);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         assertCorrectFolderResourceMap(response.getEntityInputStream());

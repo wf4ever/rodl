@@ -120,7 +120,7 @@ public class ResourceTest extends ResourceBase {
     @Test
     public void createROFromZip()
             throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("ro1.zip");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
         ClientResponse response = webResource.path("ROs").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
                 .type("application/zip").post(ClientResponse.class, is);
@@ -138,13 +138,13 @@ public class ResourceTest extends ResourceBase {
     @Test
     public void createConflictedROFromZip()
             throws UniformInterfaceException, ClientHandlerException, IOException {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("ro1.zip");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
         ClientResponse response = webResource.path("ROs").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
                 .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(is));
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
-        is = getClass().getClassLoader().getResourceAsStream("ro1.zip");
+        is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
         response = webResource.path("ROs").accept("text/turtle").header("Authorization", "Bearer " + accessToken)
                 .header("Slug", createdFromZipResourceObject).type("application/zip")
                 .post(ClientResponse.class, IOUtils.toByteArray(is));
