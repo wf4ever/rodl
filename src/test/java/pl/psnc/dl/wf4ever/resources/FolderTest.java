@@ -187,7 +187,7 @@ public class FolderTest extends ResourceBase {
 
 
     /**
-     * Test for dereferencing a folder.
+     * Test for deleting a folder.
      */
     @Test
     public void testDeleteFolder() {

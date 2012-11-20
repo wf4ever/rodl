@@ -314,6 +314,11 @@ public class Resource {
             }
             return ROSRService.deleteAnnotation(researchObject, resource);
         }
+        if (ROSRService.SMS.get().isRoFolder(researchObject, resource)) {
+            Folder folder = ROSRService.SMS.get().getFolder(resource);
+            ROSRService.deleteFolder(folder);
+            return Response.noContent().build();
+        }
         if (original != null) {
             resource = resource.resolve(original);
         }

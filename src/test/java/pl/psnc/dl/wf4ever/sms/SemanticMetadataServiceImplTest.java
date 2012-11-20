@@ -1078,6 +1078,38 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     }
 
 
+    /**
+     * Delete a folder and make sure its resource map is gone.
+     */
+    @Test
+    public void testDeleteFolder() {
+        Folder folder = new Folder();
+        folder.setUri(test.emptyRO.getUri().resolve(FOLDER_PATH));
+
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
+
+        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
+        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
+        test.sms.addFolder(test.emptyRO, folder);
+        Assert.assertNotNull(test.sms.getFolder(folder.getUri()));
+
+        OntModel manifestModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        manifestModel.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
+        Individual folderInd = manifestModel.getIndividual(folder.getUri().toString());
+        Assert.assertNotNull(folderInd);
+
+        test.sms.deleteFolder(folder);
+        Assert.assertNull(test.sms.getFolder(folder.getUri()));
+
+        manifestModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        manifestModel.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
+        folderInd = manifestModel.getIndividual(folder.getUri().toString());
+        Assert.assertNull(folderInd);
+    }
+
+
     @Test
     public void testAnnotationForBody() {
         Annotation annotation = test.sms

@@ -766,4 +766,13 @@ public interface SemanticMetadataService {
      * @return root folder or null if not defined
      */
     Folder getRootFolder(ResearchObject researchObject);
+
+
+    /**
+     * Delete the folder.
+     * 
+     * @param folder
+     *            folder
+     */
+    void deleteFolder(Folder folder);
 }

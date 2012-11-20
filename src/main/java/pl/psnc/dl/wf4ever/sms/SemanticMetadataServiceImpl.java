@@ -1959,4 +1959,14 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         Literal name = folderModel.createLiteral(entry.getEntryName());
         folderModel.add(entryInd, RO.entryName, name);
     }
+
+
+    @Override
+    public void deleteFolder(Folder folder) {
+        ResearchObject researchObject = ResearchObject.create(folder.getAggregationUri());
+        OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+        manifestModel.getIndividual(folder.getUri().toString()).remove();
+
+        removeNamedGraph(researchObject, folder.getResourceMapUri());
+    }
 }

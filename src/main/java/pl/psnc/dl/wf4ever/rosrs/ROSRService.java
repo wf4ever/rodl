@@ -1098,4 +1098,26 @@ public final class ROSRService {
             researchObject, folder.getResourceMapUri());
     }
 
+
+    /**
+     * Delete the folder and update the manifest.
+     * 
+     * @param folder
+     *            folder
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
+    public static void deleteFolder(Folder folder)
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        ResearchObject researchObject = ResearchObject.create(folder.getAggregationUri());
+        String filePath = researchObject.getUri().relativize(folder.getResourceMapUri()).getPath();
+        ROSRService.DL.get().deleteFile(researchObject.getUri(), filePath);
+        ROSRService.SMS.get().deleteFolder(folder);
+        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+    }
+
 }
