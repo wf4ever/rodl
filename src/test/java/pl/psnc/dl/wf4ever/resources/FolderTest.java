@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import junit.framework.Assert;
 
+import org.apache.http.HttpStatus;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -183,4 +184,38 @@ public class FolderTest extends ResourceBase {
             Assert.assertTrue(entry.hasProperty(ORE.proxyIn));
         }
     }
+
+
+    /**
+     * Test for dereferencing a folder.
+     */
+    @Test
+    public void testDeleteFolder() {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
+        ClientResponse response = addFolder(is, ro, folderPath, accessToken);
+        assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        URI folderProxyURI = response.getLocation();
+        Assert.assertNotNull(folderProxyURI);
+        response.close();
+
+        response.getClient().setFollowRedirects(false);
+        response = webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken)
+                .get(ClientResponse.class);
+        response = webResource.uri(response.getLocation()).header("Authorization", "Bearer " + accessToken)
+                .get(ClientResponse.class);
+        URI resourceMap = response.getLocation();
+        response.getClient().setFollowRedirects(true);
+        response = webResource.uri(resourceMap).header("Authorization", "Bearer " + accessToken)
+                .get(ClientResponse.class);
+        assertEquals(HttpStatus.SC_OK, response.getStatus());
+
+        response = webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken)
+                .delete(ClientResponse.class);
+        assertEquals(HttpStatus.SC_NO_CONTENT, response.getStatus());
+
+        response = webResource.uri(resourceMap).header("Authorization", "Bearer " + accessToken)
+                .get(ClientResponse.class);
+        assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatus());
+    }
+
 }
