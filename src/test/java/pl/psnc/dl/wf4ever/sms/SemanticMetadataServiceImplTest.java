@@ -455,7 +455,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), is, RDFFormat.TURTLE);
         Assert.assertNotNull("A named graph exists",
             test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), RDFFormat.RDFXML));
-        test.sms.removeNamedGraph(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH));
+        test.sms.removeNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH));
         Assert.assertNull("A deleted named graph no longer exists",
             test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), RDFFormat.RDFXML));
     }
@@ -1055,6 +1055,30 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
             } else {
                 Assert.assertEquals(entry3, entry);
             }
+        }
+    }
+
+
+    @Test
+    public void testGetFolderEntry() {
+        Folder folder = new Folder();
+        folder.setUri(test.emptyRO.getUri().resolve(FOLDER_PATH));
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
+
+        FolderEntry entry1 = new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1");
+        FolderEntry entry2 = new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource");
+        folder.getFolderEntries().add(entry1);
+        folder.getFolderEntries().add(entry2);
+        Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
+
+        for (FolderEntry entry : folder2.getFolderEntries()) {
+            FolderEntry actual = test.sms.getFolderEntry(entry.getUri());
+            Assert.assertEquals(entry.getUri(), actual.getUri());
+            Assert.assertEquals(entry.getProxyFor(), actual.getProxyFor());
+            Assert.assertEquals(entry.getProxyIn(), actual.getProxyIn());
+            Assert.assertEquals(entry.getEntryName(), actual.getEntryName());
         }
     }
 

@@ -1120,4 +1120,24 @@ public final class ROSRService {
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
     }
 
+
+    /**
+     * Delete a folder entry.
+     * 
+     * @param entry
+     *            folder entry
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
+    public static void deleteFolderEntry(FolderEntry entry)
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        Folder folder = ROSRService.SMS.get().getFolder(entry.getProxyIn());
+        folder.getFolderEntries().remove(entry);
+        updateFolder(folder);
+    }
+
 }

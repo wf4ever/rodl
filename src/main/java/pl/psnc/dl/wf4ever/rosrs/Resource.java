@@ -319,6 +319,11 @@ public class Resource {
             ROSRService.deleteFolder(folder);
             return Response.noContent().build();
         }
+        FolderEntry entry = ROSRService.SMS.get().getFolderEntry(resource);
+        if (entry != null) {
+            ROSRService.deleteFolderEntry(entry);
+            return Response.noContent().build();
+        }
         if (original != null) {
             resource = resource.resolve(original);
         }

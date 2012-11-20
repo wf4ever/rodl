@@ -369,7 +369,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
                 if (annBody != null && annBody.isURIResource()) {
                     URI annBodyURI = URI.create(annBody.getURI());
                     if (containsNamedGraph(annBodyURI)) {
-                        removeNamedGraph(researchObject, annBodyURI);
+                        removeNamedGraph(annBodyURI);
                     }
                 }
                 manifestModel.removeAll(ann, null, null);
@@ -587,7 +587,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     @Override
-    public void removeNamedGraph(ResearchObject researchObject, URI graphURI) {
+    public void removeNamedGraph(URI graphURI) {
         //@TODO Remove evo_inf file
         graphURI = graphURI.normalize();
         if (!graphset.containsGraph(graphURI.toString())) {
@@ -664,11 +664,11 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     @Override
     public void removeResearchObject(ResearchObject researchObject) {
         try {
-            removeNamedGraph(researchObject, getDeprecatedManifestURI(researchObject.getUri()));
+            removeNamedGraph(getDeprecatedManifestURI(researchObject.getUri()));
         } catch (IllegalArgumentException e) {
             // it is a hack so ignore exceptions
         }
-        removeNamedGraph(researchObject, researchObject.getManifestUri());
+        removeNamedGraph(researchObject.getManifestUri());
     }
 
 
@@ -1934,7 +1934,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         Individual folderInd = folderModel.createIndividual(folder.getUri().toString(), RO.Folder);
         List<Individual> entries = folderModel.listIndividuals(RO.FolderEntry).toList();
         for (Individual entry : entries) {
-            entry.remove();
+            deleteFolderEntry(entry);
         }
 
         for (FolderEntry entry : folder.getFolderEntries()) {
@@ -1943,6 +1943,16 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    /**
+     * Save a folder entry in the triplestore.
+     * 
+     * @param folder
+     *            folder that contains the entry
+     * @param folderInd
+     *            folder individual
+     * @param entry
+     *            entry
+     */
     private void addFolderEntry(Folder folder, Individual folderInd, FolderEntry entry) {
         OntModel folderModel = folderInd.getOntModel();
         if (entry.getUri() == null) {
@@ -1958,6 +1968,22 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         folderModel.add(entryInd, ORE.proxyIn, folderInd);
         Literal name = folderModel.createLiteral(entry.getEntryName());
         folderModel.add(entryInd, RO.entryName, name);
+
+        OntModel entryModel = createOntModelForNamedGraph(entry.getUri());
+        entryInd = entryModel.createIndividual(entry.getUri().toString(), RO.FolderEntry);
+        entryInd.addProperty(ORE.isAggregatedBy, folderInd);
+    }
+
+
+    /**
+     * Delete a folder entry.
+     * 
+     * @param entry
+     *            entry
+     */
+    private void deleteFolderEntry(Individual entry) {
+        entry.remove();
+        removeNamedGraph(URI.create(entry.getURI()));
     }
 
 
@@ -1967,6 +1993,30 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
         manifestModel.getIndividual(folder.getUri().toString()).remove();
 
-        removeNamedGraph(researchObject, folder.getResourceMapUri());
+        OntModel folderModel = createOntModelForNamedGraph(folder.getResourceMapUri());
+        List<Individual> entries = folderModel.listIndividuals(RO.FolderEntry).toList();
+        for (Individual entry : entries) {
+            deleteFolderEntry(entry);
+        }
+
+        removeNamedGraph(folder.getResourceMapUri());
+    }
+
+
+    @Override
+    public FolderEntry getFolderEntry(URI entryUri) {
+        OntModel entryModel = createOntModelForNamedGraph(entryUri);
+        Individual entryInd = entryModel.getIndividual(entryUri.toString());
+        if (entryInd == null) {
+            return null;
+        }
+        Resource folderR = entryInd.getPropertyResourceValue(ORE.isAggregatedBy);
+        Folder folder = getFolder(URI.create(folderR.getURI()));
+        for (FolderEntry entry : folder.getFolderEntries()) {
+            if (entry.getUri().equals(entryUri)) {
+                return entry;
+            }
+        }
+        return null;
     }
 }
