@@ -1958,6 +1958,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         if (entry.getUri() == null) {
             entry.setUri(folder.getUri().resolve("entries/" + UUID.randomUUID()));
         }
+        entry.setProxyIn(folder.getUri());
         Individual entryInd = folderModel.createIndividual(entry.getUri().toString(), RO.FolderEntry);
         entryInd.addRDFType(ORE.Proxy);
         //FIXME we should check if the resource is really aggregated and what classes it has
