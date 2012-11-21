@@ -40,7 +40,7 @@ public class StoringHistoryTest extends EvoTest {
         //@TODO improve the text structure;
 
         addFile(ro, oldResourceFile, accessToken);
-        addFile(ro, modifiedResourceFile, accessToken);
+        URI fullModificatedFilePath = addFile(ro, modifiedResourceFile, accessToken).getLocation();
 
         JobStatus sp1Status = new JobStatus(ro, EvoType.SNAPSHOT, true);
         URI copyJob = createCopyJob(sp1Status).getLocation();
@@ -48,6 +48,9 @@ public class StoringHistoryTest extends EvoTest {
 
         addFile(ro, newResourceFile, accessToken);
         removeFile(ro, oldResourceFile, accessToken);
+        updateFile(fullModificatedFilePath, accessToken);
+        String content = webResource.uri(ro).path(modifiedResourceFile)
+                .header("Authorization", "Bearer " + accessToken).get(String.class);
 
         JobStatus sp2Status = new JobStatus(ro, EvoType.SNAPSHOT, true);
         copyJob = createCopyJob(sp2Status).getLocation();
@@ -69,6 +72,6 @@ public class StoringHistoryTest extends EvoTest {
 
         assertTrue("sp2 should contain Additon", sp2Evo.contains("Addition"));
         assertTrue("sp2 should contain Removal", sp2Evo.contains("Removal"));
-
+        assertTrue("sp2 should contain Removal", sp2Evo.contains("Modification"));
     }
 }

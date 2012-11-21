@@ -123,9 +123,9 @@ public class W4ETest extends JerseyTest {
     }
 
 
-    protected ClientResponse updateFile(URI roURI, String filePath, String accessToken) {
-        return webResource.uri(roURI).header("Slug", filePath).header("Authorization", "Bearer " + accessToken)
-                .type("text/plain").post(ClientResponse.class, "modification");
+    protected ClientResponse updateFile(URI reURI, String accessToken) {
+        return webResource.uri(reURI).header("Authorization", "Bearer " + accessToken).type("text/plain")
+                .put(ClientResponse.class, "modification");
     }
 
 

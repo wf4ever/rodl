@@ -1472,7 +1472,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             //@TODO compare checksums
             return true;
         }
-        return result;
+        return false;
     }
 
 
@@ -1525,7 +1525,12 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             try {
                 if (compareRelativesURI(new URI(pattern.getURI()), new URI(compared.getURI()), patternROURI,
                     comparedROURI)) {
-                    //@TODO compare checksums
+                    RDFNode patternNode = patternSource.getPropertyResourceValue(RO.checksum);
+                    RDFNode comparedNode = comparedSource.getPropertyResourceValue(RO.checksum);
+                    if (patternNode != null && comparedNode != null) {
+                        Boolean checksumResult = patternNode.toString().equals(comparedNode.toString());
+                        return checksumResult;
+                    }
                     return true;
                 } else {
                     return null;
