@@ -10,10 +10,17 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 
+/***
+ * @author pejot Created to translate ttl format of test example to rdf.
+ */
 public class RDFGenerator extends SemanticMetadataServiceBaseTest {
 
-    //not a real test.
-    //@Test
+    /**
+     * As a JUnit test generates manifest file in rdf format from one of example.
+     * 
+     * @throws URISyntaxException
+     * @throws IOException
+     */
     public final void generateRDF()
             throws URISyntaxException, IOException {
         URI fakeURI = new URI("http://www.example.com/ROs/");

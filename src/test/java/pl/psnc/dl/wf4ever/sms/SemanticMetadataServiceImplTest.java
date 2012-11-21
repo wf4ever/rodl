@@ -58,6 +58,8 @@ import de.fuberlin.wiwiss.ng4j.Quad;
 import de.fuberlin.wiwiss.ng4j.impl.NamedGraphSetImpl;
 
 /**
+ * Test Class for SementicMetadaService.
+ * 
  * @author piotrhol
  * @author filipwis
  * 
@@ -792,7 +794,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     /**
      * getAggregatedResource function should return the complete list of aggregated resources.
      * 
-     * @throws ManifestTraversingException
+     * @throws ManifestTraversingException .
      */
     @Test
     public final void testGetAggregatedResources()
@@ -813,7 +815,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     /**
      * GetAnnotation function should return the complete list of annotations.
      * 
-     * @throws ManifestTraversingException
+     * @throws ManifestTraversingException .
      */
     @Test
     public final void testGetAnnotations()
@@ -844,6 +846,9 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
     /**
      * Should store roevo information in evo_info.ttl annotation body according to the contract.
+     * 
+     * @throws URISyntaxException .
+     * @throws IOException .
      */
     @Test
     public final void testROevo()
@@ -880,40 +885,52 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
     /**
      * If wrong parameters are given then the exception should be raised.
+     * 
+     * @throws IOException .
+     * @throws URISyntaxException .
      */
     @Test(expected = IllegalArgumentException.class)
     public final void testStoreROhistoryWithWrongParametrs()
-            throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
+            throws URISyntaxException, IOException {
         test.sms.storeAggregatedDifferences(null, test.sp1);
     }
 
 
     /**
      * If wrong parameters are given then the exception should be raised.
+     * 
+     * @throws IOException .
+     * @throws URISyntaxException .
      */
     @Test(expected = IllegalArgumentException.class)
     public final void testStoreROhistoryWithParametersGivenConversely()
-            throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
+            throws URISyntaxException, IOException {
         test.sms.storeAggregatedDifferences(test.sp1, test.sp2);
     }
 
 
     /**
      * If wrong parameters are given then the exception should be raised.
+     * 
+     * @throws IOException .
+     * @throws URISyntaxException .
      */
     @Test(expected = IllegalArgumentException.class)
     public final void testStoreROhistoryBetweenTwoTheSameObjects()
-            throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
+            throws URISyntaxException, IOException {
         test.sms.storeAggregatedDifferences(test.sp1, test.sp1);
     }
 
 
     /**
      * If there is a live RO or the first snapshot then the history should not be stored.
+     * 
+     * @throws IOException
+     * @throws URISyntaxException
      */
     @Test
     public final void testStoreROhistoryWithNoAccenestor()
-            throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
+            throws URISyntaxException, IOException {
         String resultSp1 = test.sms.storeAggregatedDifferences(test.sp1, null);
         String resultLive = test.sms.storeAggregatedDifferences(test.ro1, null);
         Assert.assertEquals("", resultSp1);
@@ -1078,6 +1095,9 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     }
 
 
+    /**
+     * annotationForBody method should return an annotation
+     */
     @Test
     public void testAnnotationForBody() {
         Annotation annotation = test.sms
@@ -1090,8 +1110,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      * Annotation should be null if annotation can not be found.
      */
     @Test
-    public void testAnnotationForBodyInCaseAnnotationDoesNotExists()
-            throws URISyntaxException {
+    public void testAnnotationForBodyInCaseAnnotationDoesNotExists() {
         Annotation annotation = test.sms.findAnnotationForBody(test.wrongRO,
             test.wrongRO.getUri().resolve(ANNOTATION_BODY_PATH));
         Assert.assertNull("Annotation should not be null", annotation);
@@ -1102,8 +1121,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      * Annotation should be null if body does not exist.
      */
     @Test
-    public void testAnnotationForBodyInCaseBodyDoesNotExists()
-            throws URISyntaxException {
+    public void testAnnotationForBodyInCaseBodyDoesNotExists() {
         Annotation annotation = test.sms.findAnnotationForBody(test.wrongRO,
             test.wrongRO.getUri().resolve("annotated-does-not-exist"));
         Assert.assertNull("Annotation should not be null", annotation);
