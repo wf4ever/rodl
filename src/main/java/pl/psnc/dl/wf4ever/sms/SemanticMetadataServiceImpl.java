@@ -1983,7 +1983,9 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
      *            entry
      */
     private void deleteFolderEntry(Individual entry) {
+        Individual proxyFor = entry.getPropertyResourceValue(ORE.proxyFor).as(Individual.class);
         entry.remove();
+        proxyFor.remove();
         removeNamedGraph(URI.create(entry.getURI()));
     }
 
@@ -2006,9 +2008,12 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
     @Override
     public FolderEntry getFolderEntry(URI entryUri) {
+        if (!containsNamedGraph(entryUri)) {
+            return null;
+        }
         OntModel entryModel = createOntModelForNamedGraph(entryUri);
         Individual entryInd = entryModel.getIndividual(entryUri.toString());
-        if (entryInd == null) {
+        if (entryInd == null || !entryInd.hasRDFType(RO.FolderEntry)) {
             return null;
         }
         Resource folderR = entryInd.getPropertyResourceValue(ORE.isAggregatedBy);

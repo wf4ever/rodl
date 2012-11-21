@@ -226,6 +226,12 @@ public class FolderTest extends ResourceBase {
      *            list of aggregated resources
      */
     private void assertCorrectFolderResourceMap(InputStream entityInputStream, Set<URI> proxyFors) {
+        //        try {
+        //            System.out.println(IOUtils.toString(entityInputStream));
+        //        } catch (IOException e) {
+        //            // TODO Auto-generated catch block
+        //            e.printStackTrace();
+        //        }
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(entityInputStream, null);
 
