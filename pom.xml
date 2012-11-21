@@ -299,7 +299,7 @@
 	</reporting>
 	<scm>
 		<developerConnection>scm:git:git@github.com:wf4ever/rosrs.git</developerConnection>
-		<tag>rosrs-6.3.5</tag>
+		<tag>rosrs-6.2.4</tag>
 	</scm>
 	<repositories>
 		<repository>
@@ -377,5 +377,5 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
-	<version>6.3.5</version>
+	<version>6.3.6-SNAPSHOT</version>
 </project>
