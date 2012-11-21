@@ -67,9 +67,6 @@ public class StoringHistoryTest extends EvoTest {
         String sp2Evo = webResource.path("/evo/info").queryParam("ro", sp2Status.getTarget().toString())
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
 
-        System.out.println(sp1Evo);
-        System.out.println(sp2Evo);
-
         assertTrue("sp2 should contain Additon", sp2Evo.contains("Addition"));
         assertTrue("sp2 should contain Removal", sp2Evo.contains("Removal"));
 
