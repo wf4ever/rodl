@@ -949,16 +949,32 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
-    private static URI generateAnnotationURI(ResearchObject researchObject, String uuid) {
-        if (uuid == null) {
-            uuid = UUID.randomUUID().toString();
-        }
-        return researchObject.getUri().resolve(".ro/annotations/" + uuid);
+    /**
+     * Get the annotation URI and given id.
+     * 
+     * @param researchObject
+     *            give research object
+     * @return new annotation URI
+     */
+    private static URI generateAnnotationURI(ResearchObject researchObject) {
+        return generateAnnotationURI(researchObject, null);
     }
 
 
-    private static URI generateAnnotationURI(ResearchObject researchObject) {
-        return generateAnnotationURI(researchObject, null);
+    /**
+     * Get the annotation URI basing on Research Object URI and given id.
+     * 
+     * @param researchObject
+     *            give research object
+     * @param id
+     *            the postfix of result URI
+     * @return new annotation URI
+     */
+    private static URI generateAnnotationURI(ResearchObject researchObject, String id) {
+        if (id == null) {
+            id = UUID.randomUUID().toString();
+        }
+        return researchObject.getUri().resolve(".ro/annotations/" + id);
     }
 
 
@@ -1194,6 +1210,13 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    /**
+     * Compare dates of creation of two given research objects.
+     * 
+     * @param first
+     * @param second
+     * @return positive value if first is younger, negative otherwise, 0 if they are equal.
+     */
     private int compareTwoResearchObjectDateOfCreation(ResearchObject first, ResearchObject second) {
         DateTime dateFirst = null;
         DateTime dateSecond = null;
@@ -1225,6 +1248,13 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    /**
+     * Get a list of aggregated resources excluding evolution information annotation and annotation bodies.
+     * 
+     * @param researchObject
+     *            given Research Object.
+     * @return a list of aggregated resources excluding evolution information annotation and annotation bodies.
+     */
     private List<RDFNode> getAggregatedWithNoEvoAndBody(ResearchObject researchObject) {
         Individual roIndividual = getIndividual(researchObject);
         DateTime date = null;
@@ -1265,12 +1295,43 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    /**
+     * Get an URI with random id basing on research object URI and certain postfix called description.
+     * 
+     * @param ro
+     *            given Research object
+     * @param description
+     *            postfix
+     * @return an URI with random id basing on research object URI and certain postfix called description.
+     */
     private String generateRandomUriRelatedToResource(ResearchObject ro, String description) {
         return ro.getUri().resolve(description) + "/" + UUID.randomUUID().toString();
     }
 
 
-    private String lookForAggregatedDifferents(ResearchObject fresRO, ResearchObject oldRO, List<RDFNode> pattern,
+    //TODO
+    //MAKE IT EASIER!
+    /**
+     * Find and save differences between snapshots or archives.
+     * 
+     * @param first
+     *            current Research Object
+     * @param second
+     *            comapred Research Object
+     * @param pattern
+     *            current node
+     * @param compared
+     *            processed node
+     * @param freshROModel
+     *            OntModel where changes are added
+     * @param changeSpecificationIndividual
+     *            ChangeSpecification class Individual
+     * @param direction
+     *            NEW in case fresh snapshot/archive is processed, OLD in case old snaphot/archive is processed
+     * @return report in string format (When function is executed, information about evolution are stored in the triple
+     *         store)
+     */
+    private String lookForAggregatedDifferents(ResearchObject first, ResearchObject second, List<RDFNode> pattern,
             List<RDFNode> compared, OntModel freshROModel, Individual changeSpecificationIndividual, Direction direction) {
         String result = "";
         Boolean tmp = null;
@@ -1278,60 +1339,94 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             Boolean loopResult = null;
             for (RDFNode comparedNode : compared) {
                 if (direction == Direction.NEW) {
-                    tmp = compareProprties(patternNode, comparedNode, fresRO.getUri(), oldRO.getUri());
+                    tmp = compareProperties(patternNode, comparedNode, first.getUri(), second.getUri());
                 } else {
-                    tmp = compareProprties(patternNode, comparedNode, oldRO.getUri(), fresRO.getUri());
+                    tmp = compareProperties(patternNode, comparedNode, second.getUri(), first.getUri());
                 }
                 if (tmp != null) {
                     loopResult = tmp;
                 }
             }
-            result += serviceDetectedEVOmodification(loopResult, fresRO, oldRO, patternNode, freshROModel,
+            result += serviceDetectedEVOmodification(loopResult, first, second, patternNode, freshROModel,
                 changeSpecificationIndividual, direction);
         }
         return result;
     }
 
 
-    private String serviceDetectedEVOmodification(Boolean loopResult, ResearchObject freshRO, ResearchObject oldRO,
-            RDFNode node, OntModel freshRoModel, Individual changeSpecificatinIndividual, Direction direction) {
+    //TODO
+    //MAKE IT EASIER!
+    /**
+     * Save found differences.
+     * 
+     * @param loopResult
+     *            true/false/null change/no changes/ depends on the direction (NEW - Addition, OLD - Removal )
+     * @param first
+     *            processed Research Object
+     * @param second
+     *            compared Research Object
+     * @param node
+     *            processed node
+     * @param freshROModel
+     *            OntModel where changes are added
+     * @param changeSpecificationIndividual
+     *            ChangeSpecification class Individual
+     * @param direction
+     *            NEW in case fresh snapshot/archive is processed, OLD in case old snaphot/archive is processed
+     * @return String with the report about introduced changes
+     */
+    private String serviceDetectedEVOmodification(Boolean loopResult, ResearchObject first, ResearchObject second,
+            RDFNode node, OntModel freshROModel, Individual changeSpecificationIndividual, Direction direction) {
         String result = "";
         //Null means they are not comparable. Resource is new or deleted depends on the direction. 
         if (loopResult == null) {
             if (direction == Direction.NEW) {
-                Individual changeIndividual = freshRoModel.createIndividual(
-                    generateRandomUriRelatedToResource(freshRO, "change"), ROEVO.Change);
+                Individual changeIndividual = freshROModel.createIndividual(
+                    generateRandomUriRelatedToResource(first, "change"), ROEVO.Change);
                 changeIndividual.addRDFType(ROEVO.Addition);
                 changeIndividual.addProperty(ROEVO.relatedResource, node);
-                changeSpecificatinIndividual.addProperty(ROEVO.hasChange, changeIndividual);
-                result += freshRO + " " + node.toString() + " " + direction + "\n";
+                changeSpecificationIndividual.addProperty(ROEVO.hasChange, changeIndividual);
+                result += first + " " + node.toString() + " " + direction + "\n";
             } else {
-                Individual changeIndividual = freshRoModel.createIndividual(
-                    generateRandomUriRelatedToResource(freshRO, "change"), ROEVO.Change);
+                Individual changeIndividual = freshROModel.createIndividual(
+                    generateRandomUriRelatedToResource(first, "change"), ROEVO.Change);
                 changeIndividual.addRDFType(ROEVO.Removal);
                 changeIndividual.addProperty(ROEVO.relatedResource, node);
-                changeSpecificatinIndividual.addProperty(ROEVO.hasChange, changeIndividual);
-                result += freshRO + " " + node.toString() + " " + direction + "\n";
+                changeSpecificationIndividual.addProperty(ROEVO.hasChange, changeIndividual);
+                result += first + " " + node.toString() + " " + direction + "\n";
             }
         }
         //False means there are some changes (Changes exists in two directions so they will be stored onlu once)
         else if (loopResult == false && direction == Direction.NEW) {
-            Individual changeIndividual = freshRoModel.createIndividual(
-                generateRandomUriRelatedToResource(freshRO, "change"), ROEVO.Change);
+            Individual changeIndividual = freshROModel.createIndividual(
+                generateRandomUriRelatedToResource(first, "change"), ROEVO.Change);
             changeIndividual.addRDFType(ROEVO.Modification);
             changeIndividual.addProperty(ROEVO.relatedResource, node);
-            changeSpecificatinIndividual.addProperty(ROEVO.hasChange, changeIndividual);
-            result += freshRO + " " + node.toString() + " MODIFICATION" + "\n";
+            changeSpecificationIndividual.addProperty(ROEVO.hasChange, changeIndividual);
+            result += first + " " + node.toString() + " MODIFICATION" + "\n";
         }
         //True means there are some unchanges objects
         else if (loopResult == false && direction == Direction.NEW) {
-            result += freshRO + " " + node.toString() + " UNCHANGED" + "\n";
+            result += first + " " + node.toString() + " UNCHANGED" + "\n";
         }
         return result;
     }
 
 
-    private Boolean compareProprties(RDFNode pattern, RDFNode compared, URI patternROURI, URI comparedROURI) {
+    /**
+     * Compare two RDF properties taking into account URI in relativized form.
+     * 
+     * @param pattern
+     *            pattern node
+     * @param compared
+     *            compared node
+     * @param patternROURI
+     *            the URI of pattern Research Object
+     * @param comparedROURI
+     *            the pattern of Research Object
+     * @return true if they are equal,false otherwise
+     */
+    private Boolean compareProperties(RDFNode pattern, RDFNode compared, URI patternROURI, URI comparedROURI) {
         if (pattern.isResource() && compared.isResource()) {
             return compareTwoResources(pattern.asResource(), compared.asResource(), patternROURI, comparedROURI);
         } else if (pattern.isLiteral() && compared.isLiteral()) {
@@ -1341,6 +1436,15 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    /**
+     * Compare two RDF literals taking into account URI in relativized form.
+     * 
+     * @param pattern
+     *            first literal
+     * @param compared
+     *            second literal
+     * @return true if they are equal, otherwise false.
+     */
     private Boolean compareTwoLiterals(Literal pattern, Literal compared) {
         //@TODO compare checksums
         Boolean result = null;
@@ -1352,6 +1456,19 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    /**
+     * Compare two URIs relativized them before.
+     * 
+     * @param patternURI
+     *            first URI
+     * @param comparedURI
+     *            second URI
+     * @param baseForPatternURI
+     *            base of first URI
+     * @param baseForComparedURI
+     *            base of second URI
+     * @return true if they are equal, false otherwise
+     */
     private Boolean compareRelativesURI(URI patternURI, URI comparedURI, URI baseForPatternURI, URI baseForComparedURI) {
         return baseForPatternURI.relativize(patternURI).toString()
                 .equals(baseForComparedURI.relativize(comparedURI).toString());
@@ -1495,6 +1612,21 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    /**
+     * Check if the given statement is this same like one of the statements in the give list. URIs are relativized by
+     * patternURI and comaparedUTI parameters.
+     * 
+     * @param statement
+     *            given statement
+     * @param list
+     *            given list
+     * @param patternURI
+     *            the URI of research object where statements comes from
+     * @param comparedURI
+     *            the URI of research object where list comes from
+     * @return true is statement is in the list, false otherwise.
+     * @throws URISyntaxException .
+     */
     private Boolean isStatementInList(Statement statement, List<Statement> list, URI patternURI, URI comparedURI)
             throws URISyntaxException {
         for (Statement listStatement : list) {
@@ -1517,7 +1649,8 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
                         }
                     }
                 }
-            } finally {
+            } catch (Exception e) {
+                log.warn(e.getMessage());
                 continue;
             }
         }
@@ -1571,6 +1704,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    @Override
     public InputStream getEvoInfo(ResearchObject researchObject) {
         return getNamedGraph((researchObject.getFixedEvolutionAnnotationBodyPath()), RDFFormat.TURTLE);
     }
@@ -1706,13 +1840,20 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             case ARCHIVED:
                 generateArchiveEvoInf(researchObject, liveRO);
                 break;
+            default:
+                generateLiveRoEvoInf(researchObject);
         }
     }
 
 
+    /**
+     * Generate of evolution information annotation for given live Research Object.
+     * 
+     * @param researchObject
+     *            given Research Object
+     */
     private void generateLiveRoEvoInf(ResearchObject researchObject) {
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
-        Individual manifest = manifestModel.getIndividual(researchObject.getManifestUri().toString());
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
         OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyPath());
         Individual evoInfo = evoModel.getIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString());
@@ -1722,7 +1863,6 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         }
         evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString(),
             ORE.AggregatedResource);
-        Individual roEvo = evoModel.createIndividual(researchObject.getUri().toString(), ROEVO.LiveRO);
 
         manifestModel.add(evoInfo, ORE.describes, ro);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
@@ -1734,10 +1874,17 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    /**
+     * Generate of evolution information annotation for given snapshot of Research Object.
+     * 
+     * @param researchObject
+     *            given snapshot of Research Object
+     * @param liveRO
+     *            the origin of processed snapshot of Research Object.
+     */
     private void generateSnaphotEvoInf(ResearchObject researchObject, ResearchObject liveRO) {
 
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
-        Individual manifest = manifestModel.getIndividual(researchObject.getManifestUri().toString());
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
         OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyPath());
         Individual evoInfo = evoModel.getIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString());
@@ -1747,8 +1894,6 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         }
         evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString(),
             ORE.AggregatedResource);
-
-        Individual roEvo = evoModel.createIndividual(researchObject.getUri().toString(), ROEVO.SnapshotRO);
 
         manifestModel.add(evoInfo, ORE.describes, ro);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
@@ -1776,9 +1921,16 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    /**
+     * Generate of evolution information annotation for given snapshot of Research Object.
+     * 
+     * @param researchObject
+     *            given snapshot of Research Object
+     * @param liveRO
+     *            the origin of processed snapshot of Research Object.
+     */
     private void generateArchiveEvoInf(ResearchObject researchObject, ResearchObject liveRO) {
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
-        Individual manifest = manifestModel.getIndividual(researchObject.getManifestUri().toString());
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
         OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyPath());
         Individual evoInfo = evoModel.getIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString());
@@ -1788,8 +1940,6 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         }
         evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString(),
             ORE.AggregatedResource);
-
-        Individual roEvo = evoModel.createIndividual(researchObject.getUri().toString(), ROEVO.ArchivedRO);
 
         manifestModel.add(evoInfo, ORE.describes, ro);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
