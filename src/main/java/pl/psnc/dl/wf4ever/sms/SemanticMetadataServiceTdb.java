@@ -25,9 +25,9 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
-import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -89,19 +89,19 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     private final String findResearchObjectsByCreatorQueryTmpl = "PREFIX ro: <" + RO.NAMESPACE + "> PREFIX dcterms: <"
             + DCTerms.NS + "> SELECT ?ro WHERE { ?ro a ro:ResearchObject ; dcterms:creator <%s> . }";
 
-    private final UserProfile user;
+    private final UserMetadata user;
 
     /** SPARQL query syntax. */
     private static final Syntax SPARQL_SYNTAX = Syntax.syntaxARQ;
 
 
-    public SemanticMetadataServiceTdb(UserProfile user)
+    public SemanticMetadataServiceTdb(UserMetadata user)
             throws IOException {
         this(user, true);
     }
 
 
-    public SemanticMetadataServiceTdb(UserProfile user, boolean useDb)
+    public SemanticMetadataServiceTdb(UserMetadata user, boolean useDb)
             throws IOException {
         this.user = user;
 
@@ -113,6 +113,16 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             dataset = TDBFactory.createDataset(dir);
         } else {
             dataset = TDBFactory.createDataset("/tmp/volatilestore");
+            dataset.begin(ReadWrite.WRITE);
+            List<String> models = new ArrayList<>();
+            Iterator<String> it = dataset.listNames();
+            while (it.hasNext()) {
+                models.add(it.next());
+            }
+            for (String model : models) {
+                dataset.removeNamedModel(model);
+            }
+            dataset.commit();
         }
         W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
         createUserProfile(user);
@@ -120,21 +130,17 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     }
 
 
-    public SemanticMetadataServiceTdb(UserProfile user, ResearchObject researchObject, InputStream manifest,
-            RDFFormat rdfFormat) {
-        this.user = user;
-
-        dataset = TDBFactory.createDataset("/tmp/volatilestore");
-        W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
-        createUserProfile(user);
-
+    public SemanticMetadataServiceTdb(UserMetadata user, ResearchObject researchObject, InputStream manifest,
+            RDFFormat rdfFormat)
+            throws IOException {
+        this(user, false);
         createResearchObject(researchObject);
         updateManifest(researchObject, manifest, rdfFormat);
         TDB.getContext().set(TDB.symUnionDefaultGraph, true);
     }
 
 
-    private void createUserProfile(UserProfile user) {
+    private void createUserProfile(UserMetadata user) {
         if (!containsNamedGraph(user.getUri())) {
             dataset.begin(ReadWrite.WRITE);
             try {
@@ -162,7 +168,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public UserProfile getUserProfile() {
+    public UserMetadata getUserProfile() {
         return user;
     }
 
