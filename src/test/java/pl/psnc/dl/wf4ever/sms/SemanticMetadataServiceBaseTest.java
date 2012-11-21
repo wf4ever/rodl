@@ -104,19 +104,6 @@ public class SemanticMetadataServiceBaseTest {
     }
 
 
-    //    private static void cleanData() {
-    //        SemanticMetadataService sms = null;
-    //        try {
-    //            sms = new SemanticMetadataServiceTdb(userProfile, false);
-    //        } catch (IOException e) {
-    //            e.printStackTrace();
-    //        } finally {
-    //            if (sms != null) {
-    //                sms.close();
-    //            }
-    //        }
-    //    }
-
     /***** HELPERS *****/
 
     protected void verifyTriple(Model model, URI subjectURI, URI propertyURI, String object) {
