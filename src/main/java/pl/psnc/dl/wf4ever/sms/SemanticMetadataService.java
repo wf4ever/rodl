@@ -539,9 +539,9 @@ public interface SemanticMetadataService {
      *            ROSR5 datasource
      * 
      * @throws NamingException
-     *             couldn't connect to the old datasource
+     *             couldn't connect to the old datasource .
      * @throws SQLException
-     *             couldn't connect to the old datasource
+     *             couldn't connect to the old datasource .
      */
     int migrateRosr5To6(String oldDatasource)
             throws NamingException, SQLException;
@@ -595,7 +595,22 @@ public interface SemanticMetadataService {
      * Get the predecessor of the currently processed snapshot or archive (default relevant path to the manifest file is
      * .ro/manifest.rdf).
      * 
-     * @param ResearchObject
+     * @param liveRo
+     *            live RO (source of the snapshot or archive) uri
+     * @param freshSnaphotOrArchive
+     *            currently processed snapshot or archive
+     * @param type
+     *            EvoType snapshot/archive/null
+     * @return the URI of the current snapshot or archive predecessor
+     */
+    URI getPreviousSnaphotOrArchive(ResearchObject liveRo, ResearchObject freshSnaphotOrArchive, EvoType type);
+
+
+    /**
+     * Get the predecessor of the currently processed snapshot or archive (default relevant path to the manifest file is
+     * .ro/manifest.rdf).
+     * 
+     * @param liveRo
      *            live RO (source of the snapshot or archive) uri
      * @param freshSnaphotOrArchive
      *            currently processed snapshot or archive
@@ -612,8 +627,8 @@ public interface SemanticMetadataService {
      * @param oldRO
      *            Previous snapshot/archive
      * @return list of changes
-     * @throws URISyntaxException
-     * @throws IOException
+     * @throws URISyntaxException .
+     * @throws IOException .
      */
     String storeAggregatedDifferences(ResearchObject freshRO, ResearchObject oldRO)
             throws URISyntaxException, IOException;
@@ -651,7 +666,7 @@ public interface SemanticMetadataService {
      * 
      * @param base
      *            base URI
-     * @param secund
+     * @param second
      *            relative URI
      * @return the resolved URI
      */
@@ -661,7 +676,7 @@ public interface SemanticMetadataService {
     /**
      * Get the evolution information of research object.
      * 
-     * @param researchObjectURI
+     * @param researchObject
      *            the URI of research object
      * @return Input Stream with the evolution information
      */
@@ -674,7 +689,7 @@ public interface SemanticMetadataService {
      * @param researchObject
      *            the research object
      * @return the list of aggregated resources.
-     * @throws ManifestTraversingException
+     * @throws ManifestTraversingException .
      */
     List<AggregatedResource> getAggregatedResources(ResearchObject researchObject)
             throws ManifestTraversingException;
@@ -685,10 +700,8 @@ public interface SemanticMetadataService {
      * 
      * @param researchObject
      *            the research object
-     * @param annotation
-     *            URI the annotation URI
      * @return the list of annotations.
-     * @throws ManifestTraversingException
+     * @throws ManifestTraversingException .
      */
     List<Annotation> getAnnotations(ResearchObject researchObject)
             throws ManifestTraversingException;
