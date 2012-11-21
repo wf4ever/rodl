@@ -1119,29 +1119,39 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
     @Override
     public URI getPreviousSnaphotOrArchive(ResearchObject liveRO, ResearchObject freshSnapshotOrArchive) {
+        return getPreviousSnaphotOrArchive(liveRO, freshSnapshotOrArchive, null);
+    }
+
+
+    @Override
+    public URI getPreviousSnaphotOrArchive(ResearchObject liveRO, ResearchObject freshSnapshotOrArchive, EvoType type) {
         Individual liveSource = getIndividual(liveRO);
         StmtIterator snaphotsIterator;
         snaphotsIterator = liveSource.listProperties(ROEVO.hasSnapshot);
         StmtIterator archiveItertator;
         archiveItertator = liveSource.listProperties(ROEVO.hasArchive);
-
         Individual freshSource = getIndividual(freshSnapshotOrArchive);
         RDFNode dateNode;
-        if (isSnapshot(freshSnapshotOrArchive)) {
-            dateNode = freshSource.getProperty(ROEVO.snapshottedAtTime).getObject();
-        } else if (isArchive(freshSnapshotOrArchive)) {
-            dateNode = freshSource.getProperty(ROEVO.archivedAtTime).getObject();
-        } else {
-            return null;
-        }
+        DateTime freshTime;
 
-        DateTime freshTime = new DateTime(dateNode.asLiteral().getValue().toString());
+        if (type == null) {
+            if (isSnapshot(freshSnapshotOrArchive)) {
+                dateNode = freshSource.getProperty(ROEVO.snapshottedAtTime).getObject();
+            } else if (isArchive(freshSnapshotOrArchive)) {
+                dateNode = freshSource.getProperty(ROEVO.archivedAtTime).getObject();
+            } else {
+                return null;
+            }
+            freshTime = new DateTime(dateNode.asLiteral().getValue().toString());
+        } else {
+            freshTime = DateTime.now();
+        }
         DateTime predecessorTime = null;
         URI result = null;
 
         while (snaphotsIterator.hasNext()) {
             URI tmpURI = URI.create(snaphotsIterator.next().getObject().toString());
-            if (tmpURI == freshSnapshotOrArchive.getUri()) {
+            if (tmpURI.equals(freshSnapshotOrArchive.getUri())) {
                 continue;
             }
             RDFNode node = getIndividual(ResearchObject.create(tmpURI)).getProperty(ROEVO.snapshottedAtTime)
@@ -1223,26 +1233,36 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         Individual firstIndividual = getIndividual(first);
         Individual secondIndividual = getIndividual(second);
 
-        if (isSnapshot(first)) {
-            dateFirst = new DateTime(firstIndividual.getPropertyValue(ROEVO.snapshottedAtTime).asLiteral().getValue()
-                    .toString());
-        } else if (isArchive(first)) {
-            dateFirst = new DateTime(firstIndividual.getPropertyValue(ROEVO.archivedAtTime).asLiteral().getValue()
-                    .toString());
+        if (getNamedGraph(first.getFixedEvolutionAnnotationBodyPath(), RDFFormat.TURTLE) == null) {
+            dateFirst = DateTime.now();
         } else {
-            dateFirst = new DateTime(firstIndividual.getPropertyValue(DCTerms.created).asLiteral().getValue()
-                    .toString());
+
+            if (isSnapshot(first)) {
+                dateFirst = new DateTime(firstIndividual.getPropertyValue(ROEVO.snapshottedAtTime).asLiteral()
+                        .getValue().toString());
+            } else if (isArchive(first)) {
+                dateFirst = new DateTime(firstIndividual.getPropertyValue(ROEVO.archivedAtTime).asLiteral().getValue()
+                        .toString());
+            } else {
+                dateFirst = new DateTime(firstIndividual.getPropertyValue(DCTerms.created).asLiteral().getValue()
+                        .toString());
+            }
         }
 
-        if (isSnapshot(second)) {
-            dateSecond = new DateTime(secondIndividual.getPropertyValue(ROEVO.snapshottedAtTime).asLiteral().getValue()
-                    .toString());
-        } else if (isArchive(second)) {
-            dateSecond = new DateTime(secondIndividual.getPropertyValue(ROEVO.archivedAtTime).asLiteral().getValue()
-                    .toString());
+        if (getNamedGraph(second.getFixedEvolutionAnnotationBodyPath(), RDFFormat.TURTLE) == null) {
+            dateSecond = DateTime.now();
         } else {
-            dateSecond = new DateTime(secondIndividual.getPropertyValue(DCTerms.created).asLiteral().getValue()
-                    .toString());
+
+            if (isSnapshot(second)) {
+                dateSecond = new DateTime(secondIndividual.getPropertyValue(ROEVO.snapshottedAtTime).asLiteral()
+                        .getValue().toString());
+            } else if (isArchive(second)) {
+                dateSecond = new DateTime(secondIndividual.getPropertyValue(ROEVO.archivedAtTime).asLiteral()
+                        .getValue().toString());
+            } else {
+                dateSecond = new DateTime(secondIndividual.getPropertyValue(DCTerms.created).asLiteral().getValue()
+                        .toString());
+            }
         }
         return dateFirst.compareTo(dateSecond);
     }
@@ -1397,7 +1417,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             }
         }
         //False means there are some changes (Changes exists in two directions so they will be stored onlu once)
-        else if (loopResult == false && direction == Direction.NEW) {
+        else if (!loopResult && direction == Direction.NEW) {
             Individual changeIndividual = freshROModel.createIndividual(
                 generateRandomUriRelatedToResource(first, "change"), ROEVO.Change);
             changeIndividual.addRDFType(ROEVO.Modification);
@@ -1406,7 +1426,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             result += first + " " + node.toString() + " MODIFICATION" + "\n";
         }
         //True means there are some unchanges objects
-        else if (loopResult == false && direction == Direction.NEW) {
+        else if (!loopResult && direction == Direction.DELETED) {
             result += first + " " + node.toString() + " UNCHANGED" + "\n";
         }
         return result;
@@ -1864,6 +1884,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString(),
             ORE.AggregatedResource);
 
+        evoModel.createIndividual(ro.getURI(), ROEVO.LiveRO);
         manifestModel.add(evoInfo, ORE.describes, ro);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
@@ -1898,6 +1919,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         manifestModel.add(evoInfo, ORE.describes, ro);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
+        evoModel.createIndividual(ro.getURI(), ROEVO.SnapshotRO);
         evoModel.add(ro, ROEVO.isSnapshotOf, liveRO.getUri().toString());
         evoModel.add(ro, ROEVO.snapshottedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
         evoModel.add(ro, ROEVO.snapshottedBy, evoModel.createResource(user.getUri().toString()));
@@ -1910,9 +1932,9 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
                 .getResource(liveRO.getUriString()), ROEVO.hasSnapshot, ro);
 
         try {
-            if (getPreviousSnaphotOrArchive(liveRO, researchObject) != null) {
+            if (getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT) != null) {
                 storeAggregatedDifferences(researchObject,
-                    ResearchObject.create(getPreviousSnaphotOrArchive(liveRO, researchObject)));
+                    ResearchObject.create(getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT)));
             }
         } catch (URISyntaxException | IOException e) {
             //any way to informa about the problem?
@@ -1944,6 +1966,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         manifestModel.add(evoInfo, ORE.describes, ro);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
+        evoModel.createIndividual(ro.getURI(), ROEVO.ArchivedRO);
         evoModel.add(ro, ROEVO.isArchiveOf, liveRO.getUri().toString());
         evoModel.add(ro, ROEVO.archivedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
         evoModel.add(ro, ROEVO.archivedBy, evoModel.createResource(user.getUri().toString()));
@@ -1955,9 +1978,9 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasArchive, ro);
         try {
-            if (getPreviousSnaphotOrArchive(liveRO, researchObject) != null) {
+            if (getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.ARCHIVED) != null) {
                 storeAggregatedDifferences(researchObject,
-                    ResearchObject.create(getPreviousSnaphotOrArchive(liveRO, researchObject)));
+                    ResearchObject.create(getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.ARCHIVED)));
             }
         } catch (URISyntaxException | IOException e) {
             //any way to informa about the problem?
