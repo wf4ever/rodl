@@ -21,6 +21,7 @@ import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
+import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 
 import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.ontology.Individual;
@@ -269,13 +270,11 @@ public interface SemanticMetadataService {
      * Delete a named graph from the quadstore if exists. This is a generic method and will be made private in future
      * releases. Use specific methods to remove annotations, manifest or folder resource maps.
      * 
-     * @param roURI
-     *            the RO URI, used for distinguishing internal resources from external
      * @param graphURI
      *            graph URI
      */
     @Deprecated
-    void removeNamedGraph(ResearchObject researchObject, URI graphURI);
+    void removeNamedGraph(URI graphURI);
 
 
     /**
@@ -766,4 +765,23 @@ public interface SemanticMetadataService {
      * @return root folder or null if not defined
      */
     Folder getRootFolder(ResearchObject researchObject);
+
+
+    /**
+     * Delete the folder.
+     * 
+     * @param folder
+     *            folder
+     */
+    void deleteFolder(Folder folder);
+
+
+    /**
+     * Create folder entry based on the URI or return null if doesn't exist.
+     * 
+     * @param resource
+     *            entry URI
+     * @return folder entry or null
+     */
+    FolderEntry getFolderEntry(URI resource);
 }

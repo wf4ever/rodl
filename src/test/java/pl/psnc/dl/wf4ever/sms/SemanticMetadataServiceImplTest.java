@@ -1,6 +1,3 @@
-/**
- * 
- */
 package pl.psnc.dl.wf4ever.sms;
 
 import java.io.IOException;
@@ -457,7 +454,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), is, RDFFormat.TURTLE);
         Assert.assertNotNull("A named graph exists",
             test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), RDFFormat.RDFXML));
-        test.sms.removeNamedGraph(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH));
+        test.sms.removeNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH));
         Assert.assertNull("A deleted named graph no longer exists",
             test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), RDFFormat.RDFXML));
     }
@@ -1076,6 +1073,30 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     }
 
 
+    @Test
+    public void testGetFolderEntry() {
+        Folder folder = new Folder();
+        folder.setUri(test.emptyRO.getUri().resolve(FOLDER_PATH));
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
+
+        FolderEntry entry1 = new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1");
+        FolderEntry entry2 = new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource");
+        folder.getFolderEntries().add(entry1);
+        folder.getFolderEntries().add(entry2);
+        Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
+
+        for (FolderEntry entry : folder2.getFolderEntries()) {
+            FolderEntry actual = test.sms.getFolderEntry(entry.getUri());
+            Assert.assertEquals(entry.getUri(), actual.getUri());
+            Assert.assertEquals(entry.getProxyFor(), actual.getProxyFor());
+            Assert.assertEquals(entry.getProxyIn(), actual.getProxyIn());
+            Assert.assertEquals(entry.getEntryName(), actual.getEntryName());
+        }
+    }
+
+
     //TODO
     //Explain scenario
     @Test
@@ -1092,6 +1113,38 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Assert.assertNull(test.sms.getRootFolder(test.emptyRO));
         Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
         Assert.assertEquals(folder2, test.sms.getRootFolder(test.emptyRO));
+    }
+
+
+    /**
+     * Delete a folder and make sure its resource map is gone.
+     */
+    @Test
+    public void testDeleteFolder() {
+        Folder folder = new Folder();
+        folder.setUri(test.emptyRO.getUri().resolve(FOLDER_PATH));
+
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
+
+        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
+        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
+        test.sms.addFolder(test.emptyRO, folder);
+        Assert.assertNotNull(test.sms.getFolder(folder.getUri()));
+
+        OntModel manifestModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        manifestModel.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
+        Individual folderInd = manifestModel.getIndividual(folder.getUri().toString());
+        Assert.assertNotNull(folderInd);
+
+        test.sms.deleteFolder(folder);
+        Assert.assertNull(test.sms.getFolder(folder.getUri()));
+
+        manifestModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        manifestModel.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
+        folderInd = manifestModel.getIndividual(folder.getUri().toString());
+        Assert.assertNull(folderInd);
     }
 
 

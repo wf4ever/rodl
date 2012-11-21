@@ -63,7 +63,7 @@ public class FileTest extends ResourceBase {
         assertNotNull(response.getEntityTag());
         response.close();
 
-        String content = webResource.uri(ro).path(filePath).header("Authorization", "Bearer " + accessToken)
+        String content = webResource.uri(ro).path(filePathEncoded).header("Authorization", "Bearer " + accessToken)
                 .get(String.class);
         assertTrue(content.contains("lorem ipsum"));
 
