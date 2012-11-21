@@ -38,7 +38,7 @@ public class SemanticMetadataConstructorTest extends SemanticMetadataServiceBase
     @Test
     public final void testSemanticMetadataServiceImpl()
             throws ClassNotFoundException, IOException, NamingException, SQLException {
-        SemanticMetadataService sms = new SemanticMetadataServiceImpl(userProfile, true);
+        SemanticMetadataService sms = new SemanticMetadataServiceTdb(userProfile, true);
         ResearchObject researchObject = ResearchObject.create(URI.create("http://www.example.com/testSMSImpl1/"));
         sms.removeResearchObject(researchObject);
         sms.createResearchObject(researchObject);
@@ -85,7 +85,7 @@ public class SemanticMetadataConstructorTest extends SemanticMetadataServiceBase
             throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
         URI fakeURI = new URI("http://www.example.com/ROs/");
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/manifest.rdf");
-        SemanticMetadataService sms = new SemanticMetadataServiceImpl(userProfile, ResearchObject.create(fakeURI), is,
+        SemanticMetadataService sms = new SemanticMetadataServiceTdb(userProfile, ResearchObject.create(fakeURI), is,
                 RDFFormat.RDFXML);
         try {
             String manifest = IOUtils.toString(sms.getManifest(

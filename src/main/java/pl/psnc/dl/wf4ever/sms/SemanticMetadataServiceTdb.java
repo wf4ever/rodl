@@ -1039,25 +1039,33 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             String annotationUUID) {
         dataset.begin(ReadWrite.WRITE);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
-            Resource researchObjectR = manifestModel.createResource(researchObject.getUri().toString());
-            Resource body = manifestModel.createResource(annotationBody.normalize().toString());
-            URI annotationURI = generateAnnotationURI(researchObject, annotationUUID);
-            Individual annotation = manifestModel.createIndividual(annotationURI.toString(), RO.AggregatedAnnotation);
-            manifestModel.add(researchObjectR, ORE.aggregates, annotation);
-            manifestModel.add(annotation, AO.body, body);
-            for (URI targetURI : annotationTargets) {
-                Resource target = manifestModel.createResource(targetURI.normalize().toString());
-                manifestModel.add(annotation, RO.annotatesAggregatedResource, target);
-            }
-            manifestModel.add(annotation, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
-            Resource agent = manifestModel.createResource(user.getUri().toString());
-            manifestModel.add(annotation, DCTerms.creator, agent);
+            URI annotationURI = addAnnotationNoTransaction(researchObject, annotationTargets, annotationBody,
+                annotationUUID);
             dataset.commit();
             return annotationURI;
         } finally {
             dataset.end();
         }
+    }
+
+
+    private URI addAnnotationNoTransaction(ResearchObject researchObject, List<URI> annotationTargets,
+            URI annotationBody, String annotationUUID) {
+        OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+        Resource researchObjectR = manifestModel.createResource(researchObject.getUri().toString());
+        Resource body = manifestModel.createResource(annotationBody.normalize().toString());
+        URI annotationURI = generateAnnotationURI(researchObject, annotationUUID);
+        Individual annotation = manifestModel.createIndividual(annotationURI.toString(), RO.AggregatedAnnotation);
+        manifestModel.add(researchObjectR, ORE.aggregates, annotation);
+        manifestModel.add(annotation, AO.body, body);
+        for (URI targetURI : annotationTargets) {
+            Resource target = manifestModel.createResource(targetURI.normalize().toString());
+            manifestModel.add(annotation, RO.annotatesAggregatedResource, target);
+        }
+        manifestModel.add(annotation, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
+        Resource agent = manifestModel.createResource(user.getUri().toString());
+        manifestModel.add(annotation, DCTerms.creator, agent);
+        return annotationURI;
     }
 
 
@@ -2002,6 +2010,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 default:
                     generateLiveRoEvoInf(researchObject);
             }
+            dataset.commit();
         } finally {
             dataset.end();
         }
@@ -2030,8 +2039,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         manifestModel.add(evoInfo, ORE.describes, ro);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
-        addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
-            researchObject.getFixedEvolutionAnnotationBodyPath()).toString();
+        addAnnotationNoTransaction(researchObject, Arrays.asList(researchObject.getUri()),
+            researchObject.getFixedEvolutionAnnotationBodyPath(), null).toString();
         ro.addProperty(ORE.aggregates,
             manifestModel.getResource(researchObject.getFixedEvolutionAnnotationBodyPath().toString()));
     }
