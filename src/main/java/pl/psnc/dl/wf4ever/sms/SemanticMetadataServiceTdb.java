@@ -95,12 +95,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     private static final Syntax SPARQL_SYNTAX = Syntax.syntaxARQ;
 
 
-    public SemanticMetadataServiceTdb(UserMetadata user)
-            throws IOException {
-        this(user, true);
-    }
-
-
     public SemanticMetadataServiceTdb(UserMetadata user, boolean useDb)
             throws IOException {
         this.user = user;
@@ -136,7 +130,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         this(user, false);
         createResearchObject(researchObject);
         updateManifest(researchObject, manifest, rdfFormat);
-        TDB.getContext().set(TDB.symUnionDefaultGraph, true);
     }
 
 
@@ -377,8 +370,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     Resource annBody = ann.getPropertyResourceValue(AO.body);
                     if (annBody != null && annBody.isURIResource()) {
                         URI annBodyURI = URI.create(annBody.getURI());
-                        if (containsNamedGraph(annBodyURI)) {
-                            removeNamedGraph(annBodyURI);
+                        if (dataset.containsNamedModel(SafeURI.URItoString(annBodyURI))) {
+                            removeNamedGraphNoTransaction(annBodyURI);
                         }
                     }
                     manifestModel.removeAll(ann, null, null);
@@ -388,8 +381,9 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
             URI proxy = getProxyForResourceNoTransaction(researchObject, resourceURI);
             if (proxy != null) {
-                deleteProxy(researchObject, proxy);
+                deleteProxyNoTransaction(researchObject, proxy);
             }
+            dataset.commit();
         } finally {
             dataset.end();
         }
@@ -632,54 +626,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public void removeNamedGraph(URI graphURI) {
         dataset.begin(ReadWrite.WRITE);
         try {
-            //@TODO Remove evo_inf file
-            graphURI = graphURI.normalize();
-            if (!dataset.containsNamedModel(graphURI.toString())) {
-                dataset.abort();
-                return;
-            }
-
-            List<URI> graphsToDelete = new ArrayList<>();
-            graphsToDelete.add(graphURI);
-
-            int i = 0;
-            while (i < graphsToDelete.size()) {
-                OntModel model = createOntModelForNamedGraph(graphsToDelete.get(i));
-                List<RDFNode> annotationBodies = model.listObjectsOfProperty(AO.body).toList();
-                for (RDFNode annotationBodyRef : annotationBodies) {
-                    if (annotationBodyRef.isURIResource()) {
-                        URI graphURI2 = URI.create(annotationBodyRef.asResource().getURI());
-                        // TODO make sure that this named graph is internal
-                        if (dataset.containsNamedModel(graphURI2.toString()) && !graphsToDelete.contains(graphURI2)) {
-                            graphsToDelete.add(graphURI2);
-                        }
-                    }
-                }
-                List<RDFNode> evos = model.listObjectsOfProperty(ROEVO.wasChangedBy).toList();
-                for (RDFNode evo : evos) {
-                    if (evo.isURIResource()) {
-                        URI graphURI2 = URI.create(evo.asResource().getURI());
-                        if (dataset.containsNamedModel(graphURI2.toString()) && !graphsToDelete.contains(graphURI2)) {
-                            graphsToDelete.add(graphURI2);
-                        }
-                    }
-                }
-                List<Individual> folders = model.listIndividuals(RO.Folder).toList();
-                for (Individual folder : folders) {
-                    if (folder.isURIResource()) {
-                        Folder f = new Folder();
-                        f.setUri(URI.create(folder.asResource().getURI()));
-                        if (dataset.containsNamedModel(f.getResourceMapUri().toString())
-                                && !graphsToDelete.contains(f.getResourceMapUri())) {
-                            graphsToDelete.add(f.getResourceMapUri());
-                        }
-                    }
-                }
-                i++;
-            }
-            for (URI graphURI2 : graphsToDelete) {
-                dataset.removeNamedModel(graphURI2.toString());
-            }
+            removeNamedGraphNoTransaction(graphURI);
             dataset.commit();
         } finally {
             dataset.end();
@@ -687,8 +634,54 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     }
 
 
-    private OntModel createOntModelForAllNamedGraphs() {
-        return createOntModelForAllNamedGraphs(OntModelSpec.OWL_MEM);
+    private void removeNamedGraphNoTransaction(URI graphURI) {
+        //@TODO Remove evo_inf file
+        graphURI = graphURI.normalize();
+        if (!dataset.containsNamedModel(graphURI.toString())) {
+            return;
+        }
+
+        List<URI> graphsToDelete = new ArrayList<>();
+        graphsToDelete.add(graphURI);
+
+        int i = 0;
+        while (i < graphsToDelete.size()) {
+            OntModel model = createOntModelForNamedGraph(graphsToDelete.get(i));
+            List<RDFNode> annotationBodies = model.listObjectsOfProperty(AO.body).toList();
+            for (RDFNode annotationBodyRef : annotationBodies) {
+                if (annotationBodyRef.isURIResource()) {
+                    URI graphURI2 = URI.create(annotationBodyRef.asResource().getURI());
+                    // TODO make sure that this named graph is internal
+                    if (dataset.containsNamedModel(graphURI2.toString()) && !graphsToDelete.contains(graphURI2)) {
+                        graphsToDelete.add(graphURI2);
+                    }
+                }
+            }
+            List<RDFNode> evos = model.listObjectsOfProperty(ROEVO.wasChangedBy).toList();
+            for (RDFNode evo : evos) {
+                if (evo.isURIResource()) {
+                    URI graphURI2 = URI.create(evo.asResource().getURI());
+                    if (dataset.containsNamedModel(graphURI2.toString()) && !graphsToDelete.contains(graphURI2)) {
+                        graphsToDelete.add(graphURI2);
+                    }
+                }
+            }
+            List<Individual> folders = model.listIndividuals(RO.Folder).toList();
+            for (Individual folder : folders) {
+                if (folder.isURIResource()) {
+                    Folder f = new Folder();
+                    f.setUri(URI.create(folder.asResource().getURI()));
+                    if (dataset.containsNamedModel(f.getResourceMapUri().toString())
+                            && !graphsToDelete.contains(f.getResourceMapUri())) {
+                        graphsToDelete.add(f.getResourceMapUri());
+                    }
+                }
+            }
+            i++;
+        }
+        for (URI graphURI2 : graphsToDelete) {
+            dataset.removeNamedModel(graphURI2.toString());
+        }
     }
 
 
@@ -1241,9 +1234,9 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             DateTime freshTime;
 
             if (type == null) {
-                if (isSnapshot(freshSnapshotOrArchive)) {
+                if (getIndividualNoTransaction(freshSnapshotOrArchive).hasRDFType(ROEVO.SnapshotRO)) {
                     dateNode = freshSource.getProperty(ROEVO.snapshottedAtTime).getObject();
-                } else if (isArchive(freshSnapshotOrArchive)) {
+                } else if (getIndividualNoTransaction(freshSnapshotOrArchive).hasRDFType(ROEVO.ArchivedRO)) {
                     dateNode = freshSource.getProperty(ROEVO.archivedAtTime).getObject();
                 } else {
                     return null;
@@ -1344,17 +1337,17 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     private int compareTwoResearchObjectDateOfCreation(ResearchObject first, ResearchObject second) {
         DateTime dateFirst = null;
         DateTime dateSecond = null;
-        Individual firstIndividual = getIndividual(first);
-        Individual secondIndividual = getIndividual(second);
+        Individual firstIndividual = getIndividualNoTransaction(first);
+        Individual secondIndividual = getIndividualNoTransaction(second);
 
-        if (getNamedGraph(first.getFixedEvolutionAnnotationBodyPath(), RDFFormat.TURTLE) == null) {
+        if (!dataset.containsNamedModel(first.getFixedEvolutionAnnotationBodyPath().toString())) {
             dateFirst = DateTime.now();
         } else {
 
-            if (isSnapshot(first)) {
+            if (getIndividualNoTransaction(first).hasRDFType(ROEVO.SnapshotRO)) {
                 dateFirst = new DateTime(firstIndividual.getPropertyValue(ROEVO.snapshottedAtTime).asLiteral()
                         .getValue().toString());
-            } else if (isArchive(first)) {
+            } else if (getIndividualNoTransaction(first).hasRDFType(ROEVO.ArchivedRO)) {
                 dateFirst = new DateTime(firstIndividual.getPropertyValue(ROEVO.archivedAtTime).asLiteral().getValue()
                         .toString());
             } else {
@@ -1363,14 +1356,14 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             }
         }
 
-        if (getNamedGraph(second.getFixedEvolutionAnnotationBodyPath(), RDFFormat.TURTLE) == null) {
+        if (!dataset.containsNamedModel(second.getFixedEvolutionAnnotationBodyPath().toString())) {
             dateSecond = DateTime.now();
         } else {
 
-            if (isSnapshot(second)) {
+            if (getIndividualNoTransaction(second).hasRDFType(ROEVO.SnapshotRO)) {
                 dateSecond = new DateTime(secondIndividual.getPropertyValue(ROEVO.snapshottedAtTime).asLiteral()
                         .getValue().toString());
-            } else if (isArchive(second)) {
+            } else if (getIndividualNoTransaction(second).hasRDFType(ROEVO.ArchivedRO)) {
                 dateSecond = new DateTime(secondIndividual.getPropertyValue(ROEVO.archivedAtTime).asLiteral()
                         .getValue().toString());
             } else {
@@ -1390,12 +1383,12 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
      * @return positive value if first is younger, negative otherwise, 0 if they are equal.
      */
     private List<RDFNode> getAggregatedWithNoEvoAndBody(ResearchObject researchObject) {
-        Individual roIndividual = getIndividual(researchObject);
+        Individual roIndividual = getIndividualNoTransaction(researchObject);
         DateTime date = null;
-        if (isSnapshot(researchObject)) {
+        if (getIndividualNoTransaction(researchObject).hasRDFType(ROEVO.SnapshotRO)) {
             date = new DateTime(roIndividual.getPropertyValue(ROEVO.snapshottedAtTime).asLiteral().getValue()
                     .toString());
-        } else if (isArchive(researchObject)) {
+        } else if (getIndividualNoTransaction(researchObject).hasRDFType(ROEVO.ArchivedRO)) {
             date = new DateTime(roIndividual.getPropertyValue(ROEVO.archivedAtTime).asLiteral().getValue().toString());
         }
 
@@ -1793,8 +1786,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     private Individual getIndividualNoTransaction(ResearchObject ro) {
-        OntModel roManifestModel = createOntModelForNamedGraph(ro.getManifestUri());
-        OntModel roEvolutionModel = createOntModelForNamedGraph(ro.getFixedEvolutionAnnotationBodyPath());
+        Model roManifestModel = dataset.getNamedModel(ro.getManifestUri().toString());
+        Model roEvolutionModel = dataset.getNamedModel(ro.getFixedEvolutionAnnotationBodyPath().toString());
         return ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, roManifestModel.union(roEvolutionModel))
                 .getIndividual(ro.getUriString());
     }
@@ -1928,12 +1921,12 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             for (RDFNode node : aggregatesList) {
                 try {
                     if (node.isURIResource()) {
-                        if (isAnnotation(researchObject, new URI(node.asResource().getURI()))) {
+                        if (isAnnotationNoTransaction(researchObject, new URI(node.asResource().getURI()))) {
                             annotations.add(new Annotation(new URI(node.asResource().getURI()), model));
                         }
                     } else if (node.isResource()) {
                         URI nodeUri = changeBlankNodeToUriResources(researchObject, model, node);
-                        if (isAnnotation(researchObject, nodeUri)) {
+                        if (isAnnotationNoTransaction(researchObject, nodeUri)) {
                             annotations.add(new Annotation(nodeUri, model));
                         }
                     }
@@ -2215,7 +2208,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             if (r == null) {
                 return null;
             } else {
-                return getFolder(URI.create(r.getURI()));
+                return getFolderNoTransaction(URI.create(r.getURI()));
             }
         } finally {
             dataset.end();
@@ -2225,8 +2218,12 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
     @Override
     public Individual getIndividual(ResearchObject ro) {
-        // TODO Auto-generated method stub
-        return null;
+        dataset.begin(ReadWrite.READ);
+        try {
+            return getIndividualNoTransaction(ro);
+        } finally {
+            dataset.end();
+        }
     }
 
 
@@ -2234,50 +2231,55 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public Folder getFolder(URI folderURI) {
         dataset.begin(ReadWrite.READ);
         try {
-            Folder folder = new Folder();
-            folder.setUri(folderURI);
-            if (!containsNamedGraph(folder.getResourceMapUri())) {
-                return null;
-            }
-            OntModel model = createOntModelForNamedGraph(folder.getResourceMapUri());
-            Individual folderI = model.getIndividual(folder.getUri().toString());
-            List<RDFNode> aggregations = folderI.listPropertyValues(ORE.isAggregatedBy).toList();
-            Individual ro = null;
-            for (RDFNode node : aggregations) {
-                if (node.isURIResource() && node.as(Individual.class).hasRDFType(RO.ResearchObject)) {
-                    ro = node.as(Individual.class);
-                    break;
-                }
-            }
-            // this would work if we turned inference on
-            //        ObjectProperty aggregatedByRO = model.createObjectProperty(RO.NAMESPACE.concat("aggregatedByRO"), true);
-            //        aggregatedByRO.addSuperProperty(ORE.isAggregatedBy);
-            //        aggregatedByRO.addRange(RO.ResearchObject);
-            //        Resource ro = folderI.getPropertyResourceValue(aggregatedByRO);
-            URI roURI = URI.create(ro.getURI());
-            folder.setAggregationUri(roURI);
-            URI proxyURI = getProxyForResource(ResearchObject.create(roURI), folder.getUri());
-            folder.setProxyUri(proxyURI);
-
-            List<Individual> entries = model.listIndividuals(RO.FolderEntry).toList();
-            for (Individual entryI : entries) {
-                String proxyIn = entryI.getPropertyResourceValue(ORE.proxyIn).getURI();
-                if (!proxyIn.equals(folder.getUri().toString())) {
-                    continue;
-                }
-                FolderEntry entry = new FolderEntry();
-                entry.setUri(URI.create(entryI.getURI()));
-                entry.setProxyIn(URI.create(proxyIn));
-                String proxyFor = entryI.getPropertyResourceValue(ORE.proxyFor).getURI();
-                entry.setProxyFor(URI.create(proxyFor));
-                String name = entryI.getPropertyValue(RO.entryName).asLiteral().getString();
-                entry.setEntryName(name);
-                folder.getFolderEntries().add(entry);
-            }
-            return folder;
+            return getFolderNoTransaction(folderURI);
         } finally {
             dataset.end();
         }
+    }
+
+
+    private Folder getFolderNoTransaction(URI folderURI) {
+        Folder folder = new Folder();
+        folder.setUri(folderURI);
+        if (!dataset.containsNamedModel(folder.getResourceMapUri().toString())) {
+            return null;
+        }
+        OntModel model = createOntModelForNamedGraph(folder.getResourceMapUri());
+        Individual folderI = model.getIndividual(folder.getUri().toString());
+        List<RDFNode> aggregations = folderI.listPropertyValues(ORE.isAggregatedBy).toList();
+        Individual ro = null;
+        for (RDFNode node : aggregations) {
+            if (node.isURIResource() && node.as(Individual.class).hasRDFType(RO.ResearchObject)) {
+                ro = node.as(Individual.class);
+                break;
+            }
+        }
+        // this would work if we turned inference on
+        //        ObjectProperty aggregatedByRO = model.createObjectProperty(RO.NAMESPACE.concat("aggregatedByRO"), true);
+        //        aggregatedByRO.addSuperProperty(ORE.isAggregatedBy);
+        //        aggregatedByRO.addRange(RO.ResearchObject);
+        //        Resource ro = folderI.getPropertyResourceValue(aggregatedByRO);
+        URI roURI = URI.create(ro.getURI());
+        folder.setAggregationUri(roURI);
+        URI proxyURI = getProxyForResourceNoTransaction(ResearchObject.create(roURI), folder.getUri());
+        folder.setProxyUri(proxyURI);
+
+        List<Individual> entries = model.listIndividuals(RO.FolderEntry).toList();
+        for (Individual entryI : entries) {
+            String proxyIn = entryI.getPropertyResourceValue(ORE.proxyIn).getURI();
+            if (!proxyIn.equals(folder.getUri().toString())) {
+                continue;
+            }
+            FolderEntry entry = new FolderEntry();
+            entry.setUri(URI.create(entryI.getURI()));
+            entry.setProxyIn(URI.create(proxyIn));
+            String proxyFor = entryI.getPropertyResourceValue(ORE.proxyFor).getURI();
+            entry.setProxyFor(URI.create(proxyFor));
+            String name = entryI.getPropertyValue(RO.entryName).asLiteral().getString();
+            entry.setEntryName(name);
+            folder.getFolderEntries().add(entry);
+        }
+        return folder;
     }
 
 
@@ -2345,7 +2347,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         Individual proxyFor = entry.getPropertyResourceValue(ORE.proxyFor).as(Individual.class);
         entry.remove();
         proxyFor.remove();
-        removeNamedGraph(URI.create(entry.getURI()));
+        removeNamedGraphNoTransaction(URI.create(entry.getURI()));
     }
 
 
@@ -2363,7 +2365,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 deleteFolderEntry(entry);
             }
 
-            removeNamedGraph(folder.getResourceMapUri());
+            removeNamedGraphNoTransaction(folder.getResourceMapUri());
             dataset.commit();
         } finally {
             dataset.end();
@@ -2375,7 +2377,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public FolderEntry getFolderEntry(URI entryUri) {
         dataset.begin(ReadWrite.WRITE);
         try {
-            if (!containsNamedGraph(entryUri)) {
+            if (!dataset.containsNamedModel(entryUri.toString())) {
                 return null;
             }
             OntModel entryModel = createOntModelForNamedGraph(entryUri);
@@ -2384,7 +2386,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 return null;
             }
             Resource folderR = entryInd.getPropertyResourceValue(ORE.isAggregatedBy);
-            Folder folder = getFolder(URI.create(folderR.getURI()));
+            Folder folder = getFolderNoTransaction(URI.create(folderR.getURI()));
             for (FolderEntry entry : folder.getFolderEntries()) {
                 if (entry.getUri().equals(entryUri)) {
                     return entry;
