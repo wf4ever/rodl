@@ -1495,6 +1495,15 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
+    /**
+     * Compare two resources.
+     * 
+     * @param pattern
+     * @param compared
+     * @param patternROURI
+     * @param comparedROURI
+     * @return
+     */
     private Boolean compareTwoResources(Resource pattern, Resource compared, URI patternROURI, URI comparedROURI) {
         Individual patternSource = pattern.as(Individual.class);
         Individual comparedSource = compared.as(Individual.class);
@@ -1932,9 +1941,10 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
                 .getResource(liveRO.getUriString()), ROEVO.hasSnapshot, ro);
 
         try {
-            if (getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT) != null) {
-                storeAggregatedDifferences(researchObject,
-                    ResearchObject.create(getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT)));
+            URI previousSnaphot = getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
+            if (previousSnaphot != null) {
+                storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnaphot));
+                evoModel.add(ro, PROV.wasRevisionOf, previousSnaphot.toString());
             }
         } catch (URISyntaxException | IOException e) {
             //any way to informa about the problem?
