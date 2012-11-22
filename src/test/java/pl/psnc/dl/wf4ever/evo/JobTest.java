@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.net.URI;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -33,7 +34,7 @@ public class JobTest extends EvoTest {
     @Test
     public final void testCopyJobCreation()
             throws InterruptedException {
-        ClientResponse response = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, false));
+        ClientResponse response = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, true));
         URI copyJob = response.getLocation();
         getRemoteStatus(copyJob, WAIT_FOR_COPY);
         assertEquals(response.getEntity(String.class), HttpServletResponse.SC_CREATED, response.getStatus());
@@ -44,9 +45,13 @@ public class JobTest extends EvoTest {
     @Test
     public final void testCopyJobStatusDataIntegrity()
             throws InterruptedException {
-        JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, false);
+        JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, true);
+        status.setTarget(URI.create("http://" + ro.getAuthority() + "/ROs/" + "testTarget"));
         URI copyJob = createCopyJob(status).getLocation();
         JobStatus remoteStatus = getRemoteStatus(copyJob, WAIT_FOR_COPY);
+        String s = webResource.path(copyJob.getPath()).header("Authorization", "Bearer " + accessToken)
+                .accept(MediaType.APPLICATION_JSON).get(String.class);
+        Assert.assertTrue(s.contains("testTarget"));
         Assert.assertEquals(status.getCopyfrom(), remoteStatus.getCopyfrom());
         Assert.assertEquals(status.getType(), remoteStatus.getType());
         Assert.assertEquals(status.isFinalize(), remoteStatus.isFinalize());

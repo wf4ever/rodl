@@ -96,10 +96,16 @@ public class CopyResource implements JobsContainer {
         if (status.getType() == null) {
             throw new BadRequestException("incorrect or missing \"type\" attribute");
         }
-        String id = request.getHeader(Constants.SLUG_HEADER);
+        String id = null;
+        if (status.isFinalize() && status.getTarget() != null) {
+            id = status.getTarget().toString();
+        } else {
+            id = request.getHeader(Constants.SLUG_HEADER);
+        }
         if (id == null) {
             id = UUID.randomUUID().toString();
         }
+
         CopyOperation copy = new CopyOperation(id);
 
         UUID jobUUID = UUID.randomUUID();
