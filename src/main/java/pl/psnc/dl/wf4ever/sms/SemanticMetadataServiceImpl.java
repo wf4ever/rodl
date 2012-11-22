@@ -1200,8 +1200,8 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             throw new IllegalArgumentException("Fresh RO can not be older them old RO");
         }
 
-        List<RDFNode> freshAggreagted = getAggregatedWithNoEvoAndBody(freshRO);
-        List<RDFNode> oldAggreagted = getAggregatedWithNoEvoAndBody(oldRO);
+        List<RDFNode> freshAggreagted = getAggregatedWithNoEvoManifestAndBody(freshRO);
+        List<RDFNode> oldAggreagted = getAggregatedWithNoEvoManifestAndBody(oldRO);
 
         OntModel evoInfoModel = createOntModelForNamedGraph(freshRO.getFixedEvolutionAnnotationBodyPath());
 
@@ -1275,7 +1275,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
      *            given Research Object.
      * @return a list of aggregated resources excluding evolution information annotation and annotation bodies.
      */
-    private List<RDFNode> getAggregatedWithNoEvoAndBody(ResearchObject researchObject) {
+    private List<RDFNode> getAggregatedWithNoEvoManifestAndBody(ResearchObject researchObject) {
         Individual roIndividual = getIndividual(researchObject);
         DateTime date = null;
         if (isSnapshot(researchObject)) {
@@ -1301,11 +1301,15 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
                 continue;
             }
         }
+        Annotation manifestAnnotation = findAnnotationForBody(researchObject, researchObject.getManifestUri());
         for (RDFNode a : aggreageted) {
             try {
                 if (a.as(Individual.class).hasRDFType(RO.AggregatedAnnotation)) {
                     RDFNode node = a.as(Individual.class).getPropertyValue(AO.body);
                     aggreagetedWithNoEvo.remove(node);
+                }
+                if (a.isResource() && a.asResource().getURI().equals(manifestAnnotation.getUri().toString())) {
+                    aggreagetedWithNoEvo.remove(a);
                 }
             } catch (Exception e) {
                 continue;

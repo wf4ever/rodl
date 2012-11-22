@@ -873,10 +873,15 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
             ROEVO.Removal.getURI(), model, nodes));
 
         //should not consider any resources added to the research object after the snaphot is done
-        Assert.assertFalse(isChangeInTheChangesList(getResourceURI("ro1-sp1/change_annotation").toString(),
+        Assert.assertFalse(isChangeInTheChangesList(getResourceURI("ro1-sp2/change_annotation").toString(),
             ROEVO.Addition.getURI(), model, nodes));
-        Assert.assertFalse(isChangeInTheChangesList(getResourceURI("ro1-sp1/ann3-body").toString(),
+        Assert.assertFalse(isChangeInTheChangesList(getResourceURI("ro1-sp2/manifest_ann").toString(),
             ROEVO.Addition.getURI(), model, nodes));
+        Assert.assertFalse(isChangeInTheChangesList(getResourceURI("ro1-sp2/.ro/manifest.rdf").toString(),
+            ROEVO.Addition.getURI(), model, nodes));
+        Assert.assertFalse(isChangeInTheChangesList(getResourceURI("ro1-sp2/ann3-body").toString(),
+            ROEVO.Addition.getURI(), model, nodes));
+
     }
 
 
@@ -887,7 +892,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      * @throws URISyntaxException .
      */
     @Test(expected = IllegalArgumentException.class)
-    public final void testStoreROhistoryWithWrongParametrs()
+    public final void ttestROevoWithWrongParametrs()
             throws URISyntaxException, IOException {
         test.sms.storeAggregatedDifferences(null, test.sp1);
     }
@@ -900,7 +905,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      * @throws URISyntaxException .
      */
     @Test(expected = IllegalArgumentException.class)
-    public final void testStoreROhistoryWithParametersGivenConversely()
+    public final void testROevoWithParametersGivenConversely()
             throws URISyntaxException, IOException {
         test.sms.storeAggregatedDifferences(test.sp1, test.sp2);
     }
@@ -913,7 +918,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      * @throws URISyntaxException .
      */
     @Test(expected = IllegalArgumentException.class)
-    public final void testStoreROhistoryBetweenTwoTheSameObjects()
+    public final void testROevoBetweenTwoTheSameObjects()
             throws URISyntaxException, IOException {
         test.sms.storeAggregatedDifferences(test.sp1, test.sp1);
     }
@@ -926,7 +931,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      * @throws URISyntaxException
      */
     @Test
-    public final void testStoreROhistoryWithNoAccenestor()
+    public final void testROevoWithNoAccenestor()
             throws URISyntaxException, IOException {
         String resultSp1 = test.sms.storeAggregatedDifferences(test.sp1, null);
         String resultLive = test.sms.storeAggregatedDifferences(test.ro1, null);
