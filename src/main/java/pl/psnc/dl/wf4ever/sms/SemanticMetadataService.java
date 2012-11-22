@@ -603,7 +603,7 @@ public interface SemanticMetadataService {
      *            EvoType snapshot/archive/null
      * @return the URI of the current snapshot or archive predecessor
      */
-    URI getPreviousSnaphotOrArchive(ResearchObject liveRo, ResearchObject freshSnaphotOrArchive, EvoType type);
+    URI getPreviousSnapshotOrArchive(ResearchObject liveRo, ResearchObject freshSnaphotOrArchive, EvoType type);
 
 
     /**
@@ -616,7 +616,7 @@ public interface SemanticMetadataService {
      *            currently processed snapshot or archive
      * @return the URI of the current snapshot or archive predecessor
      */
-    URI getPreviousSnaphotOrArchive(ResearchObject liveRo, ResearchObject freshSnaphotOrArchive);
+    URI getPreviousSnapshotOrArchive(ResearchObject liveRo, ResearchObject freshSnaphotOrArchive);
 
 
     /**

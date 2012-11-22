@@ -1114,13 +1114,13 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     @Override
-    public URI getPreviousSnaphotOrArchive(ResearchObject liveRO, ResearchObject freshSnapshotOrArchive) {
-        return getPreviousSnaphotOrArchive(liveRO, freshSnapshotOrArchive, null);
+    public URI getPreviousSnapshotOrArchive(ResearchObject liveRO, ResearchObject freshSnapshotOrArchive) {
+        return getPreviousSnapshotOrArchive(liveRO, freshSnapshotOrArchive, null);
     }
 
 
     @Override
-    public URI getPreviousSnaphotOrArchive(ResearchObject liveRO, ResearchObject freshSnapshotOrArchive, EvoType type) {
+    public URI getPreviousSnapshotOrArchive(ResearchObject liveRO, ResearchObject freshSnapshotOrArchive, EvoType type) {
         Individual liveSource = getIndividual(liveRO);
         StmtIterator snaphotsIterator;
         snaphotsIterator = liveSource.listProperties(ROEVO.hasSnapshot);
@@ -1947,7 +1947,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
                 .getResource(liveRO.getUriString()), ROEVO.hasSnapshot, ro);
 
         try {
-            URI previousSnaphot = getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
+            URI previousSnaphot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
             if (previousSnaphot != null) {
                 storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnaphot));
                 evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnaphot.toString()));
@@ -1995,7 +1995,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasArchive, ro);
         try {
-            URI previousSnaphot = getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
+            URI previousSnaphot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
             if (previousSnaphot != null) {
                 storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnaphot));
                 evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnaphot.toString()));
