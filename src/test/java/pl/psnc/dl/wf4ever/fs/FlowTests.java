@@ -11,6 +11,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Date;
 
 import org.junit.After;
@@ -91,9 +94,10 @@ public class FlowTests {
         dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
             MAIN_FILE_MIME_TYPE);
 
-        files[0] = new FileRecord("file1.txt", "file1.txt", "text/plain");
-        files[1] = new FileRecord("file2.txt", "dir/file2.txt", "text/plain");
-        files[2] = new FileRecord("file3.jpg", "testdir/file3.jpg", "image/jpg");
+        files[0] = new FileRecord("singleFiles/file1.txt", "file1.txt", "text/plain");
+        files[1] = new FileRecord("singleFiles/file2.txt", "dir/file2.txt", "text/plain");
+        files[2] = new FileRecord("singleFiles/file3.jpg", "testdir/file3.jpg", "image/jpg");
+        Files.createDirectories(Paths.get(BASE));
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
     }
 
@@ -110,6 +114,11 @@ public class FlowTests {
         dl = new FilesystemDL(BASE, ADMIN);
         dl.deleteUser(USER.getLogin());
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+        try {
+            Files.delete(Paths.get(BASE));
+        } catch (DirectoryNotEmptyException e) {
+            // was not empty
+        }
     }
 
 
