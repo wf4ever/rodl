@@ -41,7 +41,7 @@ import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
 import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -814,7 +814,7 @@ public final class ROSRService {
             throw new BadRequestException("Research Object creation problem", e);
         }
 
-        SemanticMetadataService tmpSms = new SemanticMetadataServiceImpl(ROSRService.SMS.get().getUserProfile(),
+        SemanticMetadataService tmpSms = new SemanticMetadataServiceTdb(ROSRService.SMS.get().getUserProfile(),
                 createdResearchObject, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
 
         List<AggregatedResource> aggregatedList;
@@ -848,7 +848,7 @@ public final class ROSRService {
                     aggregateExternalResource(ResearchObject.create(createdResearchObjectURI), aggregated.getUri());
                 }
             } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
-                e.printStackTrace();
+                LOGGER.error("Error when aggregating resources", e);
             } finally {
                 tmpFile.delete();
             }

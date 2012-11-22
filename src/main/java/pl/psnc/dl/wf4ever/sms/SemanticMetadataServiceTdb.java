@@ -98,6 +98,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public SemanticMetadataServiceTdb(UserMetadata user, boolean useDb)
             throws IOException {
         this.user = user;
+        TDB.getContext().set(TDB.symUnionDefaultGraph, true);
 
         if (useDb) {
             String dir = getStoreDirectory("connection.properties");
@@ -108,19 +109,22 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         } else {
             dataset = TDBFactory.createDataset("/tmp/volatilestore");
             dataset.begin(ReadWrite.WRITE);
-            List<String> models = new ArrayList<>();
-            Iterator<String> it = dataset.listNames();
-            while (it.hasNext()) {
-                models.add(it.next());
+            try {
+                List<String> models = new ArrayList<>();
+                Iterator<String> it = dataset.listNames();
+                while (it.hasNext()) {
+                    models.add(it.next());
+                }
+                for (String model : models) {
+                    dataset.removeNamedModel(model);
+                }
+                dataset.commit();
+            } finally {
+                dataset.end();
             }
-            for (String model : models) {
-                dataset.removeNamedModel(model);
-            }
-            dataset.commit();
         }
         W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
         createUserProfile(user);
-        TDB.getContext().set(TDB.symUnionDefaultGraph, true);
     }
 
 
@@ -855,6 +859,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     log.error(e);
                 }
             }
+            dataset.commit();
             return attributes;
         } finally {
             dataset.end();
@@ -1898,6 +1903,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     continue;
                 }
             }
+            dataset.commit();
             return aggregated;
         } finally {
             dataset.end();
@@ -1953,6 +1959,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     continue;
                 }
             }
+            dataset.commit();
             return annotations;
         } finally {
             dataset.end();
@@ -2387,7 +2394,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
     @Override
     public FolderEntry getFolderEntry(URI entryUri) {
-        dataset.begin(ReadWrite.WRITE);
+        dataset.begin(ReadWrite.READ);
         try {
             if (!dataset.containsNamedModel(entryUri.toString())) {
                 return null;

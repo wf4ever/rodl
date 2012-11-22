@@ -25,7 +25,7 @@ import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 
 import com.hp.hpl.jena.ontology.OntModel;
@@ -137,7 +137,8 @@ public class ResourceTest extends ResourceBase {
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
 
-        SemanticMetadataService sms = new SemanticMetadataServiceImpl(new UserMetadata("login", "name", Role.ADMIN));
+        SemanticMetadataService sms = new SemanticMetadataServiceTdb(new UserMetadata("login", "name", Role.ADMIN),
+                false);
         List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
         assertEquals("research object should contain three annotations", 3, annotations.size());
         response.close();
