@@ -131,7 +131,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         this.user = userMetadata;
         this.connection = null;
         graphset = new NamedGraphSetImpl();
-        W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
+        //W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
         createUserProfile(userMetadata);
 
         createResearchObject(researchObject);

@@ -117,6 +117,15 @@ public class ResourceTest extends ResourceBase {
     }
 
 
+    /**
+     * Ziped RO has three annotations. RO added to triple store should be this same.
+     * 
+     * @throws IOException
+     * @throws ManifestTraversingException
+     * @throws ClassNotFoundException
+     * @throws NamingException
+     * @throws SQLException
+     */
     @Test
     public void createROFromZip()
             throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
@@ -130,7 +139,6 @@ public class ResourceTest extends ResourceBase {
         SemanticMetadataService sms = new SemanticMetadataServiceImpl(new UserMetadata("login", "name", Role.ADMIN));
         List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
         assertEquals("research object should contain two annotations", annotations.size(), 3);
-
         response.close();
     }
 
