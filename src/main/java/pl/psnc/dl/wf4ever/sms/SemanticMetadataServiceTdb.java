@@ -6,13 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -114,46 +107,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             }
             dataset = TDBFactory.createDataset(dir);
         } else {
-            Path path = Paths.get("/tmp/volatilestore");
-            //FIXME this doesn't seem to help if there are things still in memory
-            deleteFolder(path);
-            dataset = TDBFactory.createDataset(path.toString());
+            dataset = TDBFactory.createDataset("/tmp/volatilestore");
         }
         W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
         createUserProfile(user);
-    }
-
-
-    private void deleteFolder(Path path) {
-        try {
-            Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
-
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                        throws IOException {
-                    Files.delete(file);
-                    return FileVisitResult.CONTINUE;
-                }
-
-
-                @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                        throws IOException {
-                    if (exc == null) {
-                        Files.delete(dir);
-                        return FileVisitResult.CONTINUE;
-                    } else {
-                        throw exc;
-                    }
-                }
-
-            });
-        } catch (NoSuchFileException e) {
-            log.debug("directory not found: " + path);
-        } catch (IOException e) {
-            log.error("something went wrong when deleting the directory", e);
-        }
-
     }
 
 
@@ -603,7 +560,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
     @Override
     public void close() {
-        dataset.close();
+        TDB.sync(dataset);
     }
 
 

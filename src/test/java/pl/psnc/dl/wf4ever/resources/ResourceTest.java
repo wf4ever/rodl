@@ -138,7 +138,7 @@ public class ResourceTest extends ResourceBase {
             response.getStatus());
 
         SemanticMetadataService sms = new SemanticMetadataServiceTdb(new UserMetadata("login", "name", Role.ADMIN),
-                false);
+                true);
         List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
         assertEquals("research object should contain three annotations", 3, annotations.size());
         response.close();
@@ -155,7 +155,8 @@ public class ResourceTest extends ResourceBase {
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
 
-        SemanticMetadataService sms = new SemanticMetadataServiceImpl(new UserMetadata("login", "name", Role.ADMIN));
+        SemanticMetadataService sms = new SemanticMetadataServiceTdb(new UserMetadata("login", "name", Role.ADMIN),
+                false);
         List<AggregatedResource> aggregated = sms.getAggregatedResources(ResearchObject.create(response.getLocation()));
         assertEquals("research object should contain four aggregated resources", 4, aggregated.size());
         response.close();
