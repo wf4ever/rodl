@@ -72,13 +72,6 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>xalan</artifactId>
-			<version>2.7.1</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
 			<version>4.1.7.Final</version>
@@ -144,6 +137,25 @@
 			<version>3.0.1</version>
 		</dependency>
 		<dependency>
+			<groupId>de.fuberlin.wiwss.ng4j</groupId>
+			<artifactId>ng4j</artifactId>
+			<version>0.9.4</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>jena</artifactId>
+					<groupId>com.hp.hpl.jena</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>xercesImpl</artifactId>
+					<groupId>xerces</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>arq</artifactId>
+					<groupId>com.hp.hpl.jena</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
 			<groupId>com.sun.jersey</groupId>
 			<artifactId>jersey-server</artifactId>
 			<version>${jersey.version}</version>
@@ -180,17 +192,6 @@
 			<artifactId>jersey-test-framework-grizzly2</artifactId>
 			<version>${jersey.version}</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>de.fuberlin.wiwss.ng4j</groupId>
-			<artifactId>ng4j</artifactId>
-			<version>0.9.4</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>jena</artifactId>
-					<groupId>com.hp.hpl.jena</groupId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.openrdf.sesame</groupId>
