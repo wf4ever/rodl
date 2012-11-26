@@ -2090,26 +2090,22 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
         evoModel.createIndividual(ro.getURI(), ROEVO.SnapshotRO);
-        evoModel.add(ro, ROEVO.isSnapshotOf, liveRO.getUri().toString());
+        evoModel.add(ro, ROEVO.isSnapshotOf, evoModel.createResource(liveRO.getUriString()));
         evoModel.add(ro, ROEVO.snapshottedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
         evoModel.add(ro, ROEVO.snapshottedBy, evoModel.createResource(user.getUri().toString()));
 
         addAnnotationNoTransaction(researchObject, Arrays.asList(researchObject.getUri()),
             researchObject.getFixedEvolutionAnnotationBodyPath(), null).toString();
-        ro.addProperty(ORE.aggregates, researchObject.getFixedEvolutionAnnotationBodyPath().toString());
+        ro.addProperty(ORE.aggregates,
+            manifestModel.createResource(researchObject.getFixedEvolutionAnnotationBodyPath().toString()));
         OntModel liveEvoModel = createOntModelForNamedGraph(liveRO.getFixedEvolutionAnnotationBodyPath());
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasSnapshot, ro);
 
         URI previousSnaphot = getPreviousSnapshotOrArchiveNoTransaction(liveRO, researchObject, EvoType.SNAPSHOT);
         if (previousSnaphot != null) {
-            storeAggregatedDifferencesNoTransaction(researchObject, ResearchObject.create(previousSnaphot));
-            evoModel.add(ro, PROV.wasRevisionOf, previousSnaphot.toString());
-        }
-        if (getPreviousSnapshotOrArchiveNoTransaction(liveRO, researchObject, EvoType.SNAPSHOT) != null) {
-            storeAggregatedDifferencesNoTransaction(researchObject,
-                ResearchObject.create(getPreviousSnapshotOrArchiveNoTransaction(liveRO, researchObject,
-                    EvoType.SNAPSHOT)));
+            storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnaphot));
+            evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnaphot.toString()));
         }
     }
 
@@ -2138,20 +2134,21 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
         evoModel.createIndividual(ro.getURI(), ROEVO.ArchivedRO);
-        evoModel.add(ro, ROEVO.isArchiveOf, liveRO.getUri().toString());
+        evoModel.add(ro, ROEVO.isArchiveOf, evoModel.createResource(liveRO.getUriString()));
         evoModel.add(ro, ROEVO.archivedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
         evoModel.add(ro, ROEVO.archivedBy, evoModel.createResource(user.getUri().toString()));
 
         addAnnotationNoTransaction(researchObject, Arrays.asList(researchObject.getUri()),
             researchObject.getFixedEvolutionAnnotationBodyPath(), null).toString();
-        ro.addProperty(ORE.aggregates, researchObject.getFixedEvolutionAnnotationBodyPath().toString());
+        ro.addProperty(ORE.aggregates,
+            manifestModel.createResource(researchObject.getFixedEvolutionAnnotationBodyPath().toString()));
         OntModel liveEvoModel = createOntModelForNamedGraph(liveRO.getFixedEvolutionAnnotationBodyPath());
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasArchive, ro);
-        if (getPreviousSnapshotOrArchiveNoTransaction(liveRO, researchObject, EvoType.ARCHIVED) != null) {
-            storeAggregatedDifferencesNoTransaction(researchObject,
-                ResearchObject.create(getPreviousSnapshotOrArchiveNoTransaction(liveRO, researchObject,
-                    EvoType.ARCHIVED)));
+        URI previousSnaphot = getPreviousSnapshotOrArchiveNoTransaction(liveRO, researchObject, EvoType.SNAPSHOT);
+        if (previousSnaphot != null) {
+            storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnaphot));
+            evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnaphot.toString()));
         }
     }
 
