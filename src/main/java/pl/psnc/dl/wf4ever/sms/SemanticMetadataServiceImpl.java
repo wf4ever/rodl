@@ -1466,13 +1466,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
      * @return true if they are equal, otherwise false.
      */
     private Boolean compareTwoLiterals(Literal pattern, Literal compared) {
-        //@TODO compare checksums
-        Boolean result = null;
-        if (pattern.equals(compared)) {
-            //@TODO compare checksums
-            return true;
-        }
-        return false;
+        return pattern.equals(compared);
     }
 
 

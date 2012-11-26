@@ -1320,8 +1320,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             throw new IllegalArgumentException("Fresh RO can not be older them old RO");
         }
 
-        List<RDFNode> freshAggreagted = getAggregatedWithNoEvoAndBody(freshRO);
-        List<RDFNode> oldAggreagted = getAggregatedWithNoEvoAndBody(oldRO);
+        List<RDFNode> freshAggreagted = getAggregatedWithNoEvoManifestAndBody(freshRO);
+        List<RDFNode> oldAggreagted = getAggregatedWithNoEvoManifestAndBody(oldRO);
 
         OntModel evoInfoModel = createOntModelForNamedGraph(freshRO.getFixedEvolutionAnnotationBodyPath());
 
@@ -1394,7 +1394,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
      * @param second
      * @return positive value if first is younger, negative otherwise, 0 if they are equal.
      */
-    private List<RDFNode> getAggregatedWithNoEvoAndBody(ResearchObject researchObject) {
+    private List<RDFNode> getAggregatedWithNoEvoManifestAndBody(ResearchObject researchObject) {
         Individual roIndividual = getIndividualNoTransaction(researchObject);
         DateTime date = null;
         if (getIndividualNoTransaction(researchObject).hasRDFType(ROEVO.SnapshotRO)) {
@@ -1420,11 +1420,16 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 continue;
             }
         }
+        Annotation manifestAnnotation = findAnnotationForBodyNoTransaction(researchObject,
+            researchObject.getManifestUri());
         for (RDFNode a : aggreageted) {
             try {
                 if (a.as(Individual.class).hasRDFType(RO.AggregatedAnnotation)) {
                     RDFNode node = a.as(Individual.class).getPropertyValue(AO.body);
                     aggreagetedWithNoEvo.remove(node);
+                }
+                if (a.isResource() && a.asResource().getURI().equals(manifestAnnotation.getUri().toString())) {
+                    aggreagetedWithNoEvo.remove(a);
                 }
             } catch (Exception e) {
                 continue;
@@ -1585,13 +1590,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
      * @return true if they are equal, otherwise false.
      */
     private Boolean compareTwoLiterals(Literal pattern, Literal compared) {
-        //@TODO compare checksums
-        Boolean result = null;
-        if (pattern.equals(compared)) {
-            //@TODO compare checksums
-            return true;
-        }
-        return result;
+        return pattern.equals(compared);
     }
 
 
@@ -1614,6 +1613,15 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     }
 
 
+    /**
+     * Compare two resources.
+     * 
+     * @param pattern
+     * @param compared
+     * @param patternROURI
+     * @param comparedROURI
+     * @return
+     */
     private Boolean compareTwoResources(Resource pattern, Resource compared, URI patternROURI, URI comparedROURI) {
         Individual patternSource = pattern.as(Individual.class);
         Individual comparedSource = compared.as(Individual.class);
@@ -1635,7 +1643,12 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             try {
                 if (compareRelativesURI(new URI(pattern.getURI()), new URI(compared.getURI()), patternROURI,
                     comparedROURI)) {
-                    //@TODO compare checksums
+                    RDFNode patternNode = patternSource.getPropertyResourceValue(RO.checksum);
+                    RDFNode comparedNode = comparedSource.getPropertyResourceValue(RO.checksum);
+                    if (patternNode != null && comparedNode != null) {
+                        Boolean checksumResult = patternNode.toString().equals(comparedNode.toString());
+                        return checksumResult;
+                    }
                     return true;
                 } else {
                     return null;
@@ -2088,6 +2101,11 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasSnapshot, ro);
 
+        URI previousSnaphot = getPreviousSnapshotOrArchiveNoTransaction(liveRO, researchObject, EvoType.SNAPSHOT);
+        if (previousSnaphot != null) {
+            storeAggregatedDifferencesNoTransaction(researchObject, ResearchObject.create(previousSnaphot));
+            evoModel.add(ro, PROV.wasRevisionOf, previousSnaphot.toString());
+        }
         if (getPreviousSnapshotOrArchiveNoTransaction(liveRO, researchObject, EvoType.SNAPSHOT) != null) {
             storeAggregatedDifferencesNoTransaction(researchObject,
                 ResearchObject.create(getPreviousSnapshotOrArchiveNoTransaction(liveRO, researchObject,
@@ -2142,16 +2160,21 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public Annotation findAnnotationForBody(ResearchObject researchObject, URI body) {
         dataset.begin(ReadWrite.READ);
         try {
-            Model manifestModel = dataset.getNamedModel(researchObject.getManifestUri().toString());
-            Resource bodyR = manifestModel.createResource(SafeURI.URItoString(body));
-            StmtIterator it = manifestModel.listStatements(null, AO.body, bodyR);
-            if (!it.hasNext()) {
-                return null;
-            }
-            return new Annotation(URI.create(it.next().getSubject().getURI()));
+            return findAnnotationForBodyNoTransaction(researchObject, body);
         } finally {
             dataset.end();
         }
+    }
+
+
+    private Annotation findAnnotationForBodyNoTransaction(ResearchObject researchObject, URI body) {
+        Model manifestModel = dataset.getNamedModel(researchObject.getManifestUri().toString());
+        Resource bodyR = manifestModel.createResource(SafeURI.URItoString(body));
+        StmtIterator it = manifestModel.listStatements(null, AO.body, bodyR);
+        if (!it.hasNext()) {
+            return null;
+        }
+        return new Annotation(URI.create(it.next().getSubject().getURI()));
     }
 
 
