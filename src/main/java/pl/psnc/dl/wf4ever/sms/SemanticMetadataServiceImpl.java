@@ -131,7 +131,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         this.user = userMetadata;
         this.connection = null;
         graphset = new NamedGraphSetImpl();
-        //W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
+        W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
         createUserProfile(userMetadata);
 
         createResearchObject(researchObject);
@@ -223,7 +223,6 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         }
 
         OntModel liveManifestModel = createOntModelForNamedGraph(liveResearchObject.getManifestUri());
-
         Individual liveManifest = liveManifestModel.getIndividual(liveResearchObject.getManifestUri().toString());
 
         manifest = manifestModel.createIndividual(researchObject.getManifestUri().toString(), RO.Manifest);
@@ -252,8 +251,6 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
         manifestModel.add(manifest, ORE.describes, ro);
         manifestModel.add(manifest, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
-
-        //TODO add wasRevisionOf
     }
 
 
@@ -293,8 +290,6 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
         manifestModel.add(manifest, ORE.describes, ro);
         manifestModel.add(manifest, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
-
-        //TODO add wasRevisionOf
     }
 
 
@@ -1938,13 +1933,14 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
         evoModel.createIndividual(ro.getURI(), ROEVO.SnapshotRO);
-        evoModel.add(ro, ROEVO.isSnapshotOf, liveRO.getUri().toString());
+        evoModel.add(ro, ROEVO.isSnapshotOf, evoModel.createResource(liveRO.getUriString()));
         evoModel.add(ro, ROEVO.snapshottedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
         evoModel.add(ro, ROEVO.snapshottedBy, evoModel.createResource(user.getUri().toString()));
 
         addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
             researchObject.getFixedEvolutionAnnotationBodyPath()).toString();
-        ro.addProperty(ORE.aggregates, researchObject.getFixedEvolutionAnnotationBodyPath().toString());
+        ro.addProperty(ORE.aggregates,
+            manifestModel.createResource(researchObject.getFixedEvolutionAnnotationBodyPath().toString()));
         OntModel liveEvoModel = createOntModelForNamedGraph(liveRO.getFixedEvolutionAnnotationBodyPath());
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasSnapshot, ro);
@@ -1953,7 +1949,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             URI previousSnaphot = getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
             if (previousSnaphot != null) {
                 storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnaphot));
-                evoModel.add(ro, PROV.wasRevisionOf, previousSnaphot.toString());
+                evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnaphot.toString()));
             }
         } catch (URISyntaxException | IOException e) {
             //any way to informa about the problem?
@@ -1986,20 +1982,22 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
         evoModel.createIndividual(ro.getURI(), ROEVO.ArchivedRO);
-        evoModel.add(ro, ROEVO.isArchiveOf, liveRO.getUri().toString());
+        evoModel.add(ro, ROEVO.isArchiveOf, evoModel.createResource(liveRO.getUriString()));
         evoModel.add(ro, ROEVO.archivedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
         evoModel.add(ro, ROEVO.archivedBy, evoModel.createResource(user.getUri().toString()));
 
         addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
             researchObject.getFixedEvolutionAnnotationBodyPath()).toString();
-        ro.addProperty(ORE.aggregates, researchObject.getFixedEvolutionAnnotationBodyPath().toString());
+        ro.addProperty(ORE.aggregates,
+            manifestModel.createResource(researchObject.getFixedEvolutionAnnotationBodyPath().toString()));
         OntModel liveEvoModel = createOntModelForNamedGraph(liveRO.getFixedEvolutionAnnotationBodyPath());
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasArchive, ro);
         try {
-            if (getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.ARCHIVED) != null) {
-                storeAggregatedDifferences(researchObject,
-                    ResearchObject.create(getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.ARCHIVED)));
+            URI previousSnaphot = getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
+            if (previousSnaphot != null) {
+                storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnaphot));
+                evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnaphot.toString()));
             }
         } catch (URISyntaxException | IOException e) {
             //any way to informa about the problem?
