@@ -235,44 +235,37 @@ public class SemanticMetadataServiceBaseTest {
 
             emptyRO = ResearchObject.create(URI.create("http://example.org/ROs/empty-RO/"));
             emptyRO2 = ResearchObject.create(URI.create("http://example.org/ROs/empty-RO2/"));
-            sms.removeResearchObject(emptyRO);
             sms.createResearchObject(emptyRO);
-            sms.removeResearchObject(emptyRO2);
             sms.createResearchObject(emptyRO2);
 
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1/.ro/evo_info.ttl");
             sms.addNamedGraph(ro1.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
 
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1-sp1/.ro/manifest.ttl");
-            sms.removeResearchObject(sp1);
             sms.createResearchObject(sp1);
             sms.updateManifest(sp1, is, RDFFormat.TURTLE);
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1-sp1/.ro/evo_info.ttl");
             sms.addNamedGraph(sp1.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
 
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1-sp2/.ro/manifest.ttl");
-            sms.removeResearchObject(sp2);
             sms.createResearchObject(sp2);
             sms.updateManifest(sp2, is, RDFFormat.TURTLE);
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1-sp2/.ro/evo_info.ttl");
             sms.addNamedGraph(sp2.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
 
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1-arch1/.ro/manifest.ttl");
-            sms.removeResearchObject(arch1);
             sms.createResearchObject(arch1);
             sms.updateManifest(arch1, is, RDFFormat.TURTLE);
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1-arch1/.ro/evo_info.ttl");
             sms.addNamedGraph(arch1.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
 
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/wrong-ro/.ro/manifest.ttl");
-            sms.removeResearchObject(wrongRO);
             sms.createResearchObject(wrongRO);
             sms.updateManifest(wrongRO, is, RDFFormat.TURTLE);
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/wrong-ro/.ro/evo_info.ttl");
             sms.addNamedGraph(wrongRO.getFixedEvolutionAnnotationBodyPath(), is, RDFFormat.TURTLE);
 
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.ttl");
-            sms.removeResearchObject(annotatedRO);
             sms.createResearchObject(annotatedRO);
             sms.updateManifest(annotatedRO, is, RDFFormat.TURTLE);
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/evo_info.ttl");
@@ -282,7 +275,6 @@ public class SemanticMetadataServiceBaseTest {
             sms.addNamedGraph(annotatedRO.getUri().resolve(".ro/ann1"), is, RDFFormat.TURTLE);
 
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.ttl");
-            sms.removeResearchObject(simpleAnnotatedRO);
             sms.createResearchObject(simpleAnnotatedRO);
             sms.updateManifest(simpleAnnotatedRO, is, RDFFormat.TURTLE);
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/evo_info.ttl");
