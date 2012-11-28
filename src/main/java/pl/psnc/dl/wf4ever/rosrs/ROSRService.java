@@ -1,6 +1,5 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -830,17 +829,21 @@ public final class ROSRService {
         for (AggregatedResource aggregated : aggregatedList) {
 
             String resourceName = createdResearchObjectURI.relativize(aggregated.getUri()).getPath();
-            InputStream is = zip.getEntryAsStream(resourceName);
             UUID uuid = UUID.randomUUID();
             File tmpFile = File.createTempFile("tmp_resource", uuid.toString());
             try {
+                InputStream is = zip.getEntryAsStream(resourceName);
                 if (is != null) {
-                    BufferedInputStream inputStream = new BufferedInputStream(is);
-                    FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
-                    IOUtils.copy(inputStream, fileOutputStream);
-                    String mimeType = new MimetypesFileTypeMap().getContentType(tmpFile);
-                    aggregateInternalResource(ResearchObject.create(createdResearchObjectURI),
-                        createdResearchObjectURI.resolve(resourceName), new FileInputStream(tmpFile), mimeType, null);
+                    try {
+                        FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
+                        IOUtils.copy(is, fileOutputStream);
+                        String mimeType = new MimetypesFileTypeMap().getContentType(tmpFile);
+                        aggregateInternalResource(ResearchObject.create(createdResearchObjectURI),
+                            createdResearchObjectURI.resolve(resourceName), new FileInputStream(tmpFile), mimeType,
+                            null);
+                    } finally {
+                        is.close();
+                    }
                 } else {
                     aggregateExternalResource(ResearchObject.create(createdResearchObjectURI),
                         createdResearchObjectURI.resolve(resourceName));
