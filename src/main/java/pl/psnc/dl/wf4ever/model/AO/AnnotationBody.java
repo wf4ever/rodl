@@ -2,7 +2,7 @@ package pl.psnc.dl.wf4ever.model.AO;
 
 import java.net.URI;
 
-import pl.psnc.dl.wf4ever.model.RO.Resource;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
 
 /**
  * Simple Annotation Body model.
@@ -10,7 +10,7 @@ import pl.psnc.dl.wf4ever.model.RO.Resource;
  * @author pejot
  * 
  */
-public class AnnotationBody extends Resource {
+public class AnnotationBody extends Thing {
 
     /**
      * Constructor.
