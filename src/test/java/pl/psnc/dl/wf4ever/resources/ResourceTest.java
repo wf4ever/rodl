@@ -23,6 +23,7 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
@@ -62,7 +63,7 @@ public class ResourceTest extends ResourceBase {
     }
 
 
-    //@Test
+    @Test
     public void testGetROWithWhitspaces() {
         URI ro3 = createRO("ro " + UUID.randomUUID().toString(), accessToken);
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
@@ -138,10 +139,24 @@ public class ResourceTest extends ResourceBase {
 
         SemanticMetadataService sms = new SemanticMetadataServiceImpl(new UserMetadata("login", "name", Role.ADMIN));
         List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
-        assertEquals("research object should contain two annotations", annotations.size(), 3);
+        assertEquals("research object should contain three annotations",3 ,annotations.size());
         response.close();
     }
+    @Test
+    public void createROFromZipWithWhitespaces()
+            throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/white_spaces_ro.zip");
+        ClientResponse response = webResource.path("ROs").accept("text/turtle")
+                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
+                .type("application/zip").post(ClientResponse.class, is);
+        assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
+            response.getStatus());
 
+        SemanticMetadataService sms = new SemanticMetadataServiceImpl(new UserMetadata("login", "name", Role.ADMIN));
+        List<AggregatedResource> aggregated = sms.getAggregatedResources(ResearchObject.create(response.getLocation()));
+        assertEquals("research object should contain four aggregated resources",4 ,aggregated.size());
+        response.close();
+    }
 
     @Test
     public void createConflictedROFromZip()
@@ -178,7 +193,6 @@ public class ResourceTest extends ResourceBase {
         StmtIterator it = manifestModel.listStatements(null, AO.body, bodyR);
         if (it.hasNext()) {
             Annotation ann = new Annotation(URI.create(it.next().getSubject().getURI()));
-            System.out.println(ann.getUri().toString());
             response = webResource.uri(ann.getUri()).header("Authorization", "Bearer " + accessToken)
                     .delete(ClientResponse.class);
 

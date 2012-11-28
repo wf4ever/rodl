@@ -22,6 +22,7 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.mortbay.util.URIUtil;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
@@ -839,7 +840,7 @@ public final class ROSRService {
                         IOUtils.copy(is, fileOutputStream);
                         String mimeType = new MimetypesFileTypeMap().getContentType(tmpFile);
                         aggregateInternalResource(ResearchObject.create(createdResearchObjectURI),
-                            createdResearchObjectURI.resolve(resourceName), new FileInputStream(tmpFile), mimeType,
+                            createdResearchObjectURI.resolve(URIUtil.encodePath(resourceName)), new FileInputStream(tmpFile), mimeType,
                             null);
                     } finally {
                         is.close();
