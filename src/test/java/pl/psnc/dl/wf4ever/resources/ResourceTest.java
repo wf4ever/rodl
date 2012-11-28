@@ -139,9 +139,11 @@ public class ResourceTest extends ResourceBase {
 
         SemanticMetadataService sms = new SemanticMetadataServiceImpl(new UserMetadata("login", "name", Role.ADMIN));
         List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
-        assertEquals("research object should contain three annotations",3 ,annotations.size());
+        assertEquals("research object should contain three annotations", 3, annotations.size());
         response.close();
     }
+
+
     @Test
     public void createROFromZipWithWhitespaces()
             throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
@@ -154,9 +156,10 @@ public class ResourceTest extends ResourceBase {
 
         SemanticMetadataService sms = new SemanticMetadataServiceImpl(new UserMetadata("login", "name", Role.ADMIN));
         List<AggregatedResource> aggregated = sms.getAggregatedResources(ResearchObject.create(response.getLocation()));
-        assertEquals("research object should contain four aggregated resources",4 ,aggregated.size());
+        assertEquals("research object should contain four aggregated resources", 4, aggregated.size());
         response.close();
     }
+
 
     @Test
     public void createConflictedROFromZip()

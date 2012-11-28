@@ -18,11 +18,11 @@ import javax.activation.MimetypesFileTypeMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.mortbay.util.URIUtil;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
@@ -824,30 +824,28 @@ public final class ROSRService {
             aggregatedList = tmpSms.getAggregatedResources(createdResearchObject);
             annotationsList = tmpSms.getAnnotations(createdResearchObject);
         } catch (ManifestTraversingException e) {
-            throw new BadRequestException(e.getMessage(),e);
+            throw new BadRequestException(e.getMessage(), e);
         }
 
         for (AggregatedResource aggregated : aggregatedList) {
-
-            String resourceName = createdResearchObjectURI.relativize(aggregated.getUri()).getPath();
+            String originalResourceName = createdResearchObjectURI.relativize(aggregated.getUri()).getPath();
+            URI resourceURI = UriBuilder.fromUri(createdResearchObjectURI).path(originalResourceName).build();
             UUID uuid = UUID.randomUUID();
             File tmpFile = File.createTempFile("tmp_resource", uuid.toString());
             try {
-                InputStream is = zip.getEntryAsStream(resourceName);
+                InputStream is = zip.getEntryAsStream(originalResourceName);
                 if (is != null) {
                     try {
                         FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
                         IOUtils.copy(is, fileOutputStream);
                         String mimeType = new MimetypesFileTypeMap().getContentType(tmpFile);
-                        aggregateInternalResource(ResearchObject.create(createdResearchObjectURI),
-                            createdResearchObjectURI.resolve(URIUtil.encodePath(resourceName)), new FileInputStream(tmpFile), mimeType,
-                            null);
+                        aggregateInternalResource(ResearchObject.create(createdResearchObjectURI), resourceURI,
+                            new FileInputStream(tmpFile), mimeType, null);
                     } finally {
                         is.close();
                     }
                 } else {
-                    aggregateExternalResource(ResearchObject.create(createdResearchObjectURI),
-                        createdResearchObjectURI.resolve(resourceName));
+                    aggregateExternalResource(ResearchObject.create(createdResearchObjectURI), aggregated.getUri());
                 }
             } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
                 e.printStackTrace();
