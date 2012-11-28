@@ -1749,7 +1749,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         OntModel model = createOntModelForNamedGraph(researchObject.getManifestUri());
         Individual source = model.getIndividual(researchObject.getUri().toString());
         if (source == null) {
-            throw new ManifestTraversingException();
+            throw new ManifestTraversingException("Could not find " + researchObject.getUri().toString() + " in manifest");
         }
         List<RDFNode> aggregatesList = source.listPropertyValues(ORE.aggregates).toList();
         List<AggregatedResource> aggregated = new ArrayList<AggregatedResource>();
@@ -1799,7 +1799,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         OntModel model = createOntModelForNamedGraph(researchObject.getManifestUri());
         Individual source = model.getIndividual(researchObject.getUri().toString());
         if (source == null) {
-            throw new ManifestTraversingException();
+        	throw new ManifestTraversingException("Could not find " + researchObject.getUri().toString() + " in manifest");
         }
         List<RDFNode> aggregatesList = source.listPropertyValues(ORE.aggregates).toList();
         List<Annotation> annotations = new ArrayList<Annotation>();

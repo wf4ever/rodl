@@ -824,7 +824,7 @@ public final class ROSRService {
             aggregatedList = tmpSms.getAggregatedResources(createdResearchObject);
             annotationsList = tmpSms.getAnnotations(createdResearchObject);
         } catch (ManifestTraversingException e) {
-            throw new BadRequestException("manifest is not correct", e);
+            throw new BadRequestException(e.getMessage(),e);
         }
 
         for (AggregatedResource aggregated : aggregatedList) {
