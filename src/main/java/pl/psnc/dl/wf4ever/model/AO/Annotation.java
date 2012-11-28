@@ -88,6 +88,9 @@ public class Annotation extends AggregatedResource {
             }
         }
         RDFNode bodyNode = source.getPropertyValue(AO.body);
+        if (bodyNode == null) {
+            throw new IncorrectModelException(String.format("Annotation %s has no body", uri.toString()));
+        }
         if (bodyNode.isLiteral()) {
             throw new IncorrectModelException(String.format("Annotation %s uses a literal %s as body", uri.toString(),
                 bodyNode.toString()));
