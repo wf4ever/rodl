@@ -156,7 +156,7 @@ public class ResourceTest extends ResourceBase {
             response.getStatus());
 
         SemanticMetadataService sms = new SemanticMetadataServiceTdb(new UserMetadata("login", "name", Role.ADMIN),
-                false);
+                true);
         List<AggregatedResource> aggregated = sms.getAggregatedResources(ResearchObject.create(response.getLocation()));
         assertEquals("research object should contain four aggregated resources", 4, aggregated.size());
         response.close();
