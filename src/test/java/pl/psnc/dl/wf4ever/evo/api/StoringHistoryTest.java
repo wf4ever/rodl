@@ -58,16 +58,20 @@ public class StoringHistoryTest extends EvoTest {
 
         String roManifest = webResource.uri(ro).path("/.ro/manifest.rdf")
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
-        String sp1Manifest = webResource.uri(sp1Status.getTarget()).path("/.ro/manifest.rdf")
-                .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
-        String sp2Manifest = webResource.uri(sp2Status.getTarget()).path("/.ro/manifest.rdf")
-                .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
+        String sp1Manifest = webResource.uri(sp1Status.getCopyfrom().resolve("../" + sp1Status.getTarget() + "/"))
+                .path("/.ro/manifest.rdf").header("Authorization", "Bearer " + accessToken).accept("text/turtle")
+                .get(String.class);
+        String sp2Manifest = webResource.uri(sp2Status.getCopyfrom().resolve("../" + sp2Status.getTarget() + "/"))
+                .path("/.ro/manifest.rdf").header("Authorization", "Bearer " + accessToken).accept("text/turtle")
+                .get(String.class);
 
         String roEvo = webResource.path("/evo/info").queryParam("ro", sp1Status.getCopyfrom().toString())
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
-        String sp1Evo = webResource.path("/evo/info").queryParam("ro", sp1Status.getTarget().toString())
+        String sp1Evo = webResource.path("/evo/info")
+                .queryParam("ro", sp1Status.getCopyfrom().resolve("../" + sp1Status.getTarget() + "/").toString())
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
-        String sp2Evo = webResource.path("/evo/info").queryParam("ro", sp2Status.getTarget().toString())
+        String sp2Evo = webResource.path("/evo/info")
+                .queryParam("ro", sp2Status.getCopyfrom().resolve("../" + sp2Status.getTarget() + "/").toString())
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
 
         assertTrue("sp2 should contain Additon", sp2Evo.contains("Addition"));
