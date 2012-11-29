@@ -1946,7 +1946,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 throw new ManifestTraversingException("Could not find " + researchObject.getUri().toString()
                         + " in manifest");
             }
-            List<RDFNode> aggregatesList = source.listPropertyValues(ORE.aggregates).toList();
+            Set<RDFNode> aggregatesList = source.listPropertyValues(ORE.aggregates).toSet();
+            //HACK only for old ROs, should be removed later
+            aggregatesList.addAll(manifestModel.listObjectsOfProperty(AO.body).toSet());
+
             List<AggregatedResource> aggregated = new ArrayList<AggregatedResource>();
             for (RDFNode node : aggregatesList) {
                 try {
