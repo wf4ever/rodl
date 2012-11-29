@@ -342,7 +342,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             resourceURI = resourceURI.normalize();
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Manifest not found: " + researchObject.getUri());
+            }
             Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
             if (ro == null) {
                 throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
@@ -380,7 +383,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             resourceURI = resourceURI.normalize();
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Manifest not found: " + researchObject.getUri());
+            }
             Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
             if (ro == null) {
                 throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
@@ -508,7 +514,11 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     private void addNamedModelsRecursively(Dataset tmpDataset, URI namedGraphURI) {
         tmpDataset.addNamedModel(namedGraphURI.toString(), dataset.getNamedModel(namedGraphURI.toString()));
 
-        OntModel annotationModel = createOntModelForNamedGraph(namedGraphURI);
+        OntModel annotationModel = getOntModelForNamedGraph(namedGraphURI);
+        if (annotationModel == null) {
+            log.warn("Could not find model for URI " + namedGraphURI);
+            return;
+        }
         List<RDFNode> it = annotationModel.listObjectsOfProperty(AO.body).toList();
         it.addAll(annotationModel.listObjectsOfProperty(ORE.isDescribedBy).toList());
         for (RDFNode annotationBodyRef : it) {
@@ -589,7 +599,17 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     private OntModel createOntModelForNamedGraph(URI namedGraphURI) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM,
             dataset.getNamedModel(namedGraphURI.toString()));
-        //        ontModel.addSubModel(W4E.defaultModel);
+        return ontModel;
+    }
+
+
+    private OntModel getOntModelForNamedGraph(URI namedGraphURI) {
+        if (!dataset.containsNamedModel(namedGraphURI.toString())) {
+            //FIXME maybe throw an exception?
+            return null;
+        }
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM,
+            dataset.getNamedModel(namedGraphURI.toString()));
         return ontModel;
     }
 
@@ -605,7 +625,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             resourceURI = resourceURI.normalize();
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                return false;
+            }
             Individual resource = manifestModel.getIndividual(resourceURI.toString());
             if (resource == null) {
                 return false;
@@ -665,34 +688,38 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
             int i = 0;
             while (i < graphsToDelete.size()) {
-                OntModel model = createOntModelForNamedGraph(graphsToDelete.get(i));
-                List<RDFNode> annotationBodies = model.listObjectsOfProperty(AO.body).toList();
-                for (RDFNode annotationBodyRef : annotationBodies) {
-                    if (annotationBodyRef.isURIResource()) {
-                        URI graphURI2 = URI.create(annotationBodyRef.asResource().getURI());
-                        // TODO make sure that this named graph is internal
-                        if (dataset.containsNamedModel(graphURI2.toString()) && !graphsToDelete.contains(graphURI2)) {
-                            graphsToDelete.add(graphURI2);
+                OntModel model = getOntModelForNamedGraph(graphsToDelete.get(i));
+                if (model == null) {
+                    log.warn("This model does not exist: " + graphsToDelete.get(i).toString());
+                } else {
+                    List<RDFNode> annotationBodies = model.listObjectsOfProperty(AO.body).toList();
+                    for (RDFNode annotationBodyRef : annotationBodies) {
+                        if (annotationBodyRef.isURIResource()) {
+                            URI graphURI2 = URI.create(annotationBodyRef.asResource().getURI());
+                            // TODO make sure that this named graph is internal
+                            if (dataset.containsNamedModel(graphURI2.toString()) && !graphsToDelete.contains(graphURI2)) {
+                                graphsToDelete.add(graphURI2);
+                            }
                         }
                     }
-                }
-                List<RDFNode> evos = model.listObjectsOfProperty(ROEVO.wasChangedBy).toList();
-                for (RDFNode evo : evos) {
-                    if (evo.isURIResource()) {
-                        URI graphURI2 = URI.create(evo.asResource().getURI());
-                        if (dataset.containsNamedModel(graphURI2.toString()) && !graphsToDelete.contains(graphURI2)) {
-                            graphsToDelete.add(graphURI2);
+                    List<RDFNode> evos = model.listObjectsOfProperty(ROEVO.wasChangedBy).toList();
+                    for (RDFNode evo : evos) {
+                        if (evo.isURIResource()) {
+                            URI graphURI2 = URI.create(evo.asResource().getURI());
+                            if (dataset.containsNamedModel(graphURI2.toString()) && !graphsToDelete.contains(graphURI2)) {
+                                graphsToDelete.add(graphURI2);
+                            }
                         }
                     }
-                }
-                List<Individual> folders = model.listIndividuals(RO.Folder).toList();
-                for (Individual folder : folders) {
-                    if (folder.isURIResource()) {
-                        Folder f = new Folder();
-                        f.setUri(URI.create(folder.asResource().getURI()));
-                        if (dataset.containsNamedModel(f.getResourceMapUri().toString())
-                                && !graphsToDelete.contains(f.getResourceMapUri())) {
-                            graphsToDelete.add(f.getResourceMapUri());
+                    List<Individual> folders = model.listIndividuals(RO.Folder).toList();
+                    for (Individual folder : folders) {
+                        if (folder.isURIResource()) {
+                            Folder f = new Folder();
+                            f.setUri(URI.create(folder.asResource().getURI()));
+                            if (dataset.containsNamedModel(f.getResourceMapUri().toString())
+                                    && !graphsToDelete.contains(f.getResourceMapUri())) {
+                                graphsToDelete.add(f.getResourceMapUri());
+                            }
                         }
                     }
                 }
@@ -920,7 +947,11 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public boolean isAggregatedResource(ResearchObject researchObject, URI resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                log.warn("Could not load manifest model for :" + researchObject.getUri());
+                return false;
+            }
             Resource researchObjectR = manifestModel.createResource(researchObject.getUri().toString());
             Resource resourceR = manifestModel.createResource(resource.normalize().toString());
             return manifestModel.contains(researchObjectR, ORE.aggregates, resourceR);
@@ -934,7 +965,11 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public boolean isAnnotation(ResearchObject researchObject, URI resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                log.warn("Could not load manifest model for :" + researchObject.getUri());
+                return false;
+            }
             Individual resourceR = manifestModel.getIndividual(resource.normalize().toString());
             return resourceR != null && resourceR.hasRDFType(RO.AggregatedAnnotation);
         } finally {
@@ -947,7 +982,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public URI addProxy(ResearchObject researchObject, URI resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
             Resource researchObjectR = manifestModel.createResource(researchObject.getUri().toString());
             Resource resourceR = manifestModel.createResource(resource.normalize().toString());
             URI proxyURI = generateProxyURI(researchObject);
@@ -971,7 +1009,11 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public boolean isProxy(ResearchObject researchObject, URI resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                log.warn("Could not load manifest model for :" + researchObject.getUri());
+                return false;
+            }
             Individual resourceR = manifestModel.getIndividual(resource.normalize().toString());
             return resourceR != null && resourceR.hasRDFType(ORE.Proxy);
         } finally {
@@ -990,7 +1032,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public URI getProxyForResource(ResearchObject researchObject, URI resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
             Resource resourceR = manifestModel.createResource(resource.normalize().toString());
             ResIterator it = manifestModel.listSubjectsWithProperty(ORE.proxyFor, resourceR);
             while (it.hasNext()) {
@@ -1010,7 +1055,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public URI getProxyFor(ResearchObject researchObject, URI proxy) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
             Individual proxyR = manifestModel.getIndividual(proxy.normalize().toString());
             if (proxyR.hasProperty(ORE.proxyFor)) {
                 return URI.create(proxyR.getPropertyResourceValue(ORE.proxyFor).getURI());
@@ -1027,7 +1075,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public void deleteProxy(ResearchObject researchObject, URI proxy) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
             Resource proxyR = manifestModel.getResource(proxy.normalize().toString());
             manifestModel.removeAll(proxyR, null, null);
             commitTransaction(transactionStarted);
@@ -1048,7 +1099,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             String annotationUUID) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
             Resource researchObjectR = manifestModel.createResource(researchObject.getUri().toString());
             Resource body = manifestModel.createResource(annotationBody.normalize().toString());
             URI annotationURI = generateAnnotationURI(researchObject, annotationUUID);
@@ -1092,7 +1146,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             URI annotationBody) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
             Resource body = manifestModel.createResource(annotationBody.normalize().toString());
             Individual annotation = manifestModel.getIndividual(annotationURI.toString());
             manifestModel.removeAll(annotation, AO.body, null);
@@ -1113,7 +1170,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public URI getAnnotationBody(ResearchObject researchObject, URI annotation) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
             Individual annotationR = manifestModel.getIndividual(annotation.normalize().toString());
             if (annotationR.hasProperty(AO.body)) {
                 return URI.create(annotationR.getPropertyResourceValue(AO.body).getURI());
@@ -1130,7 +1190,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public void deleteAnnotation(ResearchObject researchObject, URI annotation) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
             Resource annotationR = manifestModel.getResource(annotation.normalize().toString());
             manifestModel.removeAll(annotationR, null, null);
             manifestModel.removeAll(null, null, annotationR);
@@ -1823,8 +1886,11 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         try {
             int cnt = changeURIInNamedGraph(researchObject.getManifestUri(), oldURI, newURI);
             if (withBodies) {
-                OntModel model = createOntModelForNamedGraph(researchObject.getManifestUri());
-                List<RDFNode> bodies = model.listObjectsOfProperty(AO.body).toList();
+                OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+                if (manifestModel == null) {
+                    throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+                }
+                List<RDFNode> bodies = manifestModel.listObjectsOfProperty(AO.body).toList();
                 for (RDFNode body : bodies) {
                     URI bodyURI = URI.create(body.asResource().getURI());
                     cnt += changeURIInNamedGraph(bodyURI, oldURI, newURI);
@@ -1839,7 +1905,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     private int changeURIInNamedGraph(URI graph, URI oldURI, URI newURI) {
-        OntModel model = createOntModelForNamedGraph(graph);
+        OntModel model = getOntModelForNamedGraph(graph);
+        if (model == null) {
+            throw new IllegalArgumentException("Could not load model for :" + graph);
+        }
         Resource oldResource = model.createResource(SafeURI.URItoString(oldURI));
         Resource newResource = model.createResource(SafeURI.URItoString(newURI));
 
@@ -1868,8 +1937,11 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             throws ManifestTraversingException {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            OntModel model = createOntModelForNamedGraph(researchObject.getManifestUri());
-            Individual source = model.getIndividual(researchObject.getUri().toString());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
+            Individual source = manifestModel.getIndividual(researchObject.getUri().toString());
             if (source == null) {
                 throw new ManifestTraversingException();
             }
@@ -1882,7 +1954,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                             aggregated.add(new AggregatedResource(new URI(node.asResource().getURI())));
                         }
                     } else if (node.isResource()) {
-                        URI nodeUri = changeBlankNodeToUriResources(researchObject, model, node);
+                        URI nodeUri = changeBlankNodeToUriResources(researchObject, manifestModel, node);
                         if (!isAnnotation(researchObject, nodeUri)) {
                             aggregated.add(new AggregatedResource(nodeUri));
                         }
@@ -1923,10 +1995,13 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             throws ManifestTraversingException {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            OntModel model = createOntModelForNamedGraph(researchObject.getManifestUri());
-            Individual source = model.getIndividual(researchObject.getUri().toString());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
+            Individual source = manifestModel.getIndividual(researchObject.getUri().toString());
             if (source == null) {
-                throw new ManifestTraversingException();
+                throw new ManifestTraversingException("Research object not found");
             }
             List<RDFNode> aggregatesList = source.listPropertyValues(ORE.aggregates).toList();
             List<Annotation> annotations = new ArrayList<Annotation>();
@@ -1935,12 +2010,12 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     if (node.isURIResource()) {
                         URI nodeURI = URI.create(node.asResource().getURI());
                         if (isAnnotation(researchObject, nodeURI)) {
-                            annotations.add(new Annotation(nodeURI, model));
+                            annotations.add(new Annotation(nodeURI, manifestModel));
                         }
                     } else if (node.isResource()) {
-                        URI nodeURI = changeBlankNodeToUriResources(researchObject, model, node);
+                        URI nodeURI = changeBlankNodeToUriResources(researchObject, manifestModel, node);
                         if (isAnnotation(researchObject, nodeURI)) {
-                            annotations.add(new Annotation(nodeURI, model));
+                            annotations.add(new Annotation(nodeURI, manifestModel));
                         }
                     }
                 } catch (IncorrectModelException e) {
@@ -1959,7 +2034,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public Folder addFolder(ResearchObject researchObject, Folder folder) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
             Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
             if (ro == null) {
                 throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
@@ -2030,7 +2108,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
      *            given Research Object
      */
     private void generateLiveRoEvoInf(ResearchObject researchObject) {
-        OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+        OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+        if (manifestModel == null) {
+            throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+        }
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
         OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyPath());
         Individual evoInfo = evoModel.getIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString());
@@ -2061,8 +2142,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
      *            the origin of processed snapshot of Research Object.
      */
     private void generateSnaphotEvoInf(ResearchObject researchObject, ResearchObject liveRO) {
-
-        OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+        OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+        if (manifestModel == null) {
+            throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+        }
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
         OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyPath());
         Individual evoInfo = evoModel.getIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString());
@@ -2106,7 +2189,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
      *            the origin of processed snapshot of Research Object.
      */
     private void generateArchiveEvoInf(ResearchObject researchObject, ResearchObject liveRO) {
-        OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+        OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+        if (manifestModel == null) {
+            throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+        }
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
         OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyPath());
         Individual evoInfo = evoModel.getIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString());
@@ -2162,7 +2248,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             RDFFormat rdfFormat) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
             Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
             if (ro == null) {
                 throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
@@ -2182,7 +2271,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             graphURI = graphURI.normalize();
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
             Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
             if (ro == null) {
                 throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
@@ -2211,7 +2303,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public Folder getRootFolder(ResearchObject researchObject) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
             Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
             Resource r = ro.getPropertyResourceValue(RO.rootFolder);
             if (r == null) {
@@ -2248,7 +2343,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             if (!dataset.containsNamedModel(folder.getResourceMapUri().toString())) {
                 return null;
             }
-            OntModel model = createOntModelForNamedGraph(folder.getResourceMapUri());
+            OntModel model = getOntModelForNamedGraph(folder.getResourceMapUri());
+            if (model == null) {
+                throw new IllegalArgumentException("Could not load folder model for :" + folder.getUri());
+            }
             Individual folderI = model.getIndividual(folder.getUri().toString());
             List<RDFNode> aggregations = folderI.listPropertyValues(ORE.isAggregatedBy).toList();
             Individual ro = null;
@@ -2294,7 +2392,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public void updateFolder(Folder folder) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            OntModel folderModel = createOntModelForNamedGraph(folder.getResourceMapUri());
+            OntModel folderModel = getOntModelForNamedGraph(folder.getResourceMapUri());
+            if (folderModel == null) {
+                throw new IllegalArgumentException("Could not load folder model for :" + folder.getUri());
+            }
             Individual folderInd = folderModel.createIndividual(folder.getUri().toString(), RO.Folder);
             List<Individual> entries = folderModel.listIndividuals(RO.FolderEntry).toList();
             for (Individual entry : entries) {
@@ -2363,10 +2464,16 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             ResearchObject researchObject = ResearchObject.create(folder.getAggregationUri());
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            if (manifestModel == null) {
+                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            }
             manifestModel.getIndividual(folder.getUri().toString()).remove();
 
-            OntModel folderModel = createOntModelForNamedGraph(folder.getResourceMapUri());
+            OntModel folderModel = getOntModelForNamedGraph(folder.getResourceMapUri());
+            if (folderModel == null) {
+                throw new IllegalArgumentException("Could not load folder model for :" + folder.getUri());
+            }
             List<Individual> entries = folderModel.listIndividuals(RO.FolderEntry).toList();
             for (Individual entry : entries) {
                 deleteFolderEntry(entry);
@@ -2387,7 +2494,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             if (!dataset.containsNamedModel(entryUri.toString())) {
                 return null;
             }
-            OntModel entryModel = createOntModelForNamedGraph(entryUri);
+            OntModel entryModel = getOntModelForNamedGraph(entryUri);
+            if (entryModel == null) {
+                throw new IllegalArgumentException("Could not load folder entry model for :" + entryUri);
+            }
             Individual entryInd = entryModel.getIndividual(entryUri.toString());
             if (entryInd == null || !entryInd.hasRDFType(RO.FolderEntry)) {
                 return null;
