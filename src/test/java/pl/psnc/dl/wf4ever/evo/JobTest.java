@@ -46,7 +46,7 @@ public class JobTest extends EvoTest {
     public final void testCopyJobStatusDataIntegrity()
             throws InterruptedException {
         JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, true);
-        status.setTarget(URI.create("http://" + ro.getAuthority() + "/ROs/" + "testTarget"));
+        status.setTarget("testTarget");
         URI copyJob = createCopyJob(status).getLocation();
         JobStatus remoteStatus = getRemoteStatus(copyJob, WAIT_FOR_COPY);
         String s = webResource.path(copyJob.getPath()).header("Authorization", "Bearer " + accessToken)

@@ -62,10 +62,12 @@ public class CopyOperation implements Operation {
         try {
             URI target = status.getCopyfrom().resolve("../" + id + "/");
             int i = 1;
+            String sufix = "";
             while (ROSRService.SMS.get().containsNamedGraph(target)) {
+                sufix = "-" + Integer.toString(i);
                 target = status.getCopyfrom().resolve("../" + id + "-" + (i++) + "/");
             }
-            status.setTarget(target);
+            status.setTarget(id + sufix);
 
             ResearchObject targetRO = ResearchObject.create(target);
             ResearchObject sourceRO = ResearchObject.create(status.getCopyfrom());

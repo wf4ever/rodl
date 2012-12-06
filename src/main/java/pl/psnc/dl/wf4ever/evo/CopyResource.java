@@ -1,6 +1,5 @@
 package pl.psnc.dl.wf4ever.evo;
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -68,10 +67,10 @@ public class CopyResource implements JobsContainer {
 
     /** Statuses of finished jobs by target. */
     @SuppressWarnings("serial")
-    private static Map<URI, JobStatus> finishedJobsByTarget = Collections
-            .synchronizedMap(new LinkedHashMap<URI, JobStatus>() {
+    private static Map<String, JobStatus> finishedJobsByTarget = Collections
+            .synchronizedMap(new LinkedHashMap<String, JobStatus>() {
 
-                protected boolean removeEldestEntry(Map.Entry<URI, JobStatus> eldest) {
+                protected boolean removeEldestEntry(Map.Entry<String, JobStatus> eldest) {
                     return size() > MAX_JOBS_DONE;
                 };
             });
@@ -165,7 +164,7 @@ public class CopyResource implements JobsContainer {
             jobs.remove(uuid);
         }
         if (finishedJobs.containsKey(uuid)) {
-            URI target = finishedJobs.get(uuid).getTarget();
+            String target = finishedJobs.get(uuid).getTarget();
             finishedJobs.remove(uuid);
             finishedJobsByTarget.remove(target);
         }
@@ -180,7 +179,7 @@ public class CopyResource implements JobsContainer {
      *            target RO URI
      * @return the job status
      */
-    public static JobStatus getStatusForTarget(URI target) {
+    public static JobStatus getStatusForTarget(String target) {
         return finishedJobsByTarget.get(target);
     }
 }
