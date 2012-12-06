@@ -204,7 +204,7 @@
 		<url>http://dl.psnc.pl/</url>
 	</organization>
 	<build>
-		<finalName>rodl-experimental</finalName>
+		<finalName>rodl</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -377,5 +377,5 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
-	<version>6.3.10-SNAPSHOT</version>
+	<version>7.0.0-SNAPSHOT</version>
 </project>
