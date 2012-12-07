@@ -23,6 +23,9 @@ public class JobStatus {
     /** Target RO evolution status. */
     private EvoType type;
 
+    /** User's token, necessary for users identification. */
+    private String token;
+
     /** Finalize? */
     private boolean finalize;
 
@@ -58,6 +61,24 @@ public class JobStatus {
         setCopyfrom(copyfrom);
         setType(type);
         setFinalize(finalize);
+    }
+
+
+    /**
+     * Constructor.
+     * 
+     * @param copyfrom
+     *            RO to copy from
+     * @param type
+     *            Target RO evolution status
+     * @param finalize
+     *            Finalize?
+     * @param token
+     *            user's token
+     */
+    public JobStatus(URI copyfrom, EvoType type, boolean finalize, String token) {
+        this(copyfrom, type, finalize);
+        setToken(token);
     }
 
 
@@ -133,6 +154,16 @@ public class JobStatus {
     public synchronized void setStateAndReason(State state, String message) {
         this.state = state;
         this.reason = message;
+    }
+
+
+    public String getToken() {
+        return token;
+    }
+
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
 }

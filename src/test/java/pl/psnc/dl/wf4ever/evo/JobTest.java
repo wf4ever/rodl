@@ -86,4 +86,23 @@ public class JobTest extends EvoTest {
         //TODO verify correct finalized RO
     }
 
+
+    //negative scenarios
+
+    /**
+     * In case there is no token in request, 401 Unauthorized should be returned.
+     */
+    @Test
+    public final void createCopyJobWithNoToken() {
+
+    }
+
+
+    /**
+     * In case given token doesn't exists, 401 Unauthorized should be returned.
+     */
+    @Test
+    public final void createCoptJobWithWrongToken() {
+
+    }
 }
