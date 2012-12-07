@@ -524,7 +524,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         for (RDFNode annotationBodyRef : it) {
             URI childURI = URI.create(annotationBodyRef.asResource().getURI());
             if (dataset.containsNamedModel(childURI.toString()) && !tmpDataset.containsNamedModel(childURI.toString())) {
-                log.debug("Will add recursively: " + childURI);
                 addNamedModelsRecursively(tmpDataset, childURI);
             }
         }
