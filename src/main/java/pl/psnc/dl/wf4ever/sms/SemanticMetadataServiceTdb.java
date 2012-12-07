@@ -524,6 +524,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         for (RDFNode annotationBodyRef : it) {
             URI childURI = URI.create(annotationBodyRef.asResource().getURI());
             if (dataset.containsNamedModel(childURI.toString()) && !tmpDataset.containsNamedModel(childURI.toString())) {
+                log.debug("Will add recursively: " + childURI);
                 addNamedModelsRecursively(tmpDataset, childURI);
             }
         }
@@ -645,7 +646,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         boolean created = !containsNamedGraph(graphURI);
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            Model namedGraphModel = dataset.getNamedModel(graphURI.toString());
+            Model namedGraphModel = createOntModelForNamedGraph(graphURI);
             namedGraphModel.removeAll();
             namedGraphModel.read(inputStream, graphURI.resolve(".").toString(), rdfFormat.getName().toUpperCase());
             commitTransaction(transactionStarted);
