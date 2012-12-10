@@ -1,0 +1,19 @@
+# Useful for guessing the MIME types, for example when processing a zipped RO
+
+# The RDF/XML file format.
+application/rdf+xml rdf rdfs owl
+
+# The N-Triples file format.
+text/plain nt
+
+# The Turtle file format.
+text/turtle ttl
+
+# The N3/Notation3 file format.
+text/rdf+n3 n3
+
+# The TriX file format.
+application/trix trix
+
+# The TriG file format.
+application/x-trig trig

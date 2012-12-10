@@ -167,8 +167,8 @@ public class ResearchObjectListResource {
         BufferedInputStream inputStream = new BufferedInputStream(request.getInputStream());
         FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
         IOUtils.copy(inputStream, fileOutputStream);
-        Response response = ROSRService.createNewResearchObjectFromZip(ro.getUri(), new MemoryZipFile(tmpFile,
-                researchObjectId));
+        Response response = ROSRService
+                .createNewResearchObjectFromZip(ro, new MemoryZipFile(tmpFile, researchObjectId));
         tmpFile.delete();
         return response;
     }

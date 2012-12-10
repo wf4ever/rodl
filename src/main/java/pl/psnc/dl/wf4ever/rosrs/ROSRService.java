@@ -791,45 +791,46 @@ public final class ROSRService {
 
 
     /**
-     * Create a new research object submitted in zip format.
+     * Create a new research object submitted in ZIP format.
      * 
-     * @param freshResearchObjectURI
-     *            the uri of created object
+     * @param researchObject
+     *            the new research object
      * @param zip
-     *            the zip file
+     *            the ZIP file
      * @return HTTP response (created in case of success, 404 in case of error)
      * @throws BadRequestException .
      * @throws AccessDeniedException .
      * @throws IOException
      *             error creating the temporary file
      */
-    public static Response createNewResearchObjectFromZip(URI freshResearchObjectURI, MemoryZipFile zip)
+    public static Response createNewResearchObjectFromZip(ResearchObject researchObject, MemoryZipFile zip)
             throws BadRequestException, AccessDeniedException, IOException {
-        URI createdResearchObjectURI;
-        ResearchObject createdResearchObject;
         try {
-            createdResearchObjectURI = createResearchObject(ResearchObject.create(freshResearchObjectURI));
-            createdResearchObject = ResearchObject.create(createdResearchObjectURI);
+            URI createdResearchObjectURI = createResearchObject(researchObject);
+            researchObject = ResearchObject.create(createdResearchObjectURI);
         } catch (ConflictException | DigitalLibraryException | NotFoundException e) {
             throw new BadRequestException("Research Object creation problem", e);
         }
 
         SemanticMetadataService tmpSms = new SemanticMetadataServiceTdb(ROSRService.SMS.get().getUserProfile(),
-                createdResearchObject, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
+                researchObject, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
 
         List<AggregatedResource> aggregatedList;
         List<Annotation> annotationsList;
 
         try {
-            aggregatedList = tmpSms.getAggregatedResources(createdResearchObject);
-            annotationsList = tmpSms.getAnnotations(createdResearchObject);
+            aggregatedList = tmpSms.getAggregatedResources(researchObject);
+            annotationsList = tmpSms.getAnnotations(researchObject);
         } catch (ManifestTraversingException e) {
             throw new BadRequestException(e.getMessage(), e);
         }
 
+        InputStream mimeTypesIs = ROSRService.class.getClassLoader().getResourceAsStream("mime.types");
+        MimetypesFileTypeMap mfm = new MimetypesFileTypeMap(mimeTypesIs);
+        mimeTypesIs.close();
         for (AggregatedResource aggregated : aggregatedList) {
-            String originalResourceName = createdResearchObjectURI.relativize(aggregated.getUri()).getPath();
-            URI resourceURI = UriBuilder.fromUri(createdResearchObjectURI).path(originalResourceName).build();
+            String originalResourceName = researchObject.getUri().relativize(aggregated.getUri()).getPath();
+            URI resourceURI = UriBuilder.fromUri(researchObject.getUri()).path(originalResourceName).build();
             UUID uuid = UUID.randomUUID();
             File tmpFile = File.createTempFile("tmp_resource", uuid.toString());
             try {
@@ -838,14 +839,14 @@ public final class ROSRService {
                     try {
                         FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
                         IOUtils.copy(is, fileOutputStream);
-                        String mimeType = new MimetypesFileTypeMap().getContentType(tmpFile);
-                        aggregateInternalResource(ResearchObject.create(createdResearchObjectURI), resourceURI,
-                            new FileInputStream(tmpFile), mimeType, null);
+                        String mimeType = mfm.getContentType(resourceURI.getPath());
+                        aggregateInternalResource(researchObject, resourceURI, new FileInputStream(tmpFile), mimeType,
+                            null);
                     } finally {
                         is.close();
                     }
                 } else {
-                    aggregateExternalResource(ResearchObject.create(createdResearchObjectURI), aggregated.getUri());
+                    aggregateExternalResource(researchObject, aggregated.getUri());
                 }
             } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
                 LOGGER.error("Error when aggregating resources", e);
@@ -855,15 +856,17 @@ public final class ROSRService {
         }
         for (Annotation annotation : annotationsList) {
             try {
-                addAnnotation(ResearchObject.create(createdResearchObjectURI), annotation.getBody().getUri(),
-                    annotation.getAnnotatedToURIList());
+                if (SMS.get().isAggregatedResource(researchObject, annotation.getBody().getUri())) {
+                    convertAggregatedResourceToAnnotationBody(researchObject, annotation.getBody().getUri());
+                }
+                addAnnotation(researchObject, annotation.getBody().getUri(), annotation.getAnnotatedToURIList());
             } catch (DigitalLibraryException | NotFoundException e) {
                 LOGGER.error("Error when adding annotations", e);
             }
         }
 
         tmpSms.close();
-        return Response.created(createdResearchObjectURI).build();
+        return Response.created(researchObject.getUri()).build();
     }
 
 
