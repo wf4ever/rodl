@@ -153,7 +153,7 @@ public final class ROSRService {
         ROSRService.DL.get().createResearchObject(researchObject.getUri(), manifest, ResearchObject.MANIFEST_PATH,
             RDFFormat.RDFXML.getDefaultMIMEType());
         if (type == EvoType.LIVE) {
-            generateEvoInfo(researchObject, null, EvoType.LIVE);
+            generateEvoInfo(researchObject, null, EvoType.LIVE, null);
         }
         LOGGER.debug(String.format("%s\t\tcreate RO end", new DateTime().toString()));
         return researchObject.getUri();
@@ -1018,9 +1018,10 @@ public final class ROSRService {
     }
 
 
-    public static void generateEvoInfo(ResearchObject researchObject, ResearchObject parent, EvoType type)
+    public static void generateEvoInfo(ResearchObject researchObject, ResearchObject parent, EvoType type,
+            String creator)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        SMS.get().generateEvoInformation(researchObject, parent, type);
+        SMS.get().generateEvoInformation(researchObject, parent, type, creator);
         updateNamedGraphInDlibra(
             researchObject.getUri().relativize(researchObject.getFixedEvolutionAnnotationBodyPath()).toString(),
             researchObject, researchObject.getFixedEvolutionAnnotationBodyPath());

@@ -32,6 +32,7 @@ public class EvoTest extends W4ETest {
         createUserWithAnswer(userIdSafe, username).close();
         createUserWithAnswer(userId2Safe, username2).close();
         accessToken = createAccessToken(userId);
+        accessToken2 = createAccessToken(userId2);
         ro = createRO(accessToken);
         addFile(ro, filePath, accessToken);
     }
@@ -42,6 +43,7 @@ public class EvoTest extends W4ETest {
             throws Exception {
         deleteROs();
         deleteAccessToken(accessToken);
+        deleteAccessToken(accessToken2);
         deleteUser(userIdSafe);
         deleteUser(userId2Safe);
         super.tearDown();

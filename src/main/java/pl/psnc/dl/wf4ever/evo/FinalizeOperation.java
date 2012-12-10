@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever.evo;
 
 import java.net.URI;
 
+import pl.psnc.dl.wf4ever.auth.AccessToken;
 import pl.psnc.dl.wf4ever.common.HibernateUtil;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
@@ -39,8 +40,8 @@ public class FinalizeOperation implements Operation {
             ROSRService.deleteAnnotation(researchObject, annotation.getUri());
             ROSRService.deaggregateInternalResource(researchObject,
                 researchObject.getFixedEvolutionAnnotationBodyPath());
-            ROSRService.generateEvoInfo(researchObject, liveRO, status.getType());
-
+            AccessToken token = AccessToken.findByValue(status.getToken());
+            ROSRService.generateEvoInfo(researchObject, liveRO, status.getType(), token.getUser().getUserId());
         } catch (DigitalLibraryException | NotFoundException | AccessDeniedException e) {
             throw new OperationFailedException("Could not generate evo info", e);
         } finally {

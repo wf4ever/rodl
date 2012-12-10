@@ -1749,7 +1749,8 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         OntModel model = createOntModelForNamedGraph(researchObject.getManifestUri());
         Individual source = model.getIndividual(researchObject.getUri().toString());
         if (source == null) {
-            throw new ManifestTraversingException("Could not find " + researchObject.getUri().toString() + " in manifest");
+            throw new ManifestTraversingException("Could not find " + researchObject.getUri().toString()
+                    + " in manifest");
         }
         List<RDFNode> aggregatesList = source.listPropertyValues(ORE.aggregates).toList();
         List<AggregatedResource> aggregated = new ArrayList<AggregatedResource>();
@@ -1799,7 +1800,8 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         OntModel model = createOntModelForNamedGraph(researchObject.getManifestUri());
         Individual source = model.getIndividual(researchObject.getUri().toString());
         if (source == null) {
-        	throw new ManifestTraversingException("Could not find " + researchObject.getUri().toString() + " in manifest");
+            throw new ManifestTraversingException("Could not find " + researchObject.getUri().toString()
+                    + " in manifest");
         }
         List<RDFNode> aggregatesList = source.listPropertyValues(ORE.aggregates).toList();
         List<Annotation> annotations = new ArrayList<Annotation>();
@@ -1863,15 +1865,22 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
     @Override
     public void generateEvoInformation(ResearchObject researchObject, ResearchObject liveRO, EvoType type) {
+        generateEvoInformation(researchObject, liveRO, type, null);
+    }
+
+
+    @Override
+    public void generateEvoInformation(ResearchObject researchObject, ResearchObject liveRO, EvoType type,
+            String creator) {
         switch (type) {
             case LIVE:
                 generateLiveRoEvoInf(researchObject);
                 break;
             case SNAPSHOT:
-                generateSnaphotEvoInf(researchObject, liveRO);
+                generateSnaphotEvoInf(researchObject, liveRO, creator);
                 break;
             case ARCHIVED:
-                generateArchiveEvoInf(researchObject, liveRO);
+                generateArchiveEvoInf(researchObject, liveRO, creator);
                 break;
             default:
                 generateLiveRoEvoInf(researchObject);
@@ -1916,7 +1925,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
      * @param liveRO
      *            the origin of processed snapshot of Research Object.
      */
-    private void generateSnaphotEvoInf(ResearchObject researchObject, ResearchObject liveRO) {
+    private void generateSnaphotEvoInf(ResearchObject researchObject, ResearchObject liveRO, String creator) {
 
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
@@ -1935,7 +1944,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         evoModel.createIndividual(ro.getURI(), ROEVO.SnapshotRO);
         evoModel.add(ro, ROEVO.isSnapshotOf, evoModel.createResource(liveRO.getUriString()));
         evoModel.add(ro, ROEVO.snapshottedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
-        evoModel.add(ro, ROEVO.snapshottedBy, evoModel.createResource(user.getUri().toString()));
+        evoModel.add(ro, ROEVO.snapshottedBy, evoModel.createResource(creator));
 
         addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
             researchObject.getFixedEvolutionAnnotationBodyPath()).toString();
@@ -1966,7 +1975,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
      * @param liveRO
      *            the origin of processed snapshot of Research Object.
      */
-    private void generateArchiveEvoInf(ResearchObject researchObject, ResearchObject liveRO) {
+    private void generateArchiveEvoInf(ResearchObject researchObject, ResearchObject liveRO, String creator) {
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
         OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyPath());
@@ -1984,7 +1993,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         evoModel.createIndividual(ro.getURI(), ROEVO.ArchivedRO);
         evoModel.add(ro, ROEVO.isArchiveOf, evoModel.createResource(liveRO.getUriString()));
         evoModel.add(ro, ROEVO.archivedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
-        evoModel.add(ro, ROEVO.archivedBy, evoModel.createResource(user.getUri().toString()));
+        evoModel.add(ro, ROEVO.archivedBy, evoModel.createResource(creator));
 
         addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
             researchObject.getFixedEvolutionAnnotationBodyPath()).toString();
