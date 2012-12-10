@@ -1131,7 +1131,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
         if (type == null) {
             if (isSnapshot(freshSnapshotOrArchive)) {
-                dateNode = freshSource.getProperty(ROEVO.snapshottedAtTime).getObject();
+                dateNode = freshSource.getProperty(ROEVO.snapshotedAtTime).getObject();
             } else if (isArchive(freshSnapshotOrArchive)) {
                 dateNode = freshSource.getProperty(ROEVO.archivedAtTime).getObject();
             } else {
@@ -1149,7 +1149,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             if (tmpURI.equals(freshSnapshotOrArchive.getUri())) {
                 continue;
             }
-            RDFNode node = getIndividual(ResearchObject.create(tmpURI)).getProperty(ROEVO.snapshottedAtTime)
+            RDFNode node = getIndividual(ResearchObject.create(tmpURI)).getProperty(ROEVO.snapshotedAtTime)
                     .getObject();
             DateTime tmpTime = new DateTime(node.asLiteral().getValue().toString());
             if ((tmpTime.compareTo(freshTime) == -1)
@@ -1233,7 +1233,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         } else {
 
             if (isSnapshot(first)) {
-                dateFirst = new DateTime(firstIndividual.getPropertyValue(ROEVO.snapshottedAtTime).asLiteral()
+                dateFirst = new DateTime(firstIndividual.getPropertyValue(ROEVO.snapshotedAtTime).asLiteral()
                         .getValue().toString());
             } else if (isArchive(first)) {
                 dateFirst = new DateTime(firstIndividual.getPropertyValue(ROEVO.archivedAtTime).asLiteral().getValue()
@@ -1249,7 +1249,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         } else {
 
             if (isSnapshot(second)) {
-                dateSecond = new DateTime(secondIndividual.getPropertyValue(ROEVO.snapshottedAtTime).asLiteral()
+                dateSecond = new DateTime(secondIndividual.getPropertyValue(ROEVO.snapshotedAtTime).asLiteral()
                         .getValue().toString());
             } else if (isArchive(second)) {
                 dateSecond = new DateTime(secondIndividual.getPropertyValue(ROEVO.archivedAtTime).asLiteral()
@@ -1274,7 +1274,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         Individual roIndividual = getIndividual(researchObject);
         DateTime date = null;
         if (isSnapshot(researchObject)) {
-            date = new DateTime(roIndividual.getPropertyValue(ROEVO.snapshottedAtTime).asLiteral().getValue()
+            date = new DateTime(roIndividual.getPropertyValue(ROEVO.snapshotedAtTime).asLiteral().getValue()
                     .toString());
         } else if (isArchive(researchObject)) {
             date = new DateTime(roIndividual.getPropertyValue(ROEVO.archivedAtTime).asLiteral().getValue().toString());
@@ -1943,8 +1943,8 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
         evoModel.createIndividual(ro.getURI(), ROEVO.SnapshotRO);
         evoModel.add(ro, ROEVO.isSnapshotOf, evoModel.createResource(liveRO.getUriString()));
-        evoModel.add(ro, ROEVO.snapshottedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
-        evoModel.add(ro, ROEVO.snapshottedBy, evoModel.createResource(creator));
+        evoModel.add(ro, ROEVO.snapshotedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
+        evoModel.add(ro, ROEVO.snapshotedBy, evoModel.createResource(creator));
 
         addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
             researchObject.getFixedEvolutionAnnotationBodyPath()).toString();
