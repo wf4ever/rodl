@@ -32,6 +32,7 @@ import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -1113,13 +1114,13 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     @Override
-    public URI getPreviousSnaphotOrArchive(ResearchObject liveRO, ResearchObject freshSnapshotOrArchive) {
-        return getPreviousSnaphotOrArchive(liveRO, freshSnapshotOrArchive, null);
+    public URI getPreviousSnapshotOrArchive(ResearchObject liveRO, ResearchObject freshSnapshotOrArchive) {
+        return getPreviousSnapshotOrArchive(liveRO, freshSnapshotOrArchive, null);
     }
 
 
     @Override
-    public URI getPreviousSnaphotOrArchive(ResearchObject liveRO, ResearchObject freshSnapshotOrArchive, EvoType type) {
+    public URI getPreviousSnapshotOrArchive(ResearchObject liveRO, ResearchObject freshSnapshotOrArchive, EvoType type) {
         Individual liveSource = getIndividual(liveRO);
         StmtIterator snaphotsIterator;
         snaphotsIterator = liveSource.listProperties(ROEVO.hasSnapshot);
@@ -1463,13 +1464,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
      * @return true if they are equal, otherwise false.
      */
     private Boolean compareTwoLiterals(Literal pattern, Literal compared) {
-        //@TODO compare checksums
-        Boolean result = null;
-        if (pattern.equals(compared)) {
-            //@TODO compare checksums
-            return true;
-        }
-        return false;
+        return pattern.equals(compared);
     }
 
 
@@ -1772,8 +1767,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     }
 
 
-    private URI changeBlankNodeToUriResources(ResearchObject researchObject, OntModel model, RDFNode node)
-            throws URISyntaxException {
+    private URI changeBlankNodeToUriResources(ResearchObject researchObject, OntModel model, RDFNode node) {
         Resource r = model.createResource(researchObject.getUri().resolve(UUID.randomUUID().toString()).toString());
         List<Statement> statements = new ArrayList<Statement>();
         for (Statement s : model.listStatements(node.asResource(), null, (RDFNode) null).toList()) {
@@ -1788,7 +1782,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             statements.add(s);
         }
         model.remove(statements);
-        return new URI(r.getURI());
+        return URI.create(r.getURI());
     }
 
 
@@ -1806,17 +1800,18 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         for (RDFNode node : aggregatesList) {
             try {
                 if (node.isURIResource()) {
-                    if (isAnnotation(researchObject, new URI(node.asResource().getURI()))) {
-                        annotations.add(new Annotation(new URI(node.asResource().getURI()), model));
+                    URI nodeURI = URI.create(node.asResource().getURI());
+                    if (isAnnotation(researchObject, nodeURI)) {
+                        annotations.add(new Annotation(nodeURI, model));
                     }
                 } else if (node.isResource()) {
-                    URI nodeUri = changeBlankNodeToUriResources(researchObject, model, node);
-                    if (isAnnotation(researchObject, nodeUri)) {
-                        annotations.add(new Annotation(nodeUri, model));
+                    URI nodeURI = changeBlankNodeToUriResources(researchObject, model, node);
+                    if (isAnnotation(researchObject, nodeURI)) {
+                        annotations.add(new Annotation(nodeURI, model));
                     }
                 }
-            } catch (URISyntaxException e) {
-                continue;
+            } catch (IncorrectModelException e) {
+                log.error("Error assembling annotation for RO " + researchObject.toString(), e);
             }
         }
         return annotations;
@@ -1953,7 +1948,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
                 .getResource(liveRO.getUriString()), ROEVO.hasSnapshot, ro);
 
         try {
-            URI previousSnaphot = getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
+            URI previousSnaphot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
             if (previousSnaphot != null) {
                 storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnaphot));
                 evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnaphot.toString()));
@@ -2001,7 +1996,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasArchive, ro);
         try {
-            URI previousSnaphot = getPreviousSnaphotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
+            URI previousSnaphot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
             if (previousSnaphot != null) {
                 storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnaphot));
                 evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnaphot.toString()));

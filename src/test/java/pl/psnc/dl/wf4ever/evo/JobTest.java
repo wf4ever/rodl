@@ -65,6 +65,7 @@ public class JobTest extends EvoTest {
         JobStatus status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
         JobStatus status2 = new JobStatus();
         status2.setTarget(status.getTarget());
+        status2.setToken(accessToken);
         URI finalizeJob = createFinalizeJob(status2).getLocation();
         JobStatus remoteStatus = getRemoteStatus(finalizeJob, WAIT_FOR_FINALIZE);
         Assert.assertEquals(State.DONE, remoteStatus.getState());

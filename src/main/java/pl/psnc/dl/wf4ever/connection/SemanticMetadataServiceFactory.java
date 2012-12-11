@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
 
 /**
  * A factory for creating a connection to the Semantic Metadata Service.
@@ -60,7 +60,7 @@ public final class SemanticMetadataServiceFactory {
      */
     public static SemanticMetadataService getService(UserMetadata user)
             throws ClassNotFoundException, IOException, NamingException, SQLException {
-        return new SemanticMetadataServiceImpl(user);
+        return new SemanticMetadataServiceTdb(user, true);
     }
 
 }

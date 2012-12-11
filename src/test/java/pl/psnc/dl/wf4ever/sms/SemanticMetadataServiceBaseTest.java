@@ -1,16 +1,12 @@
 package pl.psnc.dl.wf4ever.sms;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.naming.NamingException;
 
 import org.apache.log4j.Logger;
 import org.junit.After;
@@ -83,7 +79,7 @@ public class SemanticMetadataServiceBaseTest {
     @AfterClass
     public static void tearDownAfterClass()
             throws Exception {
-        cleanData();
+        //        cleanData();
     }
 
 
@@ -93,7 +89,7 @@ public class SemanticMetadataServiceBaseTest {
     @Before
     public void setUp()
             throws Exception {
-        cleanData();
+        //        cleanData();
         test = new TestStructure();
     }
 
@@ -104,20 +100,7 @@ public class SemanticMetadataServiceBaseTest {
     @After
     public void tearDown()
             throws Exception {
-    }
-
-
-    private static void cleanData() {
-        SemanticMetadataService sms = null;
-        try {
-            sms = new SemanticMetadataServiceImpl(userProfile, true);
-        } catch (ClassNotFoundException | IOException | NamingException | SQLException e) {
-            e.printStackTrace();
-        } finally {
-            if (sms != null) {
-                sms.close();
-            }
-        }
+        test.sms.close();
     }
 
 
@@ -184,7 +167,6 @@ public class SemanticMetadataServiceBaseTest {
 
         Literal filesizeLiteral = resource.getPropertyValue(RO.filesize).asLiteral();
         Assert.assertNotNull("Resource must contain ro:filesize", filesizeLiteral);
-        Assert.assertEquals("Filesize type is xsd:long", XSDDatatype.XSDlong, filesizeLiteral.getDatatype());
         Assert.assertEquals("Filesize is valid", ann1Info2.getSizeInBytes(), filesizeLiteral.asLiteral().getLong());
 
         Resource checksumResource = resource.getPropertyValue(RO.checksum).asResource();
@@ -239,7 +221,7 @@ public class SemanticMetadataServiceBaseTest {
 
 
         public TestStructure()
-                throws URISyntaxException, FileNotFoundException {
+                throws URISyntaxException, IOException {
             ro1 = ResearchObject.create(getResourceURI("ro1/"));
             sp1 = ResearchObject.create(getResourceURI("ro1-sp1/"));
             sp2 = ResearchObject.create(getResourceURI("ro1-sp2/"));
@@ -249,7 +231,7 @@ public class SemanticMetadataServiceBaseTest {
             simpleAnnotatedRO = ResearchObject.create(URI.create("http://www.example.com/simpleAnnotatedRO/"));
 
             InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1/.ro/manifest.ttl");
-            sms = new SemanticMetadataServiceImpl(userProfile, ro1, is, RDFFormat.TURTLE);
+            sms = new SemanticMetadataServiceTdb(userProfile, ro1, is, RDFFormat.TURTLE);
 
             emptyRO = ResearchObject.create(URI.create("http://example.org/ROs/empty-RO/"));
             emptyRO2 = ResearchObject.create(URI.create("http://example.org/ROs/empty-RO2/"));

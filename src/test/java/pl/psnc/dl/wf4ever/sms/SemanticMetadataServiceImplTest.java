@@ -718,8 +718,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testGetPreviousSnaphotOrArchive() {
-        URI sp1Antecessor = test.sms.getPreviousSnaphotOrArchive(test.ro1, test.sp1);
-        URI sp2Antecessor = test.sms.getPreviousSnaphotOrArchive(test.ro1, test.sp2);
+        URI sp1Antecessor = test.sms.getPreviousSnapshotOrArchive(test.ro1, test.sp1);
+        URI sp2Antecessor = test.sms.getPreviousSnapshotOrArchive(test.ro1, test.sp2);
         Assert.assertNull("wrong antecessor URI", sp1Antecessor);
         Assert.assertEquals("wrong antecessor URI", sp2Antecessor, test.sp1.getUri());
     }
