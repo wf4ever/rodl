@@ -117,6 +117,7 @@ public class CopyOperation implements Operation {
                     try {
                         try {
                             String[] tmpURITable = resource.getURI().split("/");
+                            targets = changeManifestAnnotationTarget(status, targets, URI.create(annBody.getURI()));
                             ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets,
                                 tmpURITable[tmpURITable.length - 1]);
                         } catch (IndexOutOfBoundsException e) {
@@ -164,6 +165,30 @@ public class CopyOperation implements Operation {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         }
 
+    }
+
+
+    /**
+     * Small hack done for manifest annotation problem. If the annotation is the manifest annotation the the target must
+     * be changed.
+     * 
+     * @param status
+     * @param targets
+     * @param annBodyUri
+     * @return
+     */
+    private List<URI> changeManifestAnnotationTarget(JobStatus status, List<URI> targets, URI annBodyUri) {
+        List<URI> results = new ArrayList<URI>();
+        if (status.getCopyfrom() != null && annBodyUri != null && annBodyUri.toString().contains("manifest.rdf")) {
+            for (URI t : targets) {
+                if (t.toString().equals(status.getCopyfrom().toString())) {
+                    results.add(status.getCopyfrom().resolve("../" + status.getTarget()));
+                } else {
+                    results.add(t);
+                }
+            }
+        }
+        return results;
     }
 
 
