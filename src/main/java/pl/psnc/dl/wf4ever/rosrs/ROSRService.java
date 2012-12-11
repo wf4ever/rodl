@@ -1029,12 +1029,12 @@ public final class ROSRService {
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         SMS.get().generateEvoInformation(researchObject, parent, type, creator);
         updateNamedGraphInDlibra(
-            researchObject.getUri().relativize(researchObject.getFixedEvolutionAnnotationBodyPath()).toString(),
-            researchObject, researchObject.getFixedEvolutionAnnotationBodyPath());
+            researchObject.getUri().relativize(researchObject.getFixedEvolutionAnnotationBodyUri()).toString(),
+            researchObject, researchObject.getFixedEvolutionAnnotationBodyUri());
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
         if (parent != null) {
-            updateNamedGraphInDlibra(researchObject.getUri().relativize(parent.getFixedEvolutionAnnotationBodyPath())
-                    .toString(), parent, parent.getFixedEvolutionAnnotationBodyPath());
+            updateNamedGraphInDlibra(parent.getUri().relativize(parent.getFixedEvolutionAnnotationBodyUri())
+                    .toString(), parent, parent.getFixedEvolutionAnnotationBodyUri());
             updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, parent, parent.getManifestUri());
         }
     }

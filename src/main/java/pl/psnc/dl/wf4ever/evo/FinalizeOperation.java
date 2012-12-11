@@ -36,10 +36,10 @@ public class FinalizeOperation implements Operation {
             ResearchObject liveRO = ResearchObject.create(status.getCopyfrom());
 
             Annotation annotation = ROSRService.SMS.get().findAnnotationForBody(researchObject,
-                researchObject.getFixedEvolutionAnnotationBodyPath());
+                researchObject.getFixedEvolutionAnnotationBodyUri());
             ROSRService.deleteAnnotation(researchObject, annotation.getUri());
             ROSRService.deaggregateInternalResource(researchObject,
-                researchObject.getFixedEvolutionAnnotationBodyPath());
+                researchObject.getFixedEvolutionAnnotationBodyUri());
             AccessToken token = AccessToken.findByValue(status.getToken());
             ROSRService.generateEvoInfo(researchObject, liveRO, status.getType(), token.getUser().getUserId());
         } catch (DigitalLibraryException | NotFoundException | AccessDeniedException e) {

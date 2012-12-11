@@ -733,7 +733,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
             throws URISyntaxException, ClassNotFoundException, IOException, NamingException, SQLException {
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(SafeURI.URItoString(test.ro1.getUri().resolve(".ro/manifest.ttl")), "TTL");
-        model.read(SafeURI.URItoString(test.ro1.getFixedEvolutionAnnotationBodyPath()), "TTL");
+        model.read(SafeURI.URItoString(test.ro1.getFixedEvolutionAnnotationBodyUri()), "TTL");
         Individual source = model.getIndividual(test.ro1.getUriString());
         Individual source2 = test.sms.getIndividual(test.ro1);
         Assert.assertEquals("wrong individual returned", source, source2);
@@ -861,7 +861,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(test.sms.getNamedGraph(test.sp2.getManifestUri(), RDFFormat.RDFXML), null);
-        model.read(test.sms.getNamedGraph(test.sp2.getFixedEvolutionAnnotationBodyPath(), RDFFormat.RDFXML), null);
+        model.read(test.sms.getNamedGraph(test.sp2.getFixedEvolutionAnnotationBodyUri(), RDFFormat.RDFXML), null);
 
         Assert.assertTrue(isChangeInTheChangesList(getResourceURI("ro1-sp2/ann3").toString(),
             ROEVO.Addition.toString(), model, nodes));
@@ -1161,7 +1161,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public void testAnnotationForBody() {
         Annotation annotation = test.sms
-                .findAnnotationForBody(test.ro1, test.ro1.getFixedEvolutionAnnotationBodyPath());
+                .findAnnotationForBody(test.ro1, test.ro1.getFixedEvolutionAnnotationBodyUri());
         Assert.assertNotNull("Annotation should not be null", annotation);
     }
 

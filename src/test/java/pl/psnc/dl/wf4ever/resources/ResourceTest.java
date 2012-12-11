@@ -222,7 +222,7 @@ public class ResourceTest extends ResourceBase {
         manifestModel.read(researchObject.getManifestUri().toString());
 
         Resource bodyR = manifestModel.createResource(SafeURI.URItoString(researchObject
-                .getFixedEvolutionAnnotationBodyPath()));
+                .getFixedEvolutionAnnotationBodyUri()));
         StmtIterator it = manifestModel.listStatements(null, AO.body, bodyR);
         if (it.hasNext()) {
             Annotation ann = new Annotation(URI.create(it.next().getSubject().getURI()));
@@ -234,7 +234,7 @@ public class ResourceTest extends ResourceBase {
             assertTrue("Can not find annotation", false);
         }
         assertEquals("Removing evo info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
-        response = webResource.uri(researchObject.getFixedEvolutionAnnotationBodyPath())
+        response = webResource.uri(researchObject.getFixedEvolutionAnnotationBodyUri())
                 .header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
         assertEquals("Removing evo info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         response.close();

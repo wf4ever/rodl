@@ -117,7 +117,7 @@ public class ResearchObject {
      * @return manifest format
      */
     @Transient
-    public URI getFixedEvolutionAnnotationBodyPath() {
+    public URI getFixedEvolutionAnnotationBodyUri() {
         return getUri().resolve(roevoPath);
     }
 }

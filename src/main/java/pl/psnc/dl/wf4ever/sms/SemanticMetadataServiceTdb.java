@@ -1378,7 +1378,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             List<RDFNode> freshAggreagted = getAggregatedWithNoEvoManifestAndBody(freshRO);
             List<RDFNode> oldAggreagted = getAggregatedWithNoEvoManifestAndBody(oldRO);
 
-            OntModel evoInfoModel = createOntModelForNamedGraph(freshRO.getFixedEvolutionAnnotationBodyPath());
+            OntModel evoInfoModel = createOntModelForNamedGraph(freshRO.getFixedEvolutionAnnotationBodyUri());
 
             Individual changeSpecificationIndividual = evoInfoModel.createIndividual(
                 generateRandomUriRelatedToResource(freshRO, "change_specification"), ROEVO.ChangeSpecification);
@@ -1411,7 +1411,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         Individual firstIndividual = getIndividual(first);
         Individual secondIndividual = getIndividual(second);
 
-        if (!dataset.containsNamedModel(first.getFixedEvolutionAnnotationBodyPath().toString())) {
+        if (!dataset.containsNamedModel(first.getFixedEvolutionAnnotationBodyUri().toString())) {
             dateFirst = DateTime.now();
         } else {
 
@@ -1427,7 +1427,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             }
         }
 
-        if (!dataset.containsNamedModel(second.getFixedEvolutionAnnotationBodyPath().toString())) {
+        if (!dataset.containsNamedModel(second.getFixedEvolutionAnnotationBodyUri().toString())) {
             dateSecond = DateTime.now();
         } else {
 
@@ -1927,7 +1927,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
     @Override
     public InputStream getEvoInfo(ResearchObject researchObject) {
-        return getNamedGraph((researchObject.getFixedEvolutionAnnotationBodyPath()), RDFFormat.TURTLE);
+        return getNamedGraph((researchObject.getFixedEvolutionAnnotationBodyUri()), RDFFormat.TURTLE);
     }
 
 
@@ -2123,13 +2123,13 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
         }
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
-        OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyPath());
-        Individual evoInfo = evoModel.getIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString());
+        OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyUri());
+        Individual evoInfo = evoModel.getIndividual(researchObject.getFixedEvolutionAnnotationBodyUri().toString());
         if (evoInfo != null) {
             throw new IllegalArgumentException("URI already exists: "
-                    + researchObject.getFixedEvolutionAnnotationBodyPath());
+                    + researchObject.getFixedEvolutionAnnotationBodyUri());
         }
-        evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString(),
+        evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyUri().toString(),
             ORE.AggregatedResource);
 
         evoModel.createIndividual(ro.getURI(), ROEVO.LiveRO);
@@ -2137,9 +2137,9 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
         addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
-            researchObject.getFixedEvolutionAnnotationBodyPath(), null).toString();
+            researchObject.getFixedEvolutionAnnotationBodyUri(), null).toString();
         ro.addProperty(ORE.aggregates,
-            manifestModel.getResource(researchObject.getFixedEvolutionAnnotationBodyPath().toString()));
+            manifestModel.getResource(researchObject.getFixedEvolutionAnnotationBodyUri().toString()));
     }
 
 
@@ -2157,13 +2157,13 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
         }
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
-        OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyPath());
-        Individual evoInfo = evoModel.getIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString());
+        OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyUri());
+        Individual evoInfo = evoModel.getIndividual(researchObject.getFixedEvolutionAnnotationBodyUri().toString());
         if (evoInfo != null) {
             throw new IllegalArgumentException("URI already exists: "
-                    + researchObject.getFixedEvolutionAnnotationBodyPath());
+                    + researchObject.getFixedEvolutionAnnotationBodyUri());
         }
-        evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString(),
+        evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyUri().toString(),
             ORE.AggregatedResource);
 
         manifestModel.add(evoInfo, ORE.describes, ro);
@@ -2175,10 +2175,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         evoModel.add(ro, ROEVO.snapshotedBy, evoModel.createResource(creator));
 
         addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
-            researchObject.getFixedEvolutionAnnotationBodyPath(), null).toString();
+            researchObject.getFixedEvolutionAnnotationBodyUri(), null).toString();
         ro.addProperty(ORE.aggregates,
-            manifestModel.createResource(researchObject.getFixedEvolutionAnnotationBodyPath().toString()));
-        OntModel liveEvoModel = createOntModelForNamedGraph(liveRO.getFixedEvolutionAnnotationBodyPath());
+            manifestModel.createResource(researchObject.getFixedEvolutionAnnotationBodyUri().toString()));
+        OntModel liveEvoModel = createOntModelForNamedGraph(liveRO.getFixedEvolutionAnnotationBodyUri());
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasSnapshot, ro);
 
@@ -2204,13 +2204,13 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
         }
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
-        OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyPath());
-        Individual evoInfo = evoModel.getIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString());
+        OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyUri());
+        Individual evoInfo = evoModel.getIndividual(researchObject.getFixedEvolutionAnnotationBodyUri().toString());
         if (evoInfo != null) {
             throw new IllegalArgumentException("URI already exists: "
-                    + researchObject.getFixedEvolutionAnnotationBodyPath());
+                    + researchObject.getFixedEvolutionAnnotationBodyUri());
         }
-        evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyPath().toString(),
+        evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyUri().toString(),
             ORE.AggregatedResource);
 
         manifestModel.add(evoInfo, ORE.describes, ro);
@@ -2222,10 +2222,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         evoModel.add(ro, ROEVO.archivedBy, evoModel.createResource(creator));
 
         addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
-            researchObject.getFixedEvolutionAnnotationBodyPath(), null).toString();
+            researchObject.getFixedEvolutionAnnotationBodyUri(), null).toString();
         ro.addProperty(ORE.aggregates,
-            manifestModel.createResource(researchObject.getFixedEvolutionAnnotationBodyPath().toString()));
-        OntModel liveEvoModel = createOntModelForNamedGraph(liveRO.getFixedEvolutionAnnotationBodyPath());
+            manifestModel.createResource(researchObject.getFixedEvolutionAnnotationBodyUri().toString()));
+        OntModel liveEvoModel = createOntModelForNamedGraph(liveRO.getFixedEvolutionAnnotationBodyUri());
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasArchive, ro);
         URI previousSnaphot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
@@ -2335,7 +2335,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             Model roManifestModel = dataset.getNamedModel(ro.getManifestUri().toString());
-            Model roEvolutionModel = dataset.getNamedModel(ro.getFixedEvolutionAnnotationBodyPath().toString());
+            Model roEvolutionModel = dataset.getNamedModel(ro.getFixedEvolutionAnnotationBodyUri().toString());
             return ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, roManifestModel.union(roEvolutionModel))
                     .getIndividual(ro.getUriString());
         } finally {
