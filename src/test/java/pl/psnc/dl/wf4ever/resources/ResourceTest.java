@@ -162,6 +162,31 @@ public class ResourceTest extends ResourceBase {
 
 
     @Test
+    public void createROFromZipWithEvoAnnotation()
+            throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/zip_with_evo.zip");
+        ClientResponse response = webResource.path("ROs").accept("text/turtle")
+                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
+                .type("application/zip").post(ClientResponse.class, is);
+        assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
+            response.getStatus());
+
+        SemanticMetadataService sms = new SemanticMetadataServiceImpl(new UserMetadata("login", "name", Role.ADMIN));
+        List<AggregatedResource> aggregated = sms.getAggregatedResources(ResearchObject.create(response.getLocation()));
+        List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
+        int evoInfoCounter = 0;
+        for (Annotation a : annotations) {
+            if (a.getBody().toString().contains("evo_info.ttl")) {
+                ++evoInfoCounter;
+            }
+        }
+        response.close();
+        assertEquals("Research object should have only roevo annotation", evoInfoCounter, 1);
+
+    }
+
+
+    @Test
     public void createConflictedROFromZip()
             throws UniformInterfaceException, ClientHandlerException, IOException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");

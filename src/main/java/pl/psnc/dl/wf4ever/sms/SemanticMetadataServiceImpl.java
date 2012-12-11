@@ -1149,8 +1149,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             if (tmpURI.equals(freshSnapshotOrArchive.getUri())) {
                 continue;
             }
-            RDFNode node = getIndividual(ResearchObject.create(tmpURI)).getProperty(ROEVO.snapshotedAtTime)
-                    .getObject();
+            RDFNode node = getIndividual(ResearchObject.create(tmpURI)).getProperty(ROEVO.snapshotedAtTime).getObject();
             DateTime tmpTime = new DateTime(node.asLiteral().getValue().toString());
             if ((tmpTime.compareTo(freshTime) == -1)
                     && ((predecessorTime == null) || (tmpTime.compareTo(predecessorTime) == 1))) {
@@ -1274,8 +1273,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         Individual roIndividual = getIndividual(researchObject);
         DateTime date = null;
         if (isSnapshot(researchObject)) {
-            date = new DateTime(roIndividual.getPropertyValue(ROEVO.snapshotedAtTime).asLiteral().getValue()
-                    .toString());
+            date = new DateTime(roIndividual.getPropertyValue(ROEVO.snapshotedAtTime).asLiteral().getValue().toString());
         } else if (isArchive(researchObject)) {
             date = new DateTime(roIndividual.getPropertyValue(ROEVO.archivedAtTime).asLiteral().getValue().toString());
         }
@@ -2223,5 +2221,35 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
             }
         }
         return null;
+    }
+
+
+    @Override
+    public List<AggregatedResource> removeSpecialFilesFromAggergated(List<AggregatedResource> aggregated) {
+        List<AggregatedResource> toRemoved = new ArrayList<AggregatedResource>();
+        for (AggregatedResource a : aggregated) {
+            if (a.getUri().toString().contains("manifest.rdf")) {
+                toRemoved.add(a);
+            } else if (a.getUri().toString().contains("evo_info.ttl")) {
+                toRemoved.add(a);
+            }
+        }
+        aggregated.removeAll(toRemoved);
+        return aggregated;
+    }
+
+
+    @Override
+    public List<Annotation> removeSpecialFilesFromAnnotatios(List<Annotation> annotations) {
+        List<Annotation> toRemoved = new ArrayList<Annotation>();
+        for (Annotation a : annotations) {
+            if (a.getBody().getUri().toString().contains("evo_info.ttl")) {
+                toRemoved.add(a);
+            } else if (a.getBody().getUri().toString().contains("manifest.rdf")) {
+                toRemoved.add(a);
+            }
+        }
+        annotations.removeAll(toRemoved);
+        return annotations;
     }
 }

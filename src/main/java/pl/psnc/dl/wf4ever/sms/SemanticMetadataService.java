@@ -813,4 +813,24 @@ public interface SemanticMetadataService {
      * @return folder entry or null
      */
     FolderEntry getFolderEntry(URI resource);
+
+
+    /**
+     * Remove from aggregated list special files (manifest, evo_info).
+     * 
+     * @param aggregated
+     *            list of aggregated
+     * @return cleaned list of aggregated resources
+     */
+    List<AggregatedResource> removeSpecialFilesFromAggergated(List<AggregatedResource> aggregated);
+
+
+    /**
+     * Remove from annotation special annotations (manifest annotation, roevo annotation).
+     * 
+     * @param annotations
+     *            list of annotations
+     * @return cleaned list of annotations
+     */
+    List<Annotation> removeSpecialFilesFromAnnotatios(List<Annotation> annotations);
 }

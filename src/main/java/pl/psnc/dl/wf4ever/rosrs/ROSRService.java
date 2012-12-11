@@ -823,6 +823,8 @@ public final class ROSRService {
         try {
             aggregatedList = tmpSms.getAggregatedResources(createdResearchObject);
             annotationsList = tmpSms.getAnnotations(createdResearchObject);
+            aggregatedList = tmpSms.removeSpecialFilesFromAggergated(aggregatedList);
+            annotationsList = tmpSms.removeSpecialFilesFromAnnotatios(annotationsList);
         } catch (ManifestTraversingException e) {
             throw new BadRequestException(e.getMessage(), e);
         }

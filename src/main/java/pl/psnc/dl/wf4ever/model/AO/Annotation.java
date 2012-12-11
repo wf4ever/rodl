@@ -32,7 +32,7 @@ public class Annotation extends AggregatedResource {
      * Constructor.
      * 
      * @param uri
-     *            The resource uri
+     *            Resource uri
      */
     public Annotation(URI uri) {
         super(uri);
@@ -45,7 +45,7 @@ public class Annotation extends AggregatedResource {
      * Constructor.
      * 
      * @param uri
-     *            The resource uri
+     *            Resource uri
      * @param model
      *            Ontology model
      */
@@ -53,6 +53,22 @@ public class Annotation extends AggregatedResource {
         this(uri);
         annotated = new ArrayList<Resource>();
         fillUp(model);
+    }
+
+
+    /**
+     * Constructor.
+     * 
+     * @param uri
+     *            Resource uri
+     * @param annotated
+     *            List of annotated
+     * @Param body Annotation body
+     */
+    public Annotation(URI uri, List<Resource> annotated, AnnotationBody body) {
+        this.uri = uri;
+        this.annotated = annotated;
+        this.body = body;
     }
 
 
