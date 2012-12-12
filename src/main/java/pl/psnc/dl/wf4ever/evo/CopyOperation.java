@@ -169,6 +169,30 @@ public class CopyOperation implements Operation {
 
 
     /**
+     * Small hack done for manifest annotation problem. If the annotation is the manifest annotation the the target must
+     * be changed.
+     * 
+     * @param status
+     * @param targets
+     * @param annBodyUri
+     * @return
+     */
+    private List<URI> changeManifestAnnotationTarget(JobStatus status, List<URI> targets, URI annBodyUri) {
+        List<URI> results = new ArrayList<URI>();
+        if (status.getCopyfrom() != null && annBodyUri != null && annBodyUri.toString().contains("manifest.rdf")) {
+            for (URI t : targets) {
+                if (t.toString().equals(status.getCopyfrom().toString())) {
+                    results.add(status.getCopyfrom().resolve("../" + status.getTarget()));
+                } else {
+                    results.add(t);
+                }
+            }
+        }
+        return results;
+    }
+
+
+    /**
      * Check if a resource is internal to the RO. This will not work if they have different domains, for example if the
      * RO URI uses purl.
      * 

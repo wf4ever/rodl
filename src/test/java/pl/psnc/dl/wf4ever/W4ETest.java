@@ -22,6 +22,7 @@ public class W4ETest extends JerseyTest {
     protected final String adminCreds = StringUtils.trim(Base64.encodeBase64String("wfadmin:wfadmin!!!".getBytes()));
     protected final String clientName = "ROSRS testing app written in Ruby";
     protected String accessToken;
+    protected String accessToken2;
     protected final String clientRedirectionURI = "OOB"; // will not be used
     protected String clientId;
     protected URI ro;

@@ -110,7 +110,7 @@ public class Resource {
             }
             if (researchObject.getManifestUri().equals(resource)) {
                 throw new ForbiddenException("Can't update the manifest");
-            } else if (researchObject.getFixedEvolutionAnnotationBodyPath().equals(resource)) {
+            } else if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(resource)) {
                 throw new ForbiddenException("Can't update the evo info");
             }
             ResponseBuilder builder = ROSRService.updateInternalResource(researchObject, resource, entity,
@@ -308,7 +308,7 @@ public class Resource {
         }
         if (ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
             if (ROSRService.SMS.get()
-                    .findAnnotationForBody(researchObject, researchObject.getFixedEvolutionAnnotationBodyPath())
+                    .findAnnotationForBody(researchObject, researchObject.getFixedEvolutionAnnotationBodyUri())
                     .getUri().equals(resource)) {
                 throw new ForbiddenException("Can't delete the evo annotation");
             }
@@ -329,7 +329,7 @@ public class Resource {
         }
         if (researchObject.getManifestUri().equals(resource)) {
             throw new ForbiddenException("Can't delete the manifest");
-        } else if (researchObject.getFixedEvolutionAnnotationBodyPath().equals(resource)) {
+        } else if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(resource)) {
             throw new ForbiddenException("Can't delete the evo info");
         }
 

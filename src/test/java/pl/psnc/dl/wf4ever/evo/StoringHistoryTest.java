@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.evo.api;
+package pl.psnc.dl.wf4ever.evo;
 
 import static org.junit.Assert.assertTrue;
 
@@ -8,8 +8,6 @@ import java.net.URI;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.EvoType;
-import pl.psnc.dl.wf4ever.evo.EvoTest;
-import pl.psnc.dl.wf4ever.evo.JobStatus;
 
 public class StoringHistoryTest extends EvoTest {
 
@@ -23,7 +21,6 @@ public class StoringHistoryTest extends EvoTest {
     public void setUp()
             throws Exception {
         super.setUp();
-        //ro2 = createRO(accessToken);
     }
 
 
@@ -42,7 +39,7 @@ public class StoringHistoryTest extends EvoTest {
         addFile(ro, oldResourceFile, accessToken);
         URI fullModificatedFilePath = addFile(ro, modifiedResourceFile, accessToken).getLocation();
 
-        JobStatus sp1Status = new JobStatus(ro, EvoType.SNAPSHOT, true);
+        JobStatus sp1Status = new JobStatus(ro, EvoType.SNAPSHOT, true, accessToken);
         URI copyJob = createCopyJob(sp1Status).getLocation();
         sp1Status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
 
@@ -52,7 +49,7 @@ public class StoringHistoryTest extends EvoTest {
         String content = webResource.uri(ro).path(modifiedResourceFile)
                 .header("Authorization", "Bearer " + accessToken).get(String.class);
 
-        JobStatus sp2Status = new JobStatus(ro, EvoType.SNAPSHOT, true);
+        JobStatus sp2Status = new JobStatus(ro, EvoType.SNAPSHOT, true, accessToken2);
         copyJob = createCopyJob(sp2Status).getLocation();
         sp2Status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
 

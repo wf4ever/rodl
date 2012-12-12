@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 
 import javax.naming.NamingException;
@@ -18,8 +19,13 @@ import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 
 import com.hp.hpl.jena.ontology.OntModel;
@@ -160,6 +166,32 @@ public class ResourceTest extends ResourceBase {
 
 
     @Test
+    public void createROFromZipWithEvoAnnotation()
+            throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/zip_with_evo.zip");
+        ClientResponse response = webResource.path("ROs").accept("text/turtle")
+                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
+                .type("application/zip").post(ClientResponse.class, is);
+        assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
+            response.getStatus());
+
+        SemanticMetadataService sms = new SemanticMetadataServiceTdb(new UserMetadata("login", "name", Role.ADMIN),
+                true);
+        List<AggregatedResource> aggregated = sms.getAggregatedResources(ResearchObject.create(response.getLocation()));
+        List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
+        int evoInfoCounter = 0;
+        for (Annotation a : annotations) {
+            if (a.getBody().toString().contains("evo_info.ttl")) {
+                ++evoInfoCounter;
+            }
+        }
+        response.close();
+        assertEquals("Research object should have only roevo annotation", evoInfoCounter, 1);
+
+    }
+
+
+    @Test
     public void createConflictedROFromZip()
             throws UniformInterfaceException, ClientHandlerException, IOException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
@@ -190,7 +222,7 @@ public class ResourceTest extends ResourceBase {
         manifestModel.read(researchObject.getManifestUri().toString());
 
         Resource bodyR = manifestModel.createResource(SafeURI.URItoString(researchObject
-                .getFixedEvolutionAnnotationBodyPath()));
+                .getFixedEvolutionAnnotationBodyUri()));
         StmtIterator it = manifestModel.listStatements(null, AO.body, bodyR);
         if (it.hasNext()) {
             Annotation ann = new Annotation(URI.create(it.next().getSubject().getURI()));
@@ -202,7 +234,7 @@ public class ResourceTest extends ResourceBase {
             assertTrue("Can not find annotation", false);
         }
         assertEquals("Removing evo info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
-        response = webResource.uri(researchObject.getFixedEvolutionAnnotationBodyPath())
+        response = webResource.uri(researchObject.getFixedEvolutionAnnotationBodyUri())
                 .header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
         assertEquals("Removing evo info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         response.close();

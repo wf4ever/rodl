@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
@@ -23,6 +24,7 @@ import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.model.AO.AnnotationBody;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
@@ -731,7 +733,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
             throws URISyntaxException, ClassNotFoundException, IOException, NamingException, SQLException {
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(SafeURI.URItoString(test.ro1.getUri().resolve(".ro/manifest.ttl")), "TTL");
-        model.read(SafeURI.URItoString(test.ro1.getFixedEvolutionAnnotationBodyPath()), "TTL");
+        model.read(SafeURI.URItoString(test.ro1.getFixedEvolutionAnnotationBodyUri()), "TTL");
         Individual source = model.getIndividual(test.ro1.getUriString());
         Individual source2 = test.sms.getIndividual(test.ro1);
         Assert.assertEquals("wrong individual returned", source, source2);
@@ -859,7 +861,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(test.sms.getNamedGraph(test.sp2.getManifestUri(), RDFFormat.RDFXML), null);
-        model.read(test.sms.getNamedGraph(test.sp2.getFixedEvolutionAnnotationBodyPath(), RDFFormat.RDFXML), null);
+        model.read(test.sms.getNamedGraph(test.sp2.getFixedEvolutionAnnotationBodyUri(), RDFFormat.RDFXML), null);
 
         Assert.assertTrue(isChangeInTheChangesList(getResourceURI("ro1-sp2/ann3").toString(),
             ROEVO.Addition.toString(), model, nodes));
@@ -1159,7 +1161,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public void testAnnotationForBody() {
         Annotation annotation = test.sms
-                .findAnnotationForBody(test.ro1, test.ro1.getFixedEvolutionAnnotationBodyPath());
+                .findAnnotationForBody(test.ro1, test.ro1.getFixedEvolutionAnnotationBodyUri());
         Assert.assertNotNull("Annotation should not be null", annotation);
     }
 
@@ -1183,5 +1185,37 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Annotation annotation = test.sms.findAnnotationForBody(test.wrongRO,
             test.wrongRO.getUri().resolve("annotated-does-not-exist"));
         Assert.assertNull("Annotation should not be null", annotation);
+    }
+
+
+    @Test
+    public void testRemoveSpecialFilesFromAggergated() {
+        List<AggregatedResource> aggregated = new ArrayList<AggregatedResource>();
+        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/manifest.rdf")));
+        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/evo_info.ttl")));
+        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/resource1.ttl")));
+        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/resource2.ttl")));
+        aggregated = test.sms.removeSpecialFilesFromAggergated(aggregated);
+        Assert.assertEquals("Two aggregatetions should stay", aggregated.size(), 2);
+    }
+
+
+    @Test
+    public void testRemoveSpecialFilesFromAnnotations() {
+        List<Annotation> annotations = new ArrayList<Annotation>();
+        annotations.add(new Annotation(URI.create("http://www.example.com/ROS/annotation/1/"),
+                new ArrayList<pl.psnc.dl.wf4ever.model.RO.Resource>(), new AnnotationBody(URI
+                        .create("http://www.example.com/ROS/1/manifest.rdf"))));
+        annotations.add(new Annotation(URI.create("http://www.example.com/ROS/annotation/2/"),
+                new ArrayList<pl.psnc.dl.wf4ever.model.RO.Resource>(), new AnnotationBody(URI
+                        .create("http://www.example.com/ROS/1/evo_info.ttl"))));
+        annotations.add(new Annotation(URI.create("http://www.example.com/ROS/annotation/3/"),
+                new ArrayList<pl.psnc.dl.wf4ever.model.RO.Resource>(), new AnnotationBody(URI
+                        .create("http://www.example.com/ROS/1/body1.ttl"))));
+        annotations.add(new Annotation(URI.create("http://www.example.com/ROS/annotation/4/"),
+                new ArrayList<pl.psnc.dl.wf4ever.model.RO.Resource>(), new AnnotationBody(URI
+                        .create("http://www.example.com/ROS/1/body2.ttl"))));
+        annotations = test.sms.removeSpecialFilesFromAnnotatios(annotations);
+        Assert.assertEquals("Twoh annotations should  stay", annotations.size(), 2);
     }
 }

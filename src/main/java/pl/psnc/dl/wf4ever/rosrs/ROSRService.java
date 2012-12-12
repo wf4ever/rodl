@@ -153,7 +153,7 @@ public final class ROSRService {
         ROSRService.DL.get().createResearchObject(researchObject.getUri(), manifest, ResearchObject.MANIFEST_PATH,
             RDFFormat.RDFXML.getDefaultMIMEType());
         if (type == EvoType.LIVE) {
-            generateEvoInfo(researchObject, null, EvoType.LIVE);
+            generateEvoInfo(researchObject, null, EvoType.LIVE, null);
         }
         LOGGER.debug(String.format("%s\t\tcreate RO end", new DateTime().toString()));
         return researchObject.getUri();
@@ -821,6 +821,9 @@ public final class ROSRService {
         try {
             aggregatedList = tmpSms.getAggregatedResources(researchObject);
             annotationsList = tmpSms.getAnnotations(researchObject);
+            aggregatedList = tmpSms.removeSpecialFilesFromAggergated(aggregatedList);
+            annotationsList = tmpSms.removeSpecialFilesFromAnnotatios(annotationsList);
+
         } catch (ManifestTraversingException e) {
             throw new BadRequestException(e.getMessage(), e);
         }
@@ -1021,16 +1024,17 @@ public final class ROSRService {
     }
 
 
-    public static void generateEvoInfo(ResearchObject researchObject, ResearchObject parent, EvoType type)
+    public static void generateEvoInfo(ResearchObject researchObject, ResearchObject parent, EvoType type,
+            String creator)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        SMS.get().generateEvoInformation(researchObject, parent, type);
+        SMS.get().generateEvoInformation(researchObject, parent, type, creator);
         updateNamedGraphInDlibra(
-            researchObject.getUri().relativize(researchObject.getFixedEvolutionAnnotationBodyPath()).toString(),
-            researchObject, researchObject.getFixedEvolutionAnnotationBodyPath());
+            researchObject.getUri().relativize(researchObject.getFixedEvolutionAnnotationBodyUri()).toString(),
+            researchObject, researchObject.getFixedEvolutionAnnotationBodyUri());
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
         if (parent != null) {
-            updateNamedGraphInDlibra(researchObject.getUri().relativize(parent.getFixedEvolutionAnnotationBodyPath())
-                    .toString(), parent, parent.getFixedEvolutionAnnotationBodyPath());
+            updateNamedGraphInDlibra(parent.getUri().relativize(parent.getFixedEvolutionAnnotationBodyUri())
+                    .toString(), parent, parent.getFixedEvolutionAnnotationBodyUri());
             updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, parent, parent.getManifestUri());
         }
     }

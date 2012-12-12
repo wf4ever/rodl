@@ -11,4 +11,4 @@
 
 <.> a roevo:SnapshotRO ;
 	roevo:isSnapshotOf <../ro1/> ;
-	roevo:snapshottedAtTime "2002-01-01T16:01:10Z"^^xsd:dateTime .
+	roevo:snapshotedAtTime "2002-01-01T16:01:10Z"^^xsd:dateTime .
