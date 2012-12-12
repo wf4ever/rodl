@@ -1947,8 +1947,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                         + " in manifest");
             }
             Set<RDFNode> aggregatesList = source.listPropertyValues(ORE.aggregates).toSet();
-            //HACK only for old ROs, should be removed later
-            aggregatesList.addAll(manifestModel.listObjectsOfProperty(AO.body).toSet());
 
             List<AggregatedResource> aggregated = new ArrayList<AggregatedResource>();
             for (RDFNode node : aggregatesList) {
