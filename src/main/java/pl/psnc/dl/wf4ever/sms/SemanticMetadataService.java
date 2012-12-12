@@ -612,11 +612,11 @@ public interface SemanticMetadataService {
      * 
      * @param liveRo
      *            live RO (source of the snapshot or archive) uri
-     * @param freshSnaphotOrArchive
+     * @param freshSnapshotOrArchive
      *            currently processed snapshot or archive
      * @return the URI of the current snapshot or archive predecessor
      */
-    URI getPreviousSnapshotOrArchive(ResearchObject liveRo, ResearchObject freshSnaphotOrArchive);
+    URI getPreviousSnapshotOrArchive(ResearchObject liveRo, ResearchObject freshSnapshotOrArchive);
 
 
     /**
@@ -737,7 +737,7 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Generate a RO evolution information. In case of snaphot/archive the creator information may change. The new
+     * Generate a RO evolution information. In case of snapshot/archive the creator information may change. The new
      * parameter is introduced in this method
      * 
      * @param type

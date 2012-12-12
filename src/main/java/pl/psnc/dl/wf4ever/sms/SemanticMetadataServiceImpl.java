@@ -1345,7 +1345,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
      * @param changeSpecificationIndividual
      *            ChangeSpecification class Individual
      * @param direction
-     *            NEW in case fresh snapshot/archive is processed, OLD in case old snaphot/archive is processed
+     *            NEW in case fresh snapshot/archive is processed, OLD in case old snapshot/archive is processed
      * @return report in string format (When function is executed, information about evolution are stored in the triple
      *         store)
      */
@@ -1390,7 +1390,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
      * @param changeSpecificationIndividual
      *            ChangeSpecification class Individual
      * @param direction
-     *            NEW in case fresh snapshot/archive is processed, OLD in case old snaphot/archive is processed
+     *            NEW in case fresh snapshot/archive is processed, OLD in case old snapshot/archive is processed
      * @return String with the report about introduced changes
      */
     private String serviceDetectedEVOmodification(Boolean loopResult, ResearchObject first, ResearchObject second,
@@ -1870,7 +1870,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
                 generateLiveRoEvoInf(researchObject);
                 break;
             case SNAPSHOT:
-                generateSnaphotEvoInf(researchObject, liveRO, creator);
+                generateSnapshotEvoInf(researchObject, liveRO, creator);
                 break;
             case ARCHIVED:
                 generateArchiveEvoInf(researchObject, liveRO, creator);
@@ -1918,7 +1918,7 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
      * @param liveRO
      *            the origin of processed snapshot of Research Object.
      */
-    private void generateSnaphotEvoInf(ResearchObject researchObject, ResearchObject liveRO, String creator) {
+    private void generateSnapshotEvoInf(ResearchObject researchObject, ResearchObject liveRO, String creator) {
 
         OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
@@ -1948,10 +1948,10 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
                 .getResource(liveRO.getUriString()), ROEVO.hasSnapshot, ro);
 
         try {
-            URI previousSnaphot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
-            if (previousSnaphot != null) {
-                storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnaphot));
-                evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnaphot.toString()));
+            URI previousSnapshot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
+            if (previousSnapshot != null) {
+                storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnapshot));
+                evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnapshot.toString()));
             }
         } catch (URISyntaxException | IOException e) {
             //any way to informa about the problem?
@@ -1996,10 +1996,10 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasArchive, ro);
         try {
-            URI previousSnaphot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
-            if (previousSnaphot != null) {
-                storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnaphot));
-                evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnaphot.toString()));
+            URI previousSnapshot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
+            if (previousSnapshot != null) {
+                storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnapshot));
+                evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnapshot.toString()));
             }
         } catch (URISyntaxException | IOException e) {
             //any way to informa about the problem?
