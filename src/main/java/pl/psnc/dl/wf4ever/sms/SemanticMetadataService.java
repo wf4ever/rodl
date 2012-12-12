@@ -597,13 +597,13 @@ public interface SemanticMetadataService {
      * 
      * @param liveRo
      *            live RO (source of the snapshot or archive) uri
-     * @param freshSnaphotOrArchive
+     * @param freshSnapshotOrArchive
      *            currently processed snapshot or archive
      * @param type
      *            EvoType snapshot/archive/null
      * @return the URI of the current snapshot or archive predecessor
      */
-    URI getPreviousSnapshotOrArchive(ResearchObject liveRo, ResearchObject freshSnaphotOrArchive, EvoType type);
+    URI getPreviousSnapshotOrArchive(ResearchObject liveRo, ResearchObject freshSnapshotOrArchive, EvoType type);
 
 
     /**

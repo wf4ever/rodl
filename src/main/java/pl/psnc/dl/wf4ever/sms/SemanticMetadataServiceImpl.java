@@ -1099,13 +1099,13 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
 
 
     @Override
-    public URI getLiveURIFromSnapshotOrArchive(ResearchObject snaphotOrArchive)
+    public URI getLiveURIFromSnapshotOrArchive(ResearchObject snapshotOrArchive)
             throws URISyntaxException {
-        Individual source = getIndividual(snaphotOrArchive);
-        if (isSnapshot(snaphotOrArchive)) {
+        Individual source = getIndividual(snapshotOrArchive);
+        if (isSnapshot(snapshotOrArchive)) {
             RDFNode roNode = source.getProperty(ROEVO.isSnapshotOf).getObject();
             return new URI(roNode.toString());
-        } else if (isArchive(snaphotOrArchive)) {
+        } else if (isArchive(snapshotOrArchive)) {
             RDFNode roNode = source.getProperty(ROEVO.isArchiveOf).getObject();
             return new URI(roNode.toString());
         }
@@ -1122,8 +1122,8 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
     @Override
     public URI getPreviousSnapshotOrArchive(ResearchObject liveRO, ResearchObject freshSnapshotOrArchive, EvoType type) {
         Individual liveSource = getIndividual(liveRO);
-        StmtIterator snaphotsIterator;
-        snaphotsIterator = liveSource.listProperties(ROEVO.hasSnapshot);
+        StmtIterator snapshotsIterator;
+        snapshotsIterator = liveSource.listProperties(ROEVO.hasSnapshot);
         StmtIterator archiveItertator;
         archiveItertator = liveSource.listProperties(ROEVO.hasArchive);
         Individual freshSource = getIndividual(freshSnapshotOrArchive);
@@ -1145,8 +1145,8 @@ public class SemanticMetadataServiceImpl implements SemanticMetadataService {
         DateTime predecessorTime = null;
         URI result = null;
 
-        while (snaphotsIterator.hasNext()) {
-            URI tmpURI = URI.create(snaphotsIterator.next().getObject().toString());
+        while (snapshotsIterator.hasNext()) {
+            URI tmpURI = URI.create(snapshotsIterator.next().getObject().toString());
             if (tmpURI.equals(freshSnapshotOrArchive.getUri())) {
                 continue;
             }
