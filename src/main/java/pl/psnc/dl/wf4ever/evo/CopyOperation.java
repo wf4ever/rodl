@@ -102,7 +102,7 @@ public class CopyOperation implements Operation {
                 }
                 Individual resource = aggregatedResource.as(Individual.class);
                 URI resourceURI = URI.create(resource.getURI());
-                if (resource.hasRDFType(RO.AggregatedAnnotation.getURI())) {
+                if (resource.hasRDFType(RO.AggregatedAnnotation)) {
                     Resource annBody = resource.getPropertyResourceValue(AO.body);
                     List<URI> targets = new ArrayList<>();
                     List<RDFNode> annotationTargets = resource.listPropertyValues(RO.annotatesAggregatedResource)
@@ -115,11 +115,12 @@ public class CopyOperation implements Operation {
                         targets.add(URI.create(annTarget.asResource().getURI()));
                     }
                     try {
-                        try {
-                            String[] tmpURITable = resource.getURI().split("/");
+                        //FIXME use a dedicated class for an Annotation
+                        String[] segments = resource.getURI().split("/");
+                        if (segments.length > 0) {
                             ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets,
-                                tmpURITable[tmpURITable.length - 1]);
-                        } catch (IndexOutOfBoundsException e) {
+                                segments[segments.length - 1]);
+                        } else {
                             ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets);
                         }
                     } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e1) {
