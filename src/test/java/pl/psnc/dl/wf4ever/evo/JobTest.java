@@ -36,9 +36,9 @@ public class JobTest extends EvoTest {
             throws InterruptedException {
         ClientResponse response = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, true));
         URI copyJob = response.getLocation();
-        getRemoteStatus(copyJob, WAIT_FOR_COPY);
         assertEquals(response.getEntity(String.class), HttpServletResponse.SC_CREATED, response.getStatus());
-
+        response.close();
+        getRemoteStatus(copyJob, WAIT_FOR_COPY);
     }
 
 
