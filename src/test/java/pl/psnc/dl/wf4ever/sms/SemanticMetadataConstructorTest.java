@@ -50,7 +50,7 @@ public class SemanticMetadataConstructorTest extends SemanticMetadataServiceBase
             sms.close();
         }
         researchObject = ResearchObject.create(URI.create("http://www.example.com/testSMSImpl2/"));
-        SemanticMetadataService sms2 = new SemanticMetadataServiceImpl(userProfile, true);
+        SemanticMetadataService sms2 = new SemanticMetadataServiceTdb(userProfile, true);
         sms2.removeResearchObject(researchObject);
         sms2.createResearchObject(researchObject);
         try {
