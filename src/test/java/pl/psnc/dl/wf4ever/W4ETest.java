@@ -187,7 +187,7 @@ public class W4ETest extends JerseyTest {
                 .uri(roURI)
                 .header("Slug", annotationBodyPath)
                 .header("Link",
-                    "<" + webResource.uri(ro).getURI().toString() + ">; rel=\"http://purl.org/ao/annotates\"")
+                    "<" + webResource.uri(ro).getURI().toString() + ">; rel=\"http://purl.org/ao/annotatesResource\"")
                 .header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
                 .post(ClientResponse.class, is);
     }
