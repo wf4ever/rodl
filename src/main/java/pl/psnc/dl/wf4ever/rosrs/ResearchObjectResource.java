@@ -185,6 +185,14 @@ public class ResearchObjectResource {
         }
 
         if (!annotationTargets.isEmpty()) {
+            for (URI target : annotationTargets) {
+                if (!ROSRService.SMS.get().isAggregatedResource(researchObject, target)
+                        && !target.equals(researchObject.getUri())
+                        && !ROSRService.SMS.get().isProxy(researchObject, target)) {
+                    throw new BadRequestException(String.format(
+                        "The annotation target %s is not RO, aggregated resource nor proxy.", target));
+                }
+            }
             ROSRService.aggregateInternalResource(researchObject, resource, content, request.getContentType(), null);
             ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
             return ROSRService.addAnnotation(researchObject, resource, annotationTargets);
