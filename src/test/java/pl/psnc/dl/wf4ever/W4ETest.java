@@ -27,8 +27,8 @@ public class W4ETest extends JerseyTest {
     protected String clientId;
     protected URI ro;
     protected URI ro2;
-    protected final String userId2 = UUID.randomUUID().toString();
-    protected final String userId = UUID.randomUUID().toString();
+    protected final String userId2 = "http://" + UUID.randomUUID().toString();
+    protected final String userId = "http://" + UUID.randomUUID().toString();
     protected final String userIdSafe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId.getBytes()));
     protected final String userId2Safe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId2.getBytes()));
     protected final String username = "John Doe";
