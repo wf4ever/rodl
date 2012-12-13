@@ -570,25 +570,27 @@ public final class ROSRService {
      *            research object aggregating the resource
      * @param resource
      *            URI of the resource that is converted
-     * @throws NotFoundException
-     *             could not find the resource in DL
      * @throws DigitalLibraryException
      *             could not connect to the DL
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
     public static void convertAggregatedResourceToAnnotationBody(ResearchObject researchObject, URI resource)
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+            throws DigitalLibraryException, AccessDeniedException {
         String filePath = researchObject.getUri().relativize(resource).getPath();
-        InputStream data = ROSRService.DL.get().getFileContents(researchObject.getUri(), filePath);
-        if (data != null) {
-            RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get()
-                    .getFileInfo(researchObject.getUri(), filePath).getMimeType());
-            ROSRService.SMS.get().removeResource(researchObject, resource);
-            ROSRService.SMS.get().addAnnotationBody(researchObject, resource, data, format);
-            // update the named graph copy in dLibra, the manifest is not changed
-            updateNamedGraphInDlibra(filePath, researchObject, resource);
-            updateROAttributesInDlibra(researchObject);
+        try {
+            InputStream data = ROSRService.DL.get().getFileContents(researchObject.getUri(), filePath);
+            if (data != null) {
+                RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get()
+                        .getFileInfo(researchObject.getUri(), filePath).getMimeType());
+                ROSRService.SMS.get().removeResource(researchObject, resource);
+                ROSRService.SMS.get().addAnnotationBody(researchObject, resource, data, format);
+                // update the named graph copy in dLibra, the manifest is not changed
+                updateNamedGraphInDlibra(filePath, researchObject, resource);
+                updateROAttributesInDlibra(researchObject);
+            }
+        } catch (NotFoundException e) {
+            LOGGER.debug("Could not find an aggregated resource, must be external: " + e.getMessage());
         }
     }
 
