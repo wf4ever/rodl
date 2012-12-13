@@ -2133,7 +2133,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             ORE.AggregatedResource);
 
         evoModel.createIndividual(ro.getURI(), ROEVO.LiveRO);
-        manifestModel.add(evoInfo, ORE.describes, ro);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
         addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
@@ -2166,7 +2165,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyUri().toString(),
             ORE.AggregatedResource);
 
-        manifestModel.add(evoInfo, ORE.describes, ro);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
         evoModel.createIndividual(ro.getURI(), ROEVO.SnapshotRO);
@@ -2213,7 +2211,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyUri().toString(),
             ORE.AggregatedResource);
 
-        manifestModel.add(evoInfo, ORE.describes, ro);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
         evoModel.createIndividual(ro.getURI(), ROEVO.ArchivedRO);
