@@ -58,7 +58,7 @@ public class ResourceTest extends ResourceBase {
 
 
     @Test
-    public void testGetROWithWhitspaces() {
+    public void testGetROWithWhitespaces() {
         URI ro3 = createRO("ro " + UUID.randomUUID().toString(), accessToken);
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue(list.contains(ro3.toString()));
