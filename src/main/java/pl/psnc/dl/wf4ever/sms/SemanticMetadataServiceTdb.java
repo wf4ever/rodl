@@ -1267,11 +1267,11 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public URI getLiveURIFromSnapshotOrArchive(ResearchObject snaphotOrArchive)
+    public URI getLiveURIFromSnapshotOrArchive(ResearchObject snapshotOrArchive)
             throws URISyntaxException {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
-            Individual source = getIndividual(snaphotOrArchive);
+            Individual source = getIndividual(snapshotOrArchive);
             if (source.hasRDFType(ROEVO.SnapshotRO)) {
                 RDFNode roNode = source.getProperty(ROEVO.isSnapshotOf).getObject();
                 return new URI(roNode.toString());
@@ -1297,8 +1297,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             Individual liveSource = getIndividual(liveRO);
-            StmtIterator snaphotsIterator;
-            snaphotsIterator = liveSource.listProperties(ROEVO.hasSnapshot);
+            StmtIterator snapshotsIterator;
+            snapshotsIterator = liveSource.listProperties(ROEVO.hasSnapshot);
             StmtIterator archiveItertator;
             archiveItertator = liveSource.listProperties(ROEVO.hasArchive);
             Individual freshSource = getIndividual(freshSnapshotOrArchive);
@@ -1320,8 +1320,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             DateTime predecessorTime = null;
             URI result = null;
 
-            while (snaphotsIterator.hasNext()) {
-                URI tmpURI = URI.create(snaphotsIterator.next().getObject().toString());
+            while (snapshotsIterator.hasNext()) {
+                URI tmpURI = URI.create(snapshotsIterator.next().getObject().toString());
                 if (tmpURI.equals(freshSnapshotOrArchive.getUri())) {
                     continue;
                 }
@@ -1528,7 +1528,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
      * @param changeSpecificationIndividual
      *            ChangeSpecification class Individual
      * @param direction
-     *            NEW in case fresh snapshot/archive is processed, OLD in case old snaphot/archive is processed
+     *            NEW in case fresh snapshot/archive is processed, OLD in case old snapshot/archive is processed
      * @return report in string format (When function is executed, information about evolution are stored in the triple
      *         store)
      */
@@ -1573,7 +1573,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
      * @param changeSpecificationIndividual
      *            ChangeSpecification class Individual
      * @param direction
-     *            NEW in case fresh snapshot/archive is processed, OLD in case old snaphot/archive is processed
+     *            NEW in case fresh snapshot/archive is processed, OLD in case old snapshot/archive is processed
      * @return String with the report about introduced changes
      */
     private String serviceDetectedEVOmodification(Boolean loopResult, ResearchObject first, ResearchObject second,
@@ -2124,7 +2124,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             ORE.AggregatedResource);
 
         evoModel.createIndividual(ro.getURI(), ROEVO.LiveRO);
-        manifestModel.add(evoInfo, ORE.describes, ro);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
         addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
@@ -2157,7 +2156,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyUri().toString(),
             ORE.AggregatedResource);
 
-        manifestModel.add(evoInfo, ORE.describes, ro);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
         evoModel.createIndividual(ro.getURI(), ROEVO.SnapshotRO);
@@ -2173,10 +2171,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasSnapshot, ro);
 
-        URI previousSnaphot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
-        if (previousSnaphot != null) {
-            storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnaphot));
-            evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnaphot.toString()));
+        URI previousSnapshot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
+        if (previousSnapshot != null) {
+            storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnapshot));
+            evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnapshot.toString()));
         }
     }
 
@@ -2204,7 +2202,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         evoInfo = manifestModel.createIndividual(researchObject.getFixedEvolutionAnnotationBodyUri().toString(),
             ORE.AggregatedResource);
 
-        manifestModel.add(evoInfo, ORE.describes, ro);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
         evoModel.createIndividual(ro.getURI(), ROEVO.ArchivedRO);
@@ -2219,10 +2216,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         OntModel liveEvoModel = createOntModelForNamedGraph(liveRO.getFixedEvolutionAnnotationBodyUri());
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasArchive, ro);
-        URI previousSnaphot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
-        if (previousSnaphot != null) {
-            storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnaphot));
-            evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnaphot.toString()));
+        URI previousSnapshot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
+        if (previousSnapshot != null) {
+            storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnapshot));
+            evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnapshot.toString()));
         }
     }
 

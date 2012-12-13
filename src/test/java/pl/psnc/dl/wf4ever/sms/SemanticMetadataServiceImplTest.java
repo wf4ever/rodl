@@ -690,7 +690,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
 
     /**
-     * isSnaphot method should properly identify archives.
+     * isSnapshot method should properly identify archives.
      */
     @Test
     public final void testIsSnapshot() {
@@ -712,12 +712,12 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
 
     /**
-     * getPreviousSnaphotOrArchiveMethod should return previous snapshot or null in case previous does not exists.
+     * getPreviousSnapshotOrArchiveMethod should return previous snapshot or null in case previous does not exists.
      * 
      * @throws URISyntaxException
      */
     @Test
-    public final void testGetPreviousSnaphotOrArchive() {
+    public final void testGetPreviousSnapshotOrArchive() {
         URI sp1Antecessor = test.sms.getPreviousSnapshotOrArchive(test.ro1, test.sp1);
         URI sp2Antecessor = test.sms.getPreviousSnapshotOrArchive(test.ro1, test.sp2);
         Assert.assertNull("wrong antecessor URI", sp1Antecessor);
@@ -741,7 +741,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
 
     /**
-     * Get liveROfromSnaphotOrArchive method should find a live RO in case where live RO exists.
+     * Get liveROfromSnapshotOrArchive method should find a live RO in case where live RO exists.
      */
     @Test
     public final void testGetLiveROfromSnapshotOrArchive()
@@ -754,7 +754,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
 
     /**
-     * Get liveROfromSnaphotOrArchive method should return null in case live RO does no exists.
+     * Get liveROfromSnapshotOrArchive method should return null in case live RO does no exists.
      */
     @Test
     public final void testGetLiveROfromSnapshotOrArchiveWhereLiveRODoesNotExists()
@@ -874,7 +874,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Assert.assertTrue(isChangeInTheChangesList(getResourceURI("ro1-sp1/afolder").toString(),
             ROEVO.Removal.getURI(), model, nodes));
 
-        //should not consider any resources added to the research object after the snaphot is done
+        //should not consider any resources added to the research object after the snapshot is done
         Assert.assertFalse(isChangeInTheChangesList(getResourceURI("ro1-sp2/change_annotation").toString(),
             ROEVO.Addition.getURI(), model, nodes));
         Assert.assertFalse(isChangeInTheChangesList(getResourceURI("ro1-sp2/manifest_ann").toString(),
@@ -1160,8 +1160,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public void testAnnotationForBody() {
-        Annotation annotation = test.sms
-                .findAnnotationForBody(test.ro1, test.ro1.getFixedEvolutionAnnotationBodyUri());
+        Annotation annotation = test.sms.findAnnotationForBody(test.ro1, test.ro1.getFixedEvolutionAnnotationBodyUri());
         Assert.assertNotNull("Annotation should not be null", annotation);
     }
 
