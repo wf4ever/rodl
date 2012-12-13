@@ -39,7 +39,7 @@ public class StoringHistoryTest extends EvoTest {
         addFile(ro, oldResourceFile, accessToken);
         URI fullModificatedFilePath = addFile(ro, modifiedResourceFile, accessToken).getLocation();
 
-        JobStatus sp1Status = new JobStatus(ro, EvoType.SNAPSHOT, true, accessToken);
+        JobStatus sp1Status = new JobStatus(ro, EvoType.SNAPSHOT, true);
         URI copyJob = createCopyJob(sp1Status).getLocation();
         sp1Status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
 
@@ -49,7 +49,7 @@ public class StoringHistoryTest extends EvoTest {
         String content = webResource.uri(ro).path(modifiedResourceFile)
                 .header("Authorization", "Bearer " + accessToken).get(String.class);
 
-        JobStatus sp2Status = new JobStatus(ro, EvoType.SNAPSHOT, true, accessToken2);
+        JobStatus sp2Status = new JobStatus(ro, EvoType.SNAPSHOT, true);
         copyJob = createCopyJob(sp2Status).getLocation();
         sp2Status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
 

@@ -2079,14 +2079,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public void generateEvoInformation(ResearchObject researchObject, ResearchObject parent, EvoType type) {
-        generateEvoInformation(researchObject, parent, type, null);
-    }
-
-
-    @Override
-    public void generateEvoInformation(ResearchObject researchObject, ResearchObject liveRO, EvoType type,
-            String creator) {
+    public void generateEvoInformation(ResearchObject researchObject, ResearchObject liveRO, EvoType type) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             switch (type) {
@@ -2094,10 +2087,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     generateLiveRoEvoInf(researchObject);
                     break;
                 case SNAPSHOT:
-                    generateSnaphotEvoInf(researchObject, liveRO, creator);
+                    generateSnaphotEvoInf(researchObject, liveRO);
                     break;
                 case ARCHIVED:
-                    generateArchiveEvoInf(researchObject, liveRO, creator);
+                    generateArchiveEvoInf(researchObject, liveRO);
                     break;
                 default:
                     generateLiveRoEvoInf(researchObject);
@@ -2149,7 +2142,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
      * @param liveRO
      *            the origin of processed snapshot of Research Object.
      */
-    private void generateSnaphotEvoInf(ResearchObject researchObject, ResearchObject liveRO, String creator) {
+    private void generateSnaphotEvoInf(ResearchObject researchObject, ResearchObject liveRO) {
         OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
         if (manifestModel == null) {
             throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
@@ -2170,7 +2163,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         evoModel.createIndividual(ro.getURI(), ROEVO.SnapshotRO);
         evoModel.add(ro, ROEVO.isSnapshotOf, evoModel.createResource(liveRO.getUriString()));
         evoModel.add(ro, ROEVO.snapshotedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
-        evoModel.add(ro, ROEVO.snapshotedBy, evoModel.createResource(creator));
+        evoModel.add(ro, ROEVO.snapshotedBy, evoModel.createResource(user.getUri().toString()));
 
         addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
             researchObject.getFixedEvolutionAnnotationBodyUri(), null).toString();
@@ -2196,7 +2189,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
      * @param liveRO
      *            the origin of processed snapshot of Research Object.
      */
-    private void generateArchiveEvoInf(ResearchObject researchObject, ResearchObject liveRO, String creator) {
+    private void generateArchiveEvoInf(ResearchObject researchObject, ResearchObject liveRO) {
         OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
         if (manifestModel == null) {
             throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
@@ -2217,7 +2210,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         evoModel.createIndividual(ro.getURI(), ROEVO.ArchivedRO);
         evoModel.add(ro, ROEVO.isArchiveOf, evoModel.createResource(liveRO.getUriString()));
         evoModel.add(ro, ROEVO.archivedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
-        evoModel.add(ro, ROEVO.archivedBy, evoModel.createResource(creator));
+        evoModel.add(ro, ROEVO.archivedBy, evoModel.createResource(user.getUri().toString()));
 
         addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
             researchObject.getFixedEvolutionAnnotationBodyUri(), null).toString();

@@ -90,9 +90,6 @@ public class CopyResource implements JobsContainer {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createCopyJob(JobStatus status)
             throws BadRequestException {
-        if (status.getToken() == null || AccessToken.findByValue(status.getToken()) == null) {
-            return Response.status(401).build();
-        }
         if (status.getCopyfrom() == null) {
             throw new BadRequestException("incorrect or missing \"copyfrom\" attribute");
         }
