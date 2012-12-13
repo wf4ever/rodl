@@ -737,22 +737,6 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Generate a RO evolution information. In case of snapshot/archive the creator information may change. The new
-     * parameter is introduced in this method
-     * 
-     * @param type
-     *            RO type
-     * @param parent
-     *            live Research Object
-     * @param researchObject
-     *            Snapshot or Archive
-     * @param creator
-     *            creator openID
-     */
-    void generateEvoInformation(ResearchObject researchObject, ResearchObject parent, EvoType type, String creator);
-
-
-    /**
      * Find annotation for given body URI.
      * 
      * @param researchObject

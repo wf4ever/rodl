@@ -20,7 +20,6 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
-import pl.psnc.dl.wf4ever.auth.AccessToken;
 
 import com.sun.jersey.api.NotFoundException;
 
@@ -78,9 +77,6 @@ public class FinalizeResource implements JobsContainer {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createFinalizeJob(JobStatus newStatus)
             throws BadRequestException {
-        if (newStatus.getToken() == null || AccessToken.findByValue(newStatus.getToken()) == null) {
-            return Response.status(401).build();
-        }
         if (newStatus.getTarget() == null) {
             throw new BadRequestException("incorrect or missing \"target\" attribute");
         }

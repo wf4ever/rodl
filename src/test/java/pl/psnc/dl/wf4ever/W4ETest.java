@@ -27,8 +27,8 @@ public class W4ETest extends JerseyTest {
     protected String clientId;
     protected URI ro;
     protected URI ro2;
-    protected final String userId2 = UUID.randomUUID().toString();
-    protected final String userId = UUID.randomUUID().toString();
+    protected final String userId2 = "http://" + UUID.randomUUID().toString();
+    protected final String userId = "http://" + UUID.randomUUID().toString();
     protected final String userIdSafe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId.getBytes()));
     protected final String userId2Safe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId2.getBytes()));
     protected final String username = "John Doe";
@@ -169,14 +169,44 @@ public class W4ETest extends JerseyTest {
     }
 
 
+    /**
+     * Add an annotation with an annotation body. The annotation will annotate the RO.
+     * 
+     * @param is
+     *            annotation body in Turtle format
+     * @param roURI
+     *            RO URI
+     * @param annotationBodyPath
+     *            path of the annotation body
+     * @param accessToken
+     *            access token
+     * @return response from the server
+     */
     protected ClientResponse addAnnotation(InputStream is, URI roURI, String annotationBodyPath, String accessToken) {
         return webResource
                 .uri(roURI)
                 .header("Slug", annotationBodyPath)
                 .header("Link",
-                    "<" + webResource.uri(ro).getURI().toString() + ">; rel=\"http://purl.org/ao/annotates\"")
+                    "<" + webResource.uri(ro).getURI().toString() + ">; rel=\"http://purl.org/ao/annotatesResource\"")
                 .header("Authorization", "Bearer " + accessToken).type("application/x-turtle")
                 .post(ClientResponse.class, is);
+    }
+
+
+    /**
+     * Add an annotation without the body.
+     * 
+     * @param is
+     *            annotation description
+     * @param roURI
+     *            RO URI
+     * @param accessToken
+     *            access token
+     * @return response from the server
+     */
+    protected ClientResponse addAnnotation(InputStream is, URI roURI, String accessToken) {
+        return webResource.uri(roURI).header("Authorization", "Bearer " + accessToken)
+                .type("application/vnd.wf4ever.annotation").post(ClientResponse.class, is);
     }
 
 

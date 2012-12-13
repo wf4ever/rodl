@@ -323,6 +323,11 @@ public class ResearchObjectResource {
         } else {
             throw new BadRequestException("The entity body does not define any ro:AggregatedAnnotation.");
         }
+        for (URI target : targets) {
+            if (!ROSRService.SMS.get().isAggregatedResource(researchObject, target)) {
+                throw new BadRequestException(String.format("The annotation target %s is not aggregated.", target));
+            }
+        }
         if (ROSRService.SMS.get().isAggregatedResource(researchObject, body)) {
             ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, body);
         }

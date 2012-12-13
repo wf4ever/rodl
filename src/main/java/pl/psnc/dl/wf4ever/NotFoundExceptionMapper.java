@@ -10,9 +10,9 @@ import org.apache.log4j.Logger;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 
 /**
- * Maps <code>IdNotFoundException</code> to <code>404 (Not Found)</code> HTTP response.
+ * Maps {@link NotFoundException} to <code>404 (Not Found)</code> HTTP response.
  * 
- * @author nowakm
+ * @author piotrekhol
  * 
  */
 @Provider
@@ -24,7 +24,7 @@ public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundExceptio
 
     @Override
     public Response toResponse(NotFoundException e) {
-        LOGGER.error("Caught not found exception", e);
+        LOGGER.warn("Caught not found exception: " + e.getMessage());
         return Response.status(Status.NOT_FOUND).type("text/plain").entity(e.getMessage()).build();
     }
 
