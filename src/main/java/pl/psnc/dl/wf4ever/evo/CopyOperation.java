@@ -63,7 +63,7 @@ public class CopyOperation implements Operation {
             URI target = status.getCopyfrom().resolve("../" + id + "/");
             int i = 1;
             String sufix = "";
-            while (ROSRService.SMS.get().containsNamedGraph(target)) {
+            while (ROSRService.SMS.get().containsNamedGraph(target.resolve(ResearchObject.MANIFEST_PATH))) {
                 sufix = "-" + Integer.toString(i);
                 target = status.getCopyfrom().resolve("../" + id + "-" + (i++) + "/");
             }
