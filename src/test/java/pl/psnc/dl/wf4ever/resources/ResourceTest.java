@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
+import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
 import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
@@ -70,6 +71,10 @@ public class ResourceTest extends ResourceBase {
             throws URISyntaxException {
         client().setFollowRedirects(false);
         ClientResponse response = webResource.uri(ro).accept("text/turtle").get(ClientResponse.class);
+
+        assertTrue(response.getHeaders().get(Constants.LINK_HEADER)
+                .contains(webResource.uri(ro).path("/evo/info").queryParam("ro", ro.toString()).toString()));
+
         assertEquals(HttpServletResponse.SC_SEE_OTHER, response.getStatus());
         assertEquals(webResource.uri(ro).path(".ro/manifest.rdf").getURI().getPath(), response.getLocation().getPath());
         response.close();

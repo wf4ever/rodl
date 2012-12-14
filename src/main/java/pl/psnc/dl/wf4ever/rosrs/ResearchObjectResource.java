@@ -98,7 +98,8 @@ public class ResearchObjectResource {
     @Produces({ "application/rdf+xml", "application/x-turtle", "text/turtle", "application/x-trig", "application/trix",
             "text/rdf+n3" })
     public Response getROMetadata(@PathParam("ro_id") String researchObjectId) {
-        return Response.seeOther(getROMetadataURI(uriInfo.getBaseUriBuilder(), researchObjectId)).build();
+        return Response.seeOther(getROMetadataURI(uriInfo.getBaseUriBuilder(), researchObjectId + "/"))
+                .header(Constants.LINK_HEADER, getROEvoLinkURI(uriInfo.getBaseUriBuilder(), researchObjectId)).build();
     }
 
 
@@ -432,6 +433,21 @@ public class ResearchObjectResource {
      */
     private static URI getROMetadataURI(UriBuilder baseUriBuilder, String researchObjectId) {
         return baseUriBuilder.path("ROs").path(researchObjectId).path("/.ro/manifest.rdf").build();
+    }
+
+
+    /**
+     * Create a URI pointing to the roevo information.
+     * 
+     * @param baseUriBuilder
+     *            base URI builder
+     * @param researchObjectId
+     *            RO id
+     * @return the URI pointing to the manifest of the RO
+     */
+    private static URI getROEvoLinkURI(UriBuilder baseUriBuilder, String researchObjectId) {
+        String roUri = baseUriBuilder.path("/ROs/").path(researchObjectId + "/").build().toString();
+        return baseUriBuilder.path("/evo/info").queryParam("ro", roUri).build();
     }
 
 
