@@ -2047,6 +2047,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             Individual resource = manifestModel.createIndividual(folder.getUri().toString(), RO.Folder);
             resource.addRDFType(RO.Resource);
             manifestModel.add(ro, ORE.aggregates, resource);
+            Resource folderRMRes = manifestModel.createResource(folder.getResourceMapUri().toString());
+            manifestModel.add(resource, ORE.isDescribedBy, folderRMRes);
             if (!ro.hasProperty(RO.rootFolder)) {
                 manifestModel.add(ro, RO.rootFolder, resource);
             }
@@ -2061,7 +2063,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             Individual roInd = folderModel.createIndividual(researchObject.getUri().toString(), RO.ResearchObject);
             folderModel.add(roInd, ORE.isDescribedBy, manifestRes);
 
-            Resource folderRMRes = folderModel.createResource(folder.getResourceMapUri().toString());
+            folderRMRes = folderModel.createResource(folder.getResourceMapUri().toString());
             Individual folderInd = folderModel.createIndividual(folder.getUri().toString(), RO.Folder);
             folderInd.addRDFType(ORE.Aggregation);
             folderModel.add(folderInd, ORE.isAggregatedBy, roInd);
