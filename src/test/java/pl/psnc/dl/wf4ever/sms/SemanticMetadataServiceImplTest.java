@@ -942,8 +942,9 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     }
 
 
-    //TODO
-    //Explain scenario
+    /**
+     * Add a new folder and test the resource map in Jena.
+     */
     @Test
     public void testAddFolder() {
 
@@ -967,6 +968,9 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Assert.assertNotNull(roInd);
         Individual folderInd = manifestModel.getIndividual(folder2.getUri().toString());
         Assert.assertNotNull(folderInd);
+        Resource folderRMRes = manifestModel.getResource(folder2.getResourceMapUri().toString());
+        Assert.assertNotNull(folderRMRes);
+        Assert.assertTrue(manifestModel.contains(folderInd, ORE.isDescribedBy, folderRMRes));
         Assert.assertTrue(manifestModel.contains(roInd, RO.rootFolder, folderInd));
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
@@ -980,7 +984,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Assert.assertTrue(roInd.hasRDFType(RO.ResearchObject));
         Assert.assertTrue(model.contains(roInd, ORE.isDescribedBy, manifestRes));
 
-        Resource folderRMRes = model.getResource(folder2.getResourceMapUri().toString());
+        folderRMRes = model.getResource(folder2.getResourceMapUri().toString());
         Assert.assertNotNull(folderRMRes);
 
         folderInd = model.getIndividual(folder2.getUri().toString());
