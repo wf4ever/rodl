@@ -71,9 +71,9 @@ public class ResourceTest extends ResourceBase {
             throws URISyntaxException {
         client().setFollowRedirects(false);
         ClientResponse response = webResource.uri(ro).accept("text/turtle").get(ClientResponse.class);
-
+        System.out.println(response.getHeaders().get(Constants.LINK_HEADER));
         assertTrue(response.getHeaders().get(Constants.LINK_HEADER)
-                .contains(webResource.uri(ro).path("/evo/info").queryParam("ro", ro.toString()).toString()));
+                .contains(webResource.path("/evo/info").queryParam("ro", ro.toString()).toString()));
 
         assertEquals(HttpServletResponse.SC_SEE_OTHER, response.getStatus());
         assertEquals(webResource.uri(ro).path(".ro/manifest.rdf").getURI().getPath(), response.getLocation().getPath());
@@ -136,12 +136,6 @@ public class ResourceTest extends ResourceBase {
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
         response.close();
-
-        //FIXME tests cannot create TDB dataset instances because they run in a different JVM and that is not supported
-        //        SemanticMetadataService sms = new SemanticMetadataServiceTdb(new UserMetadata("login", "name", Role.ADMIN),
-        //                true);
-        //        List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
-        //        assertEquals("research object should contain three annotations", 3, annotations.size());
     }
 
 
@@ -155,12 +149,6 @@ public class ResourceTest extends ResourceBase {
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
         response.close();
-
-        //FIXME tests cannot create TDB dataset instances because they run in a different JVM and that is not supported
-        //                SemanticMetadataService sms = new SemanticMetadataServiceTdb(new UserMetadata("login", "name", Role.ADMIN),
-        //                        true);
-        //        List<AggregatedResource> aggregated = sms.getAggregatedResources(ResearchObject.create(response.getLocation()));
-        //        assertEquals("research object should contain four aggregated resources", 4, aggregated.size());
     }
 
 
@@ -173,20 +161,7 @@ public class ResourceTest extends ResourceBase {
                 .type("application/zip").post(ClientResponse.class, is);
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
-
-        // FIXME cannot create a connection to TDB dataset in another JVM
-        //        SemanticMetadataService sms = new SemanticMetadataServiceTdb(new UserMetadata("login", "name", Role.ADMIN),
-        //                true);
-        //        List<AggregatedResource> aggregated = sms.getAggregatedResources(ResearchObject.create(response.getLocation()));
-        //        List<Annotation> annotations = sms.getAnnotations(ResearchObject.create(response.getLocation()));
-        //        int evoInfoCounter = 0;
-        //        for (Annotation a : annotations) {
-        //            if (a.getBody().toString().contains("evo_info.ttl")) {
-        //                ++evoInfoCounter;
-        //            }
-        //        }
         response.close();
-        //        assertEquals("Research object should have only roevo annotation", evoInfoCounter, 1);
 
     }
 
