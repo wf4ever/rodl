@@ -205,7 +205,7 @@ public class FilesystemDL implements DigitalLibrary {
 
     @Override
     public void deleteFile(URI ro, String filePath)
-            throws DigitalLibraryException {
+            throws DigitalLibraryException, NotFoundException {
         Path path = getPath(ro, filePath);
         try {
             Files.delete(path);
@@ -213,6 +213,8 @@ public class FilesystemDL implements DigitalLibrary {
             ResourceInfo res = dao.findByPath(path.toString());
             dao.delete(res);
             HibernateUtil.getSessionFactory().getCurrentSession().flush();
+        } catch (NoSuchFileException e) {
+            throw new NotFoundException("File doesn't exist", e);
         } catch (IOException e) {
             throw new DigitalLibraryException(e);
         }
