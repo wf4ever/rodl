@@ -12,5 +12,5 @@ public enum EvoType {
     /** roevo:SnapshotRO. */
     SNAPSHOT,
     /** roevo:ArchivedRO. */
-    ARCHIVED
+    ARCHIVE
 }
