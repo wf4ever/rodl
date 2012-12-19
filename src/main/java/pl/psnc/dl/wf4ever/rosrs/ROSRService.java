@@ -138,7 +138,7 @@ public final class ROSRService {
                 case SNAPSHOT:
                     ROSRService.SMS.get().createSnapshotResearchObject(researchObject, sourceRO);
                     break;
-                case ARCHIVED:
+                case ARCHIVE:
                     ROSRService.SMS.get().createArchivedResearchObject(researchObject, sourceRO);
                     break;
             }
