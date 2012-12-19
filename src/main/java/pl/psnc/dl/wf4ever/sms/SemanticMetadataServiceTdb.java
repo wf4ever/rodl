@@ -2091,7 +2091,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 case SNAPSHOT:
                     generateSnaphotEvoInf(researchObject, liveRO);
                     break;
-                case ARCHIVED:
+                case ARCHIVE:
                     generateArchiveEvoInf(researchObject, liveRO);
                     break;
                 default:
