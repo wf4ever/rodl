@@ -187,6 +187,12 @@ public class CopyResource implements JobsContainer {
      * @return the job status
      */
     public static JobStatus getStatusForTarget(String target) {
+        if (URI.create(target).isAbsolute()) {
+            LOGGER.warn("Relativizing finalzie target");
+            LOGGER.warn(target);
+            String relativeTarget = URI.create(target).resolve("..").relativize(URI.create(target)).toString();
+            return finishedJobsByTarget.get(relativeTarget);
+        }
         return finishedJobsByTarget.get(target);
     }
 }
