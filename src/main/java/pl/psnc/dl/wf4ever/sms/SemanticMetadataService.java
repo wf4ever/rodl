@@ -22,6 +22,7 @@ import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
+import pl.psnc.dl.wf4ever.model.RO.Resource;
 
 import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.ontology.Individual;
@@ -136,7 +137,7 @@ public interface SemanticMetadataService {
      *            resource metadata
      * @return true if a new resource is added, false if it existed
      */
-    boolean addResource(ResearchObject researchObject, URI resourceURI, ResourceMetadata resourceInfo);
+    Resource addResource(ResearchObject researchObject, URI resourceURI, ResourceMetadata resourceInfo);
 
 
     /**
@@ -462,7 +463,7 @@ public interface SemanticMetadataService {
      *            the annotation body
      * @return URI of the annotation
      */
-    URI addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody);
+    Annotation addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody);
 
 
     /**
@@ -478,7 +479,7 @@ public interface SemanticMetadataService {
      *            annotation prefix
      * @return URI of the annotation
      */
-    URI addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody,
+    Annotation addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody,
             String annotationUUID);
 
 
@@ -488,13 +489,9 @@ public interface SemanticMetadataService {
      * @param researchObject
      *            research object
      * @param annotation
-     *            URI of the annotation
-     * @param annotationTargets
-     *            a list of annotated resources
-     * @param annotationBody
-     *            the annotation body
+     *            the annotation
      */
-    void updateAnnotation(ResearchObject researchObject, URI annotation, List<URI> annotationTargets, URI annotationBody);
+    void updateAnnotation(ResearchObject researchObject, Annotation annotation);
 
 
     /**
@@ -510,15 +507,15 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Return the ao:body object of an annotation.
+     * Return the annotation for the URI.
      * 
      * @param researchObject
      *            research object in which the annotation is
-     * @param annotation
+     * @param annotationUri
      *            the annotation URI
-     * @return the ao:body object URI or null if not defined
+     * @return the annotation instance or null
      */
-    URI getAnnotationBody(ResearchObject researchObject, URI annotation);
+    Annotation getAnnotation(ResearchObject researchObject, URI annotationUri);
 
 
     /**
@@ -527,9 +524,9 @@ public interface SemanticMetadataService {
      * @param researchObject
      *            research object in which the annotation is
      * @param annotation
-     *            the annotation URI
+     *            the annotation
      */
-    void deleteAnnotation(ResearchObject researchObject, URI annotation);
+    void deleteAnnotation(ResearchObject researchObject, Annotation annotation);
 
 
     /**

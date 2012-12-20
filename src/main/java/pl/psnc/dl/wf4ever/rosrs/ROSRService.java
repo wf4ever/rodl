@@ -40,6 +40,7 @@ import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
+import pl.psnc.dl.wf4ever.model.RO.Resource;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
 import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
@@ -189,7 +190,7 @@ public final class ROSRService {
      * 
      * @param researchObject
      *            the research object
-     * @param resource
+     * @param resourceUri
      *            resource URI, must be internal
      * @param entity
      *            request entity
@@ -207,27 +208,21 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static ResponseBuilder aggregateInternalResource(ResearchObject researchObject, URI resource,
-            InputStream entity, String contentType, String original, RDFFormat syntax)
+    public static Resource aggregateInternalResource(ResearchObject researchObject, URI resourceUri,
+            InputStream entity, String contentType, String original)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         if (original != null) {
-            resource = resource.resolve(original);
+            resourceUri = resourceUri.resolve(original);
         }
-        if (syntax == null) {
-            syntax = RDFFormat.RDFXML;
-        }
-        String filePath = researchObject.getUri().relativize(resource).getPath();
+        String filePath = researchObject.getUri().relativize(resourceUri).getPath();
         ResourceMetadata resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath,
             entity, contentType != null ? contentType : "text/plain");
-        ROSRService.SMS.get().addResource(researchObject, resource, resourceInfo);
+        Resource resource = ROSRService.SMS.get().addResource(researchObject, resourceUri, resourceInfo);
         // update the manifest that describes the resource in dLibra
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
-        URI proxy = ROSRService.SMS.get().addProxy(researchObject, resource);
-        String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, resource.toString(),
-            Constants.ORE_PROXY_FOR_HEADER);
-        InputStream proxyAndResourceDesc = SMS.get().getResource(researchObject, syntax, proxy, resource);
-        return Response.created(proxy).entity(proxyAndResourceDesc).type(syntax.getDefaultMIMEType())
-                .header(Constants.LINK_HEADER, proxyForHeader);
+        URI proxy = ROSRService.SMS.get().addProxy(researchObject, resourceUri);
+        resource.setProxyUri(proxy);
+        return resource;
     }
 
 
@@ -659,20 +654,13 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response addAnnotation(ResearchObject researchObject, URI annotationBody, List<URI> annotationTargets)
+    public static Annotation addAnnotation(ResearchObject researchObject, URI annotationBody,
+            List<URI> annotationTargets)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        URI annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody);
+        Annotation annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody);
         // update the manifest that contains the annotation in dLibra
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
-
-        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(), AO.body);
-        ResponseBuilder response = Response.created(annotation).header(Constants.LINK_HEADER, annotationBodyHeader);
-        for (URI target : annotationTargets) {
-            String targetHeader = String
-                    .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
-            response = response.header(Constants.LINK_HEADER, targetHeader);
-        }
-        return response.build();
+        return annotation;
     }
 
 
@@ -698,13 +686,14 @@ public final class ROSRService {
     public static Response addAnnotation(ResearchObject researchObject, URI annotationBody,
             List<URI> annotationTargets, String annotationPrefix)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        URI annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody,
+        Annotation annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody,
             annotationPrefix);
         // update the manifest that contains the annotation in dLibra
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
 
         String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(), AO.body);
-        ResponseBuilder response = Response.created(annotation).header(Constants.LINK_HEADER, annotationBodyHeader);
+        ResponseBuilder response = Response.created(annotation.getUri()).header(Constants.LINK_HEADER,
+            annotationBodyHeader);
         for (URI target : annotationTargets) {
             String targetHeader = String
                     .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
@@ -734,11 +723,12 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response updateAnnotation(ResearchObject researchObject, URI annotation, URI annotationBody,
+    public static Response updateAnnotation(ResearchObject researchObject, URI annotationUri, URI annotationBody,
             List<URI> annotationTargets)
             throws NotFoundException, DigitalLibraryException, AccessDeniedException {
-        URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, annotation, null);
-        ROSRService.SMS.get().updateAnnotation(researchObject, annotation, annotationTargets, annotationBody);
+        URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, annotationUri, null);
+        ROSRService.SMS.get().updateAnnotation(researchObject,
+            new Annotation(annotationUri, annotationTargets, annotationBody));
 
         if (oldAnnotationBody == null || !oldAnnotationBody.equals(annotationBody)) {
             ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody);
@@ -764,7 +754,7 @@ public final class ROSRService {
      * 
      * @param researchObject
      *            research object in which the annotation is defined
-     * @param annotation
+     * @param annotationUri
      *            the annotation
      * @param acceptHeader
      *            MIME type requested (content negotiation) or null
@@ -774,15 +764,15 @@ public final class ROSRService {
      * @throws DigitalLibraryException
      *             could not connect to the DL to check if it's internal
      */
-    public static URI getAnnotationBody(ResearchObject researchObject, URI annotation, String acceptHeader)
+    public static URI getAnnotationBody(ResearchObject researchObject, URI annotationUri, String acceptHeader)
             throws NotFoundException, DigitalLibraryException {
-        URI body = ROSRService.SMS.get().getAnnotationBody(researchObject, annotation);
+        Annotation annotation = ROSRService.SMS.get().getAnnotation(researchObject, annotationUri);
         RDFFormat acceptFormat = RDFFormat.forMIMEType(acceptHeader);
-        if (acceptFormat != null && isInternalResource(researchObject, body)) {
-            RDFFormat extensionFormat = RDFFormat.forFileName(annotation.getPath());
-            return createFormatSpecificURI(body, extensionFormat, acceptFormat);
+        if (acceptFormat != null && isInternalResource(researchObject, annotation.getBody())) {
+            RDFFormat extensionFormat = RDFFormat.forFileName(annotation.getUri().getPath());
+            return createFormatSpecificURI(annotation.getBody(), extensionFormat, acceptFormat);
         } else {
-            return body;
+            return annotation.getBody();
         }
     }
 
@@ -792,8 +782,8 @@ public final class ROSRService {
      * 
      * @param researchObject
      *            research object in which the annotation is defined
-     * @param annotation
-     *            the annotation
+     * @param annotationUri
+     *            the annotation URI
      * @return 204 No Content
      * @throws NotFoundException
      *             could not find the resource in DL when checking if it's internal
@@ -802,11 +792,11 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response deleteAnnotation(ResearchObject researchObject, URI annotation)
+    public static Response deleteAnnotation(ResearchObject researchObject, URI annotationUri)
             throws NotFoundException, DigitalLibraryException, AccessDeniedException {
-        URI annotationBody = ROSRService.getAnnotationBody(researchObject, annotation, null);
+        Annotation annotation = ROSRService.SMS.get().getAnnotation(researchObject, annotationUri);
         ROSRService.SMS.get().deleteAnnotation(researchObject, annotation);
-        ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotationBody);
+        ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotation.getBody());
         return Response.noContent().build();
     }
 
@@ -865,7 +855,7 @@ public final class ROSRService {
                         IOUtils.copy(is, fileOutputStream);
                         String mimeType = mfm.getContentType(resourceURI.getPath());
                         aggregateInternalResource(researchObject, resourceURI, new FileInputStream(tmpFile), mimeType,
-                            null, null);
+                            null);
                     } finally {
                         is.close();
                     }
@@ -880,10 +870,10 @@ public final class ROSRService {
         }
         for (Annotation annotation : annotationsList) {
             try {
-                if (SMS.get().isAggregatedResource(researchObject, annotation.getBody().getUri())) {
-                    convertAggregatedResourceToAnnotationBody(researchObject, annotation.getBody().getUri());
+                if (SMS.get().isAggregatedResource(researchObject, annotation.getBody())) {
+                    convertAggregatedResourceToAnnotationBody(researchObject, annotation.getBody());
                 }
-                addAnnotation(researchObject, annotation.getBody().getUri(), annotation.getAnnotatedToURIList());
+                addAnnotation(researchObject, annotation.getBody(), annotation.getAnnotated());
             } catch (DigitalLibraryException | NotFoundException e) {
                 LOGGER.error("Error when adding annotations", e);
             }

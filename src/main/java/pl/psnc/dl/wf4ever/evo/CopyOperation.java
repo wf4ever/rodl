@@ -135,7 +135,7 @@ public class CopyOperation implements Operation {
                             URI resourcePath = status.getCopyfrom().relativize(resourceURI);
                             URI targetURI = target.resolve(resourcePath);
                             ROSRService.aggregateInternalResource(targetRO, targetURI, response.getEntityInputStream(),
-                                response.getType().toString(), null, null);
+                                response.getType().toString(), null);
                             //TODO improve resource type detection mechanism!!
                             if (!resource.hasRDFType(RO.Resource)) {
                                 ROSRService.convertAggregatedResourceToAnnotationBody(targetRO, targetURI);
