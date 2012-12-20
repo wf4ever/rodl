@@ -191,7 +191,12 @@ public class CopyResource implements JobsContainer {
             LOGGER.warn("Relativizing finalzie target");
             LOGGER.warn(target);
             String relativeTarget = URI.create(target).resolve("..").relativize(URI.create(target)).toString();
-            return finishedJobsByTarget.get(relativeTarget);
+            if (finishedJobsByTarget.get(relativeTarget) == null) {
+                if (relativeTarget.substring(relativeTarget.length() - 1, relativeTarget.length()).equals("/")) {
+                    return finishedJobsByTarget.get(relativeTarget.substring(0, relativeTarget.length() - 1));
+
+                }
+            }
         }
         return finishedJobsByTarget.get(target);
     }
