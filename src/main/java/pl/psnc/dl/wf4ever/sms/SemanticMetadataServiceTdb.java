@@ -424,25 +424,22 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public InputStream getResource(ResearchObject researchObject, URI resourceURI, RDFFormat rdfFormat) {
+    public InputStream getResource(ResearchObject researchObject, RDFFormat rdfFormat, URI... resources) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
-            resourceURI = resourceURI.normalize();
-            Model manifestModel = dataset.getNamedModel(researchObject.getManifestUri().toString());
-            Resource resource = manifestModel.getResource(resourceURI.toString());
-            if (!manifestModel.containsResource(resource)) {
-                return null;
-            }
+            Model result = ModelFactory.createDefaultModel();
+            for (URI resource : resources) {
+                String queryString = String.format(getResourceQueryTmpl, resource.toString());
+                Query query = QueryFactory.create(queryString);
 
-            String queryString = String.format(getResourceQueryTmpl, resourceURI.toString());
-            Query query = QueryFactory.create(queryString);
-
-            QueryResult result = processDescribeQuery(query, rdfFormat);
-            if (!result.getFormat().equals(rdfFormat)) {
-                log.warn(String.format("Possible RDF format mismatch: %s requested, %s returned", rdfFormat.getName(),
-                    result.getFormat().getName()));
+                QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
+                result.add(qexec.execDescribe());
+                qexec.close();
             }
-            return result.getInputStream();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            result.removeNsPrefix("xml");
+            result.write(out, rdfFormat.getName().toUpperCase());
+            return new ByteArrayInputStream(out.toByteArray());
         } finally {
             endTransaction(transactionStarted);
         }
@@ -2544,4 +2541,5 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         annotations.removeAll(toRemoved);
         return annotations;
     }
+
 }

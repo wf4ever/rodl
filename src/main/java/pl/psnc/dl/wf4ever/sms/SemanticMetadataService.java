@@ -151,17 +151,17 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Returns resource metadata.
+     * Returns metadata of one or more resources.
      * 
-     * @param researchObjectURI
-     *            RO URI, absolute
-     * @param resourceURI
-     *            resource URI, absolute or relative to RO URI
+     * @param researchObject
+     *            RO
+     * @param resources
+     *            resources
      * @param rdfFormat
      *            resource metadata format
      * @return resource description or null if no data found
      */
-    InputStream getResource(ResearchObject researchObject, URI resourceURI, RDFFormat rdfFormat);
+    InputStream getResource(ResearchObject researchObject, RDFFormat rdfFormat, URI... resources);
 
 
     /**
@@ -817,4 +817,5 @@ public interface SemanticMetadataService {
      * @return cleaned list of annotations
      */
     List<Annotation> removeSpecialFilesFromAnnotatios(List<Annotation> annotations);
+
 }

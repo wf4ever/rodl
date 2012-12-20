@@ -135,7 +135,7 @@ public class CopyOperation implements Operation {
                             URI resourcePath = status.getCopyfrom().relativize(resourceURI);
                             URI targetURI = target.resolve(resourcePath);
                             ROSRService.aggregateInternalResource(targetRO, targetURI, response.getEntityInputStream(),
-                                response.getType().toString(), null);
+                                response.getType().toString(), null, null);
                             //TODO improve resource type detection mechanism!!
                             if (!resource.hasRDFType(RO.Resource)) {
                                 ROSRService.convertAggregatedResourceToAnnotationBody(targetRO, targetURI);
@@ -147,7 +147,7 @@ public class CopyOperation implements Operation {
                         }
                     } else {
                         try {
-                            ROSRService.aggregateExternalResource(targetRO, resourceURI);
+                            ROSRService.aggregateExternalResource(targetRO, resourceURI, null);
                         } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
                             throw new OperationFailedException("Could not create aggregate external resource: "
                                     + resourceURI, e);

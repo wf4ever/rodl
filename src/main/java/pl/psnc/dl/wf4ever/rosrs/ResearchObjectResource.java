@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -145,6 +146,8 @@ public class ResearchObjectResource {
      * 
      * @param researchObjectId
      *            RO id
+     * @param accept
+     *            Accept header
      * @param content
      *            resource content
      * @return 201 Created with proxy URI
@@ -158,7 +161,8 @@ public class ResearchObjectResource {
      *             access denied when updating data in DL
      */
     @POST
-    public Response addResource(@PathParam("ro_id") String researchObjectId, InputStream content)
+    public Response addResource(@PathParam("ro_id") String researchObjectId, @HeaderParam("Accept") String accept,
+            InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.create(uri);
@@ -194,12 +198,13 @@ public class ResearchObjectResource {
                         "The annotation target %s is not RO, aggregated resource nor proxy.", target));
                 }
             }
-            ROSRService.aggregateInternalResource(researchObject, resource, content, request.getContentType(), null);
+            ROSRService.aggregateInternalResource(researchObject, resource, content, request.getContentType(), null,
+                RDFFormat.forMIMEType(accept, RDFFormat.RDFXML));
             ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
             return ROSRService.addAnnotation(researchObject, resource, annotationTargets);
         } else {
             ResponseBuilder builder = ROSRService.aggregateInternalResource(researchObject, resource, content,
-                request.getContentType(), null);
+                request.getContentType(), null, RDFFormat.forMIMEType(accept, RDFFormat.RDFXML));
             if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
                 ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource);
             }
@@ -220,6 +225,8 @@ public class ResearchObjectResource {
      * 
      * @param researchObjectId
      *            RO id
+     * @param accept
+     *            Accept header
      * @param content
      *            proxy description
      * @return 201 Created response pointing to the proxy
@@ -234,7 +241,8 @@ public class ResearchObjectResource {
      */
     @POST
     @Consumes(Constants.PROXY_MIME_TYPE)
-    public Response addProxy(@PathParam("ro_id") String researchObjectId, InputStream content)
+    public Response addProxy(@PathParam("ro_id") String researchObjectId, @HeaderParam("Accept") String accept,
+            InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.create(uri);
@@ -268,7 +276,8 @@ public class ResearchObjectResource {
                 throw new BadRequestException("The entity body does not define any ore:Proxy.");
             }
         }
-        return ROSRService.aggregateExternalResource(researchObject, proxyFor).build();
+        RDFFormat syntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
+        return ROSRService.aggregateExternalResource(researchObject, proxyFor, syntax).build();
     }
 
 

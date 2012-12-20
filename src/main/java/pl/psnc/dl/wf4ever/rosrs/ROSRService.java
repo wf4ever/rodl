@@ -197,6 +197,8 @@ public final class ROSRService {
      *            resource content type
      * @param original
      *            original resource in case of using a format specific URI
+     * @param syntax
+     *            response RDF format, default is RDF/XML
      * @return 201 Created with proxy URI
      * @throws NotFoundException
      *             could not find the resource in DL
@@ -206,10 +208,13 @@ public final class ROSRService {
      *             access denied when updating data in DL
      */
     public static ResponseBuilder aggregateInternalResource(ResearchObject researchObject, URI resource,
-            InputStream entity, String contentType, String original)
+            InputStream entity, String contentType, String original, RDFFormat syntax)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         if (original != null) {
             resource = resource.resolve(original);
+        }
+        if (syntax == null) {
+            syntax = RDFFormat.RDFXML;
         }
         String filePath = researchObject.getUri().relativize(resource).getPath();
         ResourceMetadata resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath,
@@ -217,7 +222,12 @@ public final class ROSRService {
         ROSRService.SMS.get().addResource(researchObject, resource, resourceInfo);
         // update the manifest that describes the resource in dLibra
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
-        return addProxy(researchObject, resource);
+        URI proxy = ROSRService.SMS.get().addProxy(researchObject, resource);
+        String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, resource.toString(),
+            Constants.ORE_PROXY_FOR_HEADER);
+        InputStream proxyAndResourceDesc = SMS.get().getResource(researchObject, syntax, proxy, resource);
+        return Response.created(proxy).entity(proxyAndResourceDesc).type(syntax.getDefaultMIMEType())
+                .header(Constants.LINK_HEADER, proxyForHeader);
     }
 
 
@@ -228,6 +238,8 @@ public final class ROSRService {
      *            research object
      * @param resource
      *            resource that will be aggregated
+     * @param syntax
+     *            format in which the response should be returned
      * @return 201 Created response pointing to the proxy
      * @throws NotFoundException
      *             could not find the resource in DL
@@ -236,10 +248,11 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static ResponseBuilder aggregateExternalResource(ResearchObject researchObject, URI resource)
+    public static ResponseBuilder aggregateExternalResource(ResearchObject researchObject, URI resource,
+            RDFFormat syntax)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         ROSRService.SMS.get().addResource(researchObject, resource, null);
-        ResponseBuilder builder = addProxy(researchObject, resource);
+        ResponseBuilder builder = addProxy(researchObject, resource, syntax);
         // update the manifest that describes the resource in dLibra
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
         return builder;
@@ -342,14 +355,20 @@ public final class ROSRService {
      *            the research object
      * @param proxyFor
      *            resource for which the proxy is
+     * @param syntax
+     *            format in which the response should be returned, default is RDF/XML
      * @return 201 Created response pointing to the proxy
      */
-    private static ResponseBuilder addProxy(ResearchObject researchObject, URI proxyFor) {
+    private static ResponseBuilder addProxy(ResearchObject researchObject, URI proxyFor, RDFFormat syntax) {
+        if (syntax == null) {
+            syntax = RDFFormat.RDFXML;
+        }
         URI proxy = ROSRService.SMS.get().addProxy(researchObject, proxyFor);
-
         String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, proxyFor.toString(),
             Constants.ORE_PROXY_FOR_HEADER);
-        return Response.created(proxy).header(Constants.LINK_HEADER, proxyForHeader);
+        InputStream proxyDesc = SMS.get().getResource(researchObject, syntax, proxy);
+        return Response.created(proxy).entity(proxyDesc).type(syntax.getDefaultMIMEType())
+                .header(Constants.LINK_HEADER, proxyForHeader);
     }
 
 
@@ -846,12 +865,12 @@ public final class ROSRService {
                         IOUtils.copy(is, fileOutputStream);
                         String mimeType = mfm.getContentType(resourceURI.getPath());
                         aggregateInternalResource(researchObject, resourceURI, new FileInputStream(tmpFile), mimeType,
-                            null);
+                            null, null);
                     } finally {
                         is.close();
                     }
                 } else {
-                    aggregateExternalResource(researchObject, aggregated.getUri());
+                    aggregateExternalResource(researchObject, aggregated.getUri(), null);
                 }
             } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
                 LOGGER.error("Error when aggregating resources", e);
