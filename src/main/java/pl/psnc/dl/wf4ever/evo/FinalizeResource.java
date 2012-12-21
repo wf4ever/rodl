@@ -90,7 +90,6 @@ public class FinalizeResource implements JobsContainer {
         Job job = new Job(jobUUID, status, this, finalize);
         jobs.put(jobUUID, job);
         job.start();
-
         return Response.created(uriInfo.getAbsolutePath().resolve(jobUUID.toString())).build();
     }
 

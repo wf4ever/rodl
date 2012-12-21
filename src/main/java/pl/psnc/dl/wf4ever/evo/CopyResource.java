@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.evo;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -22,7 +23,6 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.auth.AccessToken;
 
 import com.sun.jersey.api.NotFoundException;
 
@@ -92,6 +92,12 @@ public class CopyResource implements JobsContainer {
             throws BadRequestException {
         if (status.getCopyfrom() == null) {
             throw new BadRequestException("incorrect or missing \"copyfrom\" attribute");
+        }
+        if (!status.getCopyfrom().isAbsolute()) {
+            URI rosrs = uriInfo.getAbsolutePath().resolve("../../ROs/");
+            status.setCopyfrom(rosrs.resolve(status.getCopyfrom()));
+            LOGGER.warn("resolving relative copy from uri");
+            LOGGER.warn(status.getCopyfrom());
         }
         if (status.getType() == null) {
             throw new BadRequestException("incorrect or missing \"type\" attribute");
@@ -181,6 +187,17 @@ public class CopyResource implements JobsContainer {
      * @return the job status
      */
     public static JobStatus getStatusForTarget(String target) {
+        if (URI.create(target).isAbsolute()) {
+            LOGGER.warn("Relativizing finalzie target");
+            LOGGER.warn(target);
+            String relativeTarget = URI.create(target).resolve("..").relativize(URI.create(target)).toString();
+            if (finishedJobsByTarget.get(relativeTarget) == null) {
+                if (relativeTarget.substring(relativeTarget.length() - 1, relativeTarget.length()).equals("/")) {
+                    return finishedJobsByTarget.get(relativeTarget.substring(0, relativeTarget.length() - 1));
+
+                }
+            }
+        }
         return finishedJobsByTarget.get(target);
     }
 }

@@ -489,7 +489,7 @@ public class ResearchObjectResource {
      * @return the URI pointing to the manifest of the RO
      */
     private static URI getROEvoLinkURI(UriBuilder baseUriBuilder, String researchObjectId) {
-        String roUri = baseUriBuilder.path("/ROs/").path(researchObjectId + "/").build().toString();
+        String roUri = baseUriBuilder.clone().path("/ROs/").path(researchObjectId + "/").build().toString();
         return baseUriBuilder.path("/evo/info").queryParam("ro", roUri).build();
     }
 
