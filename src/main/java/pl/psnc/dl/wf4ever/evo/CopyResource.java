@@ -111,6 +111,7 @@ public class CopyResource implements JobsContainer {
         UUID jobUUID = UUID.randomUUID();
         Job job;
         if (!status.isFinalize()) {
+            status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + status.getTarget()).toString());
             job = new Job(jobUUID, status, this, copy);
         } else {
             FinalizeOperation finalize = new FinalizeOperation();
