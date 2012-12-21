@@ -26,6 +26,7 @@ import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.sun.jersey.api.client.ClientResponse;
 
 /**
@@ -40,8 +41,11 @@ public class FolderTest extends ResourceBase {
     /** folder path. */
     private final String folderPath = "myfolder/";
 
-    /** folder path. */
+    /** folder path with spaces. */
     private final String folderWithSpacesPath = "my folder/";
+
+    /** folder path with spaces encoded. */
+    private final String folderWithSpacesPathEncoded = "my%20folder/";
 
     /** file path. */
     private final String filePath = "file2.txt";
@@ -71,18 +75,24 @@ public class FolderTest extends ResourceBase {
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         Set<URI> expected = new HashSet<>(Arrays.asList(URI.create("https://sandbox/rodl/ROs/ro1/myfolder/file1.txt"),
             URI.create("https://sandbox/rodl/ROs/ro1/anotherfolder/file2.txt"), URI.create("http://example.org")));
-        assertCorrectFolderResourceMap(response.getEntityInputStream(), expected);
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        model.read(response.getEntityInputStream(), null);
+        assertCorrectFolderResourceMap(model, expected);
         URI folderProxyURI = response.getLocation();
         Assert.assertNotNull(folderProxyURI);
+        assertCorrectFolderDescription(model, folderProxyURI, ro.resolve(folderPath));
         response.close();
         webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
 
         is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
         response = addFolder(is, ro, folderWithSpacesPath, accessToken);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
-        assertCorrectFolderResourceMap(response.getEntityInputStream(), expected);
+        model.removeAll();
+        model.read(response.getEntityInputStream(), null);
+        assertCorrectFolderResourceMap(model, expected);
         folderProxyURI = response.getLocation();
         Assert.assertNotNull(folderProxyURI);
+        assertCorrectFolderDescription(model, folderProxyURI, ro.resolve(folderWithSpacesPathEncoded));
         response.close();
         webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
     }
@@ -105,7 +115,9 @@ public class FolderTest extends ResourceBase {
         assertEquals(HttpServletResponse.SC_OK, response.getStatus());
         Set<URI> expected = new HashSet<>(Arrays.asList(URI.create("https://sandbox/rodl/ROs/ro1/myfolder/file1.txt"),
             URI.create("https://sandbox/rodl/ROs/ro1/anotherfolder/file2.txt"), URI.create("http://example.org")));
-        assertCorrectFolderResourceMap(response.getEntityInputStream(), expected);
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        model.read(response.getEntityInputStream(), null);
+        assertCorrectFolderResourceMap(model, expected);
 
         webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
     }
@@ -140,7 +152,9 @@ public class FolderTest extends ResourceBase {
         Set<URI> expected = new HashSet<>(Arrays.asList(URI.create("https://sandbox/rodl/ROs/ro1/myfolder/file1.txt"),
             URI.create("https://sandbox/rodl/ROs/ro1/anotherfolder/file2.txt"), URI.create("http://example.org"),
             URI.create("https://sandbox/rodl/ROs/ro1/file2.txt")));
-        assertCorrectFolderResourceMap(response.getEntityInputStream(), expected);
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        model.read(response.getEntityInputStream(), null);
+        assertCorrectFolderResourceMap(model, expected);
         response.close();
 
         webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
@@ -177,7 +191,9 @@ public class FolderTest extends ResourceBase {
                 .get(ClientResponse.class);
         Set<URI> expected = new HashSet<>(Arrays.asList(URI.create("https://sandbox/rodl/ROs/ro1/myfolder/file1.txt"),
             URI.create("http://example.org")));
-        assertCorrectFolderResourceMap(response.getEntityInputStream(), expected);
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        model.read(response.getEntityInputStream(), null);
+        assertCorrectFolderResourceMap(model, expected);
         response.close();
 
         webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
@@ -220,20 +236,12 @@ public class FolderTest extends ResourceBase {
     /**
      * Check if folder resource map is correct.
      * 
-     * @param entityInputStream
-     *            input stream with the RDF/XML resource map
+     * @param model
+     *            RDF model
      * @param proxyFors
      *            list of aggregated resources
      */
-    private void assertCorrectFolderResourceMap(InputStream entityInputStream, Set<URI> proxyFors) {
-        //        try {
-        //            System.out.println(IOUtils.toString(entityInputStream));
-        //        } catch (IOException e) {
-        //            // TODO Auto-generated catch block
-        //            e.printStackTrace();
-        //        }
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(entityInputStream, null);
+    private void assertCorrectFolderResourceMap(OntModel model, Set<URI> proxyFors) {
 
         List<Individual> folders = model.listIndividuals(RO.Folder).toList();
         Assert.assertEquals(1, folders.size());
@@ -254,12 +262,36 @@ public class FolderTest extends ResourceBase {
 
 
     /**
+     * Check if the model contains information from the manifest about the folder.
+     * 
+     * @param model
+     *            RDF model
+     * @param proxyUri
+     *            folder proxy URI
+     * @param folderUri
+     *            folder URI
+     */
+    private void assertCorrectFolderDescription(OntModel model, URI proxyUri, URI folderUri) {
+        Individual proxy = model.getIndividual(proxyUri.toString());
+        Individual resource = model.getIndividual(folderUri.toString());
+        Assert.assertNotNull(proxy);
+        Assert.assertNotNull(resource);
+        Assert.assertTrue(proxy.hasRDFType(ORE.Proxy));
+        Assert.assertTrue(resource.hasRDFType(RO.Folder));
+        Assert.assertTrue(model.contains(proxy, ORE.proxyFor, resource));
+        Assert.assertTrue(model.contains(resource, DCTerms.created, (RDFNode) null));
+        Assert.assertTrue(model.contains(resource, DCTerms.creator, (RDFNode) null));
+    }
+
+
+    /**
      * Find a folder entry URI given a resource.
      * 
      * @param entityInputStream
      *            input stream with the RDF/XML resource map
      * @param proxyFor
      *            the URI of the aggregated resource
+     * @return entry URI
      */
     private URI getFolderEntryURI(InputStream entityInputStream, URI proxyFor) {
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);

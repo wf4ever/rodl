@@ -1,5 +1,7 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -45,6 +47,7 @@ import pl.psnc.dl.wf4ever.vocabulary.RO;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
 import com.hp.hpl.jena.rdf.model.RDFNode;
@@ -202,8 +205,8 @@ public class ResearchObjectResource {
             }
             pl.psnc.dl.wf4ever.model.RO.Resource roResource = ROSRService.aggregateInternalResource(researchObject,
                 resourceUri, content, request.getContentType(), null);
-            AggregatedResource aggregatedResource = ROSRService.convertRoResourceToAnnotationBody(
-                researchObject, roResource.getUri());
+            AggregatedResource aggregatedResource = ROSRService.convertRoResourceToAnnotationBody(researchObject,
+                roResource.getUri());
 
             Annotation annotation = ROSRService.addAnnotation(researchObject, resourceUri, annotationTargets);
             String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE,
@@ -307,6 +310,8 @@ public class ResearchObjectResource {
      * 
      * @param researchObjectId
      *            RO id
+     * @param accept
+     *            Accept header
      * @param content
      *            annotation definition
      * @return 201 Created response pointing to the annotation stub
@@ -396,6 +401,8 @@ public class ResearchObjectResource {
      * 
      * @param researchObjectId
      *            RO id
+     * @param accept
+     *            Accept header
      * @param content
      *            folder definition
      * @return 201 Created response pointing to the folder
@@ -410,7 +417,8 @@ public class ResearchObjectResource {
      */
     @POST
     @Consumes(Constants.FOLDER_MIME_TYPE)
-    public Response addFolder(@PathParam("ro_id") String researchObjectId, InputStream content)
+    public Response addFolder(@PathParam("ro_id") String researchObjectId, @HeaderParam("Accept") String accept,
+            InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.create(uri);
@@ -423,12 +431,20 @@ public class ResearchObjectResource {
         Folder folder = ROSRService.assembleFolder(researchObject, folderURI, content);
         folder = ROSRService.createFolder(researchObject, folder);
 
+        RDFFormat syntax = RDFFormat.forFileName(accept, RDFFormat.RDFXML);
+        Model folderDesc = ModelFactory.createDefaultModel();
+        folderDesc.read(ROSRService.SMS.get().getNamedGraph(folder.getResourceMapUri(), syntax), null);
+        folderDesc.read(ROSRService.SMS.get()
+                .getResource(researchObject, syntax, folder.getUri(), folder.getProxyUri()), null);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        folderDesc.write(out);
+
         ResponseBuilder rb = Response.created(folder.getProxyUri()).type(Constants.FOLDER_MIME_TYPE);
         rb = rb.header(Constants.LINK_HEADER, String.format(Constants.LINK_HEADER_TEMPLATE, folder.getUri().toString(),
             "http://www.openarchives.org/ore/terms/proxyFor"));
         rb = rb.header(Constants.LINK_HEADER, String.format(Constants.LINK_HEADER_TEMPLATE, folder.getResourceMapUri()
                 .toString().toString(), "http://www.openarchives.org/ore/terms/isDescribedBy"));
-        rb.entity(ROSRService.SMS.get().getNamedGraph(folder.getResourceMapUri(), RDFFormat.RDFXML));
+        rb = rb.entity(new ByteArrayInputStream(out.toByteArray())).type(syntax.getDefaultMIMEType());
         return rb.build();
     }
 

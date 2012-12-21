@@ -2061,6 +2061,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             manifestModel.add(proxy, ORE.proxyIn, ro);
             manifestModel.add(proxy, ORE.proxyFor, resource);
             folder.setProxyUri(proxyURI);
+            manifestModel.add(resource, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
+            manifestModel.add(resource, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
 
             OntModel folderModel = createOntModelForNamedGraph(folder.getResourceMapUri());
             Resource manifestRes = folderModel.createResource(researchObject.getManifestUri().toString());
