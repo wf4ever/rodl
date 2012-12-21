@@ -36,6 +36,7 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -199,15 +200,16 @@ public class ResearchObjectResource {
                         "The annotation target %s is not RO, aggregated resource nor proxy.", target));
                 }
             }
-            pl.psnc.dl.wf4ever.model.RO.Resource resource = ROSRService.aggregateInternalResource(researchObject,
+            pl.psnc.dl.wf4ever.model.RO.Resource roResource = ROSRService.aggregateInternalResource(researchObject,
                 resourceUri, content, request.getContentType(), null);
-            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource.getUri());
+            AggregatedResource aggregatedResource = ROSRService.convertRoResourceToAnnotationBody(
+                researchObject, roResource.getUri());
 
             Annotation annotation = ROSRService.addAnnotation(researchObject, resourceUri, annotationTargets);
             String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE,
                 annotation.getBody().toString(), AO.body);
             InputStream annotationDesc = ROSRService.SMS.get().getResource(researchObject, responseSyntax,
-                resource.getProxyUri(), resource.getUri(), annotation.getUri());
+                aggregatedResource.getProxyUri(), aggregatedResource.getUri(), annotation.getUri());
             ResponseBuilder response = Response.created(annotation.getUri()).entity(annotationDesc)
                     .type(responseSyntax.getDefaultMIMEType()).header(Constants.LINK_HEADER, annotationBodyHeader);
             for (URI target : annotation.getAnnotated()) {
@@ -220,7 +222,7 @@ public class ResearchObjectResource {
             pl.psnc.dl.wf4ever.model.RO.Resource resource = ROSRService.aggregateInternalResource(researchObject,
                 resourceUri, content, request.getContentType(), null);
             if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource.getUri())) {
-                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, resource.getUri());
+                ROSRService.convertRoResourceToAnnotationBody(researchObject, resource.getUri());
             }
             String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, resource.getUri().toString(),
                 Constants.ORE_PROXY_FOR_HEADER);
@@ -370,7 +372,7 @@ public class ResearchObjectResource {
             }
         }
         if (ROSRService.SMS.get().isAggregatedResource(researchObject, body)) {
-            ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, body);
+            ROSRService.convertRoResourceToAnnotationBody(researchObject, body);
         }
 
         Annotation annotation = ROSRService.addAnnotation(researchObject, body, targets);

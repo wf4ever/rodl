@@ -584,12 +584,13 @@ public final class ROSRService {
      *            research object aggregating the resource
      * @param resource
      *            URI of the resource that is converted
+     * @return
      * @throws DigitalLibraryException
      *             could not connect to the DL
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static void convertAggregatedResourceToAnnotationBody(ResearchObject researchObject, URI resource)
+    public static AggregatedResource convertRoResourceToAnnotationBody(ResearchObject researchObject, URI resource)
             throws DigitalLibraryException, AccessDeniedException {
         String filePath = researchObject.getUri().relativize(resource).getPath();
         try {
@@ -597,14 +598,19 @@ public final class ROSRService {
             if (data != null) {
                 RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get()
                         .getFileInfo(researchObject.getUri(), filePath).getMimeType());
-                ROSRService.SMS.get().removeResource(researchObject, resource);
-                ROSRService.SMS.get().addAnnotationBody(researchObject, resource, data, format);
+                SMS.get().removeResource(researchObject, resource);
+                AggregatedResource res = SMS.get().addAnnotationBody(researchObject, resource, data, format);
+                res.setProxyUri(SMS.get().addProxy(researchObject, resource));
                 // update the named graph copy in dLibra, the manifest is not changed
                 updateNamedGraphInDlibra(filePath, researchObject, resource);
                 updateROAttributesInDlibra(researchObject);
+                return res;
+            } else {
+                return null;
             }
         } catch (NotFoundException e) {
             LOGGER.debug("Could not find an aggregated resource, must be external: " + e.getMessage());
+            return null;
         }
     }
 
@@ -733,7 +739,7 @@ public final class ROSRService {
         if (oldAnnotationBody == null || !oldAnnotationBody.equals(annotationBody)) {
             ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody);
             if (ROSRService.SMS.get().isAggregatedResource(researchObject, annotationBody)) {
-                ROSRService.convertAggregatedResourceToAnnotationBody(researchObject, annotationBody);
+                ROSRService.convertRoResourceToAnnotationBody(researchObject, annotationBody);
             }
         }
 
@@ -871,7 +877,7 @@ public final class ROSRService {
         for (Annotation annotation : annotationsList) {
             try {
                 if (SMS.get().isAggregatedResource(researchObject, annotation.getBody())) {
-                    convertAggregatedResourceToAnnotationBody(researchObject, annotation.getBody());
+                    convertRoResourceToAnnotationBody(researchObject, annotation.getBody());
                 }
                 addAnnotation(researchObject, annotation.getBody(), annotation.getAnnotated());
             } catch (DigitalLibraryException | NotFoundException e) {

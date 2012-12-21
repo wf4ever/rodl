@@ -10,8 +10,19 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
+import org.junit.Assert;
 import org.junit.Test;
 
+import pl.psnc.dl.wf4ever.vocabulary.AO;
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
+
+import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -54,6 +65,22 @@ public class AnnotationTest extends ResourceBase {
         ClientResponse response = addAnnotation(is, ro, annotationBodyPath, accessToken);
         IOUtils.closeQuietly(is);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        model.read(response.getEntityInputStream(), null);
+        model.write(System.out);
+        Individual proxy = model.listIndividuals(ORE.Proxy).next();
+        Individual resource = model.getIndividual(ro.resolve(annotationBodyPath).toString());
+        Assert.assertNotNull(proxy);
+        Assert.assertTrue(resource.hasRDFType(ORE.AggregatedResource));
+        Assert.assertTrue(model.contains(proxy, ORE.proxyFor, resource));
+        Assert.assertTrue(model.contains(resource, DCTerms.created, (RDFNode) null));
+        Assert.assertTrue(model.contains(resource, DCTerms.creator, (RDFNode) null));
+        Individual annotation = model.getIndividual(response.getLocation().toString());
+        Assert.assertTrue(annotation.hasRDFType(RO.AggregatedAnnotation));
+        Assert.assertTrue(model.contains(annotation, AO.body, resource));
+        Assert.assertTrue(model.contains(annotation, RO.annotatesAggregatedResource, (RDFNode) null));
+        Assert.assertTrue(model.contains(annotation, DCTerms.created, (RDFNode) null));
+        Assert.assertTrue(model.contains(annotation, DCTerms.creator, (RDFNode) null));
         response.close();
         webResource.uri(ro).path(annotationBodyPath).header("Authorization", "Bearer " + accessToken)
                 .delete(ClientResponse.class);
@@ -158,6 +185,14 @@ public class AnnotationTest extends ResourceBase {
         ClientResponse response = addAnnotation(is, ro, accessToken);
         is.close();
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        model.read(response.getEntityInputStream(), null);
+        Individual annotation = model.getIndividual(response.getLocation().toString());
+        Assert.assertTrue(annotation.hasRDFType(RO.AggregatedAnnotation));
+        Assert.assertTrue(model.contains(annotation, AO.body, (RDFNode) null));
+        Assert.assertTrue(model.contains(annotation, RO.annotatesAggregatedResource, (RDFNode) null));
+        Assert.assertTrue(model.contains(annotation, DCTerms.created, (RDFNode) null));
+        Assert.assertTrue(model.contains(annotation, DCTerms.creator, (RDFNode) null));
         response.close();
     }
 

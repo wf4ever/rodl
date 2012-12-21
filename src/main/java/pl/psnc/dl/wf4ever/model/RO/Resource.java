@@ -13,9 +13,6 @@ import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
  */
 public class Resource extends AggregatedResource {
 
-    /** URI of a proxy of this resource. */
-    protected URI proxyUri;
-
     /** physical representation metadata. */
     private ResourceMetadata stats;
 
@@ -53,16 +50,6 @@ public class Resource extends AggregatedResource {
     }
 
 
-    public URI getProxyUri() {
-        return proxyUri;
-    }
-
-
-    public void setProxyUri(URI proxyUri) {
-        this.proxyUri = proxyUri;
-    }
-
-
     public ResourceMetadata getStats() {
         return stats;
     }
@@ -71,4 +58,5 @@ public class Resource extends AggregatedResource {
     public void setStats(ResourceMetadata stats) {
         this.stats = stats;
     }
+
 }

@@ -188,7 +188,8 @@ public interface SemanticMetadataService {
      *            graph content format
      * @return true if a new named graph is added, false if it existed
      */
-    boolean addAnnotationBody(ResearchObject researchObject, URI graphURI, InputStream inputStream, RDFFormat rdfFormat);
+    AggregatedResource addAnnotationBody(ResearchObject researchObject, URI graphURI, InputStream inputStream,
+            RDFFormat rdfFormat);
 
 
     /**

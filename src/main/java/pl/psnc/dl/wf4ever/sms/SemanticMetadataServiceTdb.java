@@ -426,12 +426,13 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public InputStream getResource(ResearchObject researchObject, RDFFormat rdfFormat, URI... resources) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
+            Model source = dataset.getNamedModel(researchObject.getManifestUri().toString());
             Model result = ModelFactory.createDefaultModel();
             for (URI resource : resources) {
                 String queryString = String.format(getResourceQueryTmpl, resource.toString());
                 Query query = QueryFactory.create(queryString);
 
-                QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
+                QueryExecution qexec = QueryExecutionFactory.create(query, source);
                 result.add(qexec.execDescribe());
                 qexec.close();
             }
@@ -2247,25 +2248,34 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public boolean addAnnotationBody(ResearchObject researchObject, URI graphURI, InputStream inputStream,
-            RDFFormat rdfFormat) {
+    public AggregatedResource addAnnotationBody(ResearchObject researchObject, URI resourceURI,
+            InputStream inputStream, RDFFormat rdfFormat) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
+            resourceURI = resourceURI.normalize();
             OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
             if (manifestModel == null) {
-                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+                throw new IllegalArgumentException("Manifest not found: " + researchObject.getUri());
             }
             Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
             if (ro == null) {
                 throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
             }
-            Resource resource = manifestModel.createResource(graphURI.toString());
+            Individual resource = manifestModel.getIndividual(resourceURI.toString());
+            if (resource == null) {
+                resource = manifestModel.createIndividual(resourceURI.toString(), ORE.AggregatedResource);
+            }
             manifestModel.add(ro, ORE.aggregates, resource);
+            manifestModel.add(resource, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
+            manifestModel.add(resource, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
+
+            addNamedGraph(resourceURI, inputStream, rdfFormat);
+
             commitTransaction(transactionStarted);
+            return new AggregatedResource(resourceURI);
         } finally {
             endTransaction(transactionStarted);
         }
-        return addNamedGraph(graphURI, inputStream, rdfFormat);
     }
 
 
@@ -2287,6 +2297,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 throw new IllegalArgumentException("URI not found: " + graphURI);
             }
             manifestModel.remove(ro, ORE.aggregates, resource);
+            manifestModel.removeAll(resource, null, null);
 
             URI proxy = getProxyForResource(researchObject, graphURI);
             if (proxy != null) {

@@ -15,6 +15,9 @@ public class AggregatedResource extends Thing {
     /** ore:AggregationUri. */
     protected URI aggregationUri;
 
+    /** URI of a proxy of this resource. */
+    protected URI proxyUri;
+
 
     /**
      * Constructor.
@@ -44,4 +47,13 @@ public class AggregatedResource extends Thing {
         this.aggregationUri = aggregationUri;
     }
 
+
+    public URI getProxyUri() {
+        return proxyUri;
+    }
+
+
+    public void setProxyUri(URI proxyUri) {
+        this.proxyUri = proxyUri;
+    }
 }

@@ -12,9 +12,19 @@ import javax.ws.rs.core.EntityTag;
 
 import org.apache.http.HttpStatus;
 import org.joda.time.DateTime;
+import org.junit.Assert;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
+
+import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.sun.jersey.api.client.ClientResponse;
 
 public class FileTest extends ResourceBase {
@@ -53,6 +63,15 @@ public class FileTest extends ResourceBase {
         assertNotNull(response.getLastModified());
         //        assertTrue(!new DateTime(response.getLastModified()).isBefore(addFileTime));
         assertNotNull(response.getEntityTag());
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        model.read(response.getEntityInputStream(), null);
+        Individual proxy = model.getIndividual(response.getLocation().toString());
+        Individual resource = model.getIndividual(ro.resolve(filePathEncoded).toString());
+        Assert.assertTrue(proxy.hasRDFType(ORE.Proxy));
+        Assert.assertTrue(resource.hasRDFType(RO.Resource));
+        Assert.assertTrue(model.contains(proxy, ORE.proxyFor, resource));
+        Assert.assertTrue(model.contains(resource, DCTerms.created, (RDFNode) null));
+        Assert.assertTrue(model.contains(resource, DCTerms.creator, (RDFNode) null));
         response.close();
 
         response = webResource.uri(ro).path(filePathEncoded).header("Authorization", "Bearer " + accessToken)
