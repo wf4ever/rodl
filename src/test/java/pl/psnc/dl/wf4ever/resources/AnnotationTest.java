@@ -67,7 +67,6 @@ public class AnnotationTest extends ResourceBase {
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(response.getEntityInputStream(), null);
-        model.write(System.out);
         Individual proxy = model.listIndividuals(ORE.Proxy).next();
         Individual resource = model.getIndividual(ro.resolve(annotationBodyPath).toString());
         Assert.assertNotNull(proxy);
