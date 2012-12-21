@@ -309,22 +309,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
         test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), is, RDFFormat.TURTLE);
-
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(test.sms.getResource(test.emptyRO, RDFFormat.RDFXML, test.emptyRO.getUri().resolve(WORKFLOW_PATH)),
-            test.emptyRO.getUri().toString());
-        verifyResource(test.sms, model, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
-        verifyTriple(model, test.emptyRO.getUri().resolve(WORKFLOW_PATH), URI.create("http://purl.org/dc/terms/title"),
-            "A test");
-        verifyTriple(model, test.emptyRO.getUri().resolve(WORKFLOW_PATH), URI.create("http://purl.org/dc/terms/title"),
-            "An alternative title");
-        verifyTriple(model, test.emptyRO.getUri().resolve(WORKFLOW_PATH),
-            URI.create("http://purl.org/dc/terms/license"), "GPL");
-
-        model.read(
-            test.sms.getResource(test.emptyRO, RDFFormat.TURTLE, test.emptyRO.getUri().resolve(ANNOTATION_PATH)), null,
-            "TTL");
-        verifyResource(test.sms, model, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
     }
 
 
