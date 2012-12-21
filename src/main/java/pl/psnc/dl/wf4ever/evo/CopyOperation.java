@@ -138,7 +138,7 @@ public class CopyOperation implements Operation {
                                 response.getType().toString(), null);
                             //TODO improve resource type detection mechanism!!
                             if (!resource.hasRDFType(RO.Resource)) {
-                                ROSRService.convertAggregatedResourceToAnnotationBody(targetRO, targetURI);
+                                ROSRService.convertRoResourceToAnnotationBody(targetRO, targetURI);
                             }
                             changedURIs.put(resourceURI, targetURI);
                         } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
@@ -147,7 +147,7 @@ public class CopyOperation implements Operation {
                         }
                     } else {
                         try {
-                            ROSRService.aggregateExternalResource(targetRO, resourceURI);
+                            ROSRService.aggregateExternalResource(targetRO, resourceURI, null);
                         } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
                             throw new OperationFailedException("Could not create aggregate external resource: "
                                     + resourceURI, e);

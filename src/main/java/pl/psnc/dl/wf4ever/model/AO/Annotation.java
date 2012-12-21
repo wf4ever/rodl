@@ -7,7 +7,6 @@ import java.util.List;
 
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
-import pl.psnc.dl.wf4ever.model.RO.Resource;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
@@ -23,10 +22,10 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 public class Annotation extends AggregatedResource {
 
     /** List of annotated objects. */
-    private List<Resource> annotated;
+    private List<URI> annotated;
 
     /** The annotation body. */
-    private AnnotationBody body;
+    private URI body;
 
 
     /**
@@ -37,7 +36,7 @@ public class Annotation extends AggregatedResource {
      */
     public Annotation(URI uri) {
         super(uri);
-        annotated = new ArrayList<Resource>();
+        annotated = new ArrayList<>();
         body = null;
     }
 
@@ -55,7 +54,7 @@ public class Annotation extends AggregatedResource {
     public Annotation(URI uri, OntModel model)
             throws IncorrectModelException {
         this(uri);
-        annotated = new ArrayList<Resource>();
+        annotated = new ArrayList<>();
         fillUp(model);
     }
 
@@ -67,9 +66,10 @@ public class Annotation extends AggregatedResource {
      *            Resource uri
      * @param annotated
      *            List of annotated
-     * @Param body Annotation body
+     * @param body
+     *            Annotation body
      */
-    public Annotation(URI uri, List<Resource> annotated, AnnotationBody body) {
+    public Annotation(URI uri, List<URI> annotated, URI body) {
         this.uri = uri;
         this.annotated = annotated;
         this.body = body;
@@ -97,7 +97,7 @@ public class Annotation extends AggregatedResource {
                     uri.toString(), resource.toString()));
             }
             try {
-                annotated.add(new Resource(new URI(resource.asResource().getURI())));
+                annotated.add(new URI(resource.asResource().getURI()));
             } catch (URISyntaxException e) {
                 throw new IncorrectModelException(String.format(
                     "Annotation %s annotates a resource with an invalid URI %s", uri.toString(), resource.toString()));
@@ -116,7 +116,7 @@ public class Annotation extends AggregatedResource {
                 uri.toString(), bodyNode.toString()));
         }
         try {
-            body = new AnnotationBody(new URI(bodyNode.asResource().getURI()));
+            body = new URI(bodyNode.asResource().getURI());
         } catch (URISyntaxException e) {
             throw new IncorrectModelException(String.format(
                 "Annotation %s uses as body a resource with an invalid URI %s", uri.toString(), bodyNode.toString()));
@@ -124,27 +124,23 @@ public class Annotation extends AggregatedResource {
     }
 
 
-    public List<Resource> getAnnotated() {
+    public List<URI> getAnnotated() {
         return annotated;
     }
 
 
-    /**
-     * Get the list of annotated resources as a list of uri.
-     * 
-     * @return list of uri of annotated resources
-     */
-    public List<URI> getAnnotatedToURIList() {
-        List<URI> result = new ArrayList<URI>();
-        for (Resource r : annotated) {
-            result.add(r.getUri());
-        }
-        return result;
+    public URI getBody() {
+        return body;
     }
 
 
-    public AnnotationBody getBody() {
-        return body;
+    public void setAnnotated(List<URI> annotated) {
+        this.annotated = annotated;
+    }
+
+
+    public void setBody(URI body) {
+        this.body = body;
     }
 
 }
