@@ -4,11 +4,16 @@
 package pl.psnc.dl.wf4ever.model.RO;
 
 import java.net.URI;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.exceptions.DuplicateURIException;
+import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
+
+import com.google.common.collect.Multimap;
 
 /**
  * A DAO for a research object.
@@ -26,8 +31,28 @@ public class ResearchObject extends Thing {
     public static final String MANIFEST_PATH = ".ro/manifest.rdf";
 
     /** Fixed roevo annotation file path. */
-    private String roevoPath = ".ro/evo_info.ttl";
+    private static final String ROEVO_PATH = ".ro/evo_info.ttl";
 
+    /** has the metadata been loaded from triplestore. */
+    private boolean loaded;
+
+    /** aggregated ro:Resources, excluding ro:Folders. */
+    private Map<URI, Resource> resources;
+
+    /** aggregated ro:Folders. */
+    private Map<URI, Folder> folders;
+
+    /** aggregated annotations, grouped based on ao:annotatesResource. */
+    private Multimap<URI, Annotation> annotations;
+
+    /** creator URI. */
+    private URI creator;
+
+    /** creation date. */
+    private DateTime created;
+
+
+    //TODO add properties stored in evo_info.ttl
 
     /**
      * Constructor.
@@ -68,6 +93,24 @@ public class ResearchObject extends Thing {
 
 
     /**
+     * Delete the Research Object including its resources and annotations.
+     */
+    public void delete() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+
+    /**
+     * Load the metadata from the triplestore.
+     * 
+     * @return this instance, loaded
+     */
+    public ResearchObject load() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+
+    /**
      * Get the manifest URI.
      * 
      * @return manifest URI
@@ -83,7 +126,37 @@ public class ResearchObject extends Thing {
      * @return roevo annotation body URI
      */
     public URI getFixedEvolutionAnnotationBodyUri() {
-        return getUri().resolve(roevoPath);
+        return getUri().resolve(ROEVO_PATH);
+    }
+
+
+    public boolean isLoaded() {
+        return loaded;
+    }
+
+
+    public Map<URI, Resource> getResources() {
+        return resources;
+    }
+
+
+    public Map<URI, Folder> getFolders() {
+        return folders;
+    }
+
+
+    public Multimap<URI, Annotation> getAnnotations() {
+        return annotations;
+    }
+
+
+    public URI getCreator() {
+        return creator;
+    }
+
+
+    public DateTime getCreated() {
+        return created;
     }
 
 }
