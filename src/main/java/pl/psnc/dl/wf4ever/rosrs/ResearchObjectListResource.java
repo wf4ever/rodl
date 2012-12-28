@@ -27,13 +27,14 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
+import pl.psnc.dl.wf4ever.exceptions.DuplicateURIException;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 
 import com.sun.jersey.core.header.ContentDisposition;
@@ -120,7 +121,12 @@ public class ResearchObjectListResource {
             throw new BadRequestException("Research object ID cannot contain slashes, see WFE-703");
         }
         URI uri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.create(uri);
+        ResearchObject researchObject;
+        try {
+            researchObject = ResearchObject.create(uri);
+        } catch (DuplicateURIException e) {
+            throw new ConflictException("Research Object already exists", e);
+        }
         URI researchObjectURI = ROSRService.createResearchObject(researchObject);
         LOGGER.debug(String.format("%s\t\tRO created", new DateTime().toString()));
 
@@ -157,8 +163,13 @@ public class ResearchObjectListResource {
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
-        ResearchObject ro = ResearchObject.create(uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/")
-                .build());
+        ResearchObject ro;
+        try {
+            ro = ResearchObject.create(uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build());
+        } catch (DuplicateURIException e) {
+            throw new ConflictException("Research Object already exists", e);
+        }
+
         UUID uuid = UUID.randomUUID();
         if (ROSRService.SMS.get().containsNamedGraph(ro.getManifestUri())) {
             throw new ConflictException("RO already exists");

@@ -14,14 +14,14 @@ import javax.naming.NamingException;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.EvoType;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
-import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
 
 import com.google.common.collect.Multimap;
@@ -687,10 +687,10 @@ public interface SemanticMetadataService {
      * @param researchObject
      *            the research object
      * @return the list of aggregated resources.
-     * @throws ManifestTraversingException .
+     * @throws IncorrectModelException .
      */
     List<AggregatedResource> getAggregatedResources(ResearchObject researchObject)
-            throws ManifestTraversingException;
+            throws IncorrectModelException;
 
 
     /**
@@ -699,10 +699,10 @@ public interface SemanticMetadataService {
      * @param researchObject
      *            the research object
      * @return the list of annotations.
-     * @throws ManifestTraversingException .
+     * @throws IncorrectModelException .
      */
     List<Annotation> getAnnotations(ResearchObject researchObject)
-            throws ManifestTraversingException;
+            throws IncorrectModelException;
 
 
     /**

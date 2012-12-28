@@ -25,12 +25,12 @@ import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.auth.UserCredentials;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
 
@@ -210,7 +210,7 @@ public class UserResource {
         Set<URI> list = ROSRService.SMS.get().findResearchObjectsByCreator(
             UserProfile.generateAbsoluteURI(null, userId));
         for (URI uri : list) {
-            ResearchObject ro = ResearchObject.create(uri);
+            ResearchObject ro = ResearchObject.get(uri);
             ROSRService.deleteResearchObject(ro);
         }
 

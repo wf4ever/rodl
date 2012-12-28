@@ -30,13 +30,13 @@ import org.openrdf.rio.RDFFormat;
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
@@ -90,7 +90,10 @@ public class Resource {
             @QueryParam("original") String original, String entity)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.create(uri);
+        ResearchObject researchObject = ResearchObject.get(uri);
+        if (researchObject == null) {
+            throw new NotFoundException("Research Object not found");
+        }
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
@@ -157,7 +160,10 @@ public class Resource {
             @PathParam("filePath") String filePath, @QueryParam("original") String original, InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.create(uri);
+        ResearchObject researchObject = ResearchObject.get(uri);
+        if (researchObject == null) {
+            throw new NotFoundException("Research Object not found");
+        }
         URI resource = uriInfo.getAbsolutePath();
         URI body;
         List<URI> targets = new ArrayList<>();
@@ -229,7 +235,10 @@ public class Resource {
             @QueryParam("original") String original, @Context Request request)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.create(uri);
+        ResearchObject researchObject = ResearchObject.get(uri);
+        if (researchObject == null) {
+            throw new NotFoundException("Research Object not found");
+        }
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
@@ -295,7 +304,10 @@ public class Resource {
             @QueryParam("original") String original)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.create(uri);
+        ResearchObject researchObject = ResearchObject.get(uri);
+        if (researchObject == null) {
+            throw new NotFoundException("Research Object not found");
+        }
         URI resource = uriInfo.getAbsolutePath();
 
         if (ROSRService.SMS.get().isProxy(researchObject, resource)) {

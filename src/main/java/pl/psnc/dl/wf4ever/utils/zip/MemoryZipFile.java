@@ -9,7 +9,7 @@ import java.util.zip.ZipFile;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.common.ResearchObject;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 /**
  * Create/Read zip file in memory.

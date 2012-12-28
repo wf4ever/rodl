@@ -11,9 +11,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -47,7 +47,10 @@ public class ZippedResearchObjectResource {
     public Response getZippedRO(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, NotFoundException {
         URI uri = URI.create(uriInfo.getAbsolutePath().toString().replaceFirst("zippedROs", "ROs"));
-        ResearchObject researchObject = ResearchObject.create(uri);
+        ResearchObject researchObject = ResearchObject.get(uri);
+        if (researchObject == null) {
+            throw new NotFoundException("Research Object not found");
+        }
         InputStream body = ROSRService.DL.get().getZippedResearchObject(researchObject.getUri());
         //TODO add all named graphs from SMS that start with the base URI
         ContentDisposition cd = ContentDisposition.type("application/zip").fileName(researchObjectId + ".zip").build();

@@ -3,11 +3,11 @@ package pl.psnc.dl.wf4ever.evo;
 import java.net.URI;
 
 import pl.psnc.dl.wf4ever.common.HibernateUtil;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 /**
@@ -31,9 +31,14 @@ public class FinalizeOperation implements Operation {
             }
             URI target = status.getCopyfrom().resolve("../" + status.getTarget() + "/");
 
-            ResearchObject researchObject = ResearchObject.create(target);
-            ResearchObject liveRO = ResearchObject.create(status.getCopyfrom());
-
+            ResearchObject researchObject = ResearchObject.get(target);
+            ResearchObject liveRO = ResearchObject.get(status.getCopyfrom());
+            if (liveRO == null) {
+                throw new NotFoundException("Research Object not found " + status.getCopyfrom().toString());
+            }
+            if (researchObject == null) {
+                throw new NotFoundException("Research Object not found " + status.getTarget());
+            }
             Annotation annotation = ROSRService.SMS.get().findAnnotationForBody(researchObject,
                 researchObject.getFixedEvolutionAnnotationBodyUri());
             ROSRService.deleteAnnotation(researchObject, annotation.getUri());

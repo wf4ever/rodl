@@ -20,13 +20,13 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
-import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.FOAF;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -185,7 +185,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public final void testGetManifest() {
 
         Calendar before = Calendar.getInstance();
-        ResearchObject researchObject = ResearchObject.create(URI.create("http://www.example.com/null/"));
+        ResearchObject researchObject = new ResearchObject(URI.create("http://www.example.com/null/"));
         test.sms.createResearchObject(researchObject);
         Calendar after = Calendar.getInstance();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
@@ -717,7 +717,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(SafeURI.URItoString(test.ro1.getUri().resolve(".ro/manifest.ttl")), "TTL");
         model.read(SafeURI.URItoString(test.ro1.getFixedEvolutionAnnotationBodyUri()), "TTL");
-        Individual source = model.getIndividual(test.ro1.getUriString());
+        Individual source = model.getIndividual(test.ro1.getUri().toString());
         Individual source2 = test.sms.getIndividual(test.ro1);
         Assert.assertEquals("wrong individual returned", source, source2);
     }
@@ -780,7 +780,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testGetAggregatedResources()
-            throws ManifestTraversingException {
+            throws IncorrectModelException {
         List<AggregatedResource> list = test.sms.getAggregatedResources(test.ro1);
         Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve(
             "final-agregated-resource-file"))));
@@ -801,7 +801,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testGetAnnotations()
-            throws ManifestTraversingException {
+            throws IncorrectModelException {
         List<Annotation> list = test.sms.getAnnotations(test.ro1);
         int cnt = 0;
         Boolean evo = true;

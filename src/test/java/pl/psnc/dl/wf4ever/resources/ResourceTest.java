@@ -17,10 +17,10 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
-import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 
 import com.hp.hpl.jena.ontology.OntModel;
@@ -128,7 +128,7 @@ public class ResourceTest extends ResourceBase {
      */
     @Test
     public void createROFromZip()
-            throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
+            throws IOException, IncorrectModelException, ClassNotFoundException, NamingException, SQLException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
         ClientResponse response = webResource.path("ROs").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
@@ -141,7 +141,7 @@ public class ResourceTest extends ResourceBase {
 
     @Test
     public void createROFromZipWithWhitespaces()
-            throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
+            throws IOException, IncorrectModelException, ClassNotFoundException, NamingException, SQLException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/white_spaces_ro.zip");
         ClientResponse response = webResource.path("ROs/").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
@@ -154,7 +154,7 @@ public class ResourceTest extends ResourceBase {
 
     @Test
     public void createROFromZipWithEvoAnnotation()
-            throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
+            throws IOException, IncorrectModelException, ClassNotFoundException, NamingException, SQLException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/zip_with_evo.zip");
         ClientResponse response = webResource.path("ROs").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
@@ -192,7 +192,7 @@ public class ResourceTest extends ResourceBase {
                 .header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
         assertEquals("Updating evo_info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         response.close();
-        ResearchObject researchObject = ResearchObject.create(ro);
+        ResearchObject researchObject = new ResearchObject(ro);
         OntModel manifestModel = ModelFactory.createOntologyModel();
         manifestModel.read(researchObject.getManifestUri().toString());
 

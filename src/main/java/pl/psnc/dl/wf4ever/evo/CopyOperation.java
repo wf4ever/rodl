@@ -9,11 +9,12 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.common.HibernateUtil;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.exceptions.DuplicateURIException;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -69,9 +70,16 @@ public class CopyOperation implements Operation {
             }
             status.setTarget(id + sufix);
 
-            ResearchObject targetRO = ResearchObject.create(target);
-            ResearchObject sourceRO = ResearchObject.create(status.getCopyfrom());
-
+            ResearchObject targetRO = null;
+            try {
+                targetRO = ResearchObject.create(target);
+            } catch (DuplicateURIException e) {
+                LOGGER.error(e);
+            }
+            ResearchObject sourceRO = ResearchObject.get(status.getCopyfrom());
+            if (sourceRO == null) {
+                throw new OperationFailedException("source Research Object does not exist");
+            }
             try {
                 ROSRService.createResearchObject(targetRO, status.getType(), sourceRO);
             } catch (ConflictException | DigitalLibraryException | NotFoundException | AccessDeniedException e) {

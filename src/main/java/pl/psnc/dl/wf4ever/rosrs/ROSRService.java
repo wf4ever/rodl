@@ -28,18 +28,19 @@ import org.openrdf.rio.RDFFormat;
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.EvoType;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
-import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
+import pl.psnc.dl.wf4ever.exceptions.DuplicateURIException;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
@@ -819,14 +820,18 @@ public final class ROSRService {
      * @throws AccessDeniedException .
      * @throws IOException
      *             error creating the temporary file
+     * @throws ConflictException
+     *             Research Object already exists
      */
     public static Response createNewResearchObjectFromZip(ResearchObject researchObject, MemoryZipFile zip)
-            throws BadRequestException, AccessDeniedException, IOException {
+            throws BadRequestException, AccessDeniedException, IOException, ConflictException {
         try {
             URI createdResearchObjectURI = createResearchObject(researchObject);
             researchObject = ResearchObject.create(createdResearchObjectURI);
-        } catch (ConflictException | DigitalLibraryException | NotFoundException e) {
+        } catch (DigitalLibraryException | NotFoundException e) {
             throw new BadRequestException("Research Object creation problem", e);
+        } catch (DuplicateURIException e) {
+            throw new ConflictException("Research Object already exists", e);
         }
 
         SemanticMetadataService tmpSms = new SemanticMetadataServiceTdb(ROSRService.SMS.get().getUserProfile(),
@@ -841,7 +846,7 @@ public final class ROSRService {
             aggregatedList = tmpSms.removeSpecialFilesFromAggergated(aggregatedList);
             annotationsList = tmpSms.removeSpecialFilesFromAnnotatios(annotationsList);
 
-        } catch (ManifestTraversingException e) {
+        } catch (IncorrectModelException e) {
             throw new BadRequestException(e.getMessage(), e);
         }
 
@@ -1119,7 +1124,10 @@ public final class ROSRService {
     public static void updateFolder(Folder folder)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         ROSRService.SMS.get().updateFolder(folder);
-        ResearchObject researchObject = ResearchObject.create(folder.getAggregationUri());
+        ResearchObject researchObject = ResearchObject.get(folder.getAggregationUri());
+        if (researchObject == null) {
+            throw new NotFoundException("Research Object not found");
+        }
         updateNamedGraphInDlibra(researchObject.getUri().relativize(folder.getResourceMapUri()).toString(),
             researchObject, folder.getResourceMapUri());
     }
@@ -1139,7 +1147,10 @@ public final class ROSRService {
      */
     public static void deleteFolder(Folder folder)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        ResearchObject researchObject = ResearchObject.create(folder.getAggregationUri());
+        ResearchObject researchObject = ResearchObject.get(folder.getAggregationUri());
+        if (researchObject == null) {
+            throw new NotFoundException("Research Object not found");
+        }
         String filePath = researchObject.getUri().relativize(folder.getResourceMapUri()).getPath();
         ROSRService.DL.get().deleteFile(researchObject.getUri(), filePath);
         ROSRService.SMS.get().deleteFolder(folder);
