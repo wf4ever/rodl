@@ -22,7 +22,6 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
@@ -34,7 +33,6 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
-import pl.psnc.dl.wf4ever.exceptions.DuplicateURIException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -127,38 +125,6 @@ public final class ROSRService {
      */
     public static URI createResearchObject(ResearchObject researchObject, EvoType type, ResearchObject sourceRO)
             throws ConflictException, DigitalLibraryException, NotFoundException, AccessDeniedException {
-        InputStream manifest;
-        try {
-            if (type == null) {
-                type = EvoType.LIVE;
-            }
-            switch (type) {
-                default:
-                case LIVE:
-                    ROSRService.SMS.get().createLiveResearchObject(researchObject, sourceRO);
-                    break;
-                case SNAPSHOT:
-                    ROSRService.SMS.get().createSnapshotResearchObject(researchObject, sourceRO);
-                    break;
-                case ARCHIVE:
-                    ROSRService.SMS.get().createArchivedResearchObject(researchObject, sourceRO);
-                    break;
-            }
-
-            manifest = ROSRService.SMS.get().getManifest(researchObject, RDFFormat.RDFXML);
-        } catch (IllegalArgumentException e) {
-            // RO already existed in sms, maybe created by someone else
-            throw new ConflictException("The RO with URI " + researchObject.getUri() + " already exists");
-        }
-
-        LOGGER.debug(String.format("%s\t\tcreate RO start", new DateTime().toString()));
-        ROSRService.DL.get().createResearchObject(researchObject.getUri(), manifest, ResearchObject.MANIFEST_PATH,
-            RDFFormat.RDFXML.getDefaultMIMEType());
-        if (type == EvoType.LIVE) {
-            generateEvoInfo(researchObject, null, EvoType.LIVE);
-        }
-        LOGGER.debug(String.format("%s\t\tcreate RO end", new DateTime().toString()));
-        return researchObject.getUri();
     }
 
 
@@ -913,32 +879,6 @@ public final class ROSRService {
 
 
     /**
-     * Take out an RDF graph from SMS and serialize it in dLibra with relative URI references.
-     * 
-     * @param filePath
-     *            resource path
-     * @param researchObject
-     *            RO URI
-     * @param namedGraphURI
-     *            RDF graph URI
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     */
-    private static void updateNamedGraphInDlibra(String filePath, ResearchObject researchObject, URI namedGraphURI)
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        RDFFormat format = RDFFormat.forFileName(filePath, RDFFormat.RDFXML);
-        InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(namedGraphURI, researchObject,
-            format);
-        ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, dataStream,
-            format.getDefaultMIMEType());
-    }
-
-
-    /**
      * Create a folder instance out of an RDF/XML description.
      * 
      * @param researchObject
@@ -1043,22 +983,6 @@ public final class ROSRService {
         updateNamedGraphInDlibra(path, researchObject, folder.getResourceMapUri());
         updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
         return folder;
-    }
-
-
-    public static void generateEvoInfo(ResearchObject researchObject, ResearchObject parent, EvoType type)
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        SMS.get().generateEvoInformation(researchObject, parent, type);
-        updateNamedGraphInDlibra(researchObject.getUri()
-                .relativize(researchObject.getFixedEvolutionAnnotationBodyUri()).toString(), researchObject,
-            researchObject.getFixedEvolutionAnnotationBodyUri());
-        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
-        if (parent != null) {
-            updateNamedGraphInDlibra(
-                parent.getUri().relativize(parent.getFixedEvolutionAnnotationBodyUri()).toString(), parent,
-                parent.getFixedEvolutionAnnotationBodyUri());
-            updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, parent, parent.getManifestUri());
-        }
     }
 
 

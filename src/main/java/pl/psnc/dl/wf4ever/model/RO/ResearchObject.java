@@ -3,20 +3,28 @@
  */
 package pl.psnc.dl.wf4ever.model.RO;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.exceptions.DuplicateURIException;
+import pl.psnc.dl.wf4ever.common.EvoType;
+import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.google.common.collect.Multimap;
 
 /**
- * A DAO for a research object.
+ * A research object, live by default.
  * 
  * @author piotrekhol
  * 
@@ -60,6 +68,7 @@ public class ResearchObject extends Thing {
      * @param uri
      *            RO URI
      */
+    //FIXME should this be private?
     public ResearchObject(URI uri) {
         super(uri);
     }
@@ -71,12 +80,45 @@ public class ResearchObject extends Thing {
      * @param uri
      *            RO URI
      * @return an instance
-     * @throws DuplicateURIException
-     *             in case the URI is already being used
+     * @throws AccessDeniedException
+     * @throws NotFoundException
+     * @throws DigitalLibraryException
+     * @throws ConflictException
      */
     public static ResearchObject create(URI uri)
-            throws DuplicateURIException {
-        return new ResearchObject(uri);
+            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+        ResearchObject researchObject = new ResearchObject(uri);
+        InputStream manifest;
+        try {
+            ROSRService.SMS.get().createLiveResearchObject(researchObject, null);
+            manifest = ROSRService.SMS.get().getManifest(researchObject, RDFFormat.RDFXML);
+        } catch (IllegalArgumentException e) {
+            // RO already existed in sms, maybe created by someone else
+            throw new ConflictException("The RO with URI " + researchObject.getUri() + " already exists");
+        }
+
+        ROSRService.DL.get().createResearchObject(researchObject.getUri(), manifest, ResearchObject.MANIFEST_PATH,
+            RDFFormat.RDFXML.getDefaultMIMEType());
+        researchObject.generateEvoInfo();
+        return researchObject;
+    }
+
+
+    public void generateEvoInfo()
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        ROSRService.SMS.get().generateEvoInformation(this, null, EvoType.LIVE);
+        this.getEvoInfoBody().serialize();
+        this.getManifest().serialize();
+    }
+
+
+    public AggregatedResource getEvoInfoBody() {
+        return new AggregatedResource(getFixedEvolutionAnnotationBodyUri(), uri);
+    }
+
+
+    public Manifest getManifest() {
+        return new Manifest(creator, this);
     }
 
 

@@ -2,7 +2,11 @@ package pl.psnc.dl.wf4ever.model.ORE;
 
 import java.net.URI;
 
+import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 /**
  * Simple Aggregated Resource model.
@@ -22,8 +26,26 @@ public class AggregatedResource extends Thing {
     /**
      * Constructor.
      */
-    public AggregatedResource() {
-        super();
+    public AggregatedResource(URI uri, URI agggregationUri) {
+        super(uri);
+        this.aggregationUri = agggregationUri;
+    }
+
+
+    /**
+     * Store to disk.
+     * 
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
+    public void serialize()
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        //FIXME is this good?
+        serialize(new ResearchObject(aggregationUri));
     }
 
 

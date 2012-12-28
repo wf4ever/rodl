@@ -13,7 +13,6 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
-import pl.psnc.dl.wf4ever.exceptions.DuplicateURIException;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
@@ -70,11 +69,11 @@ public class CopyOperation implements Operation {
             }
             status.setTarget(id + sufix);
 
-            ResearchObject targetRO = null;
+            ResearchObject targetRO;
             try {
                 targetRO = ResearchObject.create(target);
-            } catch (DuplicateURIException e) {
-                LOGGER.error(e);
+            } catch (ConflictException | DigitalLibraryException | AccessDeniedException e) {
+                throw new OperationFailedException("Failed to create target RO", e);
             }
             ResearchObject sourceRO = ResearchObject.get(status.getCopyfrom());
             if (sourceRO == null) {

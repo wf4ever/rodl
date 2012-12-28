@@ -12,6 +12,7 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -22,7 +23,6 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
@@ -33,7 +33,6 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
-import pl.psnc.dl.wf4ever.exceptions.DuplicateURIException;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.utils.zip.MemoryZipFile;
 
@@ -91,6 +90,8 @@ public class ResearchObjectListResource {
     /**
      * Creates new RO with given RO_ID.
      * 
+     * @param researchObjectId
+     *            slug header
      * @return 201 (Created) when the RO was successfully created, 409 (Conflict) if the RO_ID is already used in the
      *         WORKSPACE_ID workspace
      * @throws BadRequestException
@@ -109,11 +110,9 @@ public class ResearchObjectListResource {
      *             no permissions
      */
     @POST
-    public Response createResearchObject()
+    public Response createResearchObject(@HeaderParam(Constants.SLUG_HEADER) String researchObjectId)
             throws BadRequestException, IllegalArgumentException, UriBuilderException, ConflictException,
             DigitalLibraryException, NotFoundException, AccessDeniedException {
-        LOGGER.debug(String.format("%s\t\tInit create RO", new DateTime().toString()));
-        String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
@@ -121,21 +120,13 @@ public class ResearchObjectListResource {
             throw new BadRequestException("Research object ID cannot contain slashes, see WFE-703");
         }
         URI uri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
-        ResearchObject researchObject;
-        try {
-            researchObject = ResearchObject.create(uri);
-        } catch (DuplicateURIException e) {
-            throw new ConflictException("Research Object already exists", e);
-        }
-        URI researchObjectURI = ROSRService.createResearchObject(researchObject);
-        LOGGER.debug(String.format("%s\t\tRO created", new DateTime().toString()));
+        ResearchObject researchObject = ResearchObject.create(uri);
 
         RDFFormat format = RDFFormat.forMIMEType(request.getHeader(Constants.ACCEPT_HEADER), RDFFormat.RDFXML);
         InputStream manifest = ROSRService.SMS.get().getNamedGraph(researchObject.getManifestUri(), format);
         ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType())
                 .fileName(ResearchObject.MANIFEST_PATH).build();
 
-        LOGGER.debug(String.format("%s\t\tReturning", new DateTime().toString()));
         return Response.created(researchObjectURI).entity(manifest).header("Content-disposition", cd).build();
     }
 
@@ -154,21 +145,19 @@ public class ResearchObjectListResource {
      *             no permissions
      * @throws ConflictException
      *             RO already exists
+     * @throws DigitalLibraryException
+     *             error saving data to storage
      */
     @POST
     @Consumes("application/zip")
     public Response createResearchObjectFromZip(InputStream zipStream)
-            throws BadRequestException, IOException, AccessDeniedException, ConflictException {
+            throws BadRequestException, IOException, AccessDeniedException, ConflictException, DigitalLibraryException {
         String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
-        ResearchObject ro;
-        try {
-            ro = ResearchObject.create(uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build());
-        } catch (DuplicateURIException e) {
-            throw new ConflictException("Research Object already exists", e);
-        }
+        ResearchObject ro = ResearchObject.create(uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/")
+                .build());
 
         UUID uuid = UUID.randomUUID();
         if (ROSRService.SMS.get().containsNamedGraph(ro.getManifestUri())) {
