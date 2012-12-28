@@ -127,7 +127,7 @@ public class ResearchObjectListResource {
         ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType())
                 .fileName(ResearchObject.MANIFEST_PATH).build();
 
-        return Response.created(researchObjectURI).entity(manifest).header("Content-disposition", cd).build();
+        return Response.created(researchObject.getUri()).entity(manifest).header("Content-disposition", cd).build();
     }
 
 
@@ -147,11 +147,13 @@ public class ResearchObjectListResource {
      *             RO already exists
      * @throws DigitalLibraryException
      *             error saving data to storage
+     * @throws NotFoundException
      */
     @POST
     @Consumes("application/zip")
     public Response createResearchObjectFromZip(InputStream zipStream)
-            throws BadRequestException, IOException, AccessDeniedException, ConflictException, DigitalLibraryException {
+            throws BadRequestException, IOException, AccessDeniedException, ConflictException, DigitalLibraryException,
+            NotFoundException {
         String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
@@ -160,9 +162,6 @@ public class ResearchObjectListResource {
                 .build());
 
         UUID uuid = UUID.randomUUID();
-        if (ROSRService.SMS.get().containsNamedGraph(ro.getManifestUri())) {
-            throw new ConflictException("RO already exists");
-        }
         File tmpFile = File.createTempFile("tmp_ro", uuid.toString());
         BufferedInputStream inputStream = new BufferedInputStream(request.getInputStream());
         FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);

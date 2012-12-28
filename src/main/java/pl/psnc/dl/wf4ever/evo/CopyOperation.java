@@ -72,19 +72,13 @@ public class CopyOperation implements Operation {
             ResearchObject targetRO;
             try {
                 targetRO = ResearchObject.create(target);
-            } catch (ConflictException | DigitalLibraryException | AccessDeniedException e) {
+            } catch (ConflictException | DigitalLibraryException | AccessDeniedException | NotFoundException e) {
                 throw new OperationFailedException("Failed to create target RO", e);
             }
             ResearchObject sourceRO = ResearchObject.get(status.getCopyfrom());
             if (sourceRO == null) {
                 throw new OperationFailedException("source Research Object does not exist");
             }
-            try {
-                ROSRService.createResearchObject(targetRO, status.getType(), sourceRO);
-            } catch (ConflictException | DigitalLibraryException | NotFoundException | AccessDeniedException e) {
-                throw new OperationFailedException("Could not create the target research object", e);
-            }
-
             OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
             model.read(sourceRO.getManifestUri().toString());
             Individual source = model.getIndividual(sourceRO.getUri().toString());

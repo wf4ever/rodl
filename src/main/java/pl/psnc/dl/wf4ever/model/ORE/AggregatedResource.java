@@ -26,6 +26,14 @@ public class AggregatedResource extends Thing {
     /**
      * Constructor.
      */
+    public AggregatedResource() {
+
+    }
+
+
+    /**
+     * Constructor.
+     */
     public AggregatedResource(URI uri, URI agggregationUri) {
         super(uri);
         this.aggregationUri = agggregationUri;

@@ -54,7 +54,6 @@ public class Annotation extends AggregatedResource {
     public Annotation(URI uri, OntModel model)
             throws IncorrectModelException {
         this(uri);
-        annotated = new ArrayList<>();
         fillUp(model);
     }
 
@@ -70,7 +69,7 @@ public class Annotation extends AggregatedResource {
      *            Annotation body
      */
     public Annotation(URI uri, List<URI> annotated, URI body) {
-        this.uri = uri;
+        this(uri);
         this.annotated = annotated;
         this.body = body;
     }

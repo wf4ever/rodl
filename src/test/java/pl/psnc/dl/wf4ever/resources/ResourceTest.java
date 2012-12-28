@@ -71,7 +71,6 @@ public class ResourceTest extends ResourceBase {
             throws URISyntaxException {
         client().setFollowRedirects(false);
         ClientResponse response = webResource.uri(ro).accept("text/turtle").get(ClientResponse.class);
-        System.out.println(response.getHeaders().get(Constants.LINK_HEADER));
         assertTrue(response.getHeaders().get(Constants.LINK_HEADER)
                 .contains(webResource.path("/evo/info").queryParam("ro", ro.toString()).toString()));
 

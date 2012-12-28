@@ -26,7 +26,6 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
@@ -80,51 +79,6 @@ public final class ROSRService {
      */
     private ROSRService() {
         //nope
-    }
-
-
-    /**
-     * Create a new research object.
-     * 
-     * @param researchObject
-     *            the research object
-     * @return research object URI
-     * @throws ConflictException
-     *             the research object id is already used
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             no permissions
-     */
-    public static URI createResearchObject(ResearchObject researchObject)
-            throws ConflictException, DigitalLibraryException, NotFoundException, AccessDeniedException {
-        return createResearchObject(researchObject, null, null);
-    }
-
-
-    /**
-     * Create a new research object of a specific ROEVO type.
-     * 
-     * @param researchObject
-     *            the research object URI
-     * @param type
-     *            ROEVO type, may be null
-     * @param sourceRO
-     *            live RO for snapshots and archives, any URI for live ROs, may be null if type is null
-     * @return research object URI
-     * @throws ConflictException
-     *             the research object id is already used
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             no permissions
-     */
-    public static URI createResearchObject(ResearchObject researchObject, EvoType type, ResearchObject sourceRO)
-            throws ConflictException, DigitalLibraryException, NotFoundException, AccessDeniedException {
     }
 
 
@@ -186,7 +140,7 @@ public final class ROSRService {
             entity, contentType != null ? contentType : "text/plain");
         Resource resource = ROSRService.SMS.get().addResource(researchObject, resourceUri, resourceInfo);
         // update the manifest that describes the resource in dLibra
-        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+        researchObject.getManifest().serialize();
         URI proxy = ROSRService.SMS.get().addProxy(researchObject, resourceUri);
         resource.setProxyUri(proxy);
         return resource;
@@ -216,7 +170,7 @@ public final class ROSRService {
         ROSRService.SMS.get().addResource(researchObject, resource, null);
         ResponseBuilder builder = addProxy(researchObject, resource, syntax);
         // update the manifest that describes the resource in dLibra
-        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+        researchObject.getManifest().serialize();
         return builder;
     }
 
@@ -246,7 +200,7 @@ public final class ROSRService {
             ROSRService.SMS.get().removeResource(researchObject, resource);
         }
         // update the manifest that describes the resource in dLibra
-        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+        researchObject.getManifest().serialize();
         return Response.noContent().build();
     }
 
@@ -271,7 +225,7 @@ public final class ROSRService {
         URI resource = ROSRService.SMS.get().getProxyFor(researchObject, proxy);
         ROSRService.SMS.get().removeResource(researchObject, resource);
         // update the manifest that describes the resource in dLibra
-        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+        researchObject.getManifest().serialize();
         return deleteProxy(researchObject, proxy);
     }
 
@@ -389,7 +343,7 @@ public final class ROSRService {
                 new ByteArrayInputStream(entity.getBytes()), contentType != null ? contentType : "text/plain");
             ROSRService.SMS.get().addResource(researchObject, resource, resourceInfo);
             // update the manifest that describes the resource in dLibra
-            updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+            researchObject.getManifest().serialize();
         }
         if (contentExisted) {
             return Response.ok();
@@ -421,6 +375,16 @@ public final class ROSRService {
         String filePath = researchObject.getUri().relativize(original != null ? resource.resolve(original) : resource)
                 .getPath();
         return ROSRService.DL.get().getFileInfo(researchObject.getUri(), filePath);
+    }
+
+
+    private static void updateNamedGraphInDlibra(String filePath, ResearchObject researchObject, URI namedGraphURI)
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+        RDFFormat format = RDFFormat.forFileName(filePath, RDFFormat.RDFXML);
+        InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(namedGraphURI, researchObject,
+            format);
+        ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, dataStream,
+            format.getDefaultMIMEType());
     }
 
 
@@ -632,7 +596,7 @@ public final class ROSRService {
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         Annotation annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody);
         // update the manifest that contains the annotation in dLibra
-        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+        researchObject.getManifest().serialize();
         return annotation;
     }
 
@@ -662,7 +626,7 @@ public final class ROSRService {
         Annotation annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody,
             annotationPrefix);
         // update the manifest that contains the annotation in dLibra
-        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+        researchObject.getManifest().serialize();
 
         String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(), AO.body);
         ResponseBuilder response = Response.created(annotation.getUri()).header(Constants.LINK_HEADER,
@@ -791,15 +755,6 @@ public final class ROSRService {
      */
     public static Response createNewResearchObjectFromZip(ResearchObject researchObject, MemoryZipFile zip)
             throws BadRequestException, AccessDeniedException, IOException, ConflictException {
-        try {
-            URI createdResearchObjectURI = createResearchObject(researchObject);
-            researchObject = ResearchObject.create(createdResearchObjectURI);
-        } catch (DigitalLibraryException | NotFoundException e) {
-            throw new BadRequestException("Research Object creation problem", e);
-        } catch (DuplicateURIException e) {
-            throw new ConflictException("Research Object already exists", e);
-        }
-
         SemanticMetadataService tmpSms = new SemanticMetadataServiceTdb(ROSRService.SMS.get().getUserProfile(),
                 researchObject, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
 
@@ -981,7 +936,7 @@ public final class ROSRService {
         folder = SMS.get().addFolder(researchObject, folder);
         String path = researchObject.getUri().relativize(folder.getResourceMapUri()).toString();
         updateNamedGraphInDlibra(path, researchObject, folder.getResourceMapUri());
-        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+        researchObject.getManifest().serialize();
         return folder;
     }
 
@@ -1078,7 +1033,7 @@ public final class ROSRService {
         String filePath = researchObject.getUri().relativize(folder.getResourceMapUri()).getPath();
         ROSRService.DL.get().deleteFile(researchObject.getUri(), filePath);
         ROSRService.SMS.get().deleteFolder(folder);
-        updateNamedGraphInDlibra(ResearchObject.MANIFEST_PATH, researchObject, researchObject.getManifestUri());
+        researchObject.getManifest().serialize();
     }
 
 

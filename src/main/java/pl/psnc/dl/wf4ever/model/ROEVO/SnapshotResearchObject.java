@@ -74,6 +74,25 @@ public class SnapshotResearchObject extends FrozenResearchObject {
     }
 
 
+    /**
+     * Get a Snapshot of existing Research Object.
+     * 
+     * @param uri
+     *            uri
+     * @param liveRO
+     *            live Research Object
+     * @return an existing Research Object or null
+     */
+    public static SnapshotResearchObject get(URI uri, ResearchObject LiveRO) {
+
+        if (ROSRService.SMS.get().containsNamedGraph(uri.resolve(ResearchObject.MANIFEST_PATH))) {
+            return new SnapshotResearchObject(uri, LiveRO);
+        } else {
+            return null;
+        }
+    }
+
+
     @Override
     public void generateEvoInfo()
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {

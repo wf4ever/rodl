@@ -118,7 +118,7 @@ public class ResearchObject extends Thing {
 
 
     public Manifest getManifest() {
-        return new Manifest(creator, this);
+        return new Manifest(getManifestUri(), this);
     }
 
 
@@ -130,7 +130,12 @@ public class ResearchObject extends Thing {
      * @return an existing Research Object or null
      */
     public static ResearchObject get(URI uri) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (ROSRService.SMS.get() == null
+                || ROSRService.SMS.get().containsNamedGraph(uri.resolve(ResearchObject.MANIFEST_PATH))) {
+            return new ResearchObject(uri);
+        } else {
+            return null;
+        }
     }
 
 
