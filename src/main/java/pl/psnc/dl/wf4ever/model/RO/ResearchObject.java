@@ -5,6 +5,7 @@ package pl.psnc.dl.wf4ever.model.RO;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -16,12 +17,29 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
+import pl.psnc.dl.wf4ever.vocabulary.AO;
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.vocabulary.DCTerms;
 
 /**
  * A research object, live by default.
@@ -52,12 +70,6 @@ public class ResearchObject extends Thing {
 
     /** aggregated annotations, grouped based on ao:annotatesResource. */
     private Multimap<URI, Annotation> annotations;
-
-    /** creator URI. */
-    private URI creator;
-
-    /** creation date. */
-    private DateTime created;
 
 
     //TODO add properties stored in evo_info.ttl
@@ -112,8 +124,20 @@ public class ResearchObject extends Thing {
     }
 
 
+    /**
+     * Get a resource with a given URI or null if doesn't exist.
+     * 
+     * @param resourceUri
+     *            resource URI
+     * @return resource instance or null
+     */
+    public Resource getResource(URI resourceUri) {
+        return resources.get(resourceUri);
+    }
+
+
     public AggregatedResource getEvoInfoBody() {
-        return new AggregatedResource(getFixedEvolutionAnnotationBodyUri(), uri);
+        return new AggregatedResource(getFixedEvolutionAnnotationBodyUri(), this);
     }
 
 
@@ -151,9 +175,199 @@ public class ResearchObject extends Thing {
      * Load the metadata from the triplestore.
      * 
      * @return this instance, loaded
+     * @throws IncorrectModelException
      */
-    public ResearchObject load() {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public ResearchObject load()
+            throws IncorrectModelException {
+        //TODO should it be a private property?
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        model.read(ROSRService.SMS.get().getManifest(this, RDFFormat.RDFXML), null);
+
+        this.creator = extractCreator(model);
+        this.created = extractCreated(model);
+        this.resources = extractResources(model);
+        this.folders = extractFolders(model);
+        this.annotations = extractAnnotations(model);
+        this.loaded = true;
+        return this;
+    }
+
+
+    /**
+     * Identify ro:Resources that are not ro:Folders, aggregated by the RO.
+     * 
+     * @param model
+     *            manifest model
+     * @return a set of resources (not loaded)
+     */
+    private Map<URI, Resource> extractResources(OntModel model) {
+        Map<URI, Resource> resources2 = new HashMap<>();
+        String queryString = String
+                .format(
+                    "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ro: <%s> SELECT ?resource ?proxy ?created ?creator WHERE { <%s> ore:aggregates ?resource . ?resource a ro:Resource . ?proxy ore:proxyFor ?resource . OPTIONAL { ?resource dcterms:creator ?creator . } OPTIONAL { ?resource dcterms:created ?created . } }",
+                    ORE.NAMESPACE, DCTerms.NS, RO.NAMESPACE, uri.toString());
+
+        Query query = QueryFactory.create(queryString);
+        QueryExecution qe = QueryExecutionFactory.create(query, model);
+        try {
+            ResultSet results = qe.execSelect();
+            while (results.hasNext()) {
+                QuerySolution solution = results.next();
+                RDFNode r = solution.get("resource");
+                if (r.as(Individual.class).hasRDFType(RO.Folder)) {
+                    continue;
+                }
+                URI rURI = URI.create(r.asResource().getURI());
+                RDFNode p = solution.get("proxy");
+                RDFNode creatorNode = solution.get("creator");
+                URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
+                        .asResource().getURI()) : null;
+                RDFNode createdNode = solution.get("created");
+                DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
+                        .asLiteral().getString()) : null;
+                resources2.put(rURI, new Resource(this, rURI, URI.create(p.asResource().getURI()), resCreator,
+                        resCreated));
+            }
+        } finally {
+            qe.close();
+        }
+
+        return resources2;
+    }
+
+
+    /**
+     * Identify ro:Resources that are not ro:Folders, aggregated by the RO.
+     * 
+     * @param model
+     *            manifest model
+     * @return a set of folders (not loaded)
+     */
+    private Map<URI, Folder> extractFolders(OntModel model) {
+        Map<URI, Folder> folders2 = new HashMap<>();
+        String queryString = String
+                .format(
+                    "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ro: <%s> SELECT ?folder ?proxy ?resourcemap ?created ?creator WHERE { <%s> ore:aggregates ?folder . ?folder a ro:Folder ; ore:isDescribedBy ?resourcemap . ?proxy ore:proxyFor ?folder . OPTIONAL { ?folder dcterms:creator ?creator . } OPTIONAL { ?folder dcterms:created ?created . } }",
+                    ORE.NAMESPACE, DCTerms.NS, RO.NAMESPACE, uri.toString());
+
+        Query query = QueryFactory.create(queryString);
+        QueryExecution qe = QueryExecutionFactory.create(query, model);
+        try {
+            ResultSet results = qe.execSelect();
+            while (results.hasNext()) {
+                QuerySolution solution = results.next();
+                RDFNode f = solution.get("folder");
+                URI fURI = URI.create(f.asResource().getURI());
+                RDFNode p = solution.get("proxy");
+                RDFNode rm = solution.get("resourcemap");
+                RDFNode creatorNode = solution.get("creator");
+                URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
+                        .asResource().getURI()) : null;
+                RDFNode createdNode = solution.get("created");
+                DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
+                        .asLiteral().getString()) : null;
+
+                String queryString2 = String.format("PREFIX ro: <%s> ASK { <%s> ro:rootFolder <%s> }", RO.NAMESPACE,
+                    uri.toString(), fURI.toString());
+                Query query2 = QueryFactory.create(queryString2);
+                QueryExecution qe2 = QueryExecutionFactory.create(query2, model);
+                boolean isRootFolder = false;
+                try {
+                    isRootFolder = qe2.execAsk();
+                } finally {
+                    qe2.close();
+                }
+
+                folders2.put(fURI,
+                    new Folder(this, fURI, URI.create(p.asResource().getURI()), URI.create(rm.asResource().getURI()),
+                            resCreator, resCreated, isRootFolder));
+            }
+        } finally {
+            qe.close();
+        }
+
+        return folders2;
+    }
+
+
+    /**
+     * Identify ro:AggregatedAnnotations that aggregated by the RO.
+     * 
+     * @param model
+     *            manifest model
+     * @return a multivalued map of annotations, with bodies not loaded
+     */
+    private Multimap<URI, Annotation> extractAnnotations(OntModel model) {
+        Multimap<URI, Annotation> annotations2 = HashMultimap.<URI, Annotation> create();
+        Map<URI, Annotation> annotationsByUri = new HashMap<>();
+        String queryString = String
+                .format(
+                    "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ao: <%s> PREFIX ro: <%s> SELECT ?annotation ?body ?target ?created ?creator WHERE { <%s> ore:aggregates ?annotation . ?annotation a ro:AggregatedAnnotation ; ao:body ?body ; ro:annotatesAggregatedResource ?target . OPTIONAL { ?annotation dcterms:creator ?creator . } OPTIONAL { ?annotation dcterms:created ?created . } }",
+                    ORE.NAMESPACE, DCTerms.NS, AO.NAMESPACE, RO.NAMESPACE, uri.toString());
+
+        Query query = QueryFactory.create(queryString);
+        QueryExecution qe = QueryExecutionFactory.create(query, model);
+        try {
+            ResultSet results = qe.execSelect();
+            while (results.hasNext()) {
+                QuerySolution solution = results.next();
+                RDFNode a = solution.get("annotation");
+                URI aURI = URI.create(a.asResource().getURI());
+                RDFNode t = solution.get("target");
+                URI tURI = URI.create(t.asResource().getURI());
+                Annotation annotation;
+                if (annotationsByUri.containsKey(aURI)) {
+                    annotation = annotationsByUri.get(aURI);
+                    annotation.getAnnotated().add(tURI);
+                } else {
+                    RDFNode b = solution.get("body");
+                    RDFNode creatorNode = solution.get("creator");
+                    URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
+                            .asResource().getURI()) : null;
+                    RDFNode createdNode = solution.get("created");
+                    DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
+                            .asLiteral().getString()) : null;
+                    annotation = new Annotation(this, aURI, URI.create(b.asResource().getURI()), tURI, resCreator,
+                            resCreated);
+                }
+                annotations2.put(tURI, annotation);
+            }
+        } finally {
+            qe.close();
+        }
+
+        return annotations2;
+    }
+
+
+    /**
+     * Add an internal resource to the research object.
+     * 
+     * @param path
+     *            resource path, relative to the RO URI
+     * @param content
+     *            resource content
+     * @param contentType
+     *            resource Content Type
+     * @return the resource instance
+     * @throws NotFoundException
+     * @throws DigitalLibraryException
+     * @throws AccessDeniedException
+     * @throws IncorrectModelException
+     * @throws ROSRSException
+     *             server returned an unexpected response
+     * @throws ROException
+     *             the manifest is incorrect
+     */
+    public Resource aggregate(String path, InputStream content, String contentType)
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException, IncorrectModelException {
+        Resource resource = ROSRService.aggregateInternalResource(this, this.getUri().resolve(path), content,
+            contentType, null);
+        if (!loaded) {
+            load();
+        }
+        this.resources.put(resource.getUri(), resource);
+        return resource;
     }
 
 
@@ -194,16 +408,6 @@ public class ResearchObject extends Thing {
 
     public Multimap<URI, Annotation> getAnnotations() {
         return annotations;
-    }
-
-
-    public URI getCreator() {
-        return creator;
-    }
-
-
-    public DateTime getCreated() {
-        return created;
     }
 
 }

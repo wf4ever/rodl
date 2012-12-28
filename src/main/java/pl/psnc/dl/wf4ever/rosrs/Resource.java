@@ -3,8 +3,8 @@ package pl.psnc.dl.wf4ever.rosrs;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -166,7 +166,7 @@ public class Resource {
         }
         URI resource = uriInfo.getAbsolutePath();
         URI body;
-        List<URI> targets = new ArrayList<>();
+        Set<URI> targets = new HashSet<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         model.read(content, researchObject.getUri().toString());
         ExtendedIterator<Individual> it = model.listIndividuals(RO.AggregatedAnnotation);
@@ -253,8 +253,7 @@ public class Resource {
                             servletRequest.getHeader(Constants.ACCEPT_HEADER))).build();
         }
         if (ROSRService.SMS.get().isRoFolder(researchObject, resource)) {
-            Folder folder = new Folder();
-            folder.setUri(resource);
+            Folder folder = new Folder(null, resource, null, null, null, null, false);
             RDFFormat format = RDFFormat.forMIMEType(servletRequest.getHeader(Constants.ACCEPT_HEADER),
                 RDFFormat.RDFXML);
             return Response.status(Status.SEE_OTHER).location(folder.getResourceMapUri(format)).build();

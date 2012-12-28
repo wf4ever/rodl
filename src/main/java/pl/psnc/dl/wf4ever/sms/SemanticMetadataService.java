@@ -458,13 +458,13 @@ public interface SemanticMetadataService {
      * 
      * @param researchObject
      *            research object
-     * @param annotationTargets
+     * @param set
      *            a list of annotated resources
      * @param annotationBody
      *            the annotation body
      * @return URI of the annotation
      */
-    Annotation addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody);
+    Annotation addAnnotation(ResearchObject researchObject, Set<URI> set, URI annotationBody);
 
 
     /**
@@ -480,7 +480,7 @@ public interface SemanticMetadataService {
      *            annotation prefix
      * @return URI of the annotation
      */
-    Annotation addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody,
+    Annotation addAnnotation(ResearchObject researchObject, Set<URI> annotationTargets, URI annotationBody,
             String annotationUUID);
 
 

@@ -2,11 +2,15 @@ package pl.psnc.dl.wf4ever.model.AO;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
@@ -21,11 +25,14 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
  */
 public class Annotation extends AggregatedResource {
 
-    /** List of annotated objects. */
-    private List<URI> annotated;
+    /** Set of annotated objects. */
+    private Set<URI> annotated;
 
     /** The annotation body. */
     private URI body;
+
+    /** has the annotation body been loaded. */
+    private boolean loaded;
 
 
     /**
@@ -36,7 +43,7 @@ public class Annotation extends AggregatedResource {
      */
     public Annotation(URI uri) {
         super(uri);
-        annotated = new ArrayList<>();
+        annotated = new HashSet<>();
         body = null;
     }
 
@@ -68,10 +75,58 @@ public class Annotation extends AggregatedResource {
      * @param body
      *            Annotation body
      */
-    public Annotation(URI uri, List<URI> annotated, URI body) {
+    public Annotation(URI uri, Set<URI> annotated, URI body) {
         this(uri);
         this.annotated = annotated;
         this.body = body;
+    }
+
+
+    /**
+     * Constructor.
+     * 
+     * @param researchObject
+     *            RO aggregating the annotation
+     * @param uri
+     *            annotation URI
+     * @param body
+     *            annotation body, may be aggregated or not, may be a ro:Resource (rarely) or not
+     * @param targets
+     *            annotated resources, must be RO/aggregated resources/proxies
+     * @param creator
+     *            annotation author
+     * @param created
+     *            annotation creation time
+     */
+    public Annotation(ResearchObject researchObject, URI uri, URI body, Set<URI> targets, URI creator, DateTime created) {
+        this.researchObject = researchObject;
+        this.uri = uri;
+        this.body = body;
+        this.annotated = targets;
+        this.creator = creator;
+        this.created = created;
+        this.loaded = false;
+    }
+
+
+    /**
+     * Constructor.
+     * 
+     * @param researchObject
+     *            RO aggregating the annotation
+     * @param uri
+     *            annotation URI
+     * @param body
+     *            annotation body, may be aggregated or not, may be a ro:Resource (rarely) or not
+     * @param target
+     *            annotated resource, must be the RO/aggregated resource/proxy
+     * @param creator
+     *            annotation author
+     * @param created
+     *            annotation creation time
+     */
+    public Annotation(ResearchObject researchObject, URI uri, URI body, URI target, URI creator, DateTime created) {
+        this(researchObject, uri, body, new HashSet<URI>(Arrays.asList(new URI[] { target })), creator, created);
     }
 
 
@@ -123,7 +178,7 @@ public class Annotation extends AggregatedResource {
     }
 
 
-    public List<URI> getAnnotated() {
+    public Set<URI> getAnnotated() {
         return annotated;
     }
 
@@ -133,7 +188,7 @@ public class Annotation extends AggregatedResource {
     }
 
 
-    public void setAnnotated(List<URI> annotated) {
+    public void setAnnotated(Set<URI> annotated) {
         this.annotated = annotated;
     }
 

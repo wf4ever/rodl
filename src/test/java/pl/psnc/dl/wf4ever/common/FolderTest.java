@@ -22,9 +22,7 @@ public class FolderTest {
      */
     @Test
     public void testGetResourceMapUri() {
-        Folder f = new Folder();
-        Assert.assertNull(f.getResourceMapUri());
-        f.setUri(URI.create("http://example.com"));
+        Folder f = new Folder(null, URI.create("http://example.com"), null, null, null, null, false);
         Assert.assertEquals(URI.create("http://example.com/folder.rdf"), f.getResourceMapUri());
         f.setUri(URI.create("http://example.com/"));
         Assert.assertEquals(URI.create("http://example.com/folder.rdf"), f.getResourceMapUri());
@@ -38,5 +36,4 @@ public class FolderTest {
         Assert.assertEquals(URI.create("http://example.com/foobar/foobar.ttl?original=foobar.rdf"),
             f.getResourceMapUri(RDFFormat.TURTLE));
     }
-
 }

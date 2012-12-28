@@ -3,8 +3,10 @@ package pl.psnc.dl.wf4ever.evo;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -13,6 +15,7 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
@@ -105,7 +108,7 @@ public class CopyOperation implements Operation {
                 URI resourceURI = URI.create(resource.getURI());
                 if (resource.hasRDFType(RO.AggregatedAnnotation)) {
                     Resource annBody = resource.getPropertyResourceValue(AO.body);
-                    List<URI> targets = new ArrayList<>();
+                    Set<URI> targets = new HashSet<>();
                     List<RDFNode> annotationTargets = resource.listPropertyValues(RO.annotatesAggregatedResource)
                             .toList();
                     for (RDFNode annTarget : annotationTargets) {
@@ -135,14 +138,15 @@ public class CopyOperation implements Operation {
                             ClientResponse response = webResource.get(ClientResponse.class);
                             URI resourcePath = status.getCopyfrom().relativize(resourceURI);
                             URI targetURI = target.resolve(resourcePath);
-                            ROSRService.aggregateInternalResource(targetRO, targetURI, response.getEntityInputStream(),
-                                response.getType().toString(), null);
+                            targetRO.aggregate(resourcePath.toString(), response.getEntityInputStream(), response
+                                    .getType().toString());
                             //TODO improve resource type detection mechanism!!
                             if (!resource.hasRDFType(RO.Resource)) {
                                 ROSRService.convertRoResourceToAnnotationBody(targetRO, targetURI);
                             }
                             changedURIs.put(resourceURI, targetURI);
-                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException
+                                | IncorrectModelException e) {
                             throw new OperationFailedException("Could not create aggregate internal resource: "
                                     + resourceURI, e);
                         }

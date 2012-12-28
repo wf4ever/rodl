@@ -369,7 +369,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             manifestModel.add(resource, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
             manifestModel.add(resource, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
             commitTransaction(transactionStarted);
-            return new pl.psnc.dl.wf4ever.model.RO.Resource(resourceURI, resourceInfo);
+            //FIXME proxy, creator, created
+            return new pl.psnc.dl.wf4ever.model.RO.Resource(researchObject, resourceURI, null, null, null, resourceInfo);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -714,8 +715,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     List<Individual> folders = model.listIndividuals(RO.Folder).toList();
                     for (Individual folder : folders) {
                         if (folder.isURIResource()) {
-                            Folder f = new Folder();
-                            f.setUri(URI.create(folder.asResource().getURI()));
+                            Folder f = new Folder(null, URI.create(folder.asResource().getURI()), null, null, null,
+                                    null, false);
                             if (dataset.containsNamedModel(f.getResourceMapUri().toString())
                                     && !graphsToDelete.contains(f.getResourceMapUri())) {
                                 graphsToDelete.add(f.getResourceMapUri());
@@ -1089,13 +1090,13 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public Annotation addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody) {
+    public Annotation addAnnotation(ResearchObject researchObject, Set<URI> annotationTargets, URI annotationBody) {
         return addAnnotation(researchObject, annotationTargets, annotationBody, null);
     }
 
 
     @Override
-    public Annotation addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody,
+    public Annotation addAnnotation(ResearchObject researchObject, Set<URI> annotationTargets, URI annotationBody,
             String annotationUUID) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
@@ -1176,7 +1177,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             Individual annotationR = manifestModel.getIndividual(annotationUri.normalize().toString());
             URI body = URI.create(annotationR.getPropertyResourceValue(AO.body).getURI());
             List<RDFNode> targetNodes = annotationR.listPropertyValues(RO.annotatesAggregatedResource).toList();
-            List<URI> targets = new ArrayList<>();
+            Set<URI> targets = new HashSet<>();
             for (RDFNode node : targetNodes) {
                 if (node.isURIResource()) {
                     targets.add(URI.create(node.asResource().getURI()));
@@ -2044,7 +2045,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             if (ro == null) {
                 throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
             }
-            folder.setAggregationUri(researchObject.getUri());
+            folder.setResearchObject(researchObject);
             Individual resource = manifestModel.createIndividual(folder.getUri().toString(), RO.Folder);
             resource.addRDFType(RO.Resource);
             manifestModel.add(ro, ORE.aggregates, resource);
@@ -2131,7 +2132,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         evoModel.createIndividual(ro.getURI(), ROEVO.LiveRO);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
-        addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
+        addAnnotation(researchObject, new HashSet<URI>(Arrays.asList(researchObject.getUri())),
             researchObject.getFixedEvolutionAnnotationBodyUri(), null).toString();
         ro.addProperty(ORE.aggregates,
             manifestModel.getResource(researchObject.getFixedEvolutionAnnotationBodyUri().toString()));
@@ -2168,7 +2169,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         evoModel.add(ro, ROEVO.snapshotedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
         evoModel.add(ro, ROEVO.snapshotedBy, evoModel.createResource(user.getUri().toString()));
 
-        addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
+        addAnnotation(researchObject, new HashSet<>(Arrays.asList(researchObject.getUri())),
             researchObject.getFixedEvolutionAnnotationBodyUri(), null).toString();
         ro.addProperty(ORE.aggregates,
             manifestModel.createResource(researchObject.getFixedEvolutionAnnotationBodyUri().toString()));
@@ -2215,7 +2216,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         evoModel.add(ro, ROEVO.archivedAtTime, evoModel.createTypedLiteral(Calendar.getInstance()));
         evoModel.add(ro, ROEVO.archivedBy, evoModel.createResource(user.getUri().toString()));
 
-        addAnnotation(researchObject, Arrays.asList(researchObject.getUri()),
+        addAnnotation(researchObject, new HashSet<>(Arrays.asList(researchObject.getUri())),
             researchObject.getFixedEvolutionAnnotationBodyUri(), null).toString();
         ro.addProperty(ORE.aggregates,
             manifestModel.createResource(researchObject.getFixedEvolutionAnnotationBodyUri().toString()));
@@ -2353,8 +2354,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public Folder getFolder(URI folderURI) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
-            Folder folder = new Folder();
-            folder.setUri(folderURI);
+            Folder folder = new Folder(null, folderURI, null, null, null, null, false);
             if (!dataset.containsNamedModel(folder.getResourceMapUri().toString())) {
                 return null;
             }
@@ -2377,8 +2377,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             //        aggregatedByRO.addRange(RO.ResearchObject);
             //        Resource ro = folderI.getPropertyResourceValue(aggregatedByRO);
             URI roURI = URI.create(ro.getURI());
-            folder.setAggregationUri(roURI);
-            URI proxyURI = getProxyForResource(ResearchObject.get(roURI), folder.getUri());
+            folder.setResearchObject(ResearchObject.get(roURI));
+            URI proxyURI = getProxyForResource(folder.getResearchObject(), folder.getUri());
             folder.setProxyUri(proxyURI);
 
             List<Individual> entries = model.listIndividuals(RO.FolderEntry).toList();
@@ -2478,10 +2478,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public void deleteFolder(Folder folder) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            ResearchObject researchObject = ResearchObject.get(folder.getAggregationUri());
-            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
+            OntModel manifestModel = getOntModelForNamedGraph(folder.getResearchObject().getManifestUri());
             if (manifestModel == null) {
-                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+                throw new IllegalArgumentException("Could not load manifest model for :"
+                        + folder.getResearchObject().getUri());
             }
             manifestModel.getIndividual(folder.getUri().toString()).remove();
 

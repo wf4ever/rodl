@@ -16,8 +16,8 @@ import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
  */
 public class AggregatedResource extends Thing {
 
-    /** ore:AggregationUri. */
-    protected URI aggregationUri;
+    /** RO it is aggregated in. */
+    protected ResearchObject researchObject;
 
     /** URI of a proxy of this resource. */
     protected URI proxyUri;
@@ -34,9 +34,9 @@ public class AggregatedResource extends Thing {
     /**
      * Constructor.
      */
-    public AggregatedResource(URI uri, URI agggregationUri) {
+    public AggregatedResource(URI uri, ResearchObject researchObject) {
         super(uri);
-        this.aggregationUri = agggregationUri;
+        this.researchObject = researchObject;
     }
 
 
@@ -52,8 +52,7 @@ public class AggregatedResource extends Thing {
      */
     public void serialize()
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        //FIXME is this good?
-        serialize(new ResearchObject(aggregationUri));
+        serialize(researchObject);
     }
 
 
@@ -68,16 +67,6 @@ public class AggregatedResource extends Thing {
     }
 
 
-    public URI getAggregationUri() {
-        return aggregationUri;
-    }
-
-
-    public void setAggregationUri(URI aggregationUri) {
-        this.aggregationUri = aggregationUri;
-    }
-
-
     public URI getProxyUri() {
         return proxyUri;
     }
@@ -85,5 +74,15 @@ public class AggregatedResource extends Thing {
 
     public void setProxyUri(URI proxyUri) {
         this.proxyUri = proxyUri;
+    }
+
+
+    public ResearchObject getResearchObject() {
+        return researchObject;
+    }
+
+
+    public void setResearchObject(ResearchObject researchObject) {
+        this.researchObject = researchObject;
     }
 }

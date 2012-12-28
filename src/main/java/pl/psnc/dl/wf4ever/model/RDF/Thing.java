@@ -3,13 +3,20 @@ package pl.psnc.dl.wf4ever.model.RDF;
 import java.io.InputStream;
 import java.net.URI;
 
+import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
+
+import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.vocabulary.DCTerms;
 
 /**
  * The root class for the model.
@@ -21,6 +28,12 @@ public class Thing {
 
     /** resource URI. */
     protected URI uri;
+
+    /** creator URI. */
+    protected URI creator;
+
+    /** creation date. */
+    protected DateTime created;
 
 
     /**
@@ -51,6 +64,16 @@ public class Thing {
     }
 
 
+    public URI getCreator() {
+        return creator;
+    }
+
+
+    public DateTime getCreated() {
+        return created;
+    }
+
+
     /**
      * Take out an RDF graph from the triplestore and serialize it in storage (e.g. dLibra) with relative URI
      * references.
@@ -71,6 +94,49 @@ public class Thing {
         InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(uri, researchObject, format);
         ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, dataStream,
             format.getDefaultMIMEType());
+    }
+
+
+    /**
+     * Find the dcterms:creator of the RO.
+     * 
+     * @param model
+     *            manifest model
+     * @return creator URI or null if not defined
+     * @throws IncorrectModelException
+     *             incorrect manifest
+     */
+    protected URI extractCreator(OntModel model)
+            throws IncorrectModelException {
+        Individual ro = model.getIndividual(uri.toString());
+        if (ro == null) {
+            throw new IncorrectModelException("RO not found in the manifest" + uri);
+        }
+        com.hp.hpl.jena.rdf.model.Resource c = ro.getPropertyResourceValue(DCTerms.creator);
+        return c != null ? URI.create(c.getURI()) : null;
+    }
+
+
+    /**
+     * Find the dcterms:created date of the RO.
+     * 
+     * @param model
+     *            manifest model
+     * @return creation date or null if not defined
+     * @throws IncorrectModelException
+     *             incorrect manifest
+     */
+    protected DateTime extractCreated(OntModel model)
+            throws IncorrectModelException {
+        Individual ro = model.getIndividual(uri.toString());
+        if (ro == null) {
+            throw new IncorrectModelException("RO not found in the manifest" + uri);
+        }
+        RDFNode d = ro.getPropertyValue(DCTerms.created);
+        if (d == null || !d.isLiteral()) {
+            return null;
+        }
+        return DateTime.parse(d.asLiteral().getString());
     }
 
 

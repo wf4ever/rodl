@@ -2,6 +2,8 @@ package pl.psnc.dl.wf4ever.model.RO;
 
 import java.net.URI;
 
+import org.joda.time.DateTime;
+
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 
@@ -39,13 +41,45 @@ public class Resource extends AggregatedResource {
     /**
      * Constructor.
      * 
+     * @param researchObject
+     *            The RO it is aggregated by
      * @param uri
-     *            URI
-     * @param stats
-     *            physical representation metadata
+     *            resource URI
+     * @param proxyURI
+     *            URI of the proxy
+     * @param creator
+     *            author of the resource
+     * @param created
+     *            creation date
      */
-    public Resource(URI uri, ResourceMetadata stats) {
-        this(uri);
+    public Resource(ResearchObject researchObject, URI uri, URI proxyURI, URI creator, DateTime created) {
+        this.researchObject = researchObject;
+        this.uri = uri;
+        this.proxyUri = proxyURI;
+        this.creator = creator;
+        this.created = created;
+    }
+
+
+    /**
+     * Constructor.
+     * 
+     * @param researchObject
+     *            The RO it is aggregated by
+     * @param uri
+     *            resource URI
+     * @param proxyURI
+     *            URI of the proxy
+     * @param creator
+     *            author of the resource
+     * @param created
+     *            creation date
+     * @param stats
+     *            physical statistics (size, checksum, etc)
+     */
+    public Resource(ResearchObject researchObject, URI uri, URI proxyURI, URI creator, DateTime created,
+            ResourceMetadata stats) {
+        this(researchObject, uri, proxyURI, creator, created);
         this.stats = stats;
     }
 

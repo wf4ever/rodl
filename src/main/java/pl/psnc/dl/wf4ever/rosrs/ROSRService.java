@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.activation.MimetypesFileTypeMap;
@@ -336,7 +337,7 @@ public final class ROSRService {
             ROSRService.SMS.get().addAnnotationBody(researchObject, resource,
                 new ByteArrayInputStream(entity.getBytes()), format);
             // update the named graph copy in dLibra, the manifest is not changed
-            updateNamedGraphInDlibra(filePath, researchObject, resource);
+            researchObject.getResource(resource).serialize();
             updateROAttributesInDlibra(researchObject);
         } else {
             ResourceMetadata resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath,
@@ -375,16 +376,6 @@ public final class ROSRService {
         String filePath = researchObject.getUri().relativize(original != null ? resource.resolve(original) : resource)
                 .getPath();
         return ROSRService.DL.get().getFileInfo(researchObject.getUri(), filePath);
-    }
-
-
-    private static void updateNamedGraphInDlibra(String filePath, ResearchObject researchObject, URI namedGraphURI)
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        RDFFormat format = RDFFormat.forFileName(filePath, RDFFormat.RDFXML);
-        InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(namedGraphURI, researchObject,
-            format);
-        ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, dataStream,
-            format.getDefaultMIMEType());
     }
 
 
@@ -533,7 +524,7 @@ public final class ROSRService {
                 AggregatedResource res = SMS.get().addAnnotationBody(researchObject, resource, data, format);
                 res.setProxyUri(SMS.get().addProxy(researchObject, resource));
                 // update the named graph copy in dLibra, the manifest is not changed
-                updateNamedGraphInDlibra(filePath, researchObject, resource);
+                researchObject.getResource(resource).serialize();
                 updateROAttributesInDlibra(researchObject);
                 return res;
             } else {
@@ -581,7 +572,7 @@ public final class ROSRService {
      *            the research object
      * @param annotationBody
      *            annotation body URI
-     * @param annotationTargets
+     * @param set
      *            list of annotated resources URIs
      * @return 201 Created response
      * @throws NotFoundException
@@ -591,10 +582,9 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Annotation addAnnotation(ResearchObject researchObject, URI annotationBody,
-            List<URI> annotationTargets)
+    public static Annotation addAnnotation(ResearchObject researchObject, URI annotationBody, Set<URI> set)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        Annotation annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody);
+        Annotation annotation = ROSRService.SMS.get().addAnnotation(researchObject, set, annotationBody);
         // update the manifest that contains the annotation in dLibra
         researchObject.getManifest().serialize();
         return annotation;
@@ -620,8 +610,8 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response addAnnotation(ResearchObject researchObject, URI annotationBody,
-            List<URI> annotationTargets, String annotationPrefix)
+    public static Response addAnnotation(ResearchObject researchObject, URI annotationBody, Set<URI> annotationTargets,
+            String annotationPrefix)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         Annotation annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody,
             annotationPrefix);
@@ -661,7 +651,7 @@ public final class ROSRService {
      *             access denied when updating data in DL
      */
     public static Response updateAnnotation(ResearchObject researchObject, URI annotationUri, URI annotationBody,
-            List<URI> annotationTargets)
+            Set<URI> annotationTargets)
             throws NotFoundException, DigitalLibraryException, AccessDeniedException {
         URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, annotationUri, null);
         ROSRService.SMS.get().updateAnnotation(researchObject,
@@ -848,8 +838,7 @@ public final class ROSRService {
      */
     public static Folder assembleFolder(ResearchObject researchObject, URI folderURI, InputStream content)
             throws BadRequestException {
-        Folder folder = new Folder();
-        folder.setUri(folderURI);
+        Folder folder = new Folder(researchObject, folderURI, null, null, null, null, false);
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         model.read(content, researchObject.getUri().toString());
         List<Individual> folders = model.listIndividuals(RO.Folder).toList();
@@ -934,8 +923,7 @@ public final class ROSRService {
     public static Folder createFolder(ResearchObject researchObject, Folder folder)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         folder = SMS.get().addFolder(researchObject, folder);
-        String path = researchObject.getUri().relativize(folder.getResourceMapUri()).toString();
-        updateNamedGraphInDlibra(path, researchObject, folder.getResourceMapUri());
+        folder.getResourceMap().serialize();
         researchObject.getManifest().serialize();
         return folder;
     }
@@ -1003,12 +991,7 @@ public final class ROSRService {
     public static void updateFolder(Folder folder)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         ROSRService.SMS.get().updateFolder(folder);
-        ResearchObject researchObject = ResearchObject.get(folder.getAggregationUri());
-        if (researchObject == null) {
-            throw new NotFoundException("Research Object not found");
-        }
-        updateNamedGraphInDlibra(researchObject.getUri().relativize(folder.getResourceMapUri()).toString(),
-            researchObject, folder.getResourceMapUri());
+        folder.getResourceMap().serialize();
     }
 
 
@@ -1026,14 +1009,10 @@ public final class ROSRService {
      */
     public static void deleteFolder(Folder folder)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        ResearchObject researchObject = ResearchObject.get(folder.getAggregationUri());
-        if (researchObject == null) {
-            throw new NotFoundException("Research Object not found");
-        }
-        String filePath = researchObject.getUri().relativize(folder.getResourceMapUri()).getPath();
-        ROSRService.DL.get().deleteFile(researchObject.getUri(), filePath);
+        String filePath = folder.getResearchObject().getUri().relativize(folder.getResourceMapUri()).getPath();
+        ROSRService.DL.get().deleteFile(folder.getResearchObject().getUri(), filePath);
         ROSRService.SMS.get().deleteFolder(folder);
-        researchObject.getManifest().serialize();
+        folder.getResearchObject().getManifest().serialize();
     }
 
 

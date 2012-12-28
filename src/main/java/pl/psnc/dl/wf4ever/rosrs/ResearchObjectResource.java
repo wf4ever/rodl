@@ -5,9 +5,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 
@@ -36,6 +37,7 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
@@ -166,28 +168,29 @@ public class ResearchObjectResource {
      *             could not connect to the DL
      * @throws AccessDeniedException
      *             access denied when updating data in DL
+     * @throws IncorrectModelException
      */
     @POST
-    public Response addResource(@PathParam("ro_id") String researchObjectId, @HeaderParam("Accept") String accept,
-            InputStream content)
-            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
+    public Response addResource(@PathParam("ro_id") String researchObjectId, @HeaderParam("Slug") String path,
+            @HeaderParam("Accept") String accept, InputStream content)
+            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException,
+            IncorrectModelException {
         URI uri = uriInfo.getAbsolutePath();
         RDFFormat responseSyntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
         ResearchObject researchObject = ResearchObject.get(uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        URI resourceUri;
-        if (request.getHeader(Constants.SLUG_HEADER) != null) {
-            resourceUri = uriInfo.getAbsolutePathBuilder().path(request.getHeader(Constants.SLUG_HEADER)).build();
-        } else {
-            resourceUri = uriInfo.getAbsolutePathBuilder().path(UUID.randomUUID().toString()).build();
+        researchObject.load();
+        if (path == null) {
+            path = UUID.randomUUID().toString();
         }
+        URI resourceUri = uriInfo.getAbsolutePathBuilder().path(path).build();
         if (ROSRService.SMS.get().isAggregatedResource(researchObject, resourceUri)) {
             throw new ConflictException("This resource has already been aggregated. Use PUT to update it.");
         }
 
-        List<URI> annotationTargets = new ArrayList<>();
+        Set<URI> annotationTargets = new HashSet<>();
         for (@SuppressWarnings("unchecked")
         Enumeration<String> en = request.getHeaders(Constants.LINK_HEADER); en.hasMoreElements();) {
             Matcher m = Constants.AO_LINK_HEADER_PATTERN.matcher(en.nextElement());
@@ -209,8 +212,8 @@ public class ResearchObjectResource {
                         "The annotation target %s is not RO, aggregated resource nor proxy.", target));
                 }
             }
-            pl.psnc.dl.wf4ever.model.RO.Resource roResource = ROSRService.aggregateInternalResource(researchObject,
-                resourceUri, content, request.getContentType(), null);
+            pl.psnc.dl.wf4ever.model.RO.Resource roResource = researchObject.aggregate(path, content,
+                request.getContentType());
             AggregatedResource aggregatedResource = ROSRService.convertRoResourceToAnnotationBody(researchObject,
                 roResource.getUri());
 
@@ -344,7 +347,7 @@ public class ResearchObjectResource {
             throw new NotFoundException("Research Object not found");
         }
         URI body;
-        List<URI> targets = new ArrayList<>();
+        Set<URI> targets = new HashSet<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         model.read(content, researchObject.getUri().toString());
         List<Individual> aggregatedAnnotations = model.listIndividuals(RO.AggregatedAnnotation).toList();
