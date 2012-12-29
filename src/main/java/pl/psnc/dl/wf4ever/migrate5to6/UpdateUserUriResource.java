@@ -12,7 +12,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.BadRequestException;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 /**

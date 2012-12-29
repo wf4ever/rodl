@@ -13,7 +13,6 @@ import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.StaleObjectStateException;
 
-import pl.psnc.dl.wf4ever.common.HibernateUtil;
 
 /**
  * Copied from https://community.jboss.org/wiki/OpenSessionInView.

@@ -9,7 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 
-import pl.psnc.dl.wf4ever.common.HibernateUtil;
+import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;

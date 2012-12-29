@@ -7,7 +7,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 
-import pl.psnc.dl.wf4ever.common.HibernateUtil;
+import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 
 /**
  * DAO base, with generic methods for loading, saving and deleting objects.

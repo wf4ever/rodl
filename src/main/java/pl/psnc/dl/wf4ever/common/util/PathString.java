@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.utils.URI;
+package pl.psnc.dl.wf4ever.common.util;
 
 /**
  * Responsible for obtaining certain data from file path given in the string format.

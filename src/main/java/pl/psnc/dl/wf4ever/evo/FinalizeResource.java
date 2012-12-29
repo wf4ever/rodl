@@ -19,7 +19,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.BadRequestException;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 
 import com.sun.jersey.api.NotFoundException;
 
