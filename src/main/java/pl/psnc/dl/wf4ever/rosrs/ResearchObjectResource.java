@@ -231,8 +231,8 @@ public class ResearchObjectResource {
             }
             return response.build();
         } else {
-            pl.psnc.dl.wf4ever.model.RO.Resource resource = ROSRService.aggregateInternalResource(researchObject,
-                resourceUri, content, request.getContentType(), null);
+            pl.psnc.dl.wf4ever.model.RO.Resource resource = researchObject.aggregate(path, content,
+                request.getContentType());
             if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource.getUri())) {
                 ROSRService.convertRoResourceToAnnotationBody(researchObject, resource.getUri());
             }
@@ -271,21 +271,23 @@ public class ResearchObjectResource {
      *             could not connect to the DL
      * @throws AccessDeniedException
      *             access denied when updating data in DL
+     * @throws IncorrectModelException
      */
     @POST
     @Consumes(Constants.PROXY_MIME_TYPE)
-    public Response addProxy(@PathParam("ro_id") String researchObjectId, @HeaderParam("Accept") String accept,
-            InputStream content)
-            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
+    public Response addProxy(@PathParam("ro_id") String researchObjectId, @HeaderParam("Slug") String slug,
+            @HeaderParam("Accept") String accept, InputStream content)
+            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException,
+            IncorrectModelException {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.get(uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
         URI proxyFor;
-        if (request.getHeader(Constants.SLUG_HEADER) != null) {
+        if (slug != null) {
             // internal resource
-            proxyFor = uriInfo.getAbsolutePathBuilder().path(request.getHeader(Constants.SLUG_HEADER)).build();
+            proxyFor = uriInfo.getAbsolutePathBuilder().path(slug).build();
         } else {
             // external resource
             OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
@@ -312,8 +314,15 @@ public class ResearchObjectResource {
                 throw new BadRequestException("The entity body does not define any ore:Proxy.");
             }
         }
-        return ROSRService.aggregateExternalResource(researchObject, proxyFor,
-            RDFFormat.forMIMEType(accept, RDFFormat.RDFXML)).build();
+        pl.psnc.dl.wf4ever.model.RO.Resource resource = researchObject.aggregate(proxyFor);
+        RDFFormat syntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
+
+        String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, proxyFor.toString(),
+            Constants.ORE_PROXY_FOR_HEADER);
+        InputStream proxyDesc = ROSRService.SMS.get().getResource(researchObject, syntax, resource.getProxyUri());
+        return Response.created(resource.getProxyUri()).entity(proxyDesc).type(syntax.getDefaultMIMEType())
+                .header(Constants.LINK_HEADER, proxyForHeader).build();
+
     }
 
 

@@ -48,6 +48,7 @@ import com.sun.jersey.core.header.ContentDisposition;
 public class ResearchObjectListResource {
 
     /** logger. */
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = Logger.getLogger(ResearchObjectListResource.class);
 
     /** HTTP request. */
@@ -92,6 +93,8 @@ public class ResearchObjectListResource {
      * 
      * @param researchObjectId
      *            slug header
+     * @param accept
+     *            Accept header
      * @return 201 (Created) when the RO was successfully created, 409 (Conflict) if the RO_ID is already used in the
      *         WORKSPACE_ID workspace
      * @throws BadRequestException
@@ -110,7 +113,8 @@ public class ResearchObjectListResource {
      *             no permissions
      */
     @POST
-    public Response createResearchObject(@HeaderParam(Constants.SLUG_HEADER) String researchObjectId)
+    public Response createResearchObject(@HeaderParam("Slug") String researchObjectId,
+            @HeaderParam("Accept") String accept)
             throws BadRequestException, IllegalArgumentException, UriBuilderException, ConflictException,
             DigitalLibraryException, NotFoundException, AccessDeniedException {
         if (researchObjectId == null || researchObjectId.isEmpty()) {
@@ -122,7 +126,7 @@ public class ResearchObjectListResource {
         URI uri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.create(uri);
 
-        RDFFormat format = RDFFormat.forMIMEType(request.getHeader(Constants.ACCEPT_HEADER), RDFFormat.RDFXML);
+        RDFFormat format = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
         InputStream manifest = ROSRService.SMS.get().getNamedGraph(researchObject.getManifestUri(), format);
         ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType())
                 .fileName(ResearchObject.MANIFEST_PATH).build();
@@ -134,6 +138,8 @@ public class ResearchObjectListResource {
     /**
      * Create a new RO based on a ZIP sent in the request.
      * 
+     * @param researchObjectId
+     *            slug header
      * @param zipStream
      *            ZIP input stream
      * @return 201 Created
@@ -151,10 +157,9 @@ public class ResearchObjectListResource {
      */
     @POST
     @Consumes("application/zip")
-    public Response createResearchObjectFromZip(InputStream zipStream)
+    public Response createResearchObjectFromZip(@HeaderParam("Slug") String researchObjectId, InputStream zipStream)
             throws BadRequestException, IOException, AccessDeniedException, ConflictException, DigitalLibraryException,
             NotFoundException {
-        String researchObjectId = request.getHeader(Constants.SLUG_HEADER);
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
@@ -163,7 +168,7 @@ public class ResearchObjectListResource {
 
         UUID uuid = UUID.randomUUID();
         File tmpFile = File.createTempFile("tmp_ro", uuid.toString());
-        BufferedInputStream inputStream = new BufferedInputStream(request.getInputStream());
+        BufferedInputStream inputStream = new BufferedInputStream(zipStream);
         FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
         IOUtils.copy(inputStream, fileOutputStream);
         Response response = ROSRService

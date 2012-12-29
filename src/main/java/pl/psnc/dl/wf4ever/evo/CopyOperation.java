@@ -152,8 +152,9 @@ public class CopyOperation implements Operation {
                         }
                     } else {
                         try {
-                            ROSRService.aggregateExternalResource(targetRO, resourceURI, null);
-                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                            targetRO.aggregate(resourceURI);
+                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException
+                                | IncorrectModelException e) {
                             throw new OperationFailedException("Could not create aggregate external resource: "
                                     + resourceURI, e);
                         }

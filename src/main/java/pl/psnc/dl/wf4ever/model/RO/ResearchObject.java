@@ -8,6 +8,8 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.ws.rs.core.UriBuilder;
+
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
@@ -17,6 +19,7 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -344,7 +347,7 @@ public class ResearchObject extends Thing {
      * Add an internal resource to the research object.
      * 
      * @param path
-     *            resource path, relative to the RO URI
+     *            resource path, relative to the RO URI, not encoded
      * @param content
      *            resource content
      * @param contentType
@@ -361,8 +364,44 @@ public class ResearchObject extends Thing {
      */
     public Resource aggregate(String path, InputStream content, String contentType)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, IncorrectModelException {
-        Resource resource = ROSRService.aggregateInternalResource(this, this.getUri().resolve(path), content,
-            contentType, null);
+        URI resourceUri = UriBuilder.fromUri(uri).path(path).build();
+        ResourceMetadata resourceInfo = ROSRService.DL.get().createOrUpdateFile(uri, path, content,
+            contentType != null ? contentType : "text/plain");
+        Resource resource = ROSRService.SMS.get().addResource(this, resourceUri, resourceInfo);
+        // update the manifest that describes the resource in dLibra
+        getManifest().serialize();
+        URI proxy = ROSRService.SMS.get().addProxy(this, resourceUri);
+        resource.setProxyUri(proxy);
+        if (!loaded) {
+            load();
+        }
+        //this is unnecessary if the resource has been saved in the triplestore before loading
+        this.resources.put(resource.getUri(), resource);
+        return resource;
+    }
+
+
+    /**
+     * Add an external resource (a reference to a resource) to the research object.
+     * 
+     * @param uri
+     *            resource URI
+     * @return the resource instance
+     * @throws NotFoundException
+     * @throws DigitalLibraryException
+     * @throws AccessDeniedException
+     * @throws IncorrectModelException
+     * @throws ROSRSException
+     *             server returned an unexpected response
+     * @throws ROException
+     *             the manifest is incorrect
+     */
+    public Resource aggregate(URI uri)
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException, IncorrectModelException {
+        Resource resource = ROSRService.SMS.get().addResource(this, uri, null);
+        resource.setProxyUri(ROSRService.SMS.get().addProxy(this, uri));
+        // update the manifest that describes the resource in dLibra
+        this.getManifest().serialize();
         if (!loaded) {
             load();
         }

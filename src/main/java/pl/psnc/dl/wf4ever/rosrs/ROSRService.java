@@ -40,7 +40,6 @@ import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
-import pl.psnc.dl.wf4ever.model.RO.Resource;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
@@ -104,75 +103,6 @@ public final class ROSRService {
                 LOGGER.warn("URI not found in SMS: " + researchObject.getUri());
             }
         }
-    }
-
-
-    /**
-     * Aggregate a new internal resource in the research object, upload the resource and add a proxy.
-     * 
-     * @param researchObject
-     *            the research object
-     * @param resourceUri
-     *            resource URI, must be internal
-     * @param entity
-     *            request entity
-     * @param contentType
-     *            resource content type
-     * @param original
-     *            original resource in case of using a format specific URI
-     * @param syntax
-     *            response RDF format, default is RDF/XML
-     * @return 201 Created with proxy URI
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     */
-    public static Resource aggregateInternalResource(ResearchObject researchObject, URI resourceUri,
-            InputStream entity, String contentType, String original)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        if (original != null) {
-            resourceUri = resourceUri.resolve(original);
-        }
-        String filePath = researchObject.getUri().relativize(resourceUri).getPath();
-        ResourceMetadata resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath,
-            entity, contentType != null ? contentType : "text/plain");
-        Resource resource = ROSRService.SMS.get().addResource(researchObject, resourceUri, resourceInfo);
-        // update the manifest that describes the resource in dLibra
-        researchObject.getManifest().serialize();
-        URI proxy = ROSRService.SMS.get().addProxy(researchObject, resourceUri);
-        resource.setProxyUri(proxy);
-        return resource;
-    }
-
-
-    /**
-     * Aggregate a resource in the research object without uploading its content and add a proxy.
-     * 
-     * @param researchObject
-     *            research object
-     * @param resource
-     *            resource that will be aggregated
-     * @param syntax
-     *            format in which the response should be returned
-     * @return 201 Created response pointing to the proxy
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     */
-    public static ResponseBuilder aggregateExternalResource(ResearchObject researchObject, URI resource,
-            RDFFormat syntax)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        ROSRService.SMS.get().addResource(researchObject, resource, null);
-        ResponseBuilder builder = addProxy(researchObject, resource, syntax);
-        // update the manifest that describes the resource in dLibra
-        researchObject.getManifest().serialize();
-        return builder;
     }
 
 
@@ -262,30 +192,6 @@ public final class ROSRService {
     public static InputStream getEvoInfo(ResearchObject researchObject) {
         ROSRService.SMS.get();
         return null;
-    }
-
-
-    /**
-     * Add a proxy to the research object.
-     * 
-     * @param researchObject
-     *            the research object
-     * @param proxyFor
-     *            resource for which the proxy is
-     * @param syntax
-     *            format in which the response should be returned, default is RDF/XML
-     * @return 201 Created response pointing to the proxy
-     */
-    private static ResponseBuilder addProxy(ResearchObject researchObject, URI proxyFor, RDFFormat syntax) {
-        if (syntax == null) {
-            syntax = RDFFormat.RDFXML;
-        }
-        URI proxy = ROSRService.SMS.get().addProxy(researchObject, proxyFor);
-        String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, proxyFor.toString(),
-            Constants.ORE_PROXY_FOR_HEADER);
-        InputStream proxyDesc = SMS.get().getResource(researchObject, syntax, proxy);
-        return Response.created(proxy).entity(proxyDesc).type(syntax.getDefaultMIMEType())
-                .header(Constants.LINK_HEADER, proxyForHeader);
     }
 
 
@@ -770,21 +676,17 @@ public final class ROSRService {
             UUID uuid = UUID.randomUUID();
             File tmpFile = File.createTempFile("tmp_resource", uuid.toString());
             try {
-                InputStream is = zip.getEntryAsStream(originalResourceName);
-                if (is != null) {
-                    try {
+                if (zip.containsEntry(originalResourceName)) {
+                    try (InputStream is = zip.getEntryAsStream(originalResourceName)) {
                         FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
                         IOUtils.copy(is, fileOutputStream);
                         String mimeType = mfm.getContentType(resourceURI.getPath());
-                        aggregateInternalResource(researchObject, resourceURI, new FileInputStream(tmpFile), mimeType,
-                            null);
-                    } finally {
-                        is.close();
+                        researchObject.aggregate(originalResourceName, new FileInputStream(tmpFile), mimeType);
                     }
                 } else {
-                    aggregateExternalResource(researchObject, aggregated.getUri(), null);
+                    researchObject.aggregate(aggregated.getUri());
                 }
-            } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+            } catch (AccessDeniedException | DigitalLibraryException | NotFoundException | IncorrectModelException e) {
                 LOGGER.error("Error when aggregating resources", e);
             } finally {
                 tmpFile.delete();

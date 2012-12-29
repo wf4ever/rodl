@@ -80,6 +80,11 @@ public class MemoryZipFile {
     }
 
 
+    public boolean containsEntry(String entryName) {
+        return zipFile.getEntry(prefix + entryName) != null;
+    }
+
+
     public InputStream getManifestAsInputStream() {
         return getEntryAsStream(ResearchObject.MANIFEST_PATH);
     }
