@@ -382,19 +382,20 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static AggregatedResource convertRoResourceToAnnotationBody(ResearchObject researchObject, URI resource)
+    public static AggregatedResource convertRoResourceToAnnotationBody(ResearchObject researchObject,
+            AggregatedResource resource)
             throws DigitalLibraryException, AccessDeniedException {
-        String filePath = researchObject.getUri().relativize(resource).getPath();
+        String filePath = researchObject.getUri().relativize(resource.getUri()).getPath();
         try {
             InputStream data = ROSRService.DL.get().getFileContents(researchObject.getUri(), filePath);
             if (data != null) {
                 RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get()
                         .getFileInfo(researchObject.getUri(), filePath).getMimeType());
-                SMS.get().removeResource(researchObject, resource);
-                AggregatedResource res = SMS.get().addAnnotationBody(researchObject, resource, data, format);
-                res.setProxyUri(SMS.get().addProxy(researchObject, resource));
+                SMS.get().removeResource(researchObject, resource.getUri());
+                AggregatedResource res = SMS.get().addAnnotationBody(researchObject, resource.getUri(), data, format);
+                res.setProxy(SMS.get().addProxy(researchObject, resource));
                 // update the named graph copy in dLibra, the manifest is not changed
-                researchObject.getResource(resource).serialize();
+                resource.serialize();
                 updateROAttributesInDlibra(researchObject);
                 return res;
             } else {
@@ -520,24 +521,23 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static Response updateAnnotation(ResearchObject researchObject, URI annotationUri, URI annotationBody,
-            Set<URI> annotationTargets)
+    public static Response updateAnnotation(ResearchObject researchObject, Annotation annotation)
             throws NotFoundException, DigitalLibraryException, AccessDeniedException {
-        URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, annotationUri, null);
-        ROSRService.SMS.get().updateAnnotation(researchObject,
-            new Annotation(annotationUri, annotationTargets, annotationBody));
+        URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, annotation.getUri(), null);
+        ROSRService.SMS.get().updateAnnotation(researchObject, annotation);
 
-        if (oldAnnotationBody == null || !oldAnnotationBody.equals(annotationBody)) {
+        if (oldAnnotationBody == null || !oldAnnotationBody.equals(annotation.getBody())) {
             ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody);
-            if (ROSRService.SMS.get().isAggregatedResource(researchObject, annotationBody)) {
-                ROSRService.convertRoResourceToAnnotationBody(researchObject, annotationBody);
+            if (researchObject.getAggregatedResources().containsKey(annotation.getBody())) {
+                ROSRService.convertRoResourceToAnnotationBody(researchObject, researchObject.getAggregatedResources()
+                        .get(annotation.getBody()));
             }
         }
 
-        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(),
+        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBody().toString(),
             AO.annotatesResource);
         ResponseBuilder response = Response.ok().header(Constants.LINK_HEADER, annotationBodyHeader);
-        for (URI target : annotationTargets) {
+        for (URI target : annotation.getAnnotated()) {
             String targetHeader = String
                     .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
             response = response.header(Constants.LINK_HEADER, targetHeader);
@@ -641,8 +641,12 @@ public final class ROSRService {
             for (RDFNode aggregatedResource : aggregatedResources) {
                 if (aggregatedResource.isURIResource()) {
                     try {
-                        URI res = new URI(aggregatedResource.asResource().getURI());
-                        entries.put(res, new FolderEntry(res, null));
+                        URI resUri = new URI(aggregatedResource.asResource().getURI());
+                        if (!researchObject.getAggregatedResources().containsKey(resUri)) {
+                            throw new BadRequestException("Resource " + resUri
+                                    + " is not aggregated by the research object");
+                        }
+                        entries.put(resUri, new FolderEntry(researchObject.getAggregatedResources().get(resUri), null));
                     } catch (URISyntaxException e) {
                         throw new BadRequestException("Aggregated resource has an incorrect URI", e);
                     }
@@ -684,11 +688,11 @@ public final class ROSRService {
         }
         for (FolderEntry folderEntry : entries.values()) {
             if (folderEntry.getEntryName() == null) {
-                if (folderEntry.getProxyFor().getPath() != null) {
-                    String[] segments = folderEntry.getProxyFor().getPath().split("/");
+                if (folderEntry.getProxyFor().getUri().getPath() != null) {
+                    String[] segments = folderEntry.getProxyFor().getUri().getPath().split("/");
                     folderEntry.setEntryName(segments[segments.length - 1]);
                 } else {
-                    folderEntry.setEntryName(folderEntry.getProxyFor().getHost());
+                    folderEntry.setEntryName(folderEntry.getProxyFor().getUri().getHost());
                 }
             }
         }
@@ -745,7 +749,9 @@ public final class ROSRService {
                 RDFNode proxyForResource = it2.next();
                 if (proxyForResource.isURIResource()) {
                     try {
-                        entry.setProxyFor(new URI(proxyForResource.asResource().getURI()));
+                        URI resUri = new URI(proxyForResource.asResource().getURI());
+                        AggregatedResource res = folder.getResearchObject().getAggregatedResources().get(resUri);
+                        entry.setProxyFor(res);
                     } catch (URISyntaxException e) {
                         throw new BadRequestException("Wrong ore:proxyFor URI", e);
                     }
@@ -757,7 +763,7 @@ public final class ROSRService {
             }
             RDFNode entryName = entryI.getPropertyValue(RO.entryName);
             if (entryName == null) {
-                entry.setEntryName(FolderEntry.generateEntryName(entry.getProxyFor()));
+                entry.setEntryName(FolderEntry.generateEntryName(entry.getProxyFor().getUri()));
             } else {
                 entry.setEntryName(entryName.asLiteral().getString());
             }

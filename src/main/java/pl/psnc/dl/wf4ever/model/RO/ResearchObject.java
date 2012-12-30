@@ -33,6 +33,7 @@ import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
@@ -76,6 +77,12 @@ public class ResearchObject extends Thing {
     /** has the metadata been loaded from triplestore. */
     private boolean loaded;
 
+    /** aggregated resources, including annotations, resources and folders. */
+    private Map<URI, AggregatedResource> aggregatedResources;
+
+    /** proxies declared in this RO. */
+    private Map<URI, Proxy> proxies;
+
     /** aggregated ro:Resources, excluding ro:Folders. */
     private Map<URI, Resource> resources;
 
@@ -83,7 +90,10 @@ public class ResearchObject extends Thing {
     private Map<URI, Folder> folders;
 
     /** aggregated annotations, grouped based on ao:annotatesResource. */
-    private Multimap<URI, Annotation> annotations;
+    private Multimap<URI, Annotation> annotationsByTarget;
+
+    /** aggregated annotations. */
+    private Map<URI, Annotation> annotations;
 
 
     //TODO add properties stored in evo_info.ttl
@@ -216,9 +226,55 @@ public class ResearchObject extends Thing {
         this.created = extractCreated(model);
         this.resources = extractResources(model);
         this.folders = extractFolders(model);
-        this.annotations = extractAnnotations(model);
+        this.annotationsByTarget = extractAnnotations(model);
+        this.aggregatedResources = extractAggregatedResources(model, resources, folders, annotations);
         this.loaded = true;
         return this;
+    }
+
+
+    private Map<URI, AggregatedResource> extractAggregatedResources(OntModel model, Map<URI, Resource> resources2,
+            Map<URI, Folder> folders2, Map<URI, Annotation> annotations2) {
+        Map<URI, AggregatedResource> aggregated = new HashMap<>();
+        String queryString = String
+                .format(
+                    "PREFIX ore: <%s> PREFIX dcterms: <%s> SELECT ?resource ?proxy ?created ?creator WHERE { <%s> ore:aggregates ?resource . ?resource a ore:AggregatedResource . ?proxy ore:proxyFor ?resource . OPTIONAL { ?resource dcterms:creator ?creator . } OPTIONAL { ?resource dcterms:created ?created . } }",
+                    ORE.NAMESPACE, DCTerms.NS, uri.toString());
+
+        Query query = QueryFactory.create(queryString);
+        QueryExecution qe = QueryExecutionFactory.create(query, model);
+        try {
+            ResultSet results = qe.execSelect();
+            while (results.hasNext()) {
+                QuerySolution solution = results.next();
+                AggregatedResource resource;
+                RDFNode r = solution.get("resource");
+                URI rURI = URI.create(r.asResource().getURI());
+                if (resources2.containsKey(rURI)) {
+                    resource = resources2.get(rURI);
+                } else if (folders2.containsKey(rURI)) {
+                    resource = folders2.get(rURI);
+                } else if (annotations2.containsKey(rURI)) {
+                    resource = annotations2.get(rURI);
+                } else {
+                    RDFNode p = solution.get("proxy");
+                    URI pURI = URI.create(p.asResource().getURI());
+                    RDFNode creatorNode = solution.get("creator");
+                    URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
+                            .asResource().getURI()) : null;
+                    RDFNode createdNode = solution.get("created");
+                    DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
+                            .asLiteral().getString()) : null;
+                    resource = new AggregatedResource(this, rURI, pURI, resCreator, resCreated);
+                }
+                aggregated.put(rURI, resource);
+            }
+        } finally {
+            qe.close();
+        }
+
+        //TODO save proxies
+        return aggregated;
     }
 
 
@@ -248,14 +304,14 @@ public class ResearchObject extends Thing {
                 }
                 URI rURI = URI.create(r.asResource().getURI());
                 RDFNode p = solution.get("proxy");
+                URI pUri = URI.create(p.asResource().getURI());
                 RDFNode creatorNode = solution.get("creator");
                 URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
                         .asResource().getURI()) : null;
                 RDFNode createdNode = solution.get("created");
                 DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                         .asLiteral().getString()) : null;
-                resources2.put(rURI, new Resource(this, rURI, URI.create(p.asResource().getURI()), resCreator,
-                        resCreated));
+                resources2.put(rURI, new Resource(this, rURI, pUri, resCreator, resCreated));
             }
         } finally {
             qe.close();
@@ -288,6 +344,7 @@ public class ResearchObject extends Thing {
                 RDFNode f = solution.get("folder");
                 URI fURI = URI.create(f.asResource().getURI());
                 RDFNode p = solution.get("proxy");
+                URI pUri = URI.create(p.asResource().getURI());
                 RDFNode rm = solution.get("resourcemap");
                 RDFNode creatorNode = solution.get("creator");
                 URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
@@ -307,9 +364,8 @@ public class ResearchObject extends Thing {
                     qe2.close();
                 }
 
-                folders2.put(fURI,
-                    new Folder(this, fURI, URI.create(p.asResource().getURI()), URI.create(rm.asResource().getURI()),
-                            resCreator, resCreated, isRootFolder));
+                folders2.put(fURI, new Folder(this, fURI, pUri, URI.create(rm.asResource().getURI()), resCreator,
+                        resCreated, isRootFolder));
             }
         } finally {
             qe.close();
@@ -331,7 +387,7 @@ public class ResearchObject extends Thing {
         Map<URI, Annotation> annotationsByUri = new HashMap<>();
         String queryString = String
                 .format(
-                    "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ao: <%s> PREFIX ro: <%s> SELECT ?annotation ?body ?target ?created ?creator WHERE { <%s> ore:aggregates ?annotation . ?annotation a ro:AggregatedAnnotation ; ao:body ?body ; ro:annotatesAggregatedResource ?target . OPTIONAL { ?annotation dcterms:creator ?creator . } OPTIONAL { ?annotation dcterms:created ?created . } }",
+                    "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ao: <%s> PREFIX ro: <%s> SELECT ?annotation ?body ?target ?created ?creator WHERE { <%s> ore:aggregates ?annotation . ?annotation a ro:AggregatedAnnotation ; ao:body ?body ; ro:annotatesAggregatedResource ?target . ?proxy ore:proxyFor ?annotation . OPTIONAL { ?annotation dcterms:creator ?creator . } OPTIONAL { ?annotation dcterms:created ?created . } }",
                     ORE.NAMESPACE, DCTerms.NS, AO.NAMESPACE, RO.NAMESPACE, uri.toString());
 
         Query query = QueryFactory.create(queryString);
@@ -342,6 +398,8 @@ public class ResearchObject extends Thing {
                 QuerySolution solution = results.next();
                 RDFNode a = solution.get("annotation");
                 URI aURI = URI.create(a.asResource().getURI());
+                RDFNode p = solution.get("proxy");
+                URI pUri = URI.create(p.asResource().getURI());
                 RDFNode t = solution.get("target");
                 URI tURI = URI.create(t.asResource().getURI());
                 Annotation annotation;
@@ -350,14 +408,14 @@ public class ResearchObject extends Thing {
                     annotation.getAnnotated().add(tURI);
                 } else {
                     RDFNode b = solution.get("body");
+                    URI bUri = URI.create(b.asResource().getURI());
                     RDFNode creatorNode = solution.get("creator");
                     URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
                             .asResource().getURI()) : null;
                     RDFNode createdNode = solution.get("created");
                     DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                             .asLiteral().getString()) : null;
-                    annotation = new Annotation(this, aURI, URI.create(b.asResource().getURI()), tURI, resCreator,
-                            resCreated);
+                    annotation = new Annotation(this, aURI, pUri, bUri, tURI, resCreator, resCreated);
                 }
                 annotations2.put(tURI, annotation);
             }
@@ -396,8 +454,8 @@ public class ResearchObject extends Thing {
         Resource resource = ROSRService.SMS.get().addResource(this, resourceUri, resourceInfo);
         // update the manifest that describes the resource in dLibra
         getManifest().serialize();
-        URI proxy = ROSRService.SMS.get().addProxy(this, resourceUri);
-        resource.setProxyUri(proxy);
+        Proxy proxy = ROSRService.SMS.get().addProxy(this, resource);
+        resource.setProxy(proxy);
         if (!loaded) {
             load();
         }
@@ -425,7 +483,7 @@ public class ResearchObject extends Thing {
     public Resource aggregate(URI uri)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, IncorrectModelException {
         Resource resource = ROSRService.SMS.get().addResource(this, uri, null);
-        resource.setProxyUri(ROSRService.SMS.get().addProxy(this, uri));
+        resource.setProxy(ROSRService.SMS.get().addProxy(this, resource));
         // update the manifest that describes the resource in dLibra
         this.getManifest().serialize();
         if (!loaded) {
@@ -452,11 +510,13 @@ public class ResearchObject extends Thing {
      *             Research Object already exists
      * @throws NotFoundException
      * @throws DigitalLibraryException
+     * @throws IncorrectModelException
      */
     public static ResearchObject create(URI researchObjectUri, MemoryZipFile zip)
             throws BadRequestException, AccessDeniedException, IOException, ConflictException, DigitalLibraryException,
-            NotFoundException {
+            NotFoundException, IncorrectModelException {
         ResearchObject researchObject = create(researchObjectUri);
+        researchObject.load();
         SemanticMetadataService tmpSms = new SemanticMetadataServiceTdb(ROSRService.SMS.get().getUserProfile(),
                 researchObject, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
 
@@ -499,8 +559,9 @@ public class ResearchObject extends Thing {
         }
         for (Annotation annotation : annotationsList) {
             try {
-                if (ROSRService.SMS.get().isAggregatedResource(researchObject, annotation.getBody())) {
-                    ROSRService.convertRoResourceToAnnotationBody(researchObject, annotation.getBody());
+                if (researchObject.getAggregatedResources().containsKey(annotation.getBody())) {
+                    ROSRService.convertRoResourceToAnnotationBody(researchObject, researchObject
+                            .getAggregatedResources().get(annotation.getBody()));
                 }
                 ROSRService.addAnnotation(researchObject, annotation.getBody(), annotation.getAnnotated());
             } catch (DigitalLibraryException | NotFoundException e) {
@@ -539,17 +600,37 @@ public class ResearchObject extends Thing {
 
 
     public Map<URI, Resource> getResources() {
+        if (!loaded) {
+            load();
+        }
         return resources;
     }
 
 
     public Map<URI, Folder> getFolders() {
+        if (!loaded) {
+            load();
+        }
         return folders;
     }
 
 
-    public Multimap<URI, Annotation> getAnnotations() {
-        return annotations;
+    public Multimap<URI, Annotation> getAnnotationsByTarget() {
+        if (!loaded) {
+            load();
+        }
+        return annotationsByTarget;
+    }
+
+
+    /**
+     * @return the aggregatedResources
+     */
+    public Map<URI, AggregatedResource> getAggregatedResources() {
+        if (!loaded) {
+            load();
+        }
+        return aggregatedResources;
     }
 
 }

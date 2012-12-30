@@ -34,6 +34,7 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 import com.sun.jersey.core.header.ContentDisposition;
@@ -154,12 +155,13 @@ public class ResearchObjectListResource {
      * @throws DigitalLibraryException
      *             error saving data to storage
      * @throws NotFoundException
+     * @throws IncorrectModelException
      */
     @POST
     @Consumes("application/zip")
     public Response createResearchObjectFromZip(@HeaderParam("Slug") String researchObjectId, InputStream zipStream)
             throws BadRequestException, IOException, AccessDeniedException, ConflictException, DigitalLibraryException,
-            NotFoundException {
+            NotFoundException, IncorrectModelException {
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }

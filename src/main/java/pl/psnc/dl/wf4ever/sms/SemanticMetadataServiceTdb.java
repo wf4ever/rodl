@@ -30,6 +30,7 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -980,7 +981,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public URI addProxy(ResearchObject researchObject, URI resource) {
+    public Proxy addProxy(ResearchObject researchObject, AggregatedResource resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
@@ -988,13 +989,13 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
             }
             Resource researchObjectR = manifestModel.createResource(researchObject.getUri().toString());
-            Resource resourceR = manifestModel.createResource(resource.normalize().toString());
+            Resource resourceR = manifestModel.createResource(resource.getUri().normalize().toString());
             URI proxyURI = generateProxyURI(researchObject);
             Individual proxy = manifestModel.createIndividual(proxyURI.toString(), ORE.Proxy);
             manifestModel.add(proxy, ORE.proxyIn, researchObjectR);
             manifestModel.add(proxy, ORE.proxyFor, resourceR);
             commitTransaction(transactionStarted);
-            return proxyURI;
+            return new Proxy(proxyURI, resource, researchObject.getUri());
         } finally {
             endTransaction(transactionStarted);
         }
@@ -1118,7 +1119,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             Resource agent = manifestModel.createResource(user.getUri().toString());
             manifestModel.add(annotation, DCTerms.creator, agent);
             commitTransaction(transactionStarted);
-            return new Annotation(annotationURI, annotationTargets, annotationBody);
+            return new Annotation(researchObject, annotationURI, annotationTargets, annotationBody);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -1183,7 +1184,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     targets.add(URI.create(node.asResource().getURI()));
                 }
             }
-            return new Annotation(annotationUri, targets, body);
+            return new Annotation(researchObject, annotationUri, targets, body);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -1954,12 +1955,12 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 try {
                     if (node.isURIResource()) {
                         if (!isAnnotation(researchObject, new URI(node.asResource().getURI()))) {
-                            aggregated.add(new AggregatedResource(new URI(node.asResource().getURI())));
+                            aggregated.add(new AggregatedResource(new URI(node.asResource().getURI()), researchObject));
                         }
                     } else if (node.isResource()) {
                         URI nodeUri = changeBlankNodeToUriResources(researchObject, manifestModel, node);
                         if (!isAnnotation(researchObject, nodeUri)) {
-                            aggregated.add(new AggregatedResource(nodeUri));
+                            aggregated.add(new AggregatedResource(nodeUri, researchObject));
                         }
                     }
                 } catch (URISyntaxException e) {
@@ -2013,12 +2014,12 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     if (node.isURIResource()) {
                         URI nodeURI = URI.create(node.asResource().getURI());
                         if (isAnnotation(researchObject, nodeURI)) {
-                            annotations.add(new Annotation(nodeURI, manifestModel));
+                            annotations.add(new Annotation(researchObject, nodeURI, manifestModel));
                         }
                     } else if (node.isResource()) {
                         URI nodeURI = changeBlankNodeToUriResources(researchObject, manifestModel, node);
                         if (isAnnotation(researchObject, nodeURI)) {
-                            annotations.add(new Annotation(nodeURI, manifestModel));
+                            annotations.add(new Annotation(researchObject, nodeURI, manifestModel));
                         }
                     }
                 } catch (IncorrectModelException e) {
@@ -2058,7 +2059,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             Individual proxy = manifestModel.createIndividual(proxyURI.toString(), ORE.Proxy);
             manifestModel.add(proxy, ORE.proxyIn, ro);
             manifestModel.add(proxy, ORE.proxyFor, resource);
-            folder.setProxyUri(proxyURI);
+            folder.setProxy(new Proxy(proxyURI, folder, researchObject.getUri()));
             manifestModel.add(resource, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
             manifestModel.add(resource, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
 
@@ -2242,7 +2243,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             if (!it.hasNext()) {
                 return null;
             }
-            return new Annotation(URI.create(it.next().getSubject().getURI()));
+            return new Annotation(researchObject, URI.create(it.next().getSubject().getURI()), null, null, (URI) null,
+                    null, null);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -2274,7 +2276,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             addNamedGraph(resourceURI, inputStream, rdfFormat);
 
             commitTransaction(transactionStarted);
-            return new AggregatedResource(resourceURI);
+            return new AggregatedResource(resourceURI, researchObject);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -2379,7 +2381,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             URI roURI = URI.create(ro.getURI());
             folder.setResearchObject(ResearchObject.get(roURI));
             URI proxyURI = getProxyForResource(folder.getResearchObject(), folder.getUri());
-            folder.setProxyUri(proxyURI);
+            folder.setProxy(new Proxy(proxyURI, folder, folder.getResearchObject().getUri()));
 
             List<Individual> entries = model.listIndividuals(RO.FolderEntry).toList();
             for (Individual entryI : entries) {
@@ -2391,7 +2393,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 entry.setUri(URI.create(entryI.getURI()));
                 entry.setProxyIn(URI.create(proxyIn));
                 String proxyFor = entryI.getPropertyResourceValue(ORE.proxyFor).getURI();
-                entry.setProxyFor(URI.create(proxyFor));
+                entry.setProxyFor(folder.getResearchObject().getAggregatedResources().get(URI.create(proxyFor)));
                 String name = entryI.getPropertyValue(RO.entryName).asLiteral().getString();
                 entry.setEntryName(name);
                 folder.getFolderEntries().add(entry);

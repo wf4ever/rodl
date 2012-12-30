@@ -2,6 +2,8 @@ package pl.psnc.dl.wf4ever.model.ORE;
 
 import java.net.URI;
 
+import org.joda.time.DateTime;
+
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
@@ -19,16 +21,8 @@ public class AggregatedResource extends Thing {
     /** RO it is aggregated in. */
     protected ResearchObject researchObject;
 
-    /** URI of a proxy of this resource. */
-    protected URI proxyUri;
-
-
-    /**
-     * Constructor.
-     */
-    public AggregatedResource() {
-
-    }
+    /** Proxy of this resource. */
+    protected Proxy proxy;
 
 
     /**
@@ -59,21 +53,33 @@ public class AggregatedResource extends Thing {
     /**
      * Constructor.
      * 
+     * @param researchObject
+     *            The RO it is aggregated by
      * @param uri
-     *            URI
+     *            resource URI
+     * @param proxyUri
+     *            URI of the proxy
+     * @param creator
+     *            author of the resource
+     * @param created
+     *            creation date
      */
-    public AggregatedResource(URI uri) {
-        super(uri);
+    public AggregatedResource(ResearchObject researchObject, URI uri, URI proxyUri, URI creator, DateTime created) {
+        this.researchObject = researchObject;
+        this.uri = uri;
+        this.proxy = new Proxy(proxyUri, this, researchObject != null ? researchObject.getUri() : null);
+        this.creator = creator;
+        this.created = created;
     }
 
 
-    public URI getProxyUri() {
-        return proxyUri;
+    public Proxy getProxy() {
+        return proxy;
     }
 
 
-    public void setProxyUri(URI proxyUri) {
-        this.proxyUri = proxyUri;
+    public void setProxy(Proxy proxy) {
+        this.proxy = proxy;
     }
 
 
@@ -84,5 +90,6 @@ public class AggregatedResource extends Thing {
 
     public void setResearchObject(ResearchObject researchObject) {
         this.researchObject = researchObject;
+        this.proxy.setProxyIn(researchObject != null ? researchObject.getUri() : null);
     }
 }

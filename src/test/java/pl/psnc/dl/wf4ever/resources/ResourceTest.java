@@ -199,7 +199,7 @@ public class ResourceTest extends ResourceBase {
                 .getFixedEvolutionAnnotationBodyUri()));
         StmtIterator it = manifestModel.listStatements(null, AO.body, bodyR);
         if (it.hasNext()) {
-            Annotation ann = new Annotation(URI.create(it.next().getSubject().getURI()));
+            Annotation ann = new Annotation(researchObject, URI.create(it.next().getSubject().getURI()), null, null);
             response = webResource.uri(ann.getUri()).header("Authorization", "Bearer " + accessToken)
                     .delete(ClientResponse.class);
 

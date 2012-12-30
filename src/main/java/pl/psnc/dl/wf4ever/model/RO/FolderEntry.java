@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.model.RO;
 import java.net.URI;
 import java.nio.file.Paths;
 
+import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 
 /**
@@ -33,7 +34,7 @@ public class FolderEntry extends Proxy {
      * @param entryName
      *            name of the resource in the folder
      */
-    public FolderEntry(URI proxyFor, String entryName) {
+    public FolderEntry(AggregatedResource proxyFor, String entryName) {
         super();
         this.proxyFor = proxyFor;
         this.entryName = entryName;

@@ -202,13 +202,13 @@ public class ResearchObjectResource {
             pl.psnc.dl.wf4ever.model.RO.Resource roResource = researchObject.aggregate(path, content,
                 request.getContentType());
             AggregatedResource aggregatedResource = ROSRService.convertRoResourceToAnnotationBody(researchObject,
-                roResource.getUri());
+                roResource);
 
             Annotation annotation = ROSRService.addAnnotation(researchObject, resourceUri, annotationTargets);
             String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE,
                 annotation.getBody().toString(), AO.body);
             InputStream annotationDesc = ROSRService.SMS.get().getResource(researchObject, responseSyntax,
-                aggregatedResource.getProxyUri(), aggregatedResource.getUri(), annotation.getUri());
+                aggregatedResource.getProxy().getUri(), aggregatedResource.getUri(), annotation.getUri());
             ResponseBuilder response = Response.created(annotation.getUri()).entity(annotationDesc)
                     .type(responseSyntax.getDefaultMIMEType()).header(Constants.LINK_HEADER, annotationBodyHeader);
             for (URI target : annotation.getAnnotated()) {
@@ -221,13 +221,13 @@ public class ResearchObjectResource {
             pl.psnc.dl.wf4ever.model.RO.Resource resource = researchObject.aggregate(path, content,
                 request.getContentType());
             if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource.getUri())) {
-                ROSRService.convertRoResourceToAnnotationBody(researchObject, resource.getUri());
+                ROSRService.convertRoResourceToAnnotationBody(researchObject, resource);
             }
             String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, resource.getUri().toString(),
                 Constants.ORE_PROXY_FOR_HEADER);
             InputStream proxyAndResourceDesc = ROSRService.SMS.get().getResource(researchObject, responseSyntax,
-                resource.getProxyUri(), resource.getUri());
-            ResponseBuilder builder = Response.created(resource.getProxyUri()).entity(proxyAndResourceDesc)
+                resource.getProxy().getUri(), resource.getUri());
+            ResponseBuilder builder = Response.created(resource.getProxy().getUri()).entity(proxyAndResourceDesc)
                     .type(responseSyntax.getDefaultMIMEType()).header(Constants.LINK_HEADER, proxyForHeader);
             if (resource.getStats() != null) {
                 CacheControl cache = new CacheControl();
@@ -306,8 +306,8 @@ public class ResearchObjectResource {
         RDFFormat syntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
         String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, proxyFor.toString(),
             Constants.ORE_PROXY_FOR_HEADER);
-        InputStream proxyDesc = ROSRService.SMS.get().getResource(researchObject, syntax, resource.getProxyUri());
-        return Response.created(resource.getProxyUri()).entity(proxyDesc).type(syntax.getDefaultMIMEType())
+        InputStream proxyDesc = ROSRService.SMS.get().getResource(researchObject, syntax, resource.getProxy().getUri());
+        return Response.created(resource.getProxy().getUri()).entity(proxyDesc).type(syntax.getDefaultMIMEType())
                 .header(Constants.LINK_HEADER, proxyForHeader).build();
 
     }
@@ -331,17 +331,20 @@ public class ResearchObjectResource {
      *             could not connect to the DL
      * @throws AccessDeniedException
      *             access denied when updating data in DL
+     * @throws IncorrectModelException
      */
     @POST
     @Consumes(Constants.ANNOTATION_MIME_TYPE)
     public Response addAnnotation(@PathParam("ro_id") String researchObjectId, @HeaderParam("Accept") String accept,
             InputStream content)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException,
+            IncorrectModelException {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.get(uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
+        researchObject.load();
         URI body;
         Set<URI> targets = new HashSet<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
@@ -387,8 +390,9 @@ public class ResearchObjectResource {
                     "The annotation target %s is not RO, aggregated resource nor proxy.", target));
             }
         }
-        if (ROSRService.SMS.get().isAggregatedResource(researchObject, body)) {
-            ROSRService.convertRoResourceToAnnotationBody(researchObject, body);
+        if (researchObject.getAggregatedResources().containsKey(body)) {
+            ROSRService.convertRoResourceToAnnotationBody(researchObject,
+                researchObject.getAggregatedResources().get(body));
         }
 
         Annotation annotation = ROSRService.addAnnotation(researchObject, body, targets);
@@ -446,12 +450,13 @@ public class ResearchObjectResource {
         RDFFormat syntax = RDFFormat.forFileName(accept, RDFFormat.RDFXML);
         Model folderDesc = ModelFactory.createDefaultModel();
         folderDesc.read(ROSRService.SMS.get().getNamedGraph(folder.getResourceMapUri(), syntax), null);
-        folderDesc.read(ROSRService.SMS.get()
-                .getResource(researchObject, syntax, folder.getUri(), folder.getProxyUri()), null);
+        folderDesc.read(
+            ROSRService.SMS.get().getResource(researchObject, syntax, folder.getUri(), folder.getProxy().getUri()),
+            null);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         folderDesc.write(out);
 
-        ResponseBuilder rb = Response.created(folder.getProxyUri()).type(Constants.FOLDER_MIME_TYPE);
+        ResponseBuilder rb = Response.created(folder.getProxy().getUri()).type(Constants.FOLDER_MIME_TYPE);
         rb = rb.header(Constants.LINK_HEADER,
             String.format(Constants.LINK_HEADER_TEMPLATE, folder.getUri().toString(), ORE.proxyFor.getURI()));
         rb = rb.header(Constants.LINK_HEADER, String.format(Constants.LINK_HEADER_TEMPLATE, folder.getResourceMapUri()

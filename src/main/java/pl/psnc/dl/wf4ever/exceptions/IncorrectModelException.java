@@ -6,7 +6,7 @@ package pl.psnc.dl.wf4ever.exceptions;
  * @author piotrekhol
  * 
  */
-public class IncorrectModelException extends Exception {
+public class IncorrectModelException extends RuntimeException {
 
     /** id. */
     private static final long serialVersionUID = -8946511066283873662L;

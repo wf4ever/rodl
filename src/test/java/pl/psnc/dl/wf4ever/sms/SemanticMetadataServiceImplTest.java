@@ -24,8 +24,6 @@ import pl.psnc.dl.wf4ever.common.util.SafeURI;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
-import pl.psnc.dl.wf4ever.model.RO.Folder;
-import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.FOAF;
@@ -781,13 +779,16 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
             throws IncorrectModelException {
         List<AggregatedResource> list = test.sms.getAggregatedResources(test.ro1);
         Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve(
-            "final-agregated-resource-file"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve(".ro/ann-blank.ttl"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve("res2"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve("res1"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve(".ro/evo_info.ttl"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve(".ro/ann1-body.ttl"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve("afinalfolder"))));
+            "final-agregated-resource-file"), test.ro1)));
+        Assert.assertTrue(list
+                .contains(new AggregatedResource(test.ro1.getUri().resolve(".ro/ann-blank.ttl"), test.ro1)));
+        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve("res2"), test.ro1)));
+        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve("res1"), test.ro1)));
+        Assert.assertTrue(list
+                .contains(new AggregatedResource(test.ro1.getUri().resolve(".ro/evo_info.ttl"), test.ro1)));
+        Assert.assertTrue(list
+                .contains(new AggregatedResource(test.ro1.getUri().resolve(".ro/ann1-body.ttl"), test.ro1)));
+        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve("afinalfolder"), test.ro1)));
 
     }
 
@@ -923,217 +924,216 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     }
 
 
-    /**
-     * Add a new folder and test the resource map in Jena.
-     */
-    @Test
-    public void testAddFolder() {
-
-        Folder folder = new Folder(null, test.emptyRO.getUri().resolve(FOLDER_PATH), null, null, null, null, false);
-
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
-
-        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
-        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
-
-        Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
-        Assert.assertEquals(folder.getUri(), folder2.getUri());
-        Assert.assertNotNull(folder2.getProxyUri());
-
-        OntModel manifestModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        manifestModel.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
-        Individual roInd = manifestModel.getIndividual(test.emptyRO.getUri().toString());
-        Assert.assertNotNull(roInd);
-        Individual folderInd = manifestModel.getIndividual(folder2.getUri().toString());
-        Assert.assertNotNull(folderInd);
-        Resource folderRMRes = manifestModel.getResource(folder2.getResourceMapUri().toString());
-        Assert.assertNotNull(folderRMRes);
-        Assert.assertTrue(manifestModel.contains(folderInd, ORE.isDescribedBy, folderRMRes));
-        Assert.assertTrue(manifestModel.contains(roInd, RO.rootFolder, folderInd));
-
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(test.sms.getNamedGraph(folder2.getResourceMapUri(), RDFFormat.RDFXML), null);
-
-        Resource manifestRes = model.getResource(test.emptyRO.getManifestUri().toString());
-        Assert.assertNotNull(manifestRes);
-
-        roInd = model.getIndividual(test.emptyRO.getUri().toString());
-        Assert.assertNotNull(roInd);
-        Assert.assertTrue(roInd.hasRDFType(RO.ResearchObject));
-        Assert.assertTrue(model.contains(roInd, ORE.isDescribedBy, manifestRes));
-
-        folderRMRes = model.getResource(folder2.getResourceMapUri().toString());
-        Assert.assertNotNull(folderRMRes);
-
-        folderInd = model.getIndividual(folder2.getUri().toString());
-        Assert.assertNotNull(folderInd);
-        Assert.assertTrue(folderInd.hasRDFType(RO.Folder));
-        Assert.assertTrue(folderInd.hasRDFType(ORE.Aggregation));
-        Assert.assertTrue(model.contains(folderInd, ORE.isAggregatedBy, roInd));
-        Assert.assertTrue(model.contains(folderInd, ORE.isDescribedBy, folderRMRes));
-
-        for (FolderEntry entry : folder2.getFolderEntries()) {
-            Assert.assertTrue(folder.getFolderEntries().contains(entry));
-            Assert.assertNotNull(entry.getUri());
-            Individual entryInd = model.getIndividual(entry.getUri().toString());
-            Assert.assertNotNull(entryInd);
-            Individual resInd = model.getIndividual(entry.getProxyFor().toString());
-            Assert.assertNotNull(resInd);
-            Literal name = model.createLiteral(entry.getEntryName());
-
-            Assert.assertTrue(resInd.hasRDFType(RO.Resource));
-            Assert.assertTrue(model.contains(folderInd, ORE.aggregates, resInd));
-            Assert.assertTrue(model.contains(entryInd, ORE.proxyFor, resInd));
-            Assert.assertTrue(model.contains(entryInd, ORE.proxyIn, folderInd));
-            Assert.assertTrue(model.contains(entryInd, RO.entryName, name));
-        }
-
-    }
-
-
-    /**
-     * Annotation should be found in easy way based on annotation body.
-     */
-    @Test
-    public void testGetFolder() {
-        Folder folder = new Folder(null, test.emptyRO.getUri().resolve(FOLDER_PATH), null, null, null, null, false);
-        folder.setUri(test.emptyRO.getUri().resolve(FOLDER_PATH));
-
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
-
-        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
-        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
-        Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
-        Folder folder3 = test.sms.getFolder(folder2.getUri());
-
-        Assert.assertEquals(folder2.getUri(), folder3.getUri());
-        Assert.assertEquals(folder2.getProxyUri(), folder3.getProxyUri());
-        Assert.assertEquals(folder2.getResearchObject().getUri(), folder3.getResearchObject().getUri());
-        Assert.assertEquals(folder2.getResourceMapUri(), folder3.getResourceMapUri());
-        Assert.assertEquals(folder2.getFolderEntries().size(), folder3.getFolderEntries().size());
-        for (FolderEntry entry : folder3.getFolderEntries()) {
-            Assert.assertTrue(folder2.getFolderEntries().contains(entry));
-        }
-
-    }
-
-
-    //TODO
-    //Explain scenario
-    @Test
-    public void testUpdateFolder() {
-        Folder folder = new Folder(null, test.emptyRO.getUri().resolve(FOLDER_PATH), null, null, null, null, false);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
-
-        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
-        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
-
-        Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
-        Folder folder3 = test.sms.getFolder(folder2.getUri());
-
-        FolderEntry entry1 = folder2.getFolderEntries().get(0);
-        FolderEntry entry2 = folder2.getFolderEntries().get(1);
-        folder2.getFolderEntries().remove(entry1);
-        entry2.setEntryName("foo");
-        FolderEntry entry3 = new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), "workflow2");
-        folder2.getFolderEntries().add(entry3);
-
-        test.sms.updateFolder(folder2);
-
-        Folder folder4 = test.sms.getFolder(folder2.getUri());
-        Assert.assertEquals(folder3.getUri(), folder4.getUri());
-        Assert.assertEquals(folder3.getProxyUri(), folder4.getProxyUri());
-        Assert.assertEquals(folder3.getResearchObject().getUri(), folder4.getResearchObject().getUri());
-        Assert.assertEquals(folder3.getResourceMapUri(), folder4.getResourceMapUri());
-        Assert.assertEquals(folder3.getFolderEntries().size(), folder4.getFolderEntries().size());
-        for (FolderEntry entry : folder4.getFolderEntries()) {
-            Assert.assertTrue(!entry.equals(entry1));
-            if (entry.equals(entry2)) {
-                Assert.assertEquals(entry2.getEntryName(), entry.getEntryName());
-            } else {
-                Assert.assertEquals(entry3, entry);
-            }
-        }
-    }
-
-
-    @Test
-    public void testGetFolderEntry() {
-        Folder folder = new Folder(null, test.emptyRO.getUri().resolve(FOLDER_PATH), null, null, null, null, false);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
-
-        FolderEntry entry1 = new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1");
-        FolderEntry entry2 = new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource");
-        folder.getFolderEntries().add(entry1);
-        folder.getFolderEntries().add(entry2);
-        Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
-
-        for (FolderEntry entry : folder2.getFolderEntries()) {
-            FolderEntry actual = test.sms.getFolderEntry(entry.getUri());
-            Assert.assertEquals(entry.getUri(), actual.getUri());
-            Assert.assertEquals(entry.getProxyFor(), actual.getProxyFor());
-            Assert.assertEquals(entry.getProxyIn(), actual.getProxyIn());
-            Assert.assertEquals(entry.getEntryName(), actual.getEntryName());
-        }
-    }
-
-
-    //TODO
-    //Explain scenario
-    @Test
-    public void testGetRootFolder() {
-        Folder folder = new Folder(null, test.emptyRO.getUri().resolve(FOLDER_PATH), null, null, null, null, false);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
-
-        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
-        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
-
-        Assert.assertNull(test.sms.getRootFolder(test.emptyRO));
-        Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
-        Assert.assertEquals(folder2, test.sms.getRootFolder(test.emptyRO));
-    }
-
-
-    /**
-     * Delete a folder and make sure its resource map is gone.
-     */
-    @Test
-    public void testDeleteFolder() {
-        Folder folder = new Folder(null, test.emptyRO.getUri().resolve(FOLDER_PATH), null, null, null, null, false);
-
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
-
-        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
-        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
-        test.sms.addFolder(test.emptyRO, folder);
-        Assert.assertNotNull(test.sms.getFolder(folder.getUri()));
-
-        OntModel manifestModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        manifestModel.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
-        Individual folderInd = manifestModel.getIndividual(folder.getUri().toString());
-        Assert.assertNotNull(folderInd);
-
-        test.sms.deleteFolder(folder);
-        Assert.assertNull(test.sms.getFolder(folder.getUri()));
-
-        manifestModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        manifestModel.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
-        folderInd = manifestModel.getIndividual(folder.getUri().toString());
-        Assert.assertNull(folderInd);
-    }
-
+    //    /**
+    //     * Add a new folder and test the resource map in Jena.
+    //     */
+    //    @Test
+    //    public void testAddFolder() {
+    //
+    //        Folder folder = new Folder(null, test.emptyRO.getUri().resolve(FOLDER_PATH), null, null, null, null, false);
+    //
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
+    //
+    //        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
+    //        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
+    //
+    //        Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
+    //        Assert.assertEquals(folder.getUri(), folder2.getUri());
+    //        Assert.assertNotNull(folder2.getProxyUri());
+    //
+    //        OntModel manifestModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+    //        manifestModel.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
+    //        Individual roInd = manifestModel.getIndividual(test.emptyRO.getUri().toString());
+    //        Assert.assertNotNull(roInd);
+    //        Individual folderInd = manifestModel.getIndividual(folder2.getUri().toString());
+    //        Assert.assertNotNull(folderInd);
+    //        Resource folderRMRes = manifestModel.getResource(folder2.getResourceMapUri().toString());
+    //        Assert.assertNotNull(folderRMRes);
+    //        Assert.assertTrue(manifestModel.contains(folderInd, ORE.isDescribedBy, folderRMRes));
+    //        Assert.assertTrue(manifestModel.contains(roInd, RO.rootFolder, folderInd));
+    //
+    //        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+    //        model.read(test.sms.getNamedGraph(folder2.getResourceMapUri(), RDFFormat.RDFXML), null);
+    //
+    //        Resource manifestRes = model.getResource(test.emptyRO.getManifestUri().toString());
+    //        Assert.assertNotNull(manifestRes);
+    //
+    //        roInd = model.getIndividual(test.emptyRO.getUri().toString());
+    //        Assert.assertNotNull(roInd);
+    //        Assert.assertTrue(roInd.hasRDFType(RO.ResearchObject));
+    //        Assert.assertTrue(model.contains(roInd, ORE.isDescribedBy, manifestRes));
+    //
+    //        folderRMRes = model.getResource(folder2.getResourceMapUri().toString());
+    //        Assert.assertNotNull(folderRMRes);
+    //
+    //        folderInd = model.getIndividual(folder2.getUri().toString());
+    //        Assert.assertNotNull(folderInd);
+    //        Assert.assertTrue(folderInd.hasRDFType(RO.Folder));
+    //        Assert.assertTrue(folderInd.hasRDFType(ORE.Aggregation));
+    //        Assert.assertTrue(model.contains(folderInd, ORE.isAggregatedBy, roInd));
+    //        Assert.assertTrue(model.contains(folderInd, ORE.isDescribedBy, folderRMRes));
+    //
+    //        for (FolderEntry entry : folder2.getFolderEntries()) {
+    //            Assert.assertTrue(folder.getFolderEntries().contains(entry));
+    //            Assert.assertNotNull(entry.getUri());
+    //            Individual entryInd = model.getIndividual(entry.getUri().toString());
+    //            Assert.assertNotNull(entryInd);
+    //            Individual resInd = model.getIndividual(entry.getProxyFor().toString());
+    //            Assert.assertNotNull(resInd);
+    //            Literal name = model.createLiteral(entry.getEntryName());
+    //
+    //            Assert.assertTrue(resInd.hasRDFType(RO.Resource));
+    //            Assert.assertTrue(model.contains(folderInd, ORE.aggregates, resInd));
+    //            Assert.assertTrue(model.contains(entryInd, ORE.proxyFor, resInd));
+    //            Assert.assertTrue(model.contains(entryInd, ORE.proxyIn, folderInd));
+    //            Assert.assertTrue(model.contains(entryInd, RO.entryName, name));
+    //        }
+    //
+    //    }
+    //
+    //
+    //    /**
+    //     * Annotation should be found in easy way based on annotation body.
+    //     */
+    //    @Test
+    //    public void testGetFolder() {
+    //        Folder folder = new Folder(null, test.emptyRO.getUri().resolve(FOLDER_PATH), null, null, null, null, false);
+    //        folder.setUri(test.emptyRO.getUri().resolve(FOLDER_PATH));
+    //
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
+    //
+    //        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
+    //        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
+    //        Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
+    //        Folder folder3 = test.sms.getFolder(folder2.getUri());
+    //
+    //        Assert.assertEquals(folder2.getUri(), folder3.getUri());
+    //        Assert.assertEquals(folder2.getProxyUri(), folder3.getProxyUri());
+    //        Assert.assertEquals(folder2.getResearchObject().getUri(), folder3.getResearchObject().getUri());
+    //        Assert.assertEquals(folder2.getResourceMapUri(), folder3.getResourceMapUri());
+    //        Assert.assertEquals(folder2.getFolderEntries().size(), folder3.getFolderEntries().size());
+    //        for (FolderEntry entry : folder3.getFolderEntries()) {
+    //            Assert.assertTrue(folder2.getFolderEntries().contains(entry));
+    //        }
+    //
+    //    }
+    //
+    //
+    //    //TODO
+    //    //Explain scenario
+    //    @Test
+    //    public void testUpdateFolder() {
+    //        Folder folder = new Folder(null, test.emptyRO.getUri().resolve(FOLDER_PATH), null, null, null, null, false);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
+    //
+    //        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
+    //        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
+    //
+    //        Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
+    //        Folder folder3 = test.sms.getFolder(folder2.getUri());
+    //
+    //        FolderEntry entry1 = folder2.getFolderEntries().get(0);
+    //        FolderEntry entry2 = folder2.getFolderEntries().get(1);
+    //        folder2.getFolderEntries().remove(entry1);
+    //        entry2.setEntryName("foo");
+    //        FolderEntry entry3 = new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), "workflow2");
+    //        folder2.getFolderEntries().add(entry3);
+    //
+    //        test.sms.updateFolder(folder2);
+    //
+    //        Folder folder4 = test.sms.getFolder(folder2.getUri());
+    //        Assert.assertEquals(folder3.getUri(), folder4.getUri());
+    //        Assert.assertEquals(folder3.getProxyUri(), folder4.getProxyUri());
+    //        Assert.assertEquals(folder3.getResearchObject().getUri(), folder4.getResearchObject().getUri());
+    //        Assert.assertEquals(folder3.getResourceMapUri(), folder4.getResourceMapUri());
+    //        Assert.assertEquals(folder3.getFolderEntries().size(), folder4.getFolderEntries().size());
+    //        for (FolderEntry entry : folder4.getFolderEntries()) {
+    //            Assert.assertTrue(!entry.equals(entry1));
+    //            if (entry.equals(entry2)) {
+    //                Assert.assertEquals(entry2.getEntryName(), entry.getEntryName());
+    //            } else {
+    //                Assert.assertEquals(entry3, entry);
+    //            }
+    //        }
+    //    }
+    //
+    //
+    //    @Test
+    //    public void testGetFolderEntry() {
+    //        Folder folder = new Folder(null, test.emptyRO.getUri().resolve(FOLDER_PATH), null, null, null, null, false);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
+    //
+    //        FolderEntry entry1 = new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1");
+    //        FolderEntry entry2 = new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource");
+    //        folder.getFolderEntries().add(entry1);
+    //        folder.getFolderEntries().add(entry2);
+    //        Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
+    //
+    //        for (FolderEntry entry : folder2.getFolderEntries()) {
+    //            FolderEntry actual = test.sms.getFolderEntry(entry.getUri());
+    //            Assert.assertEquals(entry.getUri(), actual.getUri());
+    //            Assert.assertEquals(entry.getProxyFor(), actual.getProxyFor());
+    //            Assert.assertEquals(entry.getProxyIn(), actual.getProxyIn());
+    //            Assert.assertEquals(entry.getEntryName(), actual.getEntryName());
+    //        }
+    //    }
+    //
+    //
+    //    //TODO
+    //    //Explain scenario
+    //    @Test
+    //    public void testGetRootFolder() {
+    //        Folder folder = new Folder(null, test.emptyRO.getUri().resolve(FOLDER_PATH), null, null, null, null, false);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
+    //
+    //        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
+    //        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
+    //
+    //        Assert.assertNull(test.sms.getRootFolder(test.emptyRO));
+    //        Folder folder2 = test.sms.addFolder(test.emptyRO, folder);
+    //        Assert.assertEquals(folder2, test.sms.getRootFolder(test.emptyRO));
+    //    }
+    //
+    //
+    //    /**
+    //     * Delete a folder and make sure its resource map is gone.
+    //     */
+    //    @Test
+    //    public void testDeleteFolder() {
+    //        Folder folder = new Folder(null, test.emptyRO.getUri().resolve(FOLDER_PATH), null, null, null, null, false);
+    //
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2), workflowInfo);
+    //        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
+    //
+    //        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(WORKFLOW_PATH), "workflow1"));
+    //        folder.getFolderEntries().add(new FolderEntry(test.emptyRO.getUri().resolve(FAKE_PATH), "a resource"));
+    //        test.sms.addFolder(test.emptyRO, folder);
+    //        Assert.assertNotNull(test.sms.getFolder(folder.getUri()));
+    //
+    //        OntModel manifestModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+    //        manifestModel.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
+    //        Individual folderInd = manifestModel.getIndividual(folder.getUri().toString());
+    //        Assert.assertNotNull(folderInd);
+    //
+    //        test.sms.deleteFolder(folder);
+    //        Assert.assertNull(test.sms.getFolder(folder.getUri()));
+    //
+    //        manifestModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+    //        manifestModel.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
+    //        folderInd = manifestModel.getIndividual(folder.getUri().toString());
+    //        Assert.assertNull(folderInd);
+    //    }
 
     /**
      * annotationForBody method should return an annotation
@@ -1170,10 +1170,10 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public void testRemoveSpecialFilesFromAggergated() {
         List<AggregatedResource> aggregated = new ArrayList<AggregatedResource>();
-        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/manifest.rdf")));
-        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/evo_info.ttl")));
-        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/resource1.ttl")));
-        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/resource2.ttl")));
+        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/manifest.rdf"), test.ro1));
+        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/evo_info.ttl"), test.ro1));
+        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/resource1.ttl"), test.ro1));
+        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/resource2.ttl"), test.ro1));
         aggregated = test.sms.removeSpecialFilesFromAggergated(aggregated);
         Assert.assertEquals("Two aggregatetions should stay", aggregated.size(), 2);
     }
@@ -1182,14 +1182,14 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public void testRemoveSpecialFilesFromAnnotations() {
         List<Annotation> annotations = new ArrayList<Annotation>();
-        annotations.add(new Annotation(URI.create("http://www.example.com/ROS/annotation/1/"), new HashSet<URI>(), URI
-                .create("http://www.example.com/ROS/1/manifest.rdf")));
-        annotations.add(new Annotation(URI.create("http://www.example.com/ROS/annotation/2/"), new HashSet<URI>(), URI
-                .create("http://www.example.com/ROS/1/evo_info.ttl")));
-        annotations.add(new Annotation(URI.create("http://www.example.com/ROS/annotation/3/"), new HashSet<URI>(), URI
-                .create("http://www.example.com/ROS/1/body1.ttl")));
-        annotations.add(new Annotation(URI.create("http://www.example.com/ROS/annotation/4/"), new HashSet<URI>(), URI
-                .create("http://www.example.com/ROS/1/body2.ttl")));
+        annotations.add(new Annotation(test.ro1, URI.create("http://www.example.com/ROS/annotation/1/"),
+                new HashSet<URI>(), URI.create("http://www.example.com/ROS/1/manifest.rdf")));
+        annotations.add(new Annotation(test.ro1, URI.create("http://www.example.com/ROS/annotation/2/"),
+                new HashSet<URI>(), URI.create("http://www.example.com/ROS/1/evo_info.ttl")));
+        annotations.add(new Annotation(test.ro1, URI.create("http://www.example.com/ROS/annotation/3/"),
+                new HashSet<URI>(), URI.create("http://www.example.com/ROS/1/body1.ttl")));
+        annotations.add(new Annotation(test.ro1, URI.create("http://www.example.com/ROS/annotation/4/"),
+                new HashSet<URI>(), URI.create("http://www.example.com/ROS/1/body2.ttl")));
         annotations = test.sms.removeSpecialFilesFromAnnotatios(annotations);
         Assert.assertEquals("Two annotations should stay", annotations.size(), 2);
     }

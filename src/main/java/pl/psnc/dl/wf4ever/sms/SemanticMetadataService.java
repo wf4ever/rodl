@@ -19,6 +19,7 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -391,7 +392,7 @@ public interface SemanticMetadataService {
      *            resource for which the proxy will be
      * @return proxy URI
      */
-    URI addProxy(ResearchObject researchObject, URI resource);
+    Proxy addProxy(ResearchObject researchObject, AggregatedResource resource);
 
 
     /**

@@ -70,6 +70,8 @@ public class FolderTest extends ResourceBase {
      */
     @Test
     public void testAddFolder() {
+        //TODO add resources in the folder to the RO, same for all tests
+
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
         ClientResponse response = addFolder(is, ro, folderPath, accessToken);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());

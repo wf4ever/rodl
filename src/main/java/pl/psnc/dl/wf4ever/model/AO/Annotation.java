@@ -38,18 +38,7 @@ public class Annotation extends AggregatedResource {
     /**
      * Constructor.
      * 
-     * @param uri
-     *            Resource uri
-     */
-    public Annotation(URI uri) {
-        super(uri);
-        annotated = new HashSet<>();
-        body = null;
-    }
-
-
-    /**
-     * Constructor.
+     * @param researchObject
      * 
      * @param uri
      *            Resource uri
@@ -58,9 +47,10 @@ public class Annotation extends AggregatedResource {
      * @throws IncorrectModelException
      *             the model contains an incorrect annotation description
      */
-    public Annotation(URI uri, OntModel model)
+    public Annotation(ResearchObject researchObject, URI uri, OntModel model)
             throws IncorrectModelException {
-        this(uri);
+        super(uri, researchObject);
+        this.annotated = new HashSet<>();
         fillUp(model);
     }
 
@@ -75,8 +65,8 @@ public class Annotation extends AggregatedResource {
      * @param body
      *            Annotation body
      */
-    public Annotation(URI uri, Set<URI> annotated, URI body) {
-        this(uri);
+    public Annotation(ResearchObject researchObject, URI uri, Set<URI> annotated, URI body) {
+        super(uri, researchObject);
         this.annotated = annotated;
         this.body = body;
     }
@@ -98,13 +88,11 @@ public class Annotation extends AggregatedResource {
      * @param created
      *            annotation creation time
      */
-    public Annotation(ResearchObject researchObject, URI uri, URI body, Set<URI> targets, URI creator, DateTime created) {
-        this.researchObject = researchObject;
-        this.uri = uri;
+    public Annotation(ResearchObject researchObject, URI uri, URI proxyUri, URI body, Set<URI> targets, URI creator,
+            DateTime created) {
+        super(researchObject, uri, proxyUri, creator, created);
         this.body = body;
         this.annotated = targets;
-        this.creator = creator;
-        this.created = created;
         this.loaded = false;
     }
 
@@ -125,8 +113,10 @@ public class Annotation extends AggregatedResource {
      * @param created
      *            annotation creation time
      */
-    public Annotation(ResearchObject researchObject, URI uri, URI body, URI target, URI creator, DateTime created) {
-        this(researchObject, uri, body, new HashSet<URI>(Arrays.asList(new URI[] { target })), creator, created);
+    public Annotation(ResearchObject researchObject, URI uri, URI proxyUri, URI body, URI target, URI creator,
+            DateTime created) {
+        this(researchObject, uri, proxyUri, body, new HashSet<URI>(Arrays.asList(new URI[] { target })), creator,
+                created);
     }
 
 

@@ -21,43 +21,20 @@ public class Resource extends AggregatedResource {
 
     /**
      * Constructor.
-     */
-    public Resource() {
-        super();
-    }
-
-
-    /**
-     * Constructor.
-     * 
-     * @param uri
-     *            URI
-     */
-    public Resource(URI uri) {
-        super(uri);
-    }
-
-
-    /**
-     * Constructor.
      * 
      * @param researchObject
      *            The RO it is aggregated by
      * @param uri
      *            resource URI
-     * @param proxyURI
+     * @param proxyUri
      *            URI of the proxy
      * @param creator
      *            author of the resource
      * @param created
      *            creation date
      */
-    public Resource(ResearchObject researchObject, URI uri, URI proxyURI, URI creator, DateTime created) {
-        this.researchObject = researchObject;
-        this.uri = uri;
-        this.proxyUri = proxyURI;
-        this.creator = creator;
-        this.created = created;
+    public Resource(ResearchObject researchObject, URI uri, URI proxyUri, URI creator, DateTime created) {
+        super(researchObject, uri, proxyUri, creator, created);
     }
 
 

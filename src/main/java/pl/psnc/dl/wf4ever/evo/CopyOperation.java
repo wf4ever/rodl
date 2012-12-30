@@ -142,7 +142,8 @@ public class CopyOperation implements Operation {
                                     .getType().toString());
                             //TODO improve resource type detection mechanism!!
                             if (!resource.hasRDFType(RO.Resource)) {
-                                ROSRService.convertRoResourceToAnnotationBody(targetRO, targetURI);
+                                ROSRService.convertRoResourceToAnnotationBody(targetRO, targetRO
+                                        .getAggregatedResources().get(targetURI));
                             }
                             changedURIs.put(resourceURI, targetURI);
                         } catch (AccessDeniedException | DigitalLibraryException | NotFoundException
