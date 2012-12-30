@@ -94,7 +94,7 @@ public class CopyOperation implements Operation {
             for (RDFNode aggregatedResource : aggregatedResources) {
                 if (Thread.interrupted()) {
                     try {
-                        ROSRService.deleteResearchObject(targetRO);
+                        targetRO.delete();
                     } catch (DigitalLibraryException | NotFoundException e) {
                         LOGGER.error("Could not delete the target when aborting: " + target, e);
                     }

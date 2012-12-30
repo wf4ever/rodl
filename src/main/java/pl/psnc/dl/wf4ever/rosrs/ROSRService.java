@@ -71,30 +71,6 @@ public final class ROSRService {
 
 
     /**
-     * Delete a research object.
-     * 
-     * @param researchObject
-     *            research object URI
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws NotFoundException
-     *             Research Object not found neither in dLibra nor in SMS
-     */
-    public static void deleteResearchObject(ResearchObject researchObject)
-            throws DigitalLibraryException, NotFoundException {
-        try {
-            ROSRService.DL.get().deleteResearchObject(researchObject.getUri());
-        } finally {
-            try {
-                ROSRService.SMS.get().removeResearchObject(researchObject);
-            } catch (IllegalArgumentException e) {
-                LOGGER.warn("URI not found in SMS: " + researchObject.getUri());
-            }
-        }
-    }
-
-
-    /**
      * De-aggregate an internal resource, delete its content and proxy.
      * 
      * @param researchObject

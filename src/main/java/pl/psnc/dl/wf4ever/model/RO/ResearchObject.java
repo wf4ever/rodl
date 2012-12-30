@@ -179,9 +179,24 @@ public class ResearchObject extends Thing {
 
     /**
      * Delete the Research Object including its resources and annotations.
+     * 
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws NotFoundException
+     *             Research Object not found neither in dLibra nor in SMS
      */
-    public void delete() {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public void delete()
+            throws DigitalLibraryException, NotFoundException {
+        try {
+            ROSRService.DL.get().deleteResearchObject(uri);
+        } finally {
+            try {
+                ROSRService.SMS.get().removeResearchObject(this);
+            } catch (IllegalArgumentException e) {
+                LOGGER.warn("URI not found in SMS: " + uri);
+            }
+        }
+        loaded = false;
     }
 
 

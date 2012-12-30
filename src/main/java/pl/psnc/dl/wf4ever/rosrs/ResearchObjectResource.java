@@ -145,7 +145,7 @@ public class ResearchObjectResource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        ROSRService.deleteResearchObject(researchObject);
+        researchObject.delete();
     }
 
 
@@ -429,19 +429,17 @@ public class ResearchObjectResource {
     @POST
     @Consumes(Constants.FOLDER_MIME_TYPE)
     public Response addFolder(@PathParam("ro_id") String researchObjectId, @HeaderParam("Accept") String accept,
-            InputStream content)
+            @HeaderParam("Slug") String path, InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.get(uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        URI folderURI;
-        if (request.getHeader(Constants.SLUG_HEADER) != null) {
-            folderURI = uriInfo.getAbsolutePathBuilder().path(request.getHeader(Constants.SLUG_HEADER)).build();
-        } else {
-            folderURI = uriInfo.getAbsolutePathBuilder().path(UUID.randomUUID().toString()).build();
+        if (path == null) {
+            path = UUID.randomUUID().toString();
         }
+        URI folderURI = uriInfo.getAbsolutePathBuilder().path(path).build();
         Folder folder = ROSRService.assembleFolder(researchObject, folderURI, content);
         folder = ROSRService.createFolder(researchObject, folder);
 
@@ -454,10 +452,10 @@ public class ResearchObjectResource {
         folderDesc.write(out);
 
         ResponseBuilder rb = Response.created(folder.getProxyUri()).type(Constants.FOLDER_MIME_TYPE);
-        rb = rb.header(Constants.LINK_HEADER, String.format(Constants.LINK_HEADER_TEMPLATE, folder.getUri().toString(),
-            "http://www.openarchives.org/ore/terms/proxyFor"));
+        rb = rb.header(Constants.LINK_HEADER,
+            String.format(Constants.LINK_HEADER_TEMPLATE, folder.getUri().toString(), ORE.proxyFor.getURI()));
         rb = rb.header(Constants.LINK_HEADER, String.format(Constants.LINK_HEADER_TEMPLATE, folder.getResourceMapUri()
-                .toString().toString(), "http://www.openarchives.org/ore/terms/isDescribedBy"));
+                .toString().toString(), ORE.isDescribedBy.getURI()));
         rb = rb.entity(new ByteArrayInputStream(out.toByteArray())).type(syntax.getDefaultMIMEType());
         return rb.build();
     }

@@ -211,7 +211,7 @@ public class UserResource {
             UserProfile.generateAbsoluteURI(null, userId));
         for (URI uri : list) {
             ResearchObject ro = ResearchObject.get(uri);
-            ROSRService.deleteResearchObject(ro);
+            ro.delete();
         }
 
         ROSRService.SMS.get().removeUser(URI.create(userId));
