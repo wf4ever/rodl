@@ -1,10 +1,6 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -13,35 +9,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.common.util.MemoryZipFile;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
-import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
@@ -631,80 +619,6 @@ public final class ROSRService {
         ROSRService.SMS.get().deleteAnnotation(researchObject, annotation);
         ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotation.getBody());
         return Response.noContent().build();
-    }
-
-
-    /**
-     * Create a new research object submitted in ZIP format.
-     * 
-     * @param researchObject
-     *            the new research object
-     * @param zip
-     *            the ZIP file
-     * @return HTTP response (created in case of success, 404 in case of error)
-     * @throws BadRequestException .
-     * @throws AccessDeniedException .
-     * @throws IOException
-     *             error creating the temporary file
-     * @throws ConflictException
-     *             Research Object already exists
-     */
-    public static Response createNewResearchObjectFromZip(ResearchObject researchObject, MemoryZipFile zip)
-            throws BadRequestException, AccessDeniedException, IOException, ConflictException {
-        SemanticMetadataService tmpSms = new SemanticMetadataServiceTdb(ROSRService.SMS.get().getUserProfile(),
-                researchObject, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
-
-        List<AggregatedResource> aggregatedList;
-        List<Annotation> annotationsList;
-
-        try {
-            aggregatedList = tmpSms.getAggregatedResources(researchObject);
-            annotationsList = tmpSms.getAnnotations(researchObject);
-            aggregatedList = tmpSms.removeSpecialFilesFromAggergated(aggregatedList);
-            annotationsList = tmpSms.removeSpecialFilesFromAnnotatios(annotationsList);
-
-        } catch (IncorrectModelException e) {
-            throw new BadRequestException(e.getMessage(), e);
-        }
-
-        InputStream mimeTypesIs = ROSRService.class.getClassLoader().getResourceAsStream("mime.types");
-        MimetypesFileTypeMap mfm = new MimetypesFileTypeMap(mimeTypesIs);
-        mimeTypesIs.close();
-        for (AggregatedResource aggregated : aggregatedList) {
-            String originalResourceName = researchObject.getUri().relativize(aggregated.getUri()).getPath();
-            URI resourceURI = UriBuilder.fromUri(researchObject.getUri()).path(originalResourceName).build();
-            UUID uuid = UUID.randomUUID();
-            File tmpFile = File.createTempFile("tmp_resource", uuid.toString());
-            try {
-                if (zip.containsEntry(originalResourceName)) {
-                    try (InputStream is = zip.getEntryAsStream(originalResourceName)) {
-                        FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
-                        IOUtils.copy(is, fileOutputStream);
-                        String mimeType = mfm.getContentType(resourceURI.getPath());
-                        researchObject.aggregate(originalResourceName, new FileInputStream(tmpFile), mimeType);
-                    }
-                } else {
-                    researchObject.aggregate(aggregated.getUri());
-                }
-            } catch (AccessDeniedException | DigitalLibraryException | NotFoundException | IncorrectModelException e) {
-                LOGGER.error("Error when aggregating resources", e);
-            } finally {
-                tmpFile.delete();
-            }
-        }
-        for (Annotation annotation : annotationsList) {
-            try {
-                if (SMS.get().isAggregatedResource(researchObject, annotation.getBody())) {
-                    convertRoResourceToAnnotationBody(researchObject, annotation.getBody());
-                }
-                addAnnotation(researchObject, annotation.getBody(), annotation.getAnnotated());
-            } catch (DigitalLibraryException | NotFoundException e) {
-                LOGGER.error("Error when adding annotations", e);
-            }
-        }
-
-        tmpSms.close();
-        return Response.created(researchObject.getUri()).build();
     }
 
 

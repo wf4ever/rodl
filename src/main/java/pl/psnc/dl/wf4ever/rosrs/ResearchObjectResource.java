@@ -5,12 +5,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Matcher;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -33,6 +31,7 @@ import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.common.util.HeaderUtils;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
@@ -172,7 +171,7 @@ public class ResearchObjectResource {
      */
     @POST
     public Response addResource(@PathParam("ro_id") String researchObjectId, @HeaderParam("Slug") String path,
-            @HeaderParam("Accept") String accept, InputStream content)
+            @HeaderParam("Accept") String accept, @HeaderParam("Link") Set<String> links, InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException,
             IncorrectModelException {
         URI uri = uriInfo.getAbsolutePath();
@@ -190,19 +189,7 @@ public class ResearchObjectResource {
             throw new ConflictException("This resource has already been aggregated. Use PUT to update it.");
         }
 
-        Set<URI> annotationTargets = new HashSet<>();
-        for (@SuppressWarnings("unchecked")
-        Enumeration<String> en = request.getHeaders(Constants.LINK_HEADER); en.hasMoreElements();) {
-            Matcher m = Constants.AO_LINK_HEADER_PATTERN.matcher(en.nextElement());
-            if (m.matches()) {
-                try {
-                    annotationTargets.add(new URI(m.group(1)));
-                } catch (URISyntaxException e) {
-                    throw new BadRequestException("Annotation target " + m.group(1) + " is incorrect", e);
-                }
-            }
-        }
-
+        Set<URI> annotationTargets = new HashSet<>(HeaderUtils.getLinkHeaders(links).get(AO.annotatesResource.getURI()));
         if (!annotationTargets.isEmpty()) {
             for (URI target : annotationTargets) {
                 if (!ROSRService.SMS.get().isAggregatedResource(researchObject, target)
@@ -315,8 +302,8 @@ public class ResearchObjectResource {
             }
         }
         pl.psnc.dl.wf4ever.model.RO.Resource resource = researchObject.aggregate(proxyFor);
-        RDFFormat syntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
 
+        RDFFormat syntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
         String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, proxyFor.toString(),
             Constants.ORE_PROXY_FOR_HEADER);
         InputStream proxyDesc = ROSRService.SMS.get().getResource(researchObject, syntax, resource.getProxyUri());
