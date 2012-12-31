@@ -36,7 +36,6 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
-import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
@@ -154,8 +153,12 @@ public class ResearchObjectResource {
      * 
      * @param researchObjectId
      *            RO id
+     * @param path
+     *            resource path
      * @param accept
      *            Accept header
+     * @param links
+     *            Link headers
      * @param content
      *            resource content
      * @return 201 Created with proxy URI
@@ -167,13 +170,11 @@ public class ResearchObjectResource {
      *             could not connect to the DL
      * @throws AccessDeniedException
      *             access denied when updating data in DL
-     * @throws IncorrectModelException
      */
     @POST
     public Response addResource(@PathParam("ro_id") String researchObjectId, @HeaderParam("Slug") String path,
             @HeaderParam("Accept") String accept, @HeaderParam("Link") Set<String> links, InputStream content)
-            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException,
-            IncorrectModelException {
+            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
         RDFFormat responseSyntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
         ResearchObject researchObject = ResearchObject.get(uri);
@@ -245,6 +246,8 @@ public class ResearchObjectResource {
      * 
      * @param researchObjectId
      *            RO id
+     * @param slug
+     *            Slug header
      * @param accept
      *            Accept header
      * @param content
@@ -258,14 +261,12 @@ public class ResearchObjectResource {
      *             could not connect to the DL
      * @throws AccessDeniedException
      *             access denied when updating data in DL
-     * @throws IncorrectModelException
      */
     @POST
     @Consumes(Constants.PROXY_MIME_TYPE)
     public Response addProxy(@PathParam("ro_id") String researchObjectId, @HeaderParam("Slug") String slug,
             @HeaderParam("Accept") String accept, InputStream content)
-            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException,
-            IncorrectModelException {
+            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.get(uri);
         if (researchObject == null) {
@@ -331,14 +332,12 @@ public class ResearchObjectResource {
      *             could not connect to the DL
      * @throws AccessDeniedException
      *             access denied when updating data in DL
-     * @throws IncorrectModelException
      */
     @POST
     @Consumes(Constants.ANNOTATION_MIME_TYPE)
     public Response addAnnotation(@PathParam("ro_id") String researchObjectId, @HeaderParam("Accept") String accept,
             InputStream content)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException,
-            IncorrectModelException {
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.get(uri);
         if (researchObject == null) {
@@ -416,6 +415,8 @@ public class ResearchObjectResource {
      * 
      * @param researchObjectId
      *            RO id
+     * @param path
+     *            folder path
      * @param accept
      *            Accept header
      * @param content

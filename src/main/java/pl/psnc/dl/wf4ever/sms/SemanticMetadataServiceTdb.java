@@ -354,6 +354,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             Individual resource = manifestModel.getIndividual(resourceURI.toString());
             if (resource == null) {
                 resource = manifestModel.createIndividual(resourceURI.toString(), RO.Resource);
+                resource.addRDFType(ORE.AggregatedResource);
             }
             manifestModel.add(ro, ORE.aggregates, resource);
             if (resourceInfo != null) {
@@ -1109,6 +1110,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             Resource bodyR = manifestModel.createResource(annotationBody.normalize().toString());
             URI annotationURI = generateAnnotationURI(researchObject, annotationUUID);
             Individual annotation = manifestModel.createIndividual(annotationURI.toString(), RO.AggregatedAnnotation);
+            annotation.addRDFType(ORE.AggregatedResource);
             manifestModel.add(researchObjectR, ORE.aggregates, annotation);
             manifestModel.add(annotation, AO.body, bodyR);
             for (URI targetURI : annotationTargets) {
@@ -2049,6 +2051,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             folder.setResearchObject(researchObject);
             Individual resource = manifestModel.createIndividual(folder.getUri().toString(), RO.Folder);
             resource.addRDFType(RO.Resource);
+            resource.addRDFType(ORE.AggregatedResource);
             manifestModel.add(ro, ORE.aggregates, resource);
             Resource folderRMRes = manifestModel.createResource(folder.getResourceMapUri().toString());
             manifestModel.add(resource, ORE.isDescribedBy, folderRMRes);

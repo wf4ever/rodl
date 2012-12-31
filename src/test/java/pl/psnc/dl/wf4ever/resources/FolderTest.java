@@ -50,6 +50,18 @@ public class FolderTest extends ResourceBase {
     /** file path. */
     private final String filePath = "file2.txt";
 
+    /** a file in the sample folder definition. */
+    private final URI f1 = URI.create("https://sandbox/rodl/ROs/ro1/myfolder/file1.txt");
+
+    /** a file in the sample folder definition. */
+    private final URI f2 = URI.create("https://sandbox/rodl/ROs/ro1/anotherfolder/file2.txt");
+
+    /** a file in the sample folder definition. */
+    private final URI f3 = URI.create("http://example.org");
+
+    /** a file in the sample folder entry definition. */
+    private final URI f4 = URI.create("https://sandbox/rodl/ROs/ro1/file2.txt");
+
 
     @Override
     public void setUp()
@@ -70,13 +82,14 @@ public class FolderTest extends ResourceBase {
      */
     @Test
     public void testAddFolder() {
-        //TODO add resources in the folder to the RO, same for all tests
+        addFile(ro, f1, accessToken).close();
+        addFile(ro, f2, accessToken).close();
+        addFile(ro, f3, accessToken).close();
 
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
         ClientResponse response = addFolder(is, ro, folderPath, accessToken);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
-        Set<URI> expected = new HashSet<>(Arrays.asList(URI.create("https://sandbox/rodl/ROs/ro1/myfolder/file1.txt"),
-            URI.create("https://sandbox/rodl/ROs/ro1/anotherfolder/file2.txt"), URI.create("http://example.org")));
+        Set<URI> expected = new HashSet<>(Arrays.asList(f1, f2, f3));
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(response.getEntityInputStream(), null);
         assertCorrectFolderResourceMap(model, expected);
@@ -105,6 +118,10 @@ public class FolderTest extends ResourceBase {
      */
     @Test
     public void testGetFolder() {
+        addFile(ro, f1, accessToken).close();
+        addFile(ro, f2, accessToken).close();
+        addFile(ro, f3, accessToken).close();
+
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
         ClientResponse response = addFolder(is, ro, folderPath, accessToken);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
@@ -130,6 +147,11 @@ public class FolderTest extends ResourceBase {
      */
     @Test
     public void testAddFolderEntry() {
+        addFile(ro, f1, accessToken).close();
+        addFile(ro, f2, accessToken).close();
+        addFile(ro, f3, accessToken).close();
+        addFile(ro, f4, accessToken).close();
+
         addFile(ro, filePath, accessToken);
 
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
@@ -168,6 +190,10 @@ public class FolderTest extends ResourceBase {
      */
     @Test
     public void testDeleteFolderEntry() {
+        addFile(ro, f1, accessToken).close();
+        addFile(ro, f2, accessToken).close();
+        addFile(ro, f3, accessToken).close();
+
         addFile(ro, filePath, accessToken);
 
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
@@ -207,6 +233,10 @@ public class FolderTest extends ResourceBase {
      */
     @Test
     public void testDeleteFolder() {
+        addFile(ro, f1, accessToken).close();
+        addFile(ro, f2, accessToken).close();
+        addFile(ro, f3, accessToken).close();
+
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
         ClientResponse response = addFolder(is, ro, folderPath, accessToken);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
@@ -244,7 +274,6 @@ public class FolderTest extends ResourceBase {
      *            list of aggregated resources
      */
     private void assertCorrectFolderResourceMap(OntModel model, Set<URI> proxyFors) {
-
         List<Individual> folders = model.listIndividuals(RO.Folder).toList();
         Assert.assertEquals(1, folders.size());
         List<RDFNode> folderEntries = folders.get(0).listPropertyValues(ORE.aggregates).toList();

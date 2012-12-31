@@ -461,6 +461,7 @@ public class ResearchObject extends Thing {
         }
         //this is unnecessary if the resource has been saved in the triplestore before loading
         this.resources.put(resource.getUri(), resource);
+        this.aggregatedResources.put(resource.getUri(), resource);
         return resource;
     }
 
@@ -475,10 +476,6 @@ public class ResearchObject extends Thing {
      * @throws DigitalLibraryException
      * @throws AccessDeniedException
      * @throws IncorrectModelException
-     * @throws ROSRSException
-     *             server returned an unexpected response
-     * @throws ROException
-     *             the manifest is incorrect
      */
     public Resource aggregate(URI uri)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, IncorrectModelException {
@@ -490,6 +487,7 @@ public class ResearchObject extends Thing {
             load();
         }
         this.resources.put(resource.getUri(), resource);
+        this.aggregatedResources.put(resource.getUri(), resource);
         return resource;
     }
 

@@ -124,6 +124,31 @@ public class W4ETest extends JerseyTest {
     }
 
 
+    /**
+     * Add an external resource to the RO.
+     * 
+     * @param roURI
+     *            RO URI
+     * @param resourceUri
+     *            resource URI
+     * @param accessToken
+     *            access token
+     * @return server response
+     */
+    protected ClientResponse addFile(URI roURI, URI resourceUri, String accessToken) {
+        return webResource
+                .uri(roURI)
+                .header("Authorization", "Bearer " + accessToken)
+                .type("application/vnd.wf4ever.proxy")
+                .post(
+                    ClientResponse.class,
+                    "<rdf:RDF\n" + "   xmlns:ore=\"http://www.openarchives.org/ore/terms/\"\n"
+                            + "   xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" >\n" + "   <ore:Proxy>\n"
+                            + "     <ore:proxyFor rdf:resource=\"" + resourceUri + "\" />\n" + "   </ore:Proxy>\n"
+                            + " </rdf:RDF>");
+    }
+
+
     protected ClientResponse updateFile(URI reURI, String accessToken) {
         return webResource.uri(reURI).header("Authorization", "Bearer " + accessToken).type("text/plain")
                 .put(ClientResponse.class, "modification");
