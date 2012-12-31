@@ -571,7 +571,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
         Annotation ann = test.sms.addAnnotation(test.emptyRO,
             new HashSet<>(Arrays.asList(test.emptyRO.getUri().resolve(ANNOTATION_PATH))), test.emptyRO.getUri()
-                    .resolve(ANNOTATION_BODY_PATH));
+                    .resolve(ANNOTATION_BODY_PATH), null);
         Assert.assertTrue("Annotation is an annotation", test.sms.isAnnotation(test.emptyRO, ann.getUri()));
         Assert.assertFalse("Workflow is not an annotation",
             test.sms.isAnnotation(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH)));
@@ -586,7 +586,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Annotation ann = test.sms.addAnnotation(
             test.emptyRO,
             new HashSet<>(Arrays.asList(test.emptyRO.getUri().resolve(WORKFLOW_PATH),
-                test.emptyRO.getUri().resolve(WORKFLOW_PATH_2))), test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH));
+                test.emptyRO.getUri().resolve(WORKFLOW_PATH_2))), test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH),
+            null);
         Assert.assertNotNull("Ann URI is not null", ann);
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
@@ -610,7 +611,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Set<URI> targets = new HashSet<>(Arrays.asList(test.emptyRO.getUri().resolve(WORKFLOW_PATH), test.emptyRO
                 .getUri().resolve(WORKFLOW_PATH_2)));
         Annotation ann = test.sms.addAnnotation(test.emptyRO, targets,
-            test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH));
+            test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), null);
         ann.setAnnotated(new HashSet<>(Arrays.asList(test.emptyRO.getUri().resolve(WORKFLOW_PATH),
             test.emptyRO.getUri())));
         ann.setBody(test.emptyRO.getUri().resolve(WORKFLOW_PATH_2));
@@ -642,7 +643,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Annotation ann = test.sms.addAnnotation(
             test.annotatedRO,
             new HashSet<>(Arrays.asList(test.annotatedRO.getUri().resolve(WORKFLOW_PATH), test.annotatedRO.getUri()
-                    .resolve(WORKFLOW_PATH_2))), somewhere);
+                    .resolve(WORKFLOW_PATH_2))), somewhere, null);
         Annotation actual = test.sms.getAnnotation(test.annotatedRO, ann.getUri());
         Assert.assertEquals("Annotation body retrieved correctly", ann, actual);
     }
@@ -657,7 +658,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Annotation ann = test.sms.addAnnotation(
             test.annotatedRO,
             new HashSet<>(Arrays.asList(test.annotatedRO.getUri().resolve(WORKFLOW_PATH), test.annotatedRO.getUri()
-                    .resolve(WORKFLOW_PATH_2))), test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH));
+                    .resolve(WORKFLOW_PATH_2))), test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH), null);
         test.sms.deleteAnnotation(test.annotatedRO, ann);
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(test.sms.getManifest(test.annotatedRO, RDFFormat.RDFXML), null);

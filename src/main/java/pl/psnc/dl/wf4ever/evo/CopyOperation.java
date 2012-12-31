@@ -121,12 +121,7 @@ public class CopyOperation implements Operation {
                     try {
                         //FIXME use a dedicated class for an Annotation
                         String[] segments = resource.getURI().split("/");
-                        if (segments.length > 0) {
-                            ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets,
-                                segments[segments.length - 1]);
-                        } else {
-                            ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets);
-                        }
+                        targetRO.annotate(URI.create(annBody.getURI()), targets, segments[segments.length - 1]);
                     } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e1) {
                         LOGGER.error("Could not add the annotation", e1);
                     }

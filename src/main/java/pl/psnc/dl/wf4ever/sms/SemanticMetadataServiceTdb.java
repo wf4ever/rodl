@@ -1092,14 +1092,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public Annotation addAnnotation(ResearchObject researchObject, Set<URI> annotationTargets, URI annotationBody) {
-        return addAnnotation(researchObject, annotationTargets, annotationBody, null);
-    }
-
-
-    @Override
     public Annotation addAnnotation(ResearchObject researchObject, Set<URI> annotationTargets, URI annotationBody,
-            String annotationUUID) {
+            String annotationId) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
@@ -1108,7 +1102,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             }
             Resource researchObjectR = manifestModel.createResource(researchObject.getUri().toString());
             Resource bodyR = manifestModel.createResource(annotationBody.normalize().toString());
-            URI annotationURI = generateAnnotationURI(researchObject, annotationUUID);
+            URI annotationURI = generateAnnotationURI(researchObject, annotationId);
             Individual annotation = manifestModel.createIndividual(annotationURI.toString(), RO.AggregatedAnnotation);
             annotation.addRDFType(ORE.AggregatedResource);
             manifestModel.add(researchObjectR, ORE.aggregates, annotation);

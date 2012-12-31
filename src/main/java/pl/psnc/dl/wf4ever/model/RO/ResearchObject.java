@@ -12,6 +12,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.activation.MimetypesFileTypeMap;
@@ -226,7 +227,13 @@ public class ResearchObject extends Thing {
         this.created = extractCreated(model);
         this.resources = extractResources(model);
         this.folders = extractFolders(model);
-        this.annotationsByTarget = extractAnnotations(model);
+        this.annotations = extractAnnotations(model);
+        this.annotationsByTarget = HashMultimap.<URI, Annotation> create();
+        for (Annotation ann : annotations.values()) {
+            for (URI target : ann.getAnnotated()) {
+                this.annotationsByTarget.put(target, ann);
+            }
+        }
         this.aggregatedResources = extractAggregatedResources(model, resources, folders, annotations);
         this.loaded = true;
         return this;
@@ -382,8 +389,7 @@ public class ResearchObject extends Thing {
      *            manifest model
      * @return a multivalued map of annotations, with bodies not loaded
      */
-    private Multimap<URI, Annotation> extractAnnotations(OntModel model) {
-        Multimap<URI, Annotation> annotations2 = HashMultimap.<URI, Annotation> create();
+    private Map<URI, Annotation> extractAnnotations(OntModel model) {
         Map<URI, Annotation> annotationsByUri = new HashMap<>();
         String queryString = String
                 .format(
@@ -417,13 +423,12 @@ public class ResearchObject extends Thing {
                             .asLiteral().getString()) : null;
                     annotation = new Annotation(this, aURI, pUri, bUri, tURI, resCreator, resCreated);
                 }
-                annotations2.put(tURI, annotation);
             }
         } finally {
             qe.close();
         }
 
-        return annotations2;
+        return annotationsByUri;
     }
 
 
@@ -440,11 +445,6 @@ public class ResearchObject extends Thing {
      * @throws NotFoundException
      * @throws DigitalLibraryException
      * @throws AccessDeniedException
-     * @throws IncorrectModelException
-     * @throws ROSRSException
-     *             server returned an unexpected response
-     * @throws ROException
-     *             the manifest is incorrect
      */
     public Resource aggregate(String path, InputStream content, String contentType)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, IncorrectModelException {
@@ -489,6 +489,46 @@ public class ResearchObject extends Thing {
         this.resources.put(resource.getUri(), resource);
         this.aggregatedResources.put(resource.getUri(), resource);
         return resource;
+    }
+
+
+    public Annotation annotate(URI body, Set<URI> targets)
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
+        return annotate(body, targets, null);
+    }
+
+
+    /**
+     * Add and aggregate a new annotation to the research object.
+     * 
+     * @param body
+     *            annotation body URI
+     * @param targets
+     *            list of annotated resources URIs
+     * @param annotationId
+     *            the id of the annotation, may be null
+     * @return new annotation
+     * @throws NotFoundException
+     *             could not find the resource in DL
+     * @throws DigitalLibraryException
+     *             could not connect to the DL
+     * @throws AccessDeniedException
+     *             access denied when updating data in DL
+     */
+    public Annotation annotate(URI body, Set<URI> targets, String annotationId)
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
+        Annotation annotation = ROSRService.SMS.get().addAnnotation(this, targets, body, annotationId);
+        annotation.setProxy(ROSRService.SMS.get().addProxy(this, annotation));
+        getManifest().serialize();
+        if (!loaded) {
+            load();
+        }
+        this.annotations.put(annotation.getUri(), annotation);
+        for (URI target : annotation.getAnnotated()) {
+            this.annotationsByTarget.put(target, annotation);
+        }
+        this.aggregatedResources.put(annotation.getUri(), annotation);
+        return annotation;
     }
 
 
@@ -561,7 +601,7 @@ public class ResearchObject extends Thing {
                     ROSRService.convertRoResourceToAnnotationBody(researchObject, researchObject
                             .getAggregatedResources().get(annotation.getBody()));
                 }
-                ROSRService.addAnnotation(researchObject, annotation.getBody(), annotation.getAnnotated());
+                researchObject.annotate(annotation.getBody(), annotation.getAnnotated());
             } catch (DigitalLibraryException | NotFoundException e) {
                 LOGGER.error("Error when adding annotations", e);
             }
@@ -622,7 +662,9 @@ public class ResearchObject extends Thing {
 
 
     /**
-     * @return the aggregatedResources
+     * Get the aggregated resource. Load the metadata first, if necessary.
+     * 
+     * @return a map of aggregated resource by their URI
      */
     public Map<URI, AggregatedResource> getAggregatedResources() {
         if (!loaded) {

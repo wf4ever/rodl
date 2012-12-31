@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -433,71 +432,6 @@ public final class ROSRService {
             ROSRService.SMS.get().addResource(researchObject, resource, info);
             updateROAttributesInDlibra(researchObject);
         }
-    }
-
-
-    /**
-     * Add and aggregate a new annotation to the research object.
-     * 
-     * @param researchObject
-     *            the research object
-     * @param annotationBody
-     *            annotation body URI
-     * @param set
-     *            list of annotated resources URIs
-     * @return 201 Created response
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     */
-    public static Annotation addAnnotation(ResearchObject researchObject, URI annotationBody, Set<URI> set)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        Annotation annotation = ROSRService.SMS.get().addAnnotation(researchObject, set, annotationBody);
-        // update the manifest that contains the annotation in dLibra
-        researchObject.getManifest().serialize();
-        return annotation;
-    }
-
-
-    /**
-     * Add and aggregate a new annotation to the research object.
-     * 
-     * @param researchObject
-     *            the research object
-     * @param annotationBody
-     *            annotation body URI
-     * @param annotationTargets
-     *            list of annotated resources URIs
-     * @param annotationPrefix
-     *            the prefix of annotation URI
-     * @return 201 Created response
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     */
-    public static Response addAnnotation(ResearchObject researchObject, URI annotationBody, Set<URI> annotationTargets,
-            String annotationPrefix)
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        Annotation annotation = ROSRService.SMS.get().addAnnotation(researchObject, annotationTargets, annotationBody,
-            annotationPrefix);
-        // update the manifest that contains the annotation in dLibra
-        researchObject.getManifest().serialize();
-
-        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotationBody.toString(), AO.body);
-        ResponseBuilder response = Response.created(annotation.getUri()).header(Constants.LINK_HEADER,
-            annotationBodyHeader);
-        for (URI target : annotationTargets) {
-            String targetHeader = String
-                    .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
-            response = response.header(Constants.LINK_HEADER, targetHeader);
-        }
-        return response.build();
     }
 
 

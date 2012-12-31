@@ -205,7 +205,7 @@ public class ResearchObjectResource {
             AggregatedResource aggregatedResource = ROSRService.convertRoResourceToAnnotationBody(researchObject,
                 roResource);
 
-            Annotation annotation = ROSRService.addAnnotation(researchObject, resourceUri, annotationTargets);
+            Annotation annotation = researchObject.annotate(resourceUri, annotationTargets);
             String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE,
                 annotation.getBody().toString(), AO.body);
             InputStream annotationDesc = ROSRService.SMS.get().getResource(researchObject, responseSyntax,
@@ -394,7 +394,7 @@ public class ResearchObjectResource {
                 researchObject.getAggregatedResources().get(body));
         }
 
-        Annotation annotation = ROSRService.addAnnotation(researchObject, body, targets);
+        Annotation annotation = researchObject.annotate(body, targets);
         String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBody().toString(),
             AO.body);
         RDFFormat syntax = RDFFormat.forFileName(accept, RDFFormat.RDFXML);

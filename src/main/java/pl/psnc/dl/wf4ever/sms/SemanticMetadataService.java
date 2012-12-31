@@ -459,20 +459,6 @@ public interface SemanticMetadataService {
      * 
      * @param researchObject
      *            research object
-     * @param set
-     *            a list of annotated resources
-     * @param annotationBody
-     *            the annotation body
-     * @return URI of the annotation
-     */
-    Annotation addAnnotation(ResearchObject researchObject, Set<URI> set, URI annotationBody);
-
-
-    /**
-     * Add an annotation to the research object.
-     * 
-     * @param researchObject
-     *            research object
      * @param annotationTargets
      *            a list of annotated resources
      * @param annotationBody
