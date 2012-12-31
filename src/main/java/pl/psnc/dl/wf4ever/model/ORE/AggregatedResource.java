@@ -29,6 +29,7 @@ public class AggregatedResource extends Thing {
      * Constructor.
      */
     public AggregatedResource(URI uri, ResearchObject researchObject) {
+
         super(uri);
         this.researchObject = researchObject;
     }

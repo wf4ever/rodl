@@ -47,14 +47,12 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 
@@ -96,6 +94,9 @@ public class ResearchObject extends Thing {
     /** aggregated annotations. */
     private Map<URI, Annotation> annotations;
 
+    /** Manifest. */
+    private Manifest manifest;
+
 
     //TODO add properties stored in evo_info.ttl
 
@@ -108,6 +109,7 @@ public class ResearchObject extends Thing {
     //FIXME should this be private?
     public ResearchObject(URI uri) {
         super(uri);
+        manifest = new Manifest(getManifestUri(), this);
     }
 
 
@@ -125,18 +127,7 @@ public class ResearchObject extends Thing {
     public static ResearchObject create(URI uri)
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         ResearchObject researchObject = new ResearchObject(uri);
-        InputStream manifest;
-        try {
-            ROSRService.SMS.get().createLiveResearchObject(researchObject, null);
-            manifest = ROSRService.SMS.get().getManifest(researchObject, RDFFormat.RDFXML);
-        } catch (IllegalArgumentException e) {
-            // RO already existed in sms, maybe created by someone else
-            throw new ConflictException("The RO with URI " + researchObject.getUri() + " already exists");
-        }
-
-        ROSRService.DL.get().createResearchObject(researchObject.getUri(), manifest, ResearchObject.MANIFEST_PATH,
-            RDFFormat.RDFXML.getDefaultMIMEType());
-        researchObject.generateEvoInfo();
+        researchObject.save();
         return researchObject;
     }
 
@@ -167,7 +158,7 @@ public class ResearchObject extends Thing {
 
 
     public Manifest getManifest() {
-        return new Manifest(getManifestUri(), this);
+        return manifest;
     }
 
 
@@ -211,18 +202,29 @@ public class ResearchObject extends Thing {
     }
 
 
+    public void save()
+            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+        super.save();
+        getManifest().save();
+        getManifest().saveInitialMetadata();
+        getManifest().saveContributors(this);
+
+        ROSRService.DL.get().createResearchObject(uri, getManifest().getGraphAsInputStream(RDFFormat.RDFXML),
+            ResearchObject.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
+        generateEvoInfo();
+    }
+
+
     /**
      * Load the metadata from the triplestore.
      * 
      * @return this instance, loaded
      * @throws IncorrectModelException
      */
-    public ResearchObject load()
-            throws IncorrectModelException {
+    //TODO should it be overridden?
+    public ResearchObject load() {
         //TODO should it be a private property?
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(ROSRService.SMS.get().getManifest(this, RDFFormat.RDFXML), null);
-
+        OntModel model = getManifest().getOntModel();
         this.creator = extractCreator(model);
         this.created = extractCreated(model);
         this.resources = extractResources(model);
@@ -535,7 +537,7 @@ public class ResearchObject extends Thing {
     /**
      * Create a new research object submitted in ZIP format.
      * 
-     * @param researchObject
+     * @param researchObjectUri
      *            the new research object
      * @param zip
      *            the ZIP file
@@ -546,13 +548,12 @@ public class ResearchObject extends Thing {
      *             error creating the temporary file
      * @throws ConflictException
      *             Research Object already exists
-     * @throws NotFoundException
-     * @throws DigitalLibraryException
-     * @throws IncorrectModelException
+     * @throws NotFoundException .
+     * @throws DigitalLibraryException .
      */
     public static ResearchObject create(URI researchObjectUri, MemoryZipFile zip)
             throws BadRequestException, AccessDeniedException, IOException, ConflictException, DigitalLibraryException,
-            NotFoundException, IncorrectModelException {
+            NotFoundException {
         ResearchObject researchObject = create(researchObjectUri);
         researchObject.load();
         SemanticMetadataService tmpSms = new SemanticMetadataServiceTdb(ROSRService.SMS.get().getUserProfile(),

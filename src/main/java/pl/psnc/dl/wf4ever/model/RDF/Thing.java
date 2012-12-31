@@ -1,22 +1,45 @@
 package pl.psnc.dl.wf4ever.model.RDF;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
+import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
+import pl.psnc.dl.wf4ever.vocabulary.AO;
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
+import pl.psnc.dl.wf4ever.vocabulary.W4E;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.ReadWrite;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.tdb.TDB;
+import com.hp.hpl.jena.tdb.TDBFactory;
 import com.hp.hpl.jena.vocabulary.DCTerms;
+
+import de.fuberlin.wiwiss.ng4j.NamedGraphSet;
+import de.fuberlin.wiwiss.ng4j.impl.NamedGraphSetImpl;
 
 /**
  * The root class for the model.
@@ -35,11 +58,52 @@ public class Thing {
     /** creation date. */
     protected DateTime created;
 
+    /** Use tdb transactions. */
+    protected boolean useTransactions;
+
+    /** Jena dataset. */
+    private final Dataset dataset;
+
+    /** Triple store location. */
+    private static final String TRIPLE_STORE_DIR = getStoreDirectory("connection.properties");
+
+    /** Logger. */
+    private static final Logger LOGGER = Logger.getLogger(SemanticMetadataServiceTdb.class);
+
+    /** Jena model of the named graph. */
+    protected OntModel model;
+
+    static {
+        init();
+    }
+
 
     /**
      * Constructor.
      */
+    public Thing(Dataset dataset, Boolean useTransactions) {
+        this.dataset = dataset;
+        this.useTransactions = useTransactions;
+    }
+
+
+    /**
+     * Constructor.
+     * 
+     */
     public Thing() {
+        dataset = TDBFactory.createDataset(TRIPLE_STORE_DIR);
+        useTransactions = true;
+    }
+
+
+    /**
+     * Init .
+     * 
+     */
+    public static void init() {
+        TDB.getContext().set(TDB.symUnionDefaultGraph, true);
+        W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
     }
 
 
@@ -50,6 +114,7 @@ public class Thing {
      *            resource URI
      */
     public Thing(URI uri) {
+        this();
         this.uri = uri;
     }
 
@@ -61,6 +126,7 @@ public class Thing {
 
     public void setUri(URI uri) {
         this.uri = uri;
+        this.model = getOntModel();
     }
 
 
@@ -94,6 +160,37 @@ public class Thing {
         InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(uri, researchObject, format);
         ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, dataStream,
             format.getDefaultMIMEType());
+    }
+
+
+    public InputStream getGraphAsInputStream(RDFFormat rdfFormat) {
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            if (!dataset.containsNamedModel(uri.toString())) {
+                return null;
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            if (rdfFormat.supportsContexts()) {
+                Dataset tmpDataset = TDBFactory.createDataset();
+                addNamedModelsRecursively(tmpDataset);
+
+                NamedGraphSet ngs = new NamedGraphSetImpl();
+                Iterator<String> it = tmpDataset.listNames();
+                while (it.hasNext()) {
+                    String uri = it.next();
+                    Model ng4jModel = ModelFactory.createModelForGraph(ngs.createGraph(uri));
+                    Model tdbModel = tmpDataset.getNamedModel(uri);
+                    List<Statement> statements = tdbModel.listStatements().toList();
+                    ng4jModel.add(statements);
+                }
+                ngs.write(out, rdfFormat.getName().toUpperCase(), null);
+            } else {
+                dataset.getNamedModel(uri.toString()).write(out, rdfFormat.getName().toUpperCase());
+            }
+            return new ByteArrayInputStream(out.toByteArray());
+        } finally {
+            endTransaction(transactionStarted);
+        }
     }
 
 
@@ -164,4 +261,146 @@ public class Thing {
         return getUri().toString();
     }
 
+
+    protected boolean beginTransaction(ReadWrite write) {
+        if (useTransactions && dataset.supportsTransactions() && !dataset.isInTransaction()) {
+            dataset.begin(write);
+            if (write == ReadWrite.READ) {
+                model = getOntModel();
+            } else {
+                model = createOntModel();
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    protected void commitTransaction(boolean wasStarted) {
+        if (useTransactions && dataset.supportsTransactions() && wasStarted) {
+            dataset.commit();
+        }
+    }
+
+
+    protected void endTransaction(boolean wasStarted) {
+        if (useTransactions && dataset.supportsTransactions() && wasStarted) {
+            dataset.end();
+            if (model != null) {
+                TDB.sync(model);
+                model = null;
+            }
+        }
+    }
+
+
+    protected void abortTransaction(boolean wasStarted) {
+        if (useTransactions && dataset.supportsTransactions() && wasStarted) {
+            dataset.abort();
+        }
+    }
+
+
+    // *****Private***** 
+
+    private static String getStoreDirectory(String filename) {
+        try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(filename)) {
+            Properties props = new Properties();
+            props.load(is);
+            return props.getProperty("store.directory");
+
+        } catch (Exception e) {
+            LOGGER.error("Trple store location can not be loaded from the properties file", e);
+        }
+        return null;
+    }
+
+
+    private void addNamedModelsRecursively(Dataset tmpDataset) {
+        tmpDataset.addNamedModel(uri.toString(), dataset.getNamedModel(uri.toString()));
+        OntModel model = getOntModel();
+        if (model == null) {
+            LOGGER.warn("Could not find model for URI " + uri);
+            return;
+        }
+        List<RDFNode> it = model.listObjectsOfProperty(AO.body).toList();
+        it.addAll(model.listObjectsOfProperty(ORE.isDescribedBy).toList());
+        for (RDFNode namedModelRef : it) {
+            URI childURI = URI.create(namedModelRef.asResource().getURI());
+            if (dataset.containsNamedModel(childURI.toString()) && !tmpDataset.containsNamedModel(childURI.toString())) {
+                Thing relatedModel = new Thing(childURI);
+                relatedModel.addNamedModelsRecursively(tmpDataset);
+            }
+        }
+    }
+
+
+    /**
+     * @param namedGraphURI
+     * @return
+     */
+    public OntModel createOntModel() {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM,
+                dataset.getNamedModel(uri.toString()));
+            commitTransaction(transactionStarted);
+            return ontModel;
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    public OntModel getOntModel() {
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            if (!dataset.containsNamedModel(uri.toString())) {
+                return null;
+            }
+            OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM,
+                dataset.getNamedModel(uri.toString()));
+            return ontModel;
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    public void save()
+            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+        this.model = createOntModel();
+    }
+
+
+    public void saveAuthor(Thing subject) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            com.hp.hpl.jena.rdf.model.Resource subjectR = model.getResource(subject.getUri().toString());
+            if (!subjectR.hasProperty(DCTerms.created)) {
+                model.add(subjectR, DCTerms.created, model.createTypedLiteral(Calendar.getInstance()));
+            }
+            if (!subjectR.hasProperty(DCTerms.creator)) {
+                // manifestModel.add(subjectR, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
+            }
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    public void saveContributors(Thing subject) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            com.hp.hpl.jena.rdf.model.Resource subjectR = model.getResource(subject.getUri().toString());
+            model.removeAll(subjectR, DCTerms.modified, null);
+            model.add(subjectR, DCTerms.modified, model.createTypedLiteral(Calendar.getInstance()));
+            //         manifestModel.add(subjectR, DCTerms.contributor, manifestModel.createResource(user.getUri().toString()));
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
 }

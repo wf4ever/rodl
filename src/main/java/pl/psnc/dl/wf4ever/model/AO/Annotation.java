@@ -44,11 +44,9 @@ public class Annotation extends AggregatedResource {
      *            Resource uri
      * @param model
      *            Ontology model
-     * @throws IncorrectModelException
-     *             the model contains an incorrect annotation description
+     * 
      */
-    public Annotation(ResearchObject researchObject, URI uri, OntModel model)
-            throws IncorrectModelException {
+    public Annotation(ResearchObject researchObject, URI uri, OntModel model) {
         super(uri, researchObject);
         this.annotated = new HashSet<>();
         fillUp(model);

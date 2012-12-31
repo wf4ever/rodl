@@ -84,7 +84,6 @@ public class SnapshotResearchObject extends FrozenResearchObject {
      * @return an existing Research Object or null
      */
     public static SnapshotResearchObject get(URI uri, ResearchObject LiveRO) {
-
         if (ROSRService.SMS.get().containsNamedGraph(uri.resolve(ResearchObject.MANIFEST_PATH))) {
             return new SnapshotResearchObject(uri, LiveRO);
         } else {

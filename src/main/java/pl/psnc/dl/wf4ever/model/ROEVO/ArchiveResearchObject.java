@@ -49,9 +49,9 @@ public class ArchiveResearchObject extends FrozenResearchObject {
      * @param liveRO
      *            live Research Object
      * @return an existing Research Object or null
+     * 
      */
     public static ArchiveResearchObject get(URI uri, ResearchObject LiveRO) {
-
         if (ROSRService.SMS.get().containsNamedGraph(uri.resolve(ResearchObject.MANIFEST_PATH))) {
             return new ArchiveResearchObject(uri, LiveRO);
         } else {

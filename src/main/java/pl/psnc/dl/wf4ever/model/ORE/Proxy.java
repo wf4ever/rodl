@@ -21,6 +21,7 @@ public class Proxy extends Thing {
 
     /**
      * Constructor.
+     * 
      */
     public Proxy() {
         super();
