@@ -7,6 +7,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 
 /**
@@ -33,6 +34,8 @@ public class Folder extends Resource {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param researchObject
      *            The RO it is aggregated by
      * @param uri
@@ -48,10 +51,10 @@ public class Folder extends Resource {
      * @param rootFolder
      *            is the folder a root folder in the RO
      */
-    public Folder(ResearchObject researchObject, URI uri, URI proxyURI, URI resourceMap, URI creator, DateTime created,
-            boolean rootFolder) {
-        super(researchObject, uri, proxyURI, creator, created, null);
-        this.resourceMap = new AggregatedResource(getResourceMapUri(), researchObject);
+    public Folder(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyURI, URI resourceMap,
+            URI creator, DateTime created, boolean rootFolder) {
+        super(user, researchObject, uri, proxyURI, creator, created, null);
+        this.resourceMap = new AggregatedResource(user, researchObject, getResourceMapUri());
         this.rootFolder = rootFolder;
         this.loaded = false;
     }
@@ -87,7 +90,7 @@ public class Folder extends Resource {
     @Override
     public void setResearchObject(ResearchObject researchObject) {
         super.setResearchObject(researchObject);
-        this.resourceMap = new AggregatedResource(getResourceMapUri(), researchObject);
+        this.resourceMap = new AggregatedResource(user, researchObject, getResourceMapUri());
     }
 
 

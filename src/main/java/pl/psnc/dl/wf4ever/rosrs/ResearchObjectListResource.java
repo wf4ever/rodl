@@ -25,7 +25,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.common.util.MemoryZipFile;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
@@ -34,7 +34,6 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
-import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 import com.sun.jersey.core.header.ContentDisposition;
@@ -60,6 +59,10 @@ public class ResearchObjectListResource {
     @Context
     UriInfo uriInfo;
 
+    /** Authenticated user. */
+    @RequestAttribute("User")
+    private UserMetadata user;
+
 
     /**
      * Returns list of relative links to research objects.
@@ -69,8 +72,6 @@ public class ResearchObjectListResource {
     @GET
     @Produces("text/plain")
     public Response getResearchObjectList() {
-        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
-
         Set<URI> list;
         if (user.getRole() == Role.PUBLIC) {
             list = ROSRService.SMS.get().findResearchObjects();
@@ -125,7 +126,7 @@ public class ResearchObjectListResource {
             throw new BadRequestException("Research object ID cannot contain slashes, see WFE-703");
         }
         URI uri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.create(uri);
+        ResearchObject researchObject = ResearchObject.create(user, uri);
 
         RDFFormat format = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
         InputStream manifest = ROSRService.SMS.get().getNamedGraph(researchObject.getManifestUri(), format);
@@ -155,13 +156,12 @@ public class ResearchObjectListResource {
      * @throws DigitalLibraryException
      *             error saving data to storage
      * @throws NotFoundException
-     * @throws IncorrectModelException
      */
     @POST
     @Consumes("application/zip")
     public Response createResearchObjectFromZip(@HeaderParam("Slug") String researchObjectId, InputStream zipStream)
             throws BadRequestException, IOException, AccessDeniedException, ConflictException, DigitalLibraryException,
-            NotFoundException, IncorrectModelException {
+            NotFoundException {
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
@@ -172,7 +172,8 @@ public class ResearchObjectListResource {
         FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
         IOUtils.copy(inputStream, fileOutputStream);
         URI roUri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.create(roUri, new MemoryZipFile(tmpFile, researchObjectId));
+        ResearchObject researchObject = ResearchObject
+                .create(user, roUri, new MemoryZipFile(tmpFile, researchObjectId));
         tmpFile.delete();
         return Response.created(researchObject.getUri()).build();
     }

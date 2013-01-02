@@ -19,6 +19,8 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.auth.RequestAttribute;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 
 import com.sun.jersey.api.NotFoundException;
@@ -49,6 +51,10 @@ public class FinalizeResource implements JobsContainer {
     /** URI info. */
     @Context
     private UriInfo uriInfo;
+
+    /** Authenticated user. */
+    @RequestAttribute("User")
+    private UserMetadata user;
 
     /** Running jobs. */
     private static Map<UUID, Job> jobs = new ConcurrentHashMap<>(MAX_JOBS);
@@ -84,7 +90,7 @@ public class FinalizeResource implements JobsContainer {
         if (status == null) {
             throw new BadRequestException("Can't find a copy job for this target: " + newStatus.getTarget());
         }
-        FinalizeOperation finalize = new FinalizeOperation();
+        FinalizeOperation finalize = new FinalizeOperation(user);
 
         UUID jobUUID = UUID.randomUUID();
         Job job = new Job(jobUUID, status, this, finalize);

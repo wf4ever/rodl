@@ -6,6 +6,7 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
@@ -28,13 +29,15 @@ public class Manifest extends Thing {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param uri
      *            manifest uri
      * @param researchObject
      *            research object being described
      */
-    public Manifest(URI uri, ResearchObject researchObject) {
-        super(uri);
+    public Manifest(UserMetadata user, URI uri, ResearchObject researchObject) {
+        super(user, uri);
         this.researchObject = researchObject;
     }
 
@@ -63,6 +66,14 @@ public class Manifest extends Thing {
     }
 
 
+    /**
+     * Save metadata that don't change over time.
+     * 
+     * @throws ConflictException
+     * @throws DigitalLibraryException
+     * @throws AccessDeniedException
+     * @throws NotFoundException
+     */
     public void saveInitialMetadata()
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);

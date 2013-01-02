@@ -14,6 +14,7 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
@@ -33,17 +34,21 @@ public class SnapshotResearchObject extends FrozenResearchObject {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param uri
      *            RO URI
      */
-    public SnapshotResearchObject(URI uri, ResearchObject liveRO) {
-        super(uri, liveRO);
+    public SnapshotResearchObject(UserMetadata user, URI uri, ResearchObject liveRO) {
+        super(user, uri, liveRO);
     }
 
 
     /**
      * Create new Research Object.
      * 
+     * @param user
+     *            user creating the instance
      * @param uri
      *            RO URI
      * @param liveRO
@@ -56,9 +61,9 @@ public class SnapshotResearchObject extends FrozenResearchObject {
      * @throws AccessDeniedException
      *             no permissions
      */
-    public static SnapshotResearchObject create(URI uri, ResearchObject liveRO)
+    public static SnapshotResearchObject create(UserMetadata user, URI uri, ResearchObject liveRO)
             throws ConflictException, DigitalLibraryException, AccessDeniedException {
-        SnapshotResearchObject researchObject = new SnapshotResearchObject(uri, liveRO);
+        SnapshotResearchObject researchObject = new SnapshotResearchObject(user, uri, liveRO);
         InputStream manifest;
         try {
             ROSRService.SMS.get().createSnapshotResearchObject(researchObject, liveRO);
@@ -77,15 +82,17 @@ public class SnapshotResearchObject extends FrozenResearchObject {
     /**
      * Get a Snapshot of existing Research Object.
      * 
+     * @param user
+     *            user creating the instance
      * @param uri
      *            uri
      * @param liveRO
      *            live Research Object
      * @return an existing Research Object or null
      */
-    public static SnapshotResearchObject get(URI uri, ResearchObject LiveRO) {
+    public static SnapshotResearchObject get(UserMetadata user, URI uri, ResearchObject LiveRO) {
         if (ROSRService.SMS.get().containsNamedGraph(uri.resolve(ResearchObject.MANIFEST_PATH))) {
-            return new SnapshotResearchObject(uri, LiveRO);
+            return new SnapshotResearchObject(user, uri, LiveRO);
         } else {
             return null;
         }

@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -38,16 +39,18 @@ public class Annotation extends AggregatedResource {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param researchObject
-     * 
+     *            RO aggregating the annotation
      * @param uri
      *            Resource uri
      * @param model
      *            Ontology model
      * 
      */
-    public Annotation(ResearchObject researchObject, URI uri, OntModel model) {
-        super(uri, researchObject);
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, OntModel model) {
+        super(user, researchObject, uri);
         this.annotated = new HashSet<>();
         fillUp(model);
     }
@@ -56,6 +59,10 @@ public class Annotation extends AggregatedResource {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
+     * @param researchObject
+     *            RO aggregating the annotation
      * @param uri
      *            Resource uri
      * @param annotated
@@ -63,8 +70,8 @@ public class Annotation extends AggregatedResource {
      * @param body
      *            Annotation body
      */
-    public Annotation(ResearchObject researchObject, URI uri, Set<URI> annotated, URI body) {
-        super(uri, researchObject);
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Set<URI> annotated, URI body) {
+        super(user, researchObject, uri);
         this.annotated = annotated;
         this.body = body;
     }
@@ -73,6 +80,8 @@ public class Annotation extends AggregatedResource {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param researchObject
      *            RO aggregating the annotation
      * @param uri
@@ -86,9 +95,9 @@ public class Annotation extends AggregatedResource {
      * @param created
      *            annotation creation time
      */
-    public Annotation(ResearchObject researchObject, URI uri, URI proxyUri, URI body, Set<URI> targets, URI creator,
-            DateTime created) {
-        super(researchObject, uri, proxyUri, creator, created);
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, URI body,
+            Set<URI> targets, URI creator, DateTime created) {
+        super(user, researchObject, uri, proxyUri, creator, created);
         this.body = body;
         this.annotated = targets;
         this.loaded = false;
@@ -98,6 +107,8 @@ public class Annotation extends AggregatedResource {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param researchObject
      *            RO aggregating the annotation
      * @param uri
@@ -111,9 +122,9 @@ public class Annotation extends AggregatedResource {
      * @param created
      *            annotation creation time
      */
-    public Annotation(ResearchObject researchObject, URI uri, URI proxyUri, URI body, URI target, URI creator,
-            DateTime created) {
-        this(researchObject, uri, proxyUri, body, new HashSet<URI>(Arrays.asList(new URI[] { target })), creator,
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, URI body, URI target,
+            URI creator, DateTime created) {
+        this(user, researchObject, uri, proxyUri, body, new HashSet<URI>(Arrays.asList(new URI[] { target })), creator,
                 created);
     }
 

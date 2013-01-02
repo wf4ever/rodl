@@ -5,6 +5,7 @@ import java.net.URI;
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 
 /**
@@ -22,6 +23,8 @@ public class Resource extends AggregatedResource {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param researchObject
      *            The RO it is aggregated by
      * @param uri
@@ -33,14 +36,17 @@ public class Resource extends AggregatedResource {
      * @param created
      *            creation date
      */
-    public Resource(ResearchObject researchObject, URI uri, URI proxyUri, URI creator, DateTime created) {
-        super(researchObject, uri, proxyUri, creator, created);
+    public Resource(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, URI creator,
+            DateTime created) {
+        super(user, researchObject, uri, proxyUri, creator, created);
     }
 
 
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param researchObject
      *            The RO it is aggregated by
      * @param uri
@@ -54,9 +60,9 @@ public class Resource extends AggregatedResource {
      * @param stats
      *            physical statistics (size, checksum, etc)
      */
-    public Resource(ResearchObject researchObject, URI uri, URI proxyURI, URI creator, DateTime created,
-            ResourceMetadata stats) {
-        this(researchObject, uri, proxyURI, creator, created);
+    public Resource(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyURI, URI creator,
+            DateTime created, ResourceMetadata stats) {
+        this(user, researchObject, uri, proxyURI, creator, created);
         this.stats = stats;
     }
 

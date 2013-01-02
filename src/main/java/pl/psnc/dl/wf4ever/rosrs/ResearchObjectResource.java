@@ -31,10 +31,12 @@ import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.common.util.HeaderUtils;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -76,6 +78,10 @@ public class ResearchObjectResource {
     /** URI info. */
     @Context
     UriInfo uriInfo;
+
+    /** Authenticated user. */
+    @RequestAttribute("User")
+    private UserMetadata user;
 
 
     /**
@@ -140,7 +146,7 @@ public class ResearchObjectResource {
     public void deleteResearchObject(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -177,7 +183,7 @@ public class ResearchObjectResource {
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
         RDFFormat responseSyntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -268,7 +274,7 @@ public class ResearchObjectResource {
             @HeaderParam("Accept") String accept, InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -339,7 +345,7 @@ public class ResearchObjectResource {
             InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -437,7 +443,7 @@ public class ResearchObjectResource {
             @HeaderParam("Slug") String path, InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -445,7 +451,7 @@ public class ResearchObjectResource {
             path = UUID.randomUUID().toString();
         }
         URI folderURI = uriInfo.getAbsolutePathBuilder().path(path).build();
-        Folder folder = ROSRService.assembleFolder(researchObject, folderURI, content);
+        Folder folder = ROSRService.assembleFolder(user, researchObject, folderURI, content);
         folder = ROSRService.createFolder(researchObject, folder);
 
         RDFFormat syntax = RDFFormat.forFileName(accept, RDFFormat.RDFXML);

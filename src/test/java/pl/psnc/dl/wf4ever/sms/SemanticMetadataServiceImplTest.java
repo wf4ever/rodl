@@ -170,8 +170,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testGetManifestInCaseRODoesNotExists() {
-        Assert.assertNull("Returns null when manifest does not exist",
-            test.sms.getManifest(new ResearchObject(URI.create("http://example.org/null/")), RDFFormat.RDFXML));
+        Assert.assertNull("Returns null when manifest does not exist", test.sms.getManifest(new ResearchObject(
+                userProfile, URI.create("http://example.org/null/")), RDFFormat.RDFXML));
     }
 
 
@@ -183,7 +183,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public final void testGetManifest() {
 
         Calendar before = Calendar.getInstance();
-        ResearchObject researchObject = new ResearchObject(URI.create("http://www.example.com/null/"));
+        ResearchObject researchObject = new ResearchObject(userProfile, URI.create("http://www.example.com/null/"));
         test.sms.createResearchObject(researchObject);
         Calendar after = Calendar.getInstance();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
@@ -221,8 +221,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testGetManifestWithAnnotationBodiesWhenManifestDoesNotExists() {
-        Assert.assertNull("Returns null when manifest does not exist",
-            test.sms.getManifest(new ResearchObject(URI.create("http://example.org/null/")), RDFFormat.TRIG));
+        Assert.assertNull("Returns null when manifest does not exist", test.sms.getManifest(new ResearchObject(
+                userProfile, URI.create("http://example.org/null/")), RDFFormat.TRIG));
     }
 
 
@@ -779,17 +779,20 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public final void testGetAggregatedResources()
             throws IncorrectModelException {
         List<AggregatedResource> list = test.sms.getAggregatedResources(test.ro1);
-        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve(
-            "final-agregated-resource-file"), test.ro1)));
+        Assert.assertTrue(list.contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve(
+            "final-agregated-resource-file"))));
+        Assert.assertTrue(list.contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve(
+            ".ro/ann-blank.ttl"))));
         Assert.assertTrue(list
-                .contains(new AggregatedResource(test.ro1.getUri().resolve(".ro/ann-blank.ttl"), test.ro1)));
-        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve("res2"), test.ro1)));
-        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve("res1"), test.ro1)));
+                .contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve("res2"))));
         Assert.assertTrue(list
-                .contains(new AggregatedResource(test.ro1.getUri().resolve(".ro/evo_info.ttl"), test.ro1)));
-        Assert.assertTrue(list
-                .contains(new AggregatedResource(test.ro1.getUri().resolve(".ro/ann1-body.ttl"), test.ro1)));
-        Assert.assertTrue(list.contains(new AggregatedResource(test.ro1.getUri().resolve("afinalfolder"), test.ro1)));
+                .contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve("res1"))));
+        Assert.assertTrue(list.contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve(
+            ".ro/evo_info.ttl"))));
+        Assert.assertTrue(list.contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve(
+            ".ro/ann1-body.ttl"))));
+        Assert.assertTrue(list.contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve(
+            "afinalfolder"))));
 
     }
 
@@ -1171,10 +1174,14 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public void testRemoveSpecialFilesFromAggergated() {
         List<AggregatedResource> aggregated = new ArrayList<AggregatedResource>();
-        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/manifest.rdf"), test.ro1));
-        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/evo_info.ttl"), test.ro1));
-        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/resource1.ttl"), test.ro1));
-        aggregated.add(new AggregatedResource(URI.create("http://www.example.com/ROS/1/resource2.ttl"), test.ro1));
+        aggregated.add(new AggregatedResource(userProfile, test.ro1, URI
+                .create("http://www.example.com/ROS/1/manifest.rdf")));
+        aggregated.add(new AggregatedResource(userProfile, test.ro1, URI
+                .create("http://www.example.com/ROS/1/evo_info.ttl")));
+        aggregated.add(new AggregatedResource(userProfile, test.ro1, URI
+                .create("http://www.example.com/ROS/1/resource1.ttl")));
+        aggregated.add(new AggregatedResource(userProfile, test.ro1, URI
+                .create("http://www.example.com/ROS/1/resource2.ttl")));
         aggregated = test.sms.removeSpecialFilesFromAggergated(aggregated);
         Assert.assertEquals("Two aggregatetions should stay", aggregated.size(), 2);
     }
@@ -1183,13 +1190,13 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public void testRemoveSpecialFilesFromAnnotations() {
         List<Annotation> annotations = new ArrayList<Annotation>();
-        annotations.add(new Annotation(test.ro1, URI.create("http://www.example.com/ROS/annotation/1/"),
+        annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/1/"),
                 new HashSet<URI>(), URI.create("http://www.example.com/ROS/1/manifest.rdf")));
-        annotations.add(new Annotation(test.ro1, URI.create("http://www.example.com/ROS/annotation/2/"),
+        annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/2/"),
                 new HashSet<URI>(), URI.create("http://www.example.com/ROS/1/evo_info.ttl")));
-        annotations.add(new Annotation(test.ro1, URI.create("http://www.example.com/ROS/annotation/3/"),
+        annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/3/"),
                 new HashSet<URI>(), URI.create("http://www.example.com/ROS/1/body1.ttl")));
-        annotations.add(new Annotation(test.ro1, URI.create("http://www.example.com/ROS/annotation/4/"),
+        annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/4/"),
                 new HashSet<URI>(), URI.create("http://www.example.com/ROS/1/body2.ttl")));
         annotations = test.sms.removeSpecialFilesFromAnnotatios(annotations);
         Assert.assertEquals("Two annotations should stay", annotations.size(), 2);

@@ -22,7 +22,7 @@ public class FolderTest {
      */
     @Test
     public void testGetResourceMapUri() {
-        Folder f = new Folder(null, URI.create("http://example.com"), null, null, null, null, false);
+        Folder f = new Folder(null, null, URI.create("http://example.com"), null, null, null, null, false);
         Assert.assertEquals(URI.create("http://example.com/folder.rdf"), f.getResourceMapUri());
         f.setUri(URI.create("http://example.com/"));
         Assert.assertEquals(URI.create("http://example.com/folder.rdf"), f.getResourceMapUri());

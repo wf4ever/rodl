@@ -372,7 +372,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             manifestModel.add(resource, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
             commitTransaction(transactionStarted);
             //FIXME proxy, creator, created
-            return new pl.psnc.dl.wf4ever.model.RO.Resource(researchObject, resourceURI, null, null, null, resourceInfo);
+            return new pl.psnc.dl.wf4ever.model.RO.Resource(user, researchObject, resourceURI, null, null, null,
+                    resourceInfo);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -717,8 +718,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     List<Individual> folders = model.listIndividuals(RO.Folder).toList();
                     for (Individual folder : folders) {
                         if (folder.isURIResource()) {
-                            Folder f = new Folder(null, URI.create(folder.asResource().getURI()), null, null, null,
-                                    null, false);
+                            Folder f = new Folder(user, null, URI.create(folder.asResource().getURI()), null, null,
+                                    null, null, false);
                             if (dataset.containsNamedModel(f.getResourceMapUri().toString())
                                     && !graphsToDelete.contains(f.getResourceMapUri())) {
                                 graphsToDelete.add(f.getResourceMapUri());
@@ -996,7 +997,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             manifestModel.add(proxy, ORE.proxyIn, researchObjectR);
             manifestModel.add(proxy, ORE.proxyFor, resourceR);
             commitTransaction(transactionStarted);
-            return new Proxy(proxyURI, resource, researchObject.getUri());
+            return new Proxy(user, proxyURI, resource, researchObject.getUri());
         } finally {
             endTransaction(transactionStarted);
         }
@@ -1115,7 +1116,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             Resource agent = manifestModel.createResource(user.getUri().toString());
             manifestModel.add(annotation, DCTerms.creator, agent);
             commitTransaction(transactionStarted);
-            return new Annotation(researchObject, annotationURI, annotationTargets, annotationBody);
+            return new Annotation(user, researchObject, annotationURI, annotationTargets, annotationBody);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -1180,7 +1181,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     targets.add(URI.create(node.asResource().getURI()));
                 }
             }
-            return new Annotation(researchObject, annotationUri, targets, body);
+            return new Annotation(user, researchObject, annotationUri, targets, body);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -1325,7 +1326,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 if (tmpURI.equals(freshSnapshotOrArchive.getUri())) {
                     continue;
                 }
-                RDFNode node = getIndividual(new ResearchObject(tmpURI)).getProperty(ROEVO.snapshotedAtTime)
+                RDFNode node = getIndividual(new ResearchObject(user, tmpURI)).getProperty(ROEVO.snapshotedAtTime)
                         .getObject();
                 DateTime tmpTime = new DateTime(node.asLiteral().getValue().toString());
                 if ((tmpTime.compareTo(freshTime) == -1)
@@ -1336,7 +1337,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             }
             while (archiveItertator.hasNext()) {
                 URI tmpURI = URI.create(archiveItertator.next().getObject().toString());
-                RDFNode node = getIndividual(new ResearchObject(tmpURI)).getProperty(ROEVO.archivedAtTime).getObject();
+                RDFNode node = getIndividual(new ResearchObject(user, tmpURI)).getProperty(ROEVO.archivedAtTime)
+                        .getObject();
                 DateTime tmpTime = new DateTime(node.asLiteral().getValue().toString());
                 if ((tmpTime.compareTo(freshTime) == -1)
                         && ((predecessorTime == null) || (tmpTime.compareTo(predecessorTime) == 1))) {
@@ -1951,12 +1953,13 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 try {
                     if (node.isURIResource()) {
                         if (!isAnnotation(researchObject, new URI(node.asResource().getURI()))) {
-                            aggregated.add(new AggregatedResource(new URI(node.asResource().getURI()), researchObject));
+                            aggregated.add(new AggregatedResource(user, researchObject, new URI(node.asResource()
+                                    .getURI())));
                         }
                     } else if (node.isResource()) {
                         URI nodeUri = changeBlankNodeToUriResources(researchObject, manifestModel, node);
                         if (!isAnnotation(researchObject, nodeUri)) {
-                            aggregated.add(new AggregatedResource(nodeUri, researchObject));
+                            aggregated.add(new AggregatedResource(user, researchObject, nodeUri));
                         }
                     }
                 } catch (URISyntaxException e) {
@@ -2010,12 +2013,12 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     if (node.isURIResource()) {
                         URI nodeURI = URI.create(node.asResource().getURI());
                         if (isAnnotation(researchObject, nodeURI)) {
-                            annotations.add(new Annotation(researchObject, nodeURI, manifestModel));
+                            annotations.add(new Annotation(user, researchObject, nodeURI, manifestModel));
                         }
                     } else if (node.isResource()) {
                         URI nodeURI = changeBlankNodeToUriResources(researchObject, manifestModel, node);
                         if (isAnnotation(researchObject, nodeURI)) {
-                            annotations.add(new Annotation(researchObject, nodeURI, manifestModel));
+                            annotations.add(new Annotation(user, researchObject, nodeURI, manifestModel));
                         }
                     }
                 } catch (IncorrectModelException e) {
@@ -2056,7 +2059,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             Individual proxy = manifestModel.createIndividual(proxyURI.toString(), ORE.Proxy);
             manifestModel.add(proxy, ORE.proxyIn, ro);
             manifestModel.add(proxy, ORE.proxyFor, resource);
-            folder.setProxy(new Proxy(proxyURI, folder, researchObject.getUri()));
+            folder.setProxy(new Proxy(user, proxyURI, folder, researchObject.getUri()));
             manifestModel.add(resource, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
             manifestModel.add(resource, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
 
@@ -2178,7 +2181,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
         URI previousSnapshot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
         if (previousSnapshot != null) {
-            storeAggregatedDifferences(researchObject, ResearchObject.get(previousSnapshot));
+            storeAggregatedDifferences(researchObject, ResearchObject.get(user, previousSnapshot));
             evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnapshot.toString()));
         }
     }
@@ -2224,7 +2227,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             ROEVO.hasArchive, ro);
         URI previousSnapshot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
         if (previousSnapshot != null) {
-            storeAggregatedDifferences(researchObject, ResearchObject.get(previousSnapshot));
+            storeAggregatedDifferences(researchObject, ResearchObject.get(user, previousSnapshot));
             evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnapshot.toString()));
         }
     }
@@ -2240,8 +2243,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             if (!it.hasNext()) {
                 return null;
             }
-            return new Annotation(researchObject, URI.create(it.next().getSubject().getURI()), null, null, (URI) null,
-                    null, null);
+            return new Annotation(user, researchObject, URI.create(it.next().getSubject().getURI()), null, null,
+                    (URI) null, null, null);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -2273,7 +2276,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             addNamedGraph(resourceURI, inputStream, rdfFormat);
 
             commitTransaction(transactionStarted);
-            return new AggregatedResource(resourceURI, researchObject);
+            return new AggregatedResource(user, researchObject, resourceURI);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -2353,7 +2356,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public Folder getFolder(URI folderURI) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
-            Folder folder = new Folder(null, folderURI, null, null, null, null, false);
+            Folder folder = new Folder(user, null, folderURI, null, null, null, null, false);
             if (!dataset.containsNamedModel(folder.getResourceMapUri().toString())) {
                 return null;
             }
@@ -2376,9 +2379,9 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             //        aggregatedByRO.addRange(RO.ResearchObject);
             //        Resource ro = folderI.getPropertyResourceValue(aggregatedByRO);
             URI roURI = URI.create(ro.getURI());
-            folder.setResearchObject(ResearchObject.get(roURI));
+            folder.setResearchObject(ResearchObject.get(user, roURI));
             URI proxyURI = getProxyForResource(folder.getResearchObject(), folder.getUri());
-            folder.setProxy(new Proxy(proxyURI, folder, folder.getResearchObject().getUri()));
+            folder.setProxy(new Proxy(user, proxyURI, folder, folder.getResearchObject().getUri()));
 
             List<Individual> entries = model.listIndividuals(RO.FolderEntry).toList();
             for (Individual entryI : entries) {
@@ -2386,7 +2389,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 if (!proxyIn.equals(folder.getUri().toString())) {
                     continue;
                 }
-                FolderEntry entry = new FolderEntry();
+                FolderEntry entry = new FolderEntry(user);
                 entry.setUri(URI.create(entryI.getURI()));
                 entry.setProxyIn(URI.create(proxyIn));
                 String proxyFor = entryI.getPropertyResourceValue(ORE.proxyFor).getURI();

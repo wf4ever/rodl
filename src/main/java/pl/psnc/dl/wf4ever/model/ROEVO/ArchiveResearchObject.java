@@ -14,6 +14,7 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
@@ -36,8 +37,8 @@ public class ArchiveResearchObject extends FrozenResearchObject {
      * @param uri
      *            RO URI
      */
-    public ArchiveResearchObject(URI uri, ResearchObject liveRO) {
-        super(uri, liveRO);
+    public ArchiveResearchObject(UserMetadata user, URI uri, ResearchObject liveRO) {
+        super(user, uri, liveRO);
     }
 
 
@@ -51,9 +52,9 @@ public class ArchiveResearchObject extends FrozenResearchObject {
      * @return an existing Research Object or null
      * 
      */
-    public static ArchiveResearchObject get(URI uri, ResearchObject LiveRO) {
+    public static ArchiveResearchObject get(UserMetadata user, URI uri, ResearchObject LiveRO) {
         if (ROSRService.SMS.get().containsNamedGraph(uri.resolve(ResearchObject.MANIFEST_PATH))) {
-            return new ArchiveResearchObject(uri, LiveRO);
+            return new ArchiveResearchObject(user, uri, LiveRO);
         } else {
             return null;
         }
@@ -75,9 +76,9 @@ public class ArchiveResearchObject extends FrozenResearchObject {
      * @throws AccessDeniedException
      *             no permissions
      */
-    public static ArchiveResearchObject create(URI uri, ResearchObject liveRO)
+    public static ArchiveResearchObject create(UserMetadata user, URI uri, ResearchObject liveRO)
             throws ConflictException, DigitalLibraryException, AccessDeniedException {
-        ArchiveResearchObject researchObject = new ArchiveResearchObject(uri, liveRO);
+        ArchiveResearchObject researchObject = new ArchiveResearchObject(user, uri, liveRO);
         InputStream manifest;
         try {
             ROSRService.SMS.get().createArchivedResearchObject(researchObject, liveRO);

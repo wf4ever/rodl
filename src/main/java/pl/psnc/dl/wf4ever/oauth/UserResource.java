@@ -24,6 +24,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
@@ -51,6 +52,10 @@ public class UserResource {
     /** URI info. */
     @Context
     UriInfo uriInfo;
+
+    /** Authenticated user. */
+    @RequestAttribute("User")
+    private UserMetadata user;
 
 
     /**
@@ -210,7 +215,7 @@ public class UserResource {
         Set<URI> list = ROSRService.SMS.get().findResearchObjectsByCreator(
             UserProfile.generateAbsoluteURI(null, userId));
         for (URI uri : list) {
-            ResearchObject ro = ResearchObject.get(uri);
+            ResearchObject ro = ResearchObject.get(user, uri);
             ro.delete();
         }
 
