@@ -2,6 +2,8 @@ package pl.psnc.dl.wf4ever.model.RO;
 
 import java.net.URI;
 
+import org.joda.time.DateTime;
+
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -63,20 +65,6 @@ public class Manifest extends Thing {
     public void save()
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         super.save();
-        saveContributors(this);
-    }
-
-
-    /**
-     * Save metadata that don't change over time.
-     * 
-     * @throws ConflictException
-     * @throws DigitalLibraryException
-     * @throws AccessDeniedException
-     * @throws NotFoundException
-     */
-    public void saveInitialMetadata()
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             Individual ro = model.getIndividual(researchObject.getUri().toString());
@@ -95,6 +83,14 @@ public class Manifest extends Thing {
         } finally {
             endTransaction(transactionStarted);
         }
+    }
+
+
+    public static Manifest create(UserMetadata user, URI uri, ResearchObject researchObject) {
+        Manifest manifest = new Manifest(user, uri, researchObject);
+        manifest.setCreator(user.getUri());
+        manifest.setCreated(DateTime.now());
+        return manifest;
     }
 
 }

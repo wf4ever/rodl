@@ -39,6 +39,7 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -178,11 +179,14 @@ public class ResearchObjectResource {
      *             could not connect to the DL
      * @throws AccessDeniedException
      *             access denied when updating data in DL
+     * @throws pl.psnc.dl.wf4ever.dl.ConflictException
+     * @throws IncorrectModelException
      */
     @POST
     public Response addResource(@PathParam("ro_id") String researchObjectId, @HeaderParam("Slug") String path,
             @HeaderParam("Accept") String accept, @HeaderParam("Link") Set<String> links, InputStream content)
-            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
+            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException,
+            pl.psnc.dl.wf4ever.dl.ConflictException {
         URI uri = uriInfo.getAbsolutePath();
         RDFFormat responseSyntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
         ResearchObject researchObject = ResearchObject.get(user, uri);

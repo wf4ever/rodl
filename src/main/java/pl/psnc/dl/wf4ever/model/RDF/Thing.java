@@ -4,10 +4,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Calendar;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -58,6 +59,12 @@ public class Thing {
 
     /** creation date. */
     protected DateTime created;
+
+    /** all contributors. */
+    protected Set<URI> contributors = new HashSet<>();
+
+    /** last modification date. */
+    protected DateTime modified;
 
     /** Use tdb transactions. */
     protected boolean useTransactions;
@@ -166,8 +173,33 @@ public class Thing {
     }
 
 
+    public void setCreator(URI creator) {
+        this.creator = creator;
+    }
+
+
     public DateTime getCreated() {
         return created;
+    }
+
+
+    public void setCreated(DateTime created) {
+        this.created = created;
+    }
+
+
+    public DateTime getModified() {
+        return modified;
+    }
+
+
+    public void setModified(DateTime modified) {
+        this.modified = modified;
+    }
+
+
+    public Set<URI> getContributors() {
+        return contributors;
     }
 
 
@@ -483,12 +515,12 @@ public class Thing {
      */
     public void save()
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
-        //        this.model = createOntModel();
+        saveContributors(this);
     }
 
 
     /**
-     * Save the current user and the current time as dcterms:creator and dcterms:created.
+     * Save the dcterms:creator and dcterms:created in the current model.
      * 
      * @param subject
      *            the resource being described
@@ -497,11 +529,11 @@ public class Thing {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             com.hp.hpl.jena.rdf.model.Resource subjectR = model.getResource(subject.getUri().toString());
-            if (!subjectR.hasProperty(DCTerms.created)) {
-                model.add(subjectR, DCTerms.created, model.createTypedLiteral(Calendar.getInstance()));
+            if (!subjectR.hasProperty(DCTerms.created) && subject.getCreated() != null) {
+                model.add(subjectR, DCTerms.created, model.createTypedLiteral(subject.getCreated().toCalendar(null)));
             }
-            if (!subjectR.hasProperty(DCTerms.creator) && user != null) {
-                model.add(subjectR, DCTerms.creator, model.createResource(user.getUri().toString()));
+            if (!subjectR.hasProperty(DCTerms.creator) && subject.getCreator() != null) {
+                model.add(subjectR, DCTerms.creator, model.createResource(subject.getCreator().toString()));
             }
             commitTransaction(transactionStarted);
         } finally {
@@ -511,7 +543,7 @@ public class Thing {
 
 
     /**
-     * Save the current user and the current time as dcterms:contributor and dcterms:modified.
+     * Save the dcterms:contributor and dcterms:modified in the current model.
      * 
      * @param subject
      *            the resource being described
@@ -521,9 +553,11 @@ public class Thing {
         try {
             com.hp.hpl.jena.rdf.model.Resource subjectR = model.getResource(subject.getUri().toString());
             model.removeAll(subjectR, DCTerms.modified, null);
-            model.add(subjectR, DCTerms.modified, model.createTypedLiteral(Calendar.getInstance()));
-            if (user != null) {
-                model.add(subjectR, DCTerms.contributor, model.createResource(user.getUri().toString()));
+            if (subject.getModified() != null) {
+                model.add(subjectR, DCTerms.modified, model.createTypedLiteral(subject.getModified().toCalendar(null)));
+            }
+            for (URI contributor : subject.getContributors()) {
+                model.add(subjectR, DCTerms.contributor, model.createResource(contributor.toString()));
             }
             commitTransaction(transactionStarted);
         } finally {

@@ -29,7 +29,6 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
-import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
@@ -132,6 +131,9 @@ public class ResearchObject extends Thing {
     public static ResearchObject create(UserMetadata user, URI uri)
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         ResearchObject researchObject = new ResearchObject(user, uri);
+        researchObject.setCreator(user.getUri());
+        researchObject.setCreated(DateTime.now());
+        researchObject.manifest = Manifest.create(user, researchObject.getUri().resolve(MANIFEST_PATH), researchObject);
         researchObject.save();
         return researchObject;
     }
@@ -179,6 +181,8 @@ public class ResearchObject extends Thing {
     /**
      * Get a Research Object.
      * 
+     * @param user
+     *            user creating the instance
      * @param uri
      *            uri
      * @return an existing Research Object or null
@@ -220,8 +224,6 @@ public class ResearchObject extends Thing {
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         super.save();
         getManifest().save();
-        getManifest().saveInitialMetadata();
-        getManifest().saveContributors(this);
 
         ROSRService.DL.get().createResearchObject(uri, getManifest().getGraphAsInputStream(RDFFormat.RDFXML),
             ResearchObject.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
@@ -253,8 +255,9 @@ public class ResearchObject extends Thing {
         this.aggregatedResources = extractAggregatedResources(model, resources, folders, annotations);
         this.proxies = new HashMap<>();
         for (AggregatedResource aggregatedResource : this.aggregatedResources.values()) {
-            if (aggregatedResource.getProxy() != null) {
-                this.proxies.put(aggregatedResource.getProxy().getUri(), aggregatedResource.getProxy());
+            Proxy proxy = aggregatedResource.getProxy();
+            if (proxy != null) {
+                this.proxies.put(proxy.getUri(), proxy);
             }
         }
         this.loaded = true;
@@ -468,23 +471,21 @@ public class ResearchObject extends Thing {
      * @throws NotFoundException
      * @throws DigitalLibraryException
      * @throws AccessDeniedException
+     * @throws ConflictException
      */
     public Resource aggregate(String path, InputStream content, String contentType)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException, IncorrectModelException {
+            throws AccessDeniedException, DigitalLibraryException, NotFoundException, IncorrectModelException,
+            ConflictException {
         URI resourceUri = UriBuilder.fromUri(uri).path(path).build();
-        ResourceMetadata resourceInfo = ROSRService.DL.get().createOrUpdateFile(uri, path, content,
-            contentType != null ? contentType : "text/plain");
-        Resource resource = ROSRService.SMS.get().addResource(this, resourceUri, resourceInfo);
-        // update the manifest that describes the resource in dLibra
-        getManifest().serialize();
-        Proxy proxy = ROSRService.SMS.get().addProxy(this, resource);
-        resource.setProxy(proxy);
         if (!loaded) {
             load();
         }
-        //this is unnecessary if the resource has been saved in the triplestore before loading
+        Resource resource = Resource.create(user, this, resourceUri);
+        resource.save(content, contentType);
+        getManifest().serialize();
         this.resources.put(resource.getUri(), resource);
         this.aggregatedResources.put(resource.getUri(), resource);
+        this.proxies.put(resource.getProxy().getUri(), resource.getProxy());
         return resource;
     }
 

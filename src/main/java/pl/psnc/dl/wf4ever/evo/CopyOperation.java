@@ -149,7 +149,7 @@ public class CopyOperation implements Operation {
                             }
                             changedURIs.put(resourceURI, targetURI);
                         } catch (AccessDeniedException | DigitalLibraryException | NotFoundException
-                                | IncorrectModelException e) {
+                                | IncorrectModelException | ConflictException e) {
                             throw new OperationFailedException("Could not create aggregate internal resource: "
                                     + resourceURI, e);
                         }

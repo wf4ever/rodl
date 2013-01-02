@@ -4,6 +4,9 @@ import java.net.URI;
 
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.model.RO.Resource;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 /**
  * Represents an ore:Proxy.
@@ -67,6 +70,11 @@ public class Proxy extends Thing {
 
     public void setProxyFor(AggregatedResource proxyFor) {
         this.proxyFor = proxyFor;
+    }
+
+
+    public static Proxy create(UserMetadata user, ResearchObject researchObject, Resource resource) {
+        return ROSRService.SMS.get().addProxy(researchObject, resource);
     }
 
 }
