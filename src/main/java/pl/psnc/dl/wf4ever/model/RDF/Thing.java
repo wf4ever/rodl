@@ -204,6 +204,13 @@ public class Thing {
     }
 
 
+    /**
+     * Return this resource as a named graph in a selected RDF format.
+     * 
+     * @param rdfFormat
+     *            RDF format
+     * @return an input stream or null of no model is found
+     */
     public InputStream getGraphAsInputStream(RDFFormat rdfFormat) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
@@ -218,9 +225,9 @@ public class Thing {
                 NamedGraphSet ngs = new NamedGraphSetImpl();
                 Iterator<String> it = tmpDataset.listNames();
                 while (it.hasNext()) {
-                    String uri = it.next();
-                    Model ng4jModel = ModelFactory.createModelForGraph(ngs.createGraph(uri));
-                    Model tdbModel = tmpDataset.getNamedModel(uri);
+                    String graphUri = it.next();
+                    Model ng4jModel = ModelFactory.createModelForGraph(ngs.createGraph(graphUri));
+                    Model tdbModel = tmpDataset.getNamedModel(graphUri);
                     List<Statement> statements = tdbModel.listStatements().toList();
                     ng4jModel.add(statements);
                 }
@@ -329,6 +336,13 @@ public class Thing {
     }
 
 
+    /**
+     * Commit the transaction provided that the flag useTransactions is set, the dataset supports transactions and the
+     * parameter is true.
+     * 
+     * @param wasStarted
+     *            a convenience parameter to specify if the transaction should be committed
+     */
     protected void commitTransaction(boolean wasStarted) {
         if (useTransactions && dataset.supportsTransactions() && wasStarted) {
             dataset.commit();
@@ -336,6 +350,13 @@ public class Thing {
     }
 
 
+    /**
+     * End the transaction provided that the flag useTransactions is set, the dataset supports transactions and the
+     * parameter is true.
+     * 
+     * @param wasStarted
+     *            a convenience parameter to specify if the transaction should be ended
+     */
     protected void endTransaction(boolean wasStarted) {
         if (useTransactions && dataset.supportsTransactions() && wasStarted) {
             if (model != null) {
@@ -347,6 +368,13 @@ public class Thing {
     }
 
 
+    /**
+     * Abort the transaction provided that the flag useTransactions is set, the dataset supports transactions and the
+     * parameter is true.
+     * 
+     * @param wasStarted
+     *            a convenience parameter to specify if the transaction should be aborted
+     */
     protected void abortTransaction(boolean wasStarted) {
         if (useTransactions && dataset.supportsTransactions() && wasStarted) {
             dataset.abort();
@@ -356,6 +384,13 @@ public class Thing {
 
     // *****Private***** 
 
+    /**
+     * Load the triple store location from the properties file. In case of any exceptions, log them and return null.
+     * 
+     * @param filename
+     *            properties file name
+     * @return the path to the triple store directory
+     */
     private static String getStoreDirectory(String filename) {
         try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(filename)) {
             Properties props = new Properties();
@@ -369,28 +404,41 @@ public class Thing {
     }
 
 
+    /**
+     * Add this model to a dataset and call this method recursively for all dependent models, unless they have already
+     * been added to the dataset.
+     * 
+     * @param tmpDataset
+     *            the dataset to which to add the model
+     */
     private void addNamedModelsRecursively(Dataset tmpDataset) {
-        tmpDataset.addNamedModel(uri.toString(), dataset.getNamedModel(uri.toString()));
-        OntModel model = getOntModel();
-        if (model == null) {
-            LOGGER.warn("Could not find model for URI " + uri);
-            return;
-        }
-        List<RDFNode> it = model.listObjectsOfProperty(AO.body).toList();
-        it.addAll(model.listObjectsOfProperty(ORE.isDescribedBy).toList());
-        for (RDFNode namedModelRef : it) {
-            URI childURI = URI.create(namedModelRef.asResource().getURI());
-            if (dataset.containsNamedModel(childURI.toString()) && !tmpDataset.containsNamedModel(childURI.toString())) {
-                Thing relatedModel = new Thing(user, childURI);
-                relatedModel.addNamedModelsRecursively(tmpDataset);
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            if (model == null) {
+                LOGGER.warn("Could not find model for URI " + uri);
+                return;
             }
+            tmpDataset.addNamedModel(uri.toString(), model);
+            List<RDFNode> it = model.listObjectsOfProperty(AO.body).toList();
+            it.addAll(model.listObjectsOfProperty(ORE.isDescribedBy).toList());
+            for (RDFNode namedModelRef : it) {
+                URI childURI = URI.create(namedModelRef.asResource().getURI());
+                if (dataset.containsNamedModel(childURI.toString())
+                        && !tmpDataset.containsNamedModel(childURI.toString())) {
+                    Thing relatedModel = new Thing(user, childURI);
+                    relatedModel.addNamedModelsRecursively(tmpDataset);
+                }
+            }
+        } finally {
+            endTransaction(transactionStarted);
         }
     }
 
 
     /**
-     * @param namedGraphURI
-     * @return
+     * Create a new model for this resource or open an existing one.
+     * 
+     * @return an ontology model
      */
     public OntModel createOntModel() {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
@@ -405,6 +453,11 @@ public class Thing {
     }
 
 
+    /**
+     * Get the model for this resource or null if doesn't exist.
+     * 
+     * @return an ontology model or null
+     */
     public OntModel getOntModel() {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
@@ -420,12 +473,26 @@ public class Thing {
     }
 
 
+    /**
+     * Save the resource to the triplestore and data storage backend.
+     * 
+     * @throws ConflictException
+     * @throws DigitalLibraryException
+     * @throws AccessDeniedException
+     * @throws NotFoundException
+     */
     public void save()
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         //        this.model = createOntModel();
     }
 
 
+    /**
+     * Save the current user and the current time as dcterms:creator and dcterms:created.
+     * 
+     * @param subject
+     *            the resource being described
+     */
     public void saveAuthor(Thing subject) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
@@ -443,6 +510,12 @@ public class Thing {
     }
 
 
+    /**
+     * Save the current user and the current time as dcterms:contributor and dcterms:modified.
+     * 
+     * @param subject
+     *            the resource being described
+     */
     public void saveContributors(Thing subject) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
