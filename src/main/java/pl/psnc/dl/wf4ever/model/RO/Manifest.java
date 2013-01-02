@@ -39,6 +39,7 @@ public class Manifest extends Thing {
     public Manifest(UserMetadata user, URI uri, ResearchObject researchObject) {
         super(user, uri);
         this.researchObject = researchObject;
+        setNamedGraph(true);
     }
 
 

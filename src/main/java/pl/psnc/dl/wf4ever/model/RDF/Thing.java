@@ -63,7 +63,7 @@ public class Thing {
     protected boolean useTransactions;
 
     /** Jena dataset. */
-    private final Dataset dataset;
+    private Dataset dataset;
 
     /** Triple store location. */
     private static final String TRIPLE_STORE_DIR = getStoreDirectory("connection.properties");
@@ -76,6 +76,9 @@ public class Thing {
 
     /** User creating the instance. */
     protected UserMetadata user;
+
+    /** Is the resource a named graph in the triplestore. True for manifest, annotation bodies and folder resource maps. */
+    protected boolean namedGraph = false;
 
     static {
         init();
@@ -120,7 +123,7 @@ public class Thing {
      *            user creating the instance
      */
     public Thing(UserMetadata user) {
-        this(user, TDBFactory.createDataset(TRIPLE_STORE_DIR), true);
+        this(user, null, true);
     }
 
 
@@ -165,6 +168,16 @@ public class Thing {
 
     public DateTime getCreated() {
         return created;
+    }
+
+
+    public boolean isNamedGraph() {
+        return namedGraph;
+    }
+
+
+    public void setNamedGraph(boolean namedGraph) {
+        this.namedGraph = namedGraph;
     }
 
 
@@ -290,7 +303,18 @@ public class Thing {
     }
 
 
+    /**
+     * Start a TDB transaction provided that the flag useTransactions is set, the dataset supports transactions and
+     * there is no open transaction. According to TDB, many read or one write transactions are allowed.
+     * 
+     * @param write
+     *            read or write
+     * @return true if a new transaction has been started, false otherwise
+     */
     protected boolean beginTransaction(ReadWrite write) {
+        if (dataset == null) {
+            dataset = TDBFactory.createDataset(TRIPLE_STORE_DIR);
+        }
         if (useTransactions && dataset.supportsTransactions() && !dataset.isInTransaction()) {
             dataset.begin(write);
             if (write == ReadWrite.READ) {
@@ -314,11 +338,11 @@ public class Thing {
 
     protected void endTransaction(boolean wasStarted) {
         if (useTransactions && dataset.supportsTransactions() && wasStarted) {
-            dataset.end();
             if (model != null) {
                 TDB.sync(model);
                 model = null;
             }
+            dataset.end();
         }
     }
 
