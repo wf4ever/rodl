@@ -81,6 +81,9 @@ public class FrozenResearchObject extends ResearchObject {
     protected void generateEvoInfo(EvoType type)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         ROSRService.SMS.get().generateEvoInformation(this, liveRO, type);
+        if (!loaded) {
+            load();
+        }
         this.getEvoInfoBody().serialize();
         this.getManifest().serialize();
         if (liveRO != null) {

@@ -75,10 +75,10 @@ public class ResearchObject extends Thing {
     private static final String ROEVO_PATH = ".ro/evo_info.ttl";
 
     /** has the metadata been loaded from triplestore. */
-    private boolean loaded;
+    protected boolean loaded;
 
     /** aggregated resources, including annotations, resources and folders. */
-    private Map<URI, AggregatedResource> aggregatedResources;
+    protected Map<URI, AggregatedResource> aggregatedResources;
 
     /** proxies declared in this RO. */
     private Map<URI, Proxy> proxies;
@@ -143,9 +143,6 @@ public class ResearchObject extends Thing {
         if (!loaded) {
             load();
         }
-        //HACK this should be added automatically
-        this.aggregatedResources.put(getFixedEvolutionAnnotationBodyUri(), new AggregatedResource(user, this,
-                getFixedEvolutionAnnotationBodyUri()));
         this.getEvoInfoBody().serialize();
         this.getManifest().serialize();
     }
@@ -164,6 +161,12 @@ public class ResearchObject extends Thing {
 
 
     public AggregatedResource getEvoInfoBody() {
+        if (!loaded) {
+            load();
+        }
+        //HACK this should be added automatically
+        this.aggregatedResources.put(getFixedEvolutionAnnotationBodyUri(), new AggregatedResource(user, this,
+                getFixedEvolutionAnnotationBodyUri()));
         return aggregatedResources.get(getFixedEvolutionAnnotationBodyUri());
     }
 
@@ -418,7 +421,7 @@ public class ResearchObject extends Thing {
                 RDFNode a = solution.get("annotation");
                 URI aURI = URI.create(a.asResource().getURI());
                 RDFNode p = solution.get("proxy");
-                URI pUri = URI.create(p.asResource().getURI());
+                URI pUri = p != null ? URI.create(p.asResource().getURI()) : null;
                 RDFNode t = solution.get("target");
                 URI tURI = URI.create(t.asResource().getURI());
                 Annotation annotation;

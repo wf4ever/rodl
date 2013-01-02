@@ -23,6 +23,8 @@ public class Proxy extends Thing {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      */
     public Proxy(UserMetadata user) {
         super(user);
@@ -32,6 +34,8 @@ public class Proxy extends Thing {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param uri
      *            proxy URI
      * @param proxyFor
