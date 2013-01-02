@@ -35,6 +35,7 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -167,7 +168,7 @@ public class Resource {
         }
         URI resource = uriInfo.getAbsolutePath();
         URI body;
-        Set<URI> targets = new HashSet<>();
+        Set<Thing> targets = new HashSet<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         model.read(content, researchObject.getUri().toString());
         ExtendedIterator<Individual> it = model.listIndividuals(RO.AggregatedAnnotation);
@@ -193,7 +194,7 @@ public class Resource {
                 RDFNode targetResource = it2.next();
                 if (targetResource.isURIResource()) {
                     try {
-                        targets.add(new URI(targetResource.asResource().getURI()));
+                        targets.add(new Thing(new URI(targetResource.asResource().getURI())));
                     } catch (URISyntaxException e) {
                         throw new BadRequestException("Wrong target resource URI", e);
                     }
@@ -208,7 +209,8 @@ public class Resource {
         if (!ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
             throw new ForbiddenException("You cannot create a new annotation using PUT, use POST instead.");
         }
-        return ROSRService.updateAnnotation(researchObject, new Annotation(researchObject, resource, targets, body));
+        return ROSRService.updateAnnotation(researchObject, new Annotation(researchObject, resource, targets,
+                new Thing(body)));
     }
 
 

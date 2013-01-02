@@ -403,4 +403,16 @@ public class Thing {
             endTransaction(transactionStarted);
         }
     }
+
+
+    /**
+     * 
+     * @return true if object represents a special object, false otherwise.
+     */
+    public Boolean isSpecialResource() {
+        if (uri.toString().matches("(.+)?manifest\\.rdf(\\/)?") || uri.toString().matches("(.+)?evo_info\\.ttl(\\/)?")) {
+            return true;
+        }
+        return false;
+    }
 }

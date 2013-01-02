@@ -16,6 +16,7 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
@@ -108,7 +109,7 @@ public class CopyOperation implements Operation {
                 URI resourceURI = URI.create(resource.getURI());
                 if (resource.hasRDFType(RO.AggregatedAnnotation)) {
                     Resource annBody = resource.getPropertyResourceValue(AO.body);
-                    Set<URI> targets = new HashSet<>();
+                    Set<Thing> targets = new HashSet<>();
                     List<RDFNode> annotationTargets = resource.listPropertyValues(RO.annotatesAggregatedResource)
                             .toList();
                     for (RDFNode annTarget : annotationTargets) {
@@ -116,12 +117,13 @@ public class CopyOperation implements Operation {
                             LOGGER.warn("Annotation target " + annTarget.toString() + " is not a URI resource");
                             continue;
                         }
-                        targets.add(URI.create(annTarget.asResource().getURI()));
+                        targets.add(new Thing(URI.create(annTarget.asResource().getURI())));
                     }
                     try {
                         //FIXME use a dedicated class for an Annotation
                         String[] segments = resource.getURI().split("/");
-                        targetRO.annotate(URI.create(annBody.getURI()), targets, segments[segments.length - 1]);
+                        targetRO.annotate(new Thing(URI.create(annBody.getURI())), targets,
+                            segments[segments.length - 1]);
                     } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e1) {
                         LOGGER.error("Could not add the annotation", e1);
                     }

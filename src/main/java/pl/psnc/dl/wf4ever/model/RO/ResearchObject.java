@@ -89,7 +89,7 @@ public class ResearchObject extends Thing {
     private Map<URI, Folder> folders;
 
     /** aggregated annotations, grouped based on ao:annotatesResource. */
-    private Multimap<URI, Annotation> annotationsByTarget;
+    private Multimap<URI, Annotation> annotationsByTargetUri;
 
     /** aggregated annotations. */
     private Map<URI, Annotation> annotations;
@@ -230,10 +230,10 @@ public class ResearchObject extends Thing {
         this.resources = extractResources(model);
         this.folders = extractFolders(model);
         this.annotations = extractAnnotations(model);
-        this.annotationsByTarget = HashMultimap.<URI, Annotation> create();
+        this.annotationsByTargetUri = HashMultimap.<URI, Annotation> create();
         for (Annotation ann : annotations.values()) {
-            for (URI target : ann.getAnnotated()) {
-                this.annotationsByTarget.put(target, ann);
+            for (Thing target : ann.getAnnotated()) {
+                this.annotationsByTargetUri.put(target.getUri(), ann);
             }
         }
         this.aggregatedResources = extractAggregatedResources(model, resources, folders, annotations);
@@ -409,11 +409,11 @@ public class ResearchObject extends Thing {
                 RDFNode p = solution.get("proxy");
                 URI pUri = URI.create(p.asResource().getURI());
                 RDFNode t = solution.get("target");
-                URI tURI = URI.create(t.asResource().getURI());
+                URI tUri = URI.create(t.asResource().getURI());
                 Annotation annotation;
                 if (annotationsByUri.containsKey(aURI)) {
                     annotation = annotationsByUri.get(aURI);
-                    annotation.getAnnotated().add(tURI);
+                    annotation.getAnnotated().add(new Thing(tUri));
                 } else {
                     RDFNode b = solution.get("body");
                     URI bUri = URI.create(b.asResource().getURI());
@@ -423,7 +423,8 @@ public class ResearchObject extends Thing {
                     RDFNode createdNode = solution.get("created");
                     DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                             .asLiteral().getString()) : null;
-                    annotation = new Annotation(this, aURI, pUri, bUri, tURI, resCreator, resCreated);
+                    annotation = new Annotation(this, aURI, pUri, new Thing(bUri), new Thing(tUri), resCreator,
+                            resCreated);
                 }
             }
         } finally {
@@ -494,7 +495,7 @@ public class ResearchObject extends Thing {
     }
 
 
-    public Annotation annotate(URI body, Set<URI> targets)
+    public Annotation annotate(Thing body, Set<Thing> targets)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         return annotate(body, targets, null);
     }
@@ -517,7 +518,7 @@ public class ResearchObject extends Thing {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public Annotation annotate(URI body, Set<URI> targets, String annotationId)
+    public Annotation annotate(Thing body, Set<Thing> targets, String annotationId)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         Annotation annotation = ROSRService.SMS.get().addAnnotation(this, targets, body, annotationId);
         annotation.setProxy(ROSRService.SMS.get().addProxy(this, annotation));
@@ -526,8 +527,8 @@ public class ResearchObject extends Thing {
             load();
         }
         this.annotations.put(annotation.getUri(), annotation);
-        for (URI target : annotation.getAnnotated()) {
-            this.annotationsByTarget.put(target, annotation);
+        for (Thing target : annotation.getAnnotated()) {
+            this.annotationsByTargetUri.put(target.getUri(), annotation);
         }
         this.aggregatedResources.put(annotation.getUri(), annotation);
         return annotation;
@@ -658,7 +659,7 @@ public class ResearchObject extends Thing {
         if (!loaded) {
             load();
         }
-        return annotationsByTarget;
+        return annotationsByTargetUri;
     }
 
 
