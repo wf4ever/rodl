@@ -14,6 +14,7 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -47,6 +48,9 @@ public class CopyOperation implements Operation {
     /** operation id. */
     private String id;
 
+    /** user calling this operation. */
+    private UserMetadata user;
+
 
     /**
      * Constructor.
@@ -54,7 +58,8 @@ public class CopyOperation implements Operation {
      * @param id
      *            operation id
      */
-    public CopyOperation(String id) {
+    public CopyOperation(UserMetadata user, String id) {
+        this.user = user;
         this.id = id;
     }
 
@@ -75,11 +80,11 @@ public class CopyOperation implements Operation {
 
             ResearchObject targetRO;
             try {
-                targetRO = ResearchObject.create(target);
+                targetRO = ResearchObject.create(user, target);
             } catch (ConflictException | DigitalLibraryException | AccessDeniedException | NotFoundException e) {
                 throw new OperationFailedException("Failed to create target RO", e);
             }
-            ResearchObject sourceRO = ResearchObject.get(status.getCopyfrom());
+            ResearchObject sourceRO = ResearchObject.get(user, status.getCopyfrom());
             if (sourceRO == null) {
                 throw new OperationFailedException("source Research Object does not exist");
             }
@@ -117,12 +122,12 @@ public class CopyOperation implements Operation {
                             LOGGER.warn("Annotation target " + annTarget.toString() + " is not a URI resource");
                             continue;
                         }
-                        targets.add(new Thing(URI.create(annTarget.asResource().getURI())));
+                        targets.add(new Thing(user, URI.create(annTarget.asResource().getURI())));
                     }
                     try {
                         //FIXME use a dedicated class for an Annotation
                         String[] segments = resource.getURI().split("/");
-                        targetRO.annotate(new Thing(URI.create(annBody.getURI())), targets,
+                        targetRO.annotate(new Thing(user, URI.create(annBody.getURI())), targets,
                             segments[segments.length - 1]);
                     } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e1) {
                         LOGGER.error("Could not add the annotation", e1);

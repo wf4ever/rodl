@@ -30,6 +30,7 @@ import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
@@ -74,10 +75,10 @@ public class ResearchObject extends Thing {
     private static final String ROEVO_PATH = ".ro/evo_info.ttl";
 
     /** has the metadata been loaded from triplestore. */
-    private boolean loaded;
+    protected boolean loaded;
 
     /** aggregated resources, including annotations, resources and folders. */
-    private Map<URI, AggregatedResource> aggregatedResources;
+    protected Map<URI, AggregatedResource> aggregatedResources;
 
     /** proxies declared in this RO. */
     private Map<URI, Proxy> proxies;
@@ -103,19 +104,23 @@ public class ResearchObject extends Thing {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param uri
      *            RO URI
      */
     //FIXME should this be private?
-    public ResearchObject(URI uri) {
-        super(uri);
-        manifest = new Manifest(getManifestUri(), this);
+    public ResearchObject(UserMetadata user, URI uri) {
+        super(user, uri);
+        manifest = new Manifest(user, getManifestUri(), this);
     }
 
 
     /**
      * Create new Research Object.
      * 
+     * @param user
+     *            user creating the instance
      * @param uri
      *            RO URI
      * @return an instance
@@ -124,9 +129,9 @@ public class ResearchObject extends Thing {
      * @throws DigitalLibraryException
      * @throws ConflictException
      */
-    public static ResearchObject create(URI uri)
+    public static ResearchObject create(UserMetadata user, URI uri)
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
-        ResearchObject researchObject = new ResearchObject(uri);
+        ResearchObject researchObject = new ResearchObject(user, uri);
         researchObject.save();
         return researchObject;
     }
@@ -135,6 +140,9 @@ public class ResearchObject extends Thing {
     public void generateEvoInfo()
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         ROSRService.SMS.get().generateEvoInformation(this, null, EvoType.LIVE);
+        if (!loaded) {
+            load();
+        }
         this.getEvoInfoBody().serialize();
         this.getManifest().serialize();
     }
@@ -153,7 +161,13 @@ public class ResearchObject extends Thing {
 
 
     public AggregatedResource getEvoInfoBody() {
-        return new AggregatedResource(getFixedEvolutionAnnotationBodyUri(), this);
+        if (!loaded) {
+            load();
+        }
+        //HACK this should be added automatically
+        this.aggregatedResources.put(getFixedEvolutionAnnotationBodyUri(), new AggregatedResource(user, this,
+                getFixedEvolutionAnnotationBodyUri()));
+        return aggregatedResources.get(getFixedEvolutionAnnotationBodyUri());
     }
 
 
@@ -169,10 +183,10 @@ public class ResearchObject extends Thing {
      *            uri
      * @return an existing Research Object or null
      */
-    public static ResearchObject get(URI uri) {
+    public static ResearchObject get(UserMetadata user, URI uri) {
         if (ROSRService.SMS.get() == null
                 || ROSRService.SMS.get().containsNamedGraph(uri.resolve(ResearchObject.MANIFEST_PATH))) {
-            return new ResearchObject(uri);
+            return new ResearchObject(user, uri);
         } else {
             return null;
         }
@@ -237,6 +251,12 @@ public class ResearchObject extends Thing {
             }
         }
         this.aggregatedResources = extractAggregatedResources(model, resources, folders, annotations);
+        this.proxies = new HashMap<>();
+        for (AggregatedResource aggregatedResource : this.aggregatedResources.values()) {
+            if (aggregatedResource.getProxy() != null) {
+                this.proxies.put(aggregatedResource.getProxy().getUri(), aggregatedResource.getProxy());
+            }
+        }
         this.loaded = true;
         return this;
     }
@@ -274,7 +294,7 @@ public class ResearchObject extends Thing {
                     RDFNode createdNode = solution.get("created");
                     DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                             .asLiteral().getString()) : null;
-                    resource = new AggregatedResource(this, rURI, pURI, resCreator, resCreated);
+                    resource = new AggregatedResource(user, this, rURI, pURI, resCreator, resCreated);
                 }
                 aggregated.put(rURI, resource);
             }
@@ -320,7 +340,7 @@ public class ResearchObject extends Thing {
                 RDFNode createdNode = solution.get("created");
                 DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                         .asLiteral().getString()) : null;
-                resources2.put(rURI, new Resource(this, rURI, pUri, resCreator, resCreated));
+                resources2.put(rURI, new Resource(user, this, rURI, pUri, resCreator, resCreated));
             }
         } finally {
             qe.close();
@@ -373,7 +393,7 @@ public class ResearchObject extends Thing {
                     qe2.close();
                 }
 
-                folders2.put(fURI, new Folder(this, fURI, pUri, URI.create(rm.asResource().getURI()), resCreator,
+                folders2.put(fURI, new Folder(user, this, fURI, pUri, URI.create(rm.asResource().getURI()), resCreator,
                         resCreated, isRootFolder));
             }
         } finally {
@@ -407,13 +427,13 @@ public class ResearchObject extends Thing {
                 RDFNode a = solution.get("annotation");
                 URI aURI = URI.create(a.asResource().getURI());
                 RDFNode p = solution.get("proxy");
-                URI pUri = URI.create(p.asResource().getURI());
+                URI pUri = p != null ? URI.create(p.asResource().getURI()) : null;
                 RDFNode t = solution.get("target");
                 URI tUri = URI.create(t.asResource().getURI());
                 Annotation annotation;
                 if (annotationsByUri.containsKey(aURI)) {
                     annotation = annotationsByUri.get(aURI);
-                    annotation.getAnnotated().add(new Thing(tUri));
+                    annotation.getAnnotated().add(new Thing(user, tUri));
                 } else {
                     RDFNode b = solution.get("body");
                     URI bUri = URI.create(b.asResource().getURI());
@@ -423,8 +443,8 @@ public class ResearchObject extends Thing {
                     RDFNode createdNode = solution.get("created");
                     DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                             .asLiteral().getString()) : null;
-                    annotation = new Annotation(this, aURI, pUri, new Thing(bUri), new Thing(tUri), resCreator,
-                            resCreated);
+                    annotation = new Annotation(user, this, aURI, pUri, new Thing(user, bUri), new Thing(user, tUri),
+                            resCreator, resCreated);
                 }
             }
         } finally {
@@ -552,10 +572,10 @@ public class ResearchObject extends Thing {
      * @throws NotFoundException .
      * @throws DigitalLibraryException .
      */
-    public static ResearchObject create(URI researchObjectUri, MemoryZipFile zip)
+    public static ResearchObject create(UserMetadata user, URI researchObjectUri, MemoryZipFile zip)
             throws BadRequestException, AccessDeniedException, IOException, ConflictException, DigitalLibraryException,
             NotFoundException {
-        ResearchObject researchObject = create(researchObjectUri);
+        ResearchObject researchObject = create(user, researchObjectUri);
         researchObject.load();
         SemanticMetadataService tmpSms = new SemanticMetadataServiceTdb(ROSRService.SMS.get().getUserProfile(),
                 researchObject, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
@@ -652,6 +672,11 @@ public class ResearchObject extends Thing {
             load();
         }
         return folders;
+    }
+
+
+    public Map<URI, Proxy> getProxies() {
+        return proxies;
     }
 
 

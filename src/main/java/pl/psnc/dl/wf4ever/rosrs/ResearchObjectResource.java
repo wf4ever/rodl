@@ -32,10 +32,12 @@ import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.common.util.HeaderUtils;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -78,6 +80,10 @@ public class ResearchObjectResource {
     /** URI info. */
     @Context
     UriInfo uriInfo;
+
+    /** Authenticated user. */
+    @RequestAttribute("User")
+    private UserMetadata user;
 
 
     /**
@@ -142,7 +148,7 @@ public class ResearchObjectResource {
     public void deleteResearchObject(@PathParam("ro_id") String researchObjectId)
             throws DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -179,7 +185,7 @@ public class ResearchObjectResource {
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
         RDFFormat responseSyntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -188,19 +194,19 @@ public class ResearchObjectResource {
             path = UUID.randomUUID().toString();
         }
         URI resourceUri = uriInfo.getAbsolutePathBuilder().path(path).build();
-        if (ROSRService.SMS.get().isAggregatedResource(researchObject, resourceUri)) {
+        if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
             throw new ConflictException("This resource has already been aggregated. Use PUT to update it.");
         }
         Collection<URI> annotated = HeaderUtils.getLinkHeaders(links).get(AO.annotatesResource.getURI());
         Set<Thing> annotationTargets = new HashSet<>();
         for (URI ann : annotated) {
-            annotationTargets.add(new Thing(ann));
+            annotationTargets.add(new Thing(user, ann));
         }
         if (!annotationTargets.isEmpty()) {
             for (Thing target : annotationTargets) {
-                if (!ROSRService.SMS.get().isAggregatedResource(researchObject, target.getUri())
+                if (!researchObject.getAggregatedResources().containsKey(target.getUri())
                         && !target.getUri().equals(researchObject.getUri())
-                        && !ROSRService.SMS.get().isProxy(researchObject, target.getUri())) {
+                        && !researchObject.getProxies().containsKey(target.getUri())) {
                     throw new BadRequestException(String.format(
                         "The annotation target %s is not RO, aggregated resource nor proxy.", target));
                 }
@@ -210,7 +216,7 @@ public class ResearchObjectResource {
             AggregatedResource aggregatedResource = ROSRService.convertRoResourceToAnnotationBody(researchObject,
                 roResource);
 
-            Annotation annotation = researchObject.annotate(new Thing(resourceUri), annotationTargets);
+            Annotation annotation = researchObject.annotate(new Thing(user, resourceUri), annotationTargets);
             String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE,
                 annotation.getBody().toString(), AO.body);
             InputStream annotationDesc = ROSRService.SMS.get().getResource(researchObject, responseSyntax,
@@ -273,7 +279,7 @@ public class ResearchObjectResource {
             @HeaderParam("Accept") String accept, InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -344,7 +350,7 @@ public class ResearchObjectResource {
             InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -374,7 +380,7 @@ public class ResearchObjectResource {
             List<RDFNode> targetResources = aggregatedAnnotation.listPropertyValues(AO.annotatesResource).toList();
             for (RDFNode targetResource : targetResources) {
                 if (targetResource.isURIResource()) {
-                    targets.add(new Thing(URI.create(targetResource.asResource().getURI())));
+                    targets.add(new Thing(user, URI.create(targetResource.asResource().getURI())));
                 } else {
                     throw new BadRequestException("The target is not an URI resource.");
                 }
@@ -395,7 +401,7 @@ public class ResearchObjectResource {
                 researchObject.getAggregatedResources().get(body));
         }
 
-        Annotation annotation = researchObject.annotate(new Thing(body), targets);
+        Annotation annotation = researchObject.annotate(new Thing(user, body), targets);
         String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBody().toString(),
             AO.body);
         RDFFormat syntax = RDFFormat.forFileName(accept, RDFFormat.RDFXML);
@@ -438,7 +444,7 @@ public class ResearchObjectResource {
             @HeaderParam("Slug") String path, InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -446,7 +452,7 @@ public class ResearchObjectResource {
             path = UUID.randomUUID().toString();
         }
         URI folderURI = uriInfo.getAbsolutePathBuilder().path(path).build();
-        Folder folder = ROSRService.assembleFolder(researchObject, folderURI, content);
+        Folder folder = ROSRService.assembleFolder(user, researchObject, folderURI, content);
         folder = ROSRService.createFolder(researchObject, folder);
 
         RDFFormat syntax = RDFFormat.forFileName(accept, RDFFormat.RDFXML);

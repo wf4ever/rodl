@@ -14,6 +14,7 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
@@ -38,8 +39,8 @@ public class FrozenResearchObject extends ResearchObject {
      * @param uri
      *            RO URI
      */
-    public FrozenResearchObject(URI uri, ResearchObject liveRO) {
-        super(uri);
+    public FrozenResearchObject(UserMetadata user, URI uri, ResearchObject liveRO) {
+        super(user, uri);
         this.liveRO = liveRO;
     }
 
@@ -59,9 +60,9 @@ public class FrozenResearchObject extends ResearchObject {
      * @throws AccessDeniedException
      *             no permissions
      */
-    public static FrozenResearchObject create(URI uri, ResearchObject liveRO)
+    public static FrozenResearchObject create(UserMetadata user, URI uri, ResearchObject liveRO)
             throws ConflictException, DigitalLibraryException, AccessDeniedException {
-        FrozenResearchObject researchObject = new FrozenResearchObject(uri, liveRO);
+        FrozenResearchObject researchObject = new FrozenResearchObject(user, uri, liveRO);
         InputStream manifest;
         try {
             ROSRService.SMS.get().createArchivedResearchObject(researchObject, liveRO);
@@ -80,6 +81,9 @@ public class FrozenResearchObject extends ResearchObject {
     protected void generateEvoInfo(EvoType type)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         ROSRService.SMS.get().generateEvoInformation(this, liveRO, type);
+        if (!loaded) {
+            load();
+        }
         this.getEvoInfoBody().serialize();
         this.getManifest().serialize();
         if (liveRO != null) {

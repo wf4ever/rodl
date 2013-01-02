@@ -191,7 +191,7 @@ public class ResourceTest extends ResourceBase {
                 .header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
         assertEquals("Updating evo_info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         response.close();
-        ResearchObject researchObject = new ResearchObject(ro);
+        ResearchObject researchObject = new ResearchObject(null, ro);
         OntModel manifestModel = ModelFactory.createOntologyModel();
         manifestModel.read(researchObject.getManifestUri().toString());
 
@@ -199,7 +199,8 @@ public class ResourceTest extends ResourceBase {
                 .getFixedEvolutionAnnotationBodyUri()));
         StmtIterator it = manifestModel.listStatements(null, AO.body, bodyR);
         if (it.hasNext()) {
-            Annotation ann = new Annotation(researchObject, URI.create(it.next().getSubject().getURI()), null, null);
+            Annotation ann = new Annotation(null, researchObject, URI.create(it.next().getSubject().getURI()), null,
+                    null);
             response = webResource.uri(ann.getUri()).header("Authorization", "Bearer " + accessToken)
                     .delete(ClientResponse.class);
 

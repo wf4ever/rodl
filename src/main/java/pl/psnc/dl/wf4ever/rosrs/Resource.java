@@ -29,10 +29,12 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
+import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -67,6 +69,10 @@ public class Resource {
     @Context
     private UriInfo uriInfo;
 
+    /** Authenticated user. */
+    @RequestAttribute("User")
+    private UserMetadata user;
+
 
     /**
      * Update an exiting resource or upload a one for which a proxy exists.
@@ -92,7 +98,7 @@ public class Resource {
             @QueryParam("original") String original, String entity)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -162,7 +168,7 @@ public class Resource {
             @PathParam("filePath") String filePath, @QueryParam("original") String original, InputStream content)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -194,7 +200,7 @@ public class Resource {
                 RDFNode targetResource = it2.next();
                 if (targetResource.isURIResource()) {
                     try {
-                        targets.add(new Thing(new URI(targetResource.asResource().getURI())));
+                        targets.add(new Thing(user, new URI(targetResource.asResource().getURI())));
                     } catch (URISyntaxException e) {
                         throw new BadRequestException("Wrong target resource URI", e);
                     }
@@ -209,8 +215,8 @@ public class Resource {
         if (!ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
             throw new ForbiddenException("You cannot create a new annotation using PUT, use POST instead.");
         }
-        return ROSRService.updateAnnotation(researchObject, new Annotation(researchObject, resource, targets,
-                new Thing(body)));
+        return ROSRService.updateAnnotation(researchObject, new Annotation(user, researchObject, resource, targets,
+                new Thing(user, body)));
     }
 
 
@@ -238,7 +244,7 @@ public class Resource {
             @QueryParam("original") String original, @Context Request request)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -256,7 +262,7 @@ public class Resource {
                             servletRequest.getHeader(Constants.ACCEPT_HEADER))).build();
         }
         if (ROSRService.SMS.get().isRoFolder(researchObject, resource)) {
-            Folder folder = new Folder(null, resource, null, null, null, null, false);
+            Folder folder = new Folder(user, null, resource, null, null, null, null, false);
             RDFFormat format = RDFFormat.forMIMEType(servletRequest.getHeader(Constants.ACCEPT_HEADER),
                 RDFFormat.RDFXML);
             return Response.status(Status.SEE_OTHER).location(folder.getResourceMapUri(format)).build();
@@ -306,7 +312,7 @@ public class Resource {
             @QueryParam("original") String original)
             throws AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.get(uri);
+        ResearchObject researchObject = ResearchObject.get(user, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
@@ -373,7 +379,7 @@ public class Resource {
         URI uri = uriInfo.getAbsolutePath();
         Folder folder = ROSRService.SMS.get().getFolder(uri);
 
-        FolderEntry entry = ROSRService.assembleFolderEntry(folder, content);
+        FolderEntry entry = ROSRService.assembleFolderEntry(user, folder, content);
         folder.getFolderEntries().add(entry);
         ROSRService.updateFolder(folder);
 

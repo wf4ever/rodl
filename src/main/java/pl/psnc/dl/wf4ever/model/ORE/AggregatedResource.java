@@ -7,6 +7,7 @@ import org.joda.time.DateTime;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
@@ -27,11 +28,47 @@ public class AggregatedResource extends Thing {
 
     /**
      * Constructor.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param uri
+     *            resource URI
+     * @param researchObject
+     *            The RO it is aggregated by
      */
-    public AggregatedResource(URI uri, ResearchObject researchObject) {
-
-        super(uri);
+    public AggregatedResource(UserMetadata user, ResearchObject researchObject, URI uri) {
+        super(user, uri);
         this.researchObject = researchObject;
+    }
+
+
+    /**
+     * Constructor.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param uri
+     *            resource URI
+     * @param researchObject
+     *            The RO it is aggregated by
+     * @param proxyUri
+     *            URI of the proxy
+     * @param creator
+     *            author of the resource
+     * @param created
+     *            creation date
+     */
+    public AggregatedResource(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, URI creator,
+            DateTime created) {
+        super(user, uri);
+        this.researchObject = researchObject;
+        if (proxyUri != null) {
+            this.proxy = new Proxy(user, proxyUri, this, researchObject != null ? researchObject.getUri() : null);
+        } else {
+            this.proxy = null;
+        }
+        this.creator = creator;
+        this.created = created;
     }
 
 
@@ -51,29 +88,6 @@ public class AggregatedResource extends Thing {
     }
 
 
-    /**
-     * Constructor.
-     * 
-     * @param researchObject
-     *            The RO it is aggregated by
-     * @param uri
-     *            resource URI
-     * @param proxyUri
-     *            URI of the proxy
-     * @param creator
-     *            author of the resource
-     * @param created
-     *            creation date
-     */
-    public AggregatedResource(ResearchObject researchObject, URI uri, URI proxyUri, URI creator, DateTime created) {
-        this.researchObject = researchObject;
-        this.uri = uri;
-        this.proxy = new Proxy(proxyUri, this, researchObject != null ? researchObject.getUri() : null);
-        this.creator = creator;
-        this.created = created;
-    }
-
-
     public Proxy getProxy() {
         return proxy;
     }
@@ -89,8 +103,16 @@ public class AggregatedResource extends Thing {
     }
 
 
+    /**
+     * Set the aggregating RO.
+     * 
+     * @param researchObject
+     *            research object
+     */
     public void setResearchObject(ResearchObject researchObject) {
         this.researchObject = researchObject;
-        this.proxy.setProxyIn(researchObject != null ? researchObject.getUri() : null);
+        if (this.proxy != null) {
+            this.proxy.setProxyIn(researchObject != null ? researchObject.getUri() : null);
+        }
     }
 }

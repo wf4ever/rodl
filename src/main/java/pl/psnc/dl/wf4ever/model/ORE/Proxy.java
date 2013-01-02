@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever.model.ORE;
 
 import java.net.URI;
 
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 
 /**
@@ -22,15 +23,19 @@ public class Proxy extends Thing {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      */
-    public Proxy() {
-        super();
+    public Proxy(UserMetadata user) {
+        super(user);
     }
 
 
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param uri
      *            proxy URI
      * @param proxyFor
@@ -38,8 +43,8 @@ public class Proxy extends Thing {
      * @param proxyIn
      *            URI of aggregating resource
      */
-    public Proxy(URI uri, AggregatedResource proxyFor, URI proxyIn) {
-        super(uri);
+    public Proxy(UserMetadata user, URI uri, AggregatedResource proxyFor, URI proxyIn) {
+        super(user, uri);
         this.proxyFor = proxyFor;
         this.proxyIn = proxyIn;
     }

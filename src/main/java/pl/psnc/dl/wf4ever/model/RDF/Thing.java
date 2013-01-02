@@ -17,6 +17,7 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
@@ -73,27 +74,67 @@ public class Thing {
     /** Jena model of the named graph. */
     protected OntModel model;
 
+    /** User creating the instance. */
+    protected UserMetadata user;
+
     static {
         init();
     }
 
 
     /**
-     * Constructor.
+     * Constructor that allows to specify a custom dataset.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
      */
-    public Thing(Dataset dataset, Boolean useTransactions) {
+    public Thing(UserMetadata user, Dataset dataset, Boolean useTransactions) {
+        this.user = user;
         this.dataset = dataset;
         this.useTransactions = useTransactions;
     }
 
 
     /**
-     * Constructor.
+     * Constructor that allows to specify a custom dataset that doesn't use transactions.
      * 
+     * @param user
+     *            user creating the instance
+     * @param dataset
+     *            custom dataset
      */
-    public Thing() {
-        dataset = TDBFactory.createDataset(TRIPLE_STORE_DIR);
-        useTransactions = true;
+    public Thing(UserMetadata user, Dataset dataset) {
+        this(user, dataset, false);
+    }
+
+
+    /**
+     * Constructor that uses a default dataset on a local drive using transactions.
+     * 
+     * @param user
+     *            user creating the instance
+     */
+    public Thing(UserMetadata user) {
+        this(user, TDBFactory.createDataset(TRIPLE_STORE_DIR), true);
+    }
+
+
+    /**
+     * Constructor that uses a default dataset on a local drive using transactions.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param uri
+     *            resource URI
+     */
+    public Thing(UserMetadata user, URI uri) {
+        this(user);
+        this.uri = uri;
     }
 
 
@@ -107,18 +148,6 @@ public class Thing {
     }
 
 
-    /**
-     * Constructor.
-     * 
-     * @param uri
-     *            resource URI
-     */
-    public Thing(URI uri) {
-        this();
-        this.uri = uri;
-    }
-
-
     public URI getUri() {
         return uri;
     }
@@ -126,7 +155,6 @@ public class Thing {
 
     public void setUri(URI uri) {
         this.uri = uri;
-        this.model = getOntModel();
     }
 
 
@@ -329,7 +357,7 @@ public class Thing {
         for (RDFNode namedModelRef : it) {
             URI childURI = URI.create(namedModelRef.asResource().getURI());
             if (dataset.containsNamedModel(childURI.toString()) && !tmpDataset.containsNamedModel(childURI.toString())) {
-                Thing relatedModel = new Thing(childURI);
+                Thing relatedModel = new Thing(user, childURI);
                 relatedModel.addNamedModelsRecursively(tmpDataset);
             }
         }
@@ -370,7 +398,7 @@ public class Thing {
 
     public void save()
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
-        this.model = createOntModel();
+        //        this.model = createOntModel();
     }
 
 
@@ -381,8 +409,8 @@ public class Thing {
             if (!subjectR.hasProperty(DCTerms.created)) {
                 model.add(subjectR, DCTerms.created, model.createTypedLiteral(Calendar.getInstance()));
             }
-            if (!subjectR.hasProperty(DCTerms.creator)) {
-                // manifestModel.add(subjectR, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
+            if (!subjectR.hasProperty(DCTerms.creator) && user != null) {
+                model.add(subjectR, DCTerms.creator, model.createResource(user.getUri().toString()));
             }
             commitTransaction(transactionStarted);
         } finally {
@@ -397,7 +425,9 @@ public class Thing {
             com.hp.hpl.jena.rdf.model.Resource subjectR = model.getResource(subject.getUri().toString());
             model.removeAll(subjectR, DCTerms.modified, null);
             model.add(subjectR, DCTerms.modified, model.createTypedLiteral(Calendar.getInstance()));
-            //         manifestModel.add(subjectR, DCTerms.contributor, manifestModel.createResource(user.getUri().toString()));
+            if (user != null) {
+                model.add(subjectR, DCTerms.contributor, model.createResource(user.getUri().toString()));
+            }
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);

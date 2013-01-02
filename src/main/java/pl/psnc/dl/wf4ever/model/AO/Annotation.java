@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -38,16 +39,18 @@ public class Annotation extends AggregatedResource {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param researchObject
-     * 
+     *            RO aggregating the annotation
      * @param uri
      *            Resource uri
      * @param model
      *            Ontology model
      * 
      */
-    public Annotation(ResearchObject researchObject, URI uri, OntModel model) {
-        super(uri, researchObject);
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, OntModel model) {
+        super(user, researchObject, uri);
         this.annotated = new HashSet<>();
         fillUp(model);
     }
@@ -56,6 +59,10 @@ public class Annotation extends AggregatedResource {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
+     * @param researchObject
+     *            RO aggregating the annotation
      * @param uri
      *            Resource uri
      * @param annotated
@@ -63,8 +70,8 @@ public class Annotation extends AggregatedResource {
      * @param body
      *            Annotation body
      */
-    public Annotation(ResearchObject researchObject, URI uri, Set<Thing> annotated, Thing body) {
-        super(uri, researchObject);
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Set<Thing> annotated, Thing body) {
+        super(user, researchObject, uri);
         this.annotated = annotated;
         this.body = body;
     }
@@ -73,6 +80,8 @@ public class Annotation extends AggregatedResource {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param researchObject
      *            RO aggregating the annotation
      * @param uri
@@ -86,9 +95,9 @@ public class Annotation extends AggregatedResource {
      * @param created
      *            annotation creation time
      */
-    public Annotation(ResearchObject researchObject, URI uri, URI proxyUri, Thing body, Set<Thing> targets,
-            URI creator, DateTime created) {
-        super(researchObject, uri, proxyUri, creator, created);
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, Thing body,
+            Set<Thing> targets, URI creator, DateTime created) {
+        super(user, researchObject, uri, proxyUri, creator, created);
         this.body = body;
         this.annotated = targets;
         this.loaded = false;
@@ -98,6 +107,8 @@ public class Annotation extends AggregatedResource {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
      * @param researchObject
      *            RO aggregating the annotation
      * @param uri
@@ -111,10 +122,10 @@ public class Annotation extends AggregatedResource {
      * @param created
      *            annotation creation time
      */
-    public Annotation(ResearchObject researchObject, URI uri, URI proxyUri, Thing body, Thing target, URI creator,
-            DateTime created) {
-        this(researchObject, uri, proxyUri, body, new HashSet<Thing>(Arrays.asList(new Thing[] { target })), creator,
-                created);
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, Thing body,
+            Thing target, URI creator, DateTime created) {
+        this(user, researchObject, uri, proxyUri, body, new HashSet<Thing>(Arrays.asList(new Thing[] { target })),
+                creator, created);
     }
 
 
@@ -138,7 +149,7 @@ public class Annotation extends AggregatedResource {
                 throw new IncorrectModelException(String.format("Annotation %s annotates a blank node %s",
                     uri.toString(), resource.toString()));
             }
-            annotated.add(new Thing(URI.create(resource.asResource().getURI())));
+            annotated.add(new Thing(user, URI.create(resource.asResource().getURI())));
         }
         RDFNode bodyNode = source.getPropertyValue(AO.body);
         if (bodyNode == null) {
@@ -152,7 +163,7 @@ public class Annotation extends AggregatedResource {
             throw new IncorrectModelException(String.format("Annotation %s uses a blank node %s as body",
                 uri.toString(), bodyNode.toString()));
         }
-        body = new Thing(URI.create(bodyNode.asResource().getURI()));
+        body = new Thing(user, URI.create(bodyNode.asResource().getURI()));
     }
 
 

@@ -6,9 +6,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 
-import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.AccessToken;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
+import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 
@@ -27,6 +27,10 @@ public class AccessTokenResource {
     @Context
     HttpServletRequest request;
 
+    /** Authenticated user. */
+    @RequestAttribute("User")
+    private UserMetadata user;
+
 
     /**
      * Deletes the access token.
@@ -36,8 +40,6 @@ public class AccessTokenResource {
      */
     @DELETE
     public void deletAccessToken(@PathParam("T_ID") String token) {
-        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
-
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
         }

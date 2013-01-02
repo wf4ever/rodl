@@ -8,9 +8,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
-import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
+import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 
@@ -33,6 +33,10 @@ public class ClientResource {
     @Context
     UriInfo uriInfo;
 
+    /** Authenticated user. */
+    @RequestAttribute("User")
+    private UserMetadata user;
+
 
     /**
      * Get the OAuth 2.0 client.
@@ -43,8 +47,6 @@ public class ClientResource {
      */
     @GET
     public OAuthClient getClient(@PathParam("C_ID") String clientId) {
-        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
-
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage clients.");
         }
@@ -61,8 +63,6 @@ public class ClientResource {
      */
     @DELETE
     public void deleteClient(@PathParam("C_ID") String clientId) {
-        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
-
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage clients.");
         }
