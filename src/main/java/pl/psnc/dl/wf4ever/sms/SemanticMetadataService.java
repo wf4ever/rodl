@@ -20,6 +20,7 @@ import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -467,7 +468,7 @@ public interface SemanticMetadataService {
      *            annotation prefix
      * @return URI of the annotation
      */
-    Annotation addAnnotation(ResearchObject researchObject, Set<URI> annotationTargets, URI annotationBody,
+    Annotation addAnnotation(ResearchObject researchObject, Set<Thing> annotationTargets, Thing annotationBody,
             String annotationUUID);
 
 

@@ -24,6 +24,7 @@ import pl.psnc.dl.wf4ever.common.util.SafeURI;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.FOAF;
@@ -570,8 +571,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public final void testIsAnnotation() {
         test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
         Annotation ann = test.sms.addAnnotation(test.emptyRO,
-            new HashSet<>(Arrays.asList(test.emptyRO.getUri().resolve(ANNOTATION_PATH))), test.emptyRO.getUri()
-                    .resolve(ANNOTATION_BODY_PATH), null);
+            new HashSet<>(Arrays.asList(new Thing(userProfile, test.emptyRO.getUri().resolve(ANNOTATION_PATH)))),
+            new Thing(userProfile, test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH)), null);
         Assert.assertTrue("Annotation is an annotation", test.sms.isAnnotation(test.emptyRO, ann.getUri()));
         Assert.assertFalse("Workflow is not an annotation",
             test.sms.isAnnotation(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH)));
@@ -585,9 +586,9 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
         Annotation ann = test.sms.addAnnotation(
             test.emptyRO,
-            new HashSet<>(Arrays.asList(test.emptyRO.getUri().resolve(WORKFLOW_PATH),
-                test.emptyRO.getUri().resolve(WORKFLOW_PATH_2))), test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH),
-            null);
+            new HashSet<>(Arrays.asList(new Thing(userProfile, test.emptyRO.getUri().resolve(WORKFLOW_PATH)),
+                new Thing(userProfile, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2)))), new Thing(userProfile,
+                    test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH)), null);
         Assert.assertNotNull("Ann URI is not null", ann);
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
@@ -608,13 +609,14 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     @Test
     public final void testUpdateAnnotation() {
         test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
-        Set<URI> targets = new HashSet<>(Arrays.asList(test.emptyRO.getUri().resolve(WORKFLOW_PATH), test.emptyRO
-                .getUri().resolve(WORKFLOW_PATH_2)));
-        Annotation ann = test.sms.addAnnotation(test.emptyRO, targets,
-            test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), null);
-        ann.setAnnotated(new HashSet<>(Arrays.asList(test.emptyRO.getUri().resolve(WORKFLOW_PATH),
-            test.emptyRO.getUri())));
-        ann.setBody(test.emptyRO.getUri().resolve(WORKFLOW_PATH_2));
+        Set<Thing> targets = new HashSet<>(Arrays.asList(
+            new Thing(userProfile, test.emptyRO.getUri().resolve(WORKFLOW_PATH)), new Thing(userProfile, test.emptyRO
+                    .getUri().resolve(WORKFLOW_PATH_2))));
+        Annotation ann = test.sms.addAnnotation(test.emptyRO, targets, new Thing(userProfile, test.emptyRO.getUri()
+                .resolve(ANNOTATION_BODY_PATH)), null);
+        ann.setAnnotated(new HashSet<>(Arrays.asList(new Thing(userProfile, test.emptyRO.getUri()
+                .resolve(WORKFLOW_PATH)), new Thing(userProfile, test.emptyRO.getUri()))));
+        ann.setBody(new Thing(userProfile, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2)));
         test.sms.updateAnnotation(test.emptyRO, ann);
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
@@ -642,8 +644,9 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         URI somewhere = URI.create("http://www.example.com/somewhere/");
         Annotation ann = test.sms.addAnnotation(
             test.annotatedRO,
-            new HashSet<>(Arrays.asList(test.annotatedRO.getUri().resolve(WORKFLOW_PATH), test.annotatedRO.getUri()
-                    .resolve(WORKFLOW_PATH_2))), somewhere, null);
+            new HashSet<>(Arrays.asList(new Thing(userProfile, test.annotatedRO.getUri().resolve(WORKFLOW_PATH)),
+                new Thing(userProfile, test.annotatedRO.getUri().resolve(WORKFLOW_PATH_2)))), new Thing(userProfile,
+                    somewhere), null);
         Annotation actual = test.sms.getAnnotation(test.annotatedRO, ann.getUri());
         Assert.assertEquals("Annotation body retrieved correctly", ann, actual);
     }
@@ -657,8 +660,9 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public final void testDeleteAnnotation() {
         Annotation ann = test.sms.addAnnotation(
             test.annotatedRO,
-            new HashSet<>(Arrays.asList(test.annotatedRO.getUri().resolve(WORKFLOW_PATH), test.annotatedRO.getUri()
-                    .resolve(WORKFLOW_PATH_2))), test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH), null);
+            new HashSet<>(Arrays.asList(new Thing(userProfile, test.annotatedRO.getUri().resolve(WORKFLOW_PATH)),
+                new Thing(userProfile, test.annotatedRO.getUri().resolve(WORKFLOW_PATH_2)))), new Thing(userProfile,
+                    test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH)), null);
         test.sms.deleteAnnotation(test.annotatedRO, ann);
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(test.sms.getManifest(test.annotatedRO, RDFFormat.RDFXML), null);
@@ -1191,13 +1195,13 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public void testRemoveSpecialFilesFromAnnotations() {
         List<Annotation> annotations = new ArrayList<Annotation>();
         annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/1/"),
-                new HashSet<URI>(), URI.create("http://www.example.com/ROS/1/manifest.rdf")));
+                new HashSet<Thing>(), new Thing(userProfile, URI.create("http://www.example.com/ROS/1/manifest.rdf"))));
         annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/2/"),
-                new HashSet<URI>(), URI.create("http://www.example.com/ROS/1/evo_info.ttl")));
+                new HashSet<Thing>(), new Thing(userProfile, URI.create("http://www.example.com/ROS/1/evo_info.ttl"))));
         annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/3/"),
-                new HashSet<URI>(), URI.create("http://www.example.com/ROS/1/body1.ttl")));
+                new HashSet<Thing>(), new Thing(userProfile, URI.create("http://www.example.com/ROS/1/body1.ttl"))));
         annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/4/"),
-                new HashSet<URI>(), URI.create("http://www.example.com/ROS/1/body2.ttl")));
+                new HashSet<Thing>(), new Thing(userProfile, URI.create("http://www.example.com/ROS/1/body2.ttl"))));
         annotations = test.sms.removeSpecialFilesFromAnnotatios(annotations);
         Assert.assertEquals("Two annotations should stay", annotations.size(), 2);
     }

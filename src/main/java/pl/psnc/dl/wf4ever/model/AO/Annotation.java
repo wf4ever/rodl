@@ -1,7 +1,6 @@
 package pl.psnc.dl.wf4ever.model.AO;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -11,6 +10,7 @@ import org.joda.time.DateTime;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
@@ -27,10 +27,10 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 public class Annotation extends AggregatedResource {
 
     /** Set of annotated objects. */
-    private Set<URI> annotated;
+    private Set<Thing> annotated;
 
     /** The annotation body. */
-    private URI body;
+    private Thing body;
 
     /** has the annotation body been loaded. */
     private boolean loaded;
@@ -70,7 +70,7 @@ public class Annotation extends AggregatedResource {
      * @param body
      *            Annotation body
      */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Set<URI> annotated, URI body) {
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Set<Thing> annotated, Thing body) {
         super(user, researchObject, uri);
         this.annotated = annotated;
         this.body = body;
@@ -95,8 +95,8 @@ public class Annotation extends AggregatedResource {
      * @param created
      *            annotation creation time
      */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, URI body,
-            Set<URI> targets, URI creator, DateTime created) {
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, Thing body,
+            Set<Thing> targets, URI creator, DateTime created) {
         super(user, researchObject, uri, proxyUri, creator, created);
         this.body = body;
         this.annotated = targets;
@@ -122,10 +122,10 @@ public class Annotation extends AggregatedResource {
      * @param created
      *            annotation creation time
      */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, URI body, URI target,
-            URI creator, DateTime created) {
-        this(user, researchObject, uri, proxyUri, body, new HashSet<URI>(Arrays.asList(new URI[] { target })), creator,
-                created);
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, Thing body,
+            Thing target, URI creator, DateTime created) {
+        this(user, researchObject, uri, proxyUri, body, new HashSet<Thing>(Arrays.asList(new Thing[] { target })),
+                creator, created);
     }
 
 
@@ -149,12 +149,7 @@ public class Annotation extends AggregatedResource {
                 throw new IncorrectModelException(String.format("Annotation %s annotates a blank node %s",
                     uri.toString(), resource.toString()));
             }
-            try {
-                annotated.add(new URI(resource.asResource().getURI()));
-            } catch (URISyntaxException e) {
-                throw new IncorrectModelException(String.format(
-                    "Annotation %s annotates a resource with an invalid URI %s", uri.toString(), resource.toString()));
-            }
+            annotated.add(new Thing(user, URI.create(resource.asResource().getURI())));
         }
         RDFNode bodyNode = source.getPropertyValue(AO.body);
         if (bodyNode == null) {
@@ -168,31 +163,26 @@ public class Annotation extends AggregatedResource {
             throw new IncorrectModelException(String.format("Annotation %s uses a blank node %s as body",
                 uri.toString(), bodyNode.toString()));
         }
-        try {
-            body = new URI(bodyNode.asResource().getURI());
-        } catch (URISyntaxException e) {
-            throw new IncorrectModelException(String.format(
-                "Annotation %s uses as body a resource with an invalid URI %s", uri.toString(), bodyNode.toString()));
-        }
+        body = new Thing(user, URI.create(bodyNode.asResource().getURI()));
     }
 
 
-    public Set<URI> getAnnotated() {
+    public Set<Thing> getAnnotated() {
         return annotated;
     }
 
 
-    public URI getBody() {
+    public Thing getBody() {
         return body;
     }
 
 
-    public void setAnnotated(Set<URI> annotated) {
+    public void setAnnotated(Set<Thing> annotated) {
         this.annotated = annotated;
     }
 
 
-    public void setBody(URI body) {
+    public void setBody(Thing body) {
         this.body = body;
     }
 

@@ -26,6 +26,7 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -472,7 +473,7 @@ public final class ROSRService {
         String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBody().toString(),
             AO.annotatesResource);
         ResponseBuilder response = Response.ok().header(Constants.LINK_HEADER, annotationBodyHeader);
-        for (URI target : annotation.getAnnotated()) {
+        for (Thing target : annotation.getAnnotated()) {
             String targetHeader = String
                     .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
             response = response.header(Constants.LINK_HEADER, targetHeader);
@@ -500,11 +501,11 @@ public final class ROSRService {
             throws NotFoundException, DigitalLibraryException {
         Annotation annotation = ROSRService.SMS.get().getAnnotation(researchObject, annotationUri);
         RDFFormat acceptFormat = RDFFormat.forMIMEType(acceptHeader);
-        if (acceptFormat != null && isInternalResource(researchObject, annotation.getBody())) {
+        if (acceptFormat != null && isInternalResource(researchObject, annotation.getBody().getUri())) {
             RDFFormat extensionFormat = RDFFormat.forFileName(annotation.getUri().getPath());
-            return createFormatSpecificURI(annotation.getBody(), extensionFormat, acceptFormat);
+            return createFormatSpecificURI(annotation.getBody().getUri(), extensionFormat, acceptFormat);
         } else {
-            return annotation.getBody();
+            return annotation.getBody().getUri();
         }
     }
 
@@ -528,7 +529,7 @@ public final class ROSRService {
             throws NotFoundException, DigitalLibraryException, AccessDeniedException {
         Annotation annotation = ROSRService.SMS.get().getAnnotation(researchObject, annotationUri);
         ROSRService.SMS.get().deleteAnnotation(researchObject, annotation);
-        ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotation.getBody());
+        ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotation.getBody().getUri());
         return Response.noContent().build();
     }
 
