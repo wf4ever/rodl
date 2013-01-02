@@ -62,7 +62,11 @@ public class AggregatedResource extends Thing {
             DateTime created) {
         super(user, uri);
         this.researchObject = researchObject;
-        this.proxy = new Proxy(user, proxyUri, this, researchObject != null ? researchObject.getUri() : null);
+        if (proxyUri != null) {
+            this.proxy = new Proxy(user, proxyUri, this, researchObject != null ? researchObject.getUri() : null);
+        } else {
+            this.proxy = null;
+        }
         this.creator = creator;
         this.created = created;
     }
@@ -107,6 +111,8 @@ public class AggregatedResource extends Thing {
      */
     public void setResearchObject(ResearchObject researchObject) {
         this.researchObject = researchObject;
-        this.proxy.setProxyIn(researchObject != null ? researchObject.getUri() : null);
+        if (this.proxy != null) {
+            this.proxy.setProxyIn(researchObject != null ? researchObject.getUri() : null);
+        }
     }
 }

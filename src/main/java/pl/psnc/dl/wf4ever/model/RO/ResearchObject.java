@@ -251,6 +251,12 @@ public class ResearchObject extends Thing {
             }
         }
         this.aggregatedResources = extractAggregatedResources(model, resources, folders, annotations);
+        this.proxies = new HashMap<>();
+        for (AggregatedResource aggregatedResource : this.aggregatedResources.values()) {
+            if (aggregatedResource.getProxy() != null) {
+                this.proxies.put(aggregatedResource.getProxy().getUri(), aggregatedResource.getProxy());
+            }
+        }
         this.loaded = true;
         return this;
     }
@@ -665,6 +671,11 @@ public class ResearchObject extends Thing {
             load();
         }
         return folders;
+    }
+
+
+    public Map<URI, Proxy> getProxies() {
+        return proxies;
     }
 
 

@@ -192,16 +192,15 @@ public class ResearchObjectResource {
             path = UUID.randomUUID().toString();
         }
         URI resourceUri = uriInfo.getAbsolutePathBuilder().path(path).build();
-        if (ROSRService.SMS.get().isAggregatedResource(researchObject, resourceUri)) {
+        if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
             throw new ConflictException("This resource has already been aggregated. Use PUT to update it.");
         }
 
         Set<URI> annotationTargets = new HashSet<>(HeaderUtils.getLinkHeaders(links).get(AO.annotatesResource.getURI()));
         if (!annotationTargets.isEmpty()) {
             for (URI target : annotationTargets) {
-                if (!ROSRService.SMS.get().isAggregatedResource(researchObject, target)
-                        && !target.equals(researchObject.getUri())
-                        && !ROSRService.SMS.get().isProxy(researchObject, target)) {
+                if (!researchObject.getAggregatedResources().containsKey(target)
+                        && !target.equals(researchObject.getUri()) && !researchObject.getProxies().containsKey(target)) {
                     throw new BadRequestException(String.format(
                         "The annotation target %s is not RO, aggregated resource nor proxy.", target));
                 }
