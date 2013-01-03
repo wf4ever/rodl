@@ -720,9 +720,9 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                         if (folder.isURIResource()) {
                             Folder f = new Folder(user, null, URI.create(folder.asResource().getURI()), null, null,
                                     null, null, false);
-                            if (dataset.containsNamedModel(f.getResourceMapUri().toString())
-                                    && !graphsToDelete.contains(f.getResourceMapUri())) {
-                                graphsToDelete.add(f.getResourceMapUri());
+                            if (dataset.containsNamedModel(f.getResourceMap().getUri().toString())
+                                    && !graphsToDelete.contains(f.getResourceMap().getUri())) {
+                                graphsToDelete.add(f.getResourceMap().getUri());
                             }
                         }
                     }
@@ -2051,7 +2051,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             resource.addRDFType(RO.Resource);
             resource.addRDFType(ORE.AggregatedResource);
             manifestModel.add(ro, ORE.aggregates, resource);
-            Resource folderRMRes = manifestModel.createResource(folder.getResourceMapUri().toString());
+            Resource folderRMRes = manifestModel.createResource(folder.getResourceMap().getUri().toString());
             manifestModel.add(resource, ORE.isDescribedBy, folderRMRes);
             if (!ro.hasProperty(RO.rootFolder)) {
                 manifestModel.add(ro, RO.rootFolder, resource);
@@ -2064,12 +2064,12 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             manifestModel.add(resource, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
             manifestModel.add(resource, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
 
-            OntModel folderModel = createOntModelForNamedGraph(folder.getResourceMapUri());
+            OntModel folderModel = createOntModelForNamedGraph(folder.getResourceMap().getUri());
             Resource manifestRes = folderModel.createResource(researchObject.getManifestUri().toString());
             Individual roInd = folderModel.createIndividual(researchObject.getUri().toString(), RO.ResearchObject);
             folderModel.add(roInd, ORE.isDescribedBy, manifestRes);
 
-            folderRMRes = folderModel.createResource(folder.getResourceMapUri().toString());
+            folderRMRes = folderModel.createResource(folder.getResourceMap().getUri().toString());
             Individual folderInd = folderModel.createIndividual(folder.getUri().toString(), RO.Folder);
             folderInd.addRDFType(ORE.Aggregation);
             folderModel.add(folderInd, ORE.isAggregatedBy, roInd);
@@ -2358,10 +2358,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             Folder folder = new Folder(user, null, folderURI, null, null, null, null, false);
-            if (!dataset.containsNamedModel(folder.getResourceMapUri().toString())) {
+            if (!dataset.containsNamedModel(folder.getResourceMap().getUri().toString())) {
                 return null;
             }
-            OntModel model = getOntModelForNamedGraph(folder.getResourceMapUri());
+            OntModel model = getOntModelForNamedGraph(folder.getResourceMap().getUri());
             if (model == null) {
                 throw new IllegalArgumentException("Could not load folder model for :" + folder.getUri());
             }
@@ -2410,7 +2410,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public void updateFolder(Folder folder) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            OntModel folderModel = getOntModelForNamedGraph(folder.getResourceMapUri());
+            OntModel folderModel = getOntModelForNamedGraph(folder.getResourceMap().getUri());
             if (folderModel == null) {
                 throw new IllegalArgumentException("Could not load folder model for :" + folder.getUri());
             }
@@ -2488,7 +2488,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             }
             manifestModel.getIndividual(folder.getUri().toString()).remove();
 
-            OntModel folderModel = getOntModelForNamedGraph(folder.getResourceMapUri());
+            OntModel folderModel = getOntModelForNamedGraph(folder.getResourceMap().getUri());
             if (folderModel == null) {
                 throw new IllegalArgumentException("Could not load folder model for :" + folder.getUri());
             }
@@ -2497,7 +2497,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 deleteFolderEntry(entry);
             }
 
-            removeNamedGraph(folder.getResourceMapUri());
+            removeNamedGraph(folder.getResourceMap().getUri());
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);

@@ -271,7 +271,7 @@ public class Resource {
             Folder folder = new Folder(user, null, resourceUri, null, null, null, null, false);
             RDFFormat format = RDFFormat.forMIMEType(servletRequest.getHeader(Constants.ACCEPT_HEADER),
                 RDFFormat.RDFXML);
-            return Response.status(Status.SEE_OTHER).location(folder.getResourceMapUri(format)).build();
+            return Response.status(Status.SEE_OTHER).location(folder.getResourceMap().getUri(format)).build();
         }
 
         ResourceMetadata resInfo = ROSRService.getResourceInfo(researchObject, resourceUri, original);

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.joda.time.DateTime;
-import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.ORE.Aggregation;
@@ -54,7 +53,8 @@ public class Folder extends Resource implements Aggregation {
     public Folder(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyURI, URI resourceMap,
             URI creator, DateTime created, boolean rootFolder) {
         super(user, researchObject, uri, proxyURI, creator, created, null);
-        this.resourceMap = new FolderResourceMap(user, this, getResourceMapUri(), creator, created);
+        URI resourceMapUri = generateResourceMapUri();
+        this.resourceMap = new FolderResourceMap(user, this, resourceMapUri, creator, created);
         this.rootFolder = rootFolder;
         this.loaded = false;
     }
@@ -70,6 +70,11 @@ public class Folder extends Resource implements Aggregation {
     }
 
 
+    public FolderResourceMap getResourceMap() {
+        return resourceMap;
+    }
+
+
     /**
      * Return a URI of an RDF graph that describes the folder. If folder URI is null, return null. If folder URI path is
      * empty, return folder.rdf (i.e. example.com becomes example.com/folder.rdf). Otherwise use the last path segment
@@ -77,24 +82,7 @@ public class Folder extends Resource implements Aggregation {
      * 
      * @return RDF graph URI or null if folder URI is null
      */
-    public URI getResourceMapUri() {
-        return getResourceMapUri(null);
-    }
-
-
-    public FolderResourceMap getResourceMap() {
-        return resourceMap;
-    }
-
-
-    /**
-     * Return the URI of resource map in a selected RDF format.
-     * 
-     * @param format
-     *            RDF format
-     * @return resource map URI or null if folder URI is null
-     */
-    public URI getResourceMapUri(RDFFormat format) {
+    public URI generateResourceMapUri() {
         if (uri == null) {
             return null;
         }
@@ -107,11 +95,7 @@ public class Folder extends Resource implements Aggregation {
             String[] segments = uri.getRawPath().split("/");
             base = segments[segments.length - 1];
         }
-        if (format == null || format.equals(RDFFormat.RDFXML)) {
-            return uri.resolve(base + ".rdf");
-        } else {
-            return uri.resolve(base + "." + format.getDefaultFileExtension() + "?original=" + base + ".rdf");
-        }
+        return uri.resolve(base + ".rdf");
     }
 
 

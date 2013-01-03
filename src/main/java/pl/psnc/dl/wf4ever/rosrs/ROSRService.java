@@ -747,7 +747,7 @@ public final class ROSRService {
      */
     public static void deleteFolder(Folder folder)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        String filePath = folder.getResearchObject().getUri().relativize(folder.getResourceMapUri()).getPath();
+        String filePath = folder.getResearchObject().getUri().relativize(folder.getResourceMap().getUri()).getPath();
         ROSRService.DL.get().deleteFile(folder.getResearchObject().getUri(), filePath);
         ROSRService.SMS.get().deleteFolder(folder);
         folder.getResearchObject().getManifest().serialize();

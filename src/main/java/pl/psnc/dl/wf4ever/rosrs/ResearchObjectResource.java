@@ -461,7 +461,7 @@ public class ResearchObjectResource {
 
         RDFFormat syntax = RDFFormat.forFileName(accept, RDFFormat.RDFXML);
         Model folderDesc = ModelFactory.createDefaultModel();
-        folderDesc.read(ROSRService.SMS.get().getNamedGraph(folder.getResourceMapUri(), syntax), null);
+        folderDesc.read(ROSRService.SMS.get().getNamedGraph(folder.getResourceMap().getUri(), syntax), null);
         folderDesc.read(
             ROSRService.SMS.get().getResource(researchObject, syntax, folder.getUri(), folder.getProxy().getUri()),
             null);
@@ -471,8 +471,8 @@ public class ResearchObjectResource {
         ResponseBuilder rb = Response.created(folder.getProxy().getUri()).type(Constants.FOLDER_MIME_TYPE);
         rb = rb.header(Constants.LINK_HEADER,
             String.format(Constants.LINK_HEADER_TEMPLATE, folder.getUri().toString(), ORE.proxyFor.getURI()));
-        rb = rb.header(Constants.LINK_HEADER, String.format(Constants.LINK_HEADER_TEMPLATE, folder.getResourceMapUri()
-                .toString().toString(), ORE.isDescribedBy.getURI()));
+        rb = rb.header(Constants.LINK_HEADER, String.format(Constants.LINK_HEADER_TEMPLATE, folder.getResourceMap()
+                .getUri().toString().toString(), ORE.isDescribedBy.getURI()));
         rb = rb.entity(new ByteArrayInputStream(out.toByteArray())).type(syntax.getDefaultMIMEType());
         return rb.build();
     }

@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.ws.rs.core.UriBuilder;
+
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
@@ -166,6 +168,22 @@ public class Thing {
 
     public URI getUri() {
         return uri;
+    }
+
+
+    public URI getUri(RDFFormat format) {
+        if (uri == null) {
+            return null;
+        }
+        URI base = uri.resolve(".");
+        String name = base.relativize(uri).getPath();
+        String specific;
+        if (RDFFormat.forFileName(name) != null) {
+            specific = name.substring(0, name.lastIndexOf(".")) + "." + format.getDefaultFileExtension();
+        } else {
+            specific = name + "." + format.getDefaultFileExtension();
+        }
+        return UriBuilder.fromUri(base).path(specific).queryParam("original", name).build();
     }
 
 
