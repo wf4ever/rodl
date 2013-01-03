@@ -282,7 +282,7 @@ public class ResearchObject extends Thing implements Aggregation {
         Map<URI, AggregatedResource> aggregated = new HashMap<>();
         String queryString = String
                 .format(
-                    "PREFIX ore: <%s> PREFIX dcterms: <%s> SELECT ?resource ?proxy ?created ?creator WHERE { <%s> ore:aggregates ?resource . ?resource a ore:AggregatedResource . ?proxy ore:proxyFor ?resource . OPTIONAL { ?resource dcterms:creator ?creator . } OPTIONAL { ?resource dcterms:created ?created . } }",
+                    "PREFIX ore: <%s> PREFIX dcterms: <%s> SELECT ?resource ?proxy ?created ?creator WHERE { <%s> ore:aggregates ?resource . ?resource a ore:AggregatedResource . OPTIONAL { ?proxy ore:proxyFor ?resource . } OPTIONAL { ?resource dcterms:creator ?creator . } OPTIONAL { ?resource dcterms:created ?created . } }",
                     ORE.NAMESPACE, DCTerms.NS, uri.toString());
 
         Query query = QueryFactory.create(queryString);
@@ -302,7 +302,7 @@ public class ResearchObject extends Thing implements Aggregation {
                     resource = annotations2.get(rURI);
                 } else {
                     RDFNode p = solution.get("proxy");
-                    URI pURI = URI.create(p.asResource().getURI());
+                    URI pURI = p != null ? URI.create(p.asResource().getURI()) : null;
                     RDFNode creatorNode = solution.get("creator");
                     URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
                             .asResource().getURI()) : null;
