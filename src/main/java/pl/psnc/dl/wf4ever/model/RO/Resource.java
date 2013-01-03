@@ -77,8 +77,6 @@ public class Resource extends AggregatedResource {
     public static Resource create(UserMetadata user, ResearchObject researchObject, URI resourceUri)
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         Resource resource = new Resource(user, researchObject, resourceUri, null, user.getUri(), DateTime.now());
-        resource.setCreator(user.getUri());
-        resource.setCreated(DateTime.now());
         resource.setProxy(Proxy.create(user, researchObject, resource));
         resource.save();
         return resource;
@@ -111,6 +109,7 @@ public class Resource extends AggregatedResource {
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         super.save();
         researchObject.getManifest().saveRoResourceClass(this);
+        researchObject.getManifest().saveRoStats(this);
     }
 
 

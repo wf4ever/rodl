@@ -80,4 +80,25 @@ public class Manifest extends ResourceMap {
         }
     }
 
+
+    public void saveRoStats(Resource resource) {
+        if (resource.getStats() != null) {
+            boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+            try {
+                Individual resourceR = model.getIndividual(resource.getUri().toString());
+                if (resource.getStats().getName() != null) {
+                    model.add(resourceR, RO.name, model.createTypedLiteral(resource.getStats().getName()));
+                }
+                model.add(resourceR, RO.filesize, model.createTypedLiteral(resource.getStats().getSizeInBytes()));
+                if (resource.getStats().getChecksum() != null && resource.getStats().getDigestMethod() != null) {
+                    model.add(resourceR, RO.checksum, model.createResource(String.format("urn:%s:%s", resource
+                            .getStats().getDigestMethod(), resource.getStats().getChecksum())));
+                }
+                commitTransaction(transactionStarted);
+            } finally {
+                endTransaction(transactionStarted);
+            }
+        }
+    }
+
 }
