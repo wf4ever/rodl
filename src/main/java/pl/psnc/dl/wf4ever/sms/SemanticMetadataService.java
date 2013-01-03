@@ -267,7 +267,7 @@ public interface SemanticMetadataService {
      * @param fileExtension
      * @return
      */
-    InputStream getNamedGraphWithRelativeURIs(URI graphURI, ResearchObject researchObject, RDFFormat rdfFormat);
+    InputStream getNamedGraphWithRelativeURIs(URI graphURI, URI base, RDFFormat rdfFormat);
 
 
     /**

@@ -488,8 +488,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public InputStream getNamedGraphWithRelativeURIs(URI namedGraphURI, ResearchObject researchObject,
-            RDFFormat rdfFormat) {
+    public InputStream getNamedGraphWithRelativeURIs(URI namedGraphURI, URI base, RDFFormat rdfFormat) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             ResearchObjectRelativeWriter writer;
@@ -504,7 +503,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             if (!dataset.containsNamedModel(namedGraphURI.toString())) {
                 return null;
             }
-            writer.setResearchObjectURI(researchObject.getUri());
+            writer.setResearchObjectURI(base);
             writer.setBaseURI(namedGraphURI);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -998,7 +997,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             manifestModel.add(proxy, ORE.proxyIn, researchObjectR);
             manifestModel.add(proxy, ORE.proxyFor, resourceR);
             commitTransaction(transactionStarted);
-            return new Proxy(user, proxyURI, resource, researchObject.getUri());
+            return new Proxy(user, proxyURI, resource, researchObject);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -2061,7 +2060,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             Individual proxy = manifestModel.createIndividual(proxyURI.toString(), ORE.Proxy);
             manifestModel.add(proxy, ORE.proxyIn, ro);
             manifestModel.add(proxy, ORE.proxyFor, resource);
-            folder.setProxy(new Proxy(user, proxyURI, folder, researchObject.getUri()));
+            folder.setProxy(new Proxy(user, proxyURI, folder, researchObject));
             manifestModel.add(resource, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
             manifestModel.add(resource, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
 
@@ -2383,7 +2382,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             URI roURI = URI.create(ro.getURI());
             folder.setResearchObject(ResearchObject.get(user, roURI));
             URI proxyURI = getProxyForResource(folder.getResearchObject(), folder.getUri());
-            folder.setProxy(new Proxy(user, proxyURI, folder, folder.getResearchObject().getUri()));
+            folder.setProxy(new Proxy(user, proxyURI, folder, folder.getResearchObject()));
 
             List<Individual> entries = model.listIndividuals(RO.FolderEntry).toList();
             for (Individual entryI : entries) {
@@ -2393,7 +2392,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 }
                 FolderEntry entry = new FolderEntry(user);
                 entry.setUri(URI.create(entryI.getURI()));
-                entry.setProxyIn(URI.create(proxyIn));
+                entry.setProxyIn(folder);
                 String proxyFor = entryI.getPropertyResourceValue(ORE.proxyFor).getURI();
                 entry.setProxyFor(folder.getResearchObject().getAggregatedResources().get(URI.create(proxyFor)));
                 String name = entryI.getPropertyValue(RO.entryName).asLiteral().getString();
@@ -2446,7 +2445,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         if (entry.getUri() == null) {
             entry.setUri(folder.getUri().resolve("entries/" + UUID.randomUUID()));
         }
-        entry.setProxyIn(folder.getUri());
+        entry.setProxyIn(folder);
         Individual entryInd = folderModel.createIndividual(entry.getUri().toString(), RO.FolderEntry);
         entryInd.addRDFType(ORE.Proxy);
         //FIXME we should check if the resource is really aggregated and what classes it has

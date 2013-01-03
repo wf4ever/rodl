@@ -173,6 +173,7 @@ public class FolderTest extends ResourceBase {
 
         response = webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken)
                 .get(ClientResponse.class);
+        Assert.assertEquals(HttpStatus.SC_OK, response.getStatus());
         Set<URI> expected = new HashSet<>(Arrays.asList(URI.create("https://sandbox/rodl/ROs/ro1/myfolder/file1.txt"),
             URI.create("https://sandbox/rodl/ROs/ro1/anotherfolder/file2.txt"), URI.create("http://example.org"),
             URI.create("https://sandbox/rodl/ROs/ro1/file2.txt")));

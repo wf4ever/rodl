@@ -20,7 +20,6 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
-import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
@@ -148,6 +147,13 @@ public class Thing {
     }
 
 
+    public Thing(UserMetadata user, URI uri, URI creator, DateTime created) {
+        this(user, uri);
+        this.creator = creator;
+        this.created = created;
+    }
+
+
     /**
      * Init .
      * 
@@ -217,8 +223,8 @@ public class Thing {
      * Take out an RDF graph from the triplestore and serialize it in storage (e.g. dLibra) with relative URI
      * references.
      * 
-     * @param researchObject
-     *            RO URI
+     * @param base
+     *            the object whose URI is the base
      * @throws NotFoundException
      *             could not find the resource in DL
      * @throws DigitalLibraryException
@@ -226,13 +232,12 @@ public class Thing {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public void serialize(ResearchObject researchObject)
+    public void serialize(URI base)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        String filePath = researchObject.getUri().relativize(uri).toString();
+        String filePath = base.relativize(uri).toString();
         RDFFormat format = RDFFormat.forFileName(filePath, RDFFormat.RDFXML);
-        InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(uri, researchObject, format);
-        ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, dataStream,
-            format.getDefaultMIMEType());
+        InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(uri, base, format);
+        ROSRService.DL.get().createOrUpdateFile(base, filePath, dataStream, format.getDefaultMIMEType());
     }
 
 

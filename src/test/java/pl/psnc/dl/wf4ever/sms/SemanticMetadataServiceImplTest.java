@@ -527,7 +527,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(test.sms.getNamedGraphWithRelativeURIs(test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH),
-            test.annotatedRO, RDFFormat.RDFXML), "", "RDF/XML");
+            test.annotatedRO.getUri(), RDFFormat.RDFXML), "", "RDF/XML");
         //FIXME this does not work correctly, for some reason ".." is stripped when reading the model
         verifyTriple(model, /* "../a_workflow.t2flow" */"a%20workflow.t2flow",
             URI.create("http://purl.org/dc/terms/title"), "A test");

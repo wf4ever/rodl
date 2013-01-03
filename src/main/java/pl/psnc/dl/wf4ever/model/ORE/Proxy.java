@@ -1,12 +1,15 @@
 package pl.psnc.dl.wf4ever.model.ORE;
 
 import java.net.URI;
+import java.util.UUID;
 
+import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
-import pl.psnc.dl.wf4ever.model.RO.Resource;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 /**
  * Represents an ore:Proxy.
@@ -19,8 +22,8 @@ public class Proxy extends Thing {
     /** Aggregated resource. */
     protected AggregatedResource proxyFor;
 
-    /** URI of aggregating resource. */
-    protected URI proxyIn;
+    /** Aggregating resource. */
+    protected Aggregation proxyIn;
 
 
     /**
@@ -46,19 +49,19 @@ public class Proxy extends Thing {
      * @param proxyIn
      *            URI of aggregating resource
      */
-    public Proxy(UserMetadata user, URI uri, AggregatedResource proxyFor, URI proxyIn) {
+    public Proxy(UserMetadata user, URI uri, AggregatedResource proxyFor, Aggregation proxyIn) {
         super(user, uri);
         this.proxyFor = proxyFor;
         this.proxyIn = proxyIn;
     }
 
 
-    public URI getProxyIn() {
+    public Aggregation getProxyIn() {
         return proxyIn;
     }
 
 
-    public void setProxyIn(URI proxyIn) {
+    public void setProxyIn(Aggregation proxyIn) {
         this.proxyIn = proxyIn;
     }
 
@@ -73,8 +76,20 @@ public class Proxy extends Thing {
     }
 
 
-    public static Proxy create(UserMetadata user, ResearchObject researchObject, Resource resource) {
-        return ROSRService.SMS.get().addProxy(researchObject, resource);
+    public static Proxy create(UserMetadata user, ResearchObject researchObject, AggregatedResource resource)
+            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+        URI proxyUri = researchObject.getUri().resolve(".ro/proxies/" + UUID.randomUUID());
+        Proxy proxy = new Proxy(user, proxyUri, resource, researchObject);
+        proxy.save();
+        return proxy;
+    }
+
+
+    @Override
+    public void save()
+            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+        super.save();
+        proxyIn.getResourceMap().saveProxy(this);
     }
 
 }

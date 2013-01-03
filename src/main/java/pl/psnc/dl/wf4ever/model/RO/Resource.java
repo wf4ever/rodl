@@ -74,22 +74,43 @@ public class Resource extends AggregatedResource {
     }
 
 
-    public static Resource create(UserMetadata user, ResearchObject researchObject, URI resourceUri) {
+    public static Resource create(UserMetadata user, ResearchObject researchObject, URI resourceUri)
+            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         Resource resource = new Resource(user, researchObject, resourceUri, null, user.getUri(), DateTime.now());
         resource.setCreator(user.getUri());
         resource.setCreated(DateTime.now());
         resource.setProxy(Proxy.create(user, researchObject, resource));
+        resource.save();
+        return resource;
+    }
+
+
+    public static Resource create(UserMetadata user, ResearchObject researchObject, URI resourceUri,
+            InputStream content, String contentType)
+            throws DigitalLibraryException, NotFoundException, AccessDeniedException, ConflictException {
+        Resource resource = new Resource(user, researchObject, resourceUri, null, user.getUri(), DateTime.now());
+        resource.setCreator(user.getUri());
+        resource.setCreated(DateTime.now());
+        resource.setProxy(Proxy.create(user, researchObject, resource));
+        resource.save(content, contentType);
         return resource;
     }
 
 
     public void save(InputStream content, String contentType)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException, ConflictException {
-        save();
         String path = researchObject.getUri().relativize(uri).getPath();
         setStats(ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), path, content,
             contentType != null ? contentType : "text/plain"));
-        Resource resource = ROSRService.SMS.get().addResource(researchObject, uri, stats);
+        save();
+    }
+
+
+    @Override
+    public void save()
+            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+        super.save();
+        researchObject.getManifest().saveRoResourceClass(this);
     }
 
 

@@ -271,56 +271,57 @@ public final class ROSRService {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public static ResponseBuilder getInternalResource(ResearchObject researchObject, URI resource, String accept,
-            String original, ResourceMetadata resInfo)
+    public static ResponseBuilder getInternalResource(ResearchObject researchObject, Thing resource, String accept,
+            String specific, ResourceMetadata resInfo)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        String filePath = researchObject.getUri().relativize(resource).getPath();
+        String filePath = researchObject.getUri().relativize(resource.getUri()).getPath();
 
         // check if request is for a specific format
-        if (original != null) {
-            URI originalResource = resource.resolve(original);
-            filePath = researchObject.getUri().relativize(originalResource).getPath();
-            if (ROSRService.SMS.get().containsNamedGraph(originalResource)) {
+        if (specific != null) {
+            URI specificResourceUri = resource.getUri().resolve(specific);
+            filePath = researchObject.getUri().relativize(resource.getUri()).getPath();
+            if (ROSRService.SMS.get().containsNamedGraph(resource.getUri())) {
                 RDFFormat format = RDFFormat.forMIMEType(accept);
                 if (format == null) {
-                    format = RDFFormat.forFileName(resource.getPath(), RDFFormat.RDFXML);
+                    format = RDFFormat.forFileName(specificResourceUri.getPath(), RDFFormat.RDFXML);
                 }
-                InputStream graph = ROSRService.SMS.get().getNamedGraph(originalResource, format);
+                InputStream graph = ROSRService.SMS.get().getNamedGraph(resource.getUri(), format);
                 ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType())
-                        .fileName(getFilename(resource)).build();
+                        .fileName(getFilename(specificResourceUri)).build();
                 return Response.ok(graph).type(format.getDefaultMIMEType()).header("Content-disposition", cd);
             } else {
                 return Response.status(Status.NOT_FOUND).type("text/plain").entity("Original resource not found");
             }
         }
 
-        if (ROSRService.SMS.get().containsNamedGraph(resource)) {
+        if (resource.isNamedGraph()) {
             RDFFormat acceptFormat = RDFFormat.forMIMEType(accept);
-            RDFFormat extensionFormat = RDFFormat.forFileName(resource.getPath());
+            RDFFormat extensionFormat = RDFFormat.forFileName(resource.getUri().getPath());
             if (extensionFormat != null && (acceptFormat == null || extensionFormat == acceptFormat)) {
                 // 1. GET manifest.rdf Accept: application/rdf+xml
                 // 2. GET manifest.rdf
-                InputStream graph = ROSRService.SMS.get().getNamedGraph(resource, extensionFormat);
+                InputStream graph = ROSRService.SMS.get().getNamedGraph(resource.getUri(), extensionFormat);
                 ContentDisposition cd = ContentDisposition.type(extensionFormat.getDefaultMIMEType())
-                        .fileName(getFilename(resource)).build();
+                        .fileName(getFilename(resource.getUri())).build();
                 return Response.ok(graph).type(extensionFormat.getDefaultMIMEType()).header("Content-disposition", cd);
             }
             // 3. GET manifest.rdf Accept: text/turtle
             // 4. GET manifest Accept: application/rdf+xml
             // 5. GET manifest
-            URI formatSpecificURI = createFormatSpecificURI(resource, extensionFormat,
+            URI formatSpecificURI = createFormatSpecificURI(resource.getUri(), extensionFormat,
                 (acceptFormat != null ? acceptFormat : RDFFormat.RDFXML));
             return Response.temporaryRedirect(formatSpecificURI);
         }
 
         if (resInfo == null) {
-            resInfo = getResourceInfo(researchObject, resource, original);
+            resInfo = getResourceInfo(researchObject, resource.getUri(), null);
         }
         if (resInfo == null) {
             throw new NotFoundException("Resource not found: " + resource);
         }
         InputStream body = ROSRService.DL.get().getFileContents(researchObject.getUri(), filePath);
-        ContentDisposition cd = ContentDisposition.type(resInfo.getMimeType()).fileName(getFilename(resource)).build();
+        ContentDisposition cd = ContentDisposition.type(resInfo.getMimeType()).fileName(getFilename(resource.getUri()))
+                .build();
         return Response.ok(body).type(resInfo.getMimeType()).header("Content-disposition", cd);
     }
 
@@ -397,6 +398,7 @@ public final class ROSRService {
                 res.setProxy(SMS.get().addProxy(researchObject, resource));
                 // update the named graph copy in dLibra, the manifest is not changed
                 resource.serialize();
+                resource.setNamedGraph(true);
                 updateROAttributesInDlibra(researchObject);
                 return res;
             } else {
@@ -766,7 +768,7 @@ public final class ROSRService {
      */
     public static void deleteFolderEntry(FolderEntry entry)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        Folder folder = ROSRService.SMS.get().getFolder(entry.getProxyIn());
+        Folder folder = ROSRService.SMS.get().getFolder(entry.getProxyIn().getUri());
         folder.getFolderEntries().remove(entry);
         updateFolder(folder);
     }

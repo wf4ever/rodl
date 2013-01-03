@@ -248,27 +248,33 @@ public class Resource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        URI resource = uriInfo.getAbsolutePath();
-
-        if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
-            return Response.status(Status.SEE_OTHER)
-                    .location(ROSRService.SMS.get().getProxyFor(researchObject, resource)).build();
+        researchObject.load();
+        URI resourceUri = uriInfo.getAbsolutePath();
+        String specificName = null;
+        if (original != null) {
+            specificName = resourceUri.resolve(".").relativize(resourceUri).getPath();
+            resourceUri = resourceUri.resolve(original);
         }
-        if (ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
+
+        if (ROSRService.SMS.get().isProxy(researchObject, resourceUri)) {
+            return Response.status(Status.SEE_OTHER)
+                    .location(ROSRService.SMS.get().getProxyFor(researchObject, resourceUri)).build();
+        }
+        if (ROSRService.SMS.get().isAnnotation(researchObject, resourceUri)) {
             return Response
                     .status(Status.SEE_OTHER)
                     .location(
-                        ROSRService.getAnnotationBody(researchObject, resource,
+                        ROSRService.getAnnotationBody(researchObject, resourceUri,
                             servletRequest.getHeader(Constants.ACCEPT_HEADER))).build();
         }
-        if (ROSRService.SMS.get().isRoFolder(researchObject, resource)) {
-            Folder folder = new Folder(user, null, resource, null, null, null, null, false);
+        if (ROSRService.SMS.get().isRoFolder(researchObject, resourceUri)) {
+            Folder folder = new Folder(user, null, resourceUri, null, null, null, null, false);
             RDFFormat format = RDFFormat.forMIMEType(servletRequest.getHeader(Constants.ACCEPT_HEADER),
                 RDFFormat.RDFXML);
             return Response.status(Status.SEE_OTHER).location(folder.getResourceMapUri(format)).build();
         }
 
-        ResourceMetadata resInfo = ROSRService.getResourceInfo(researchObject, resource, original);
+        ResourceMetadata resInfo = ROSRService.getResourceInfo(researchObject, resourceUri, original);
         if (resInfo != null) {
             ResponseBuilder rb = request.evaluatePreconditions(resInfo.getLastModified().toDate(), new EntityTag(
                     resInfo.getChecksum()));
@@ -277,8 +283,18 @@ public class Resource {
             }
         }
 
+        Thing resource;
+        if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
+            resource = researchObject.getAggregatedResources().get(resourceUri);
+        } else if (researchObject.getFolderResourceMaps().containsKey(resourceUri)) {
+            resource = researchObject.getFolderResourceMaps().get(resourceUri);
+        } else if (resourceUri.equals(researchObject.getManifest().getUri())) {
+            resource = researchObject.getManifest();
+        } else {
+            throw new NotFoundException("Resource not found");
+        }
         ResponseBuilder builder = ROSRService.getInternalResource(researchObject, resource,
-            servletRequest.getHeader("Accept"), original, resInfo);
+            servletRequest.getHeader("Accept"), specificName, resInfo);
 
         if (resInfo != null) {
             CacheControl cache = new CacheControl();

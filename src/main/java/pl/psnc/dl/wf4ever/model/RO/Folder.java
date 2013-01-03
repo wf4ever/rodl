@@ -8,7 +8,7 @@ import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
-import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.ORE.Aggregation;
 
 /**
  * ro:Folder.
@@ -16,13 +16,13 @@ import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
  * @author piotrekhol
  * 
  */
-public class Folder extends Resource {
+public class Folder extends Resource implements Aggregation {
 
     /** folder entries. */
     private List<FolderEntry> folderEntries = new ArrayList<FolderEntry>();
 
     /** Resource map (graph with folder description) URI. */
-    private AggregatedResource resourceMap;
+    private FolderResourceMap resourceMap;
 
     /** has the resource map been loaded. */
     private boolean loaded;
@@ -54,7 +54,7 @@ public class Folder extends Resource {
     public Folder(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyURI, URI resourceMap,
             URI creator, DateTime created, boolean rootFolder) {
         super(user, researchObject, uri, proxyURI, creator, created, null);
-        this.resourceMap = new AggregatedResource(user, researchObject, getResourceMapUri());
+        this.resourceMap = new FolderResourceMap(user, this, getResourceMapUri(), creator, created);
         this.rootFolder = rootFolder;
         this.loaded = false;
     }
@@ -82,15 +82,8 @@ public class Folder extends Resource {
     }
 
 
-    public AggregatedResource getResourceMap() {
+    public FolderResourceMap getResourceMap() {
         return resourceMap;
-    }
-
-
-    @Override
-    public void setResearchObject(ResearchObject researchObject) {
-        super.setResearchObject(researchObject);
-        this.resourceMap = new AggregatedResource(user, researchObject, getResourceMapUri());
     }
 
 

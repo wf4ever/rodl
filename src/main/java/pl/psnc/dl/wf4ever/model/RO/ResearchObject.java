@@ -34,7 +34,9 @@ import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.ORE.Aggregation;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
+import pl.psnc.dl.wf4ever.model.ORE.ResourceMap;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
@@ -62,7 +64,7 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
  * @author piotrekhol
  * 
  */
-public class ResearchObject extends Thing {
+public class ResearchObject extends Thing implements Aggregation {
 
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(ResearchObject.class);
@@ -94,6 +96,9 @@ public class ResearchObject extends Thing {
     /** aggregated annotations. */
     private Map<URI, Annotation> annotations;
 
+    /** folder resource maps. */
+    private Map<URI, ResourceMap> folderResourceMaps;
+
     /** Manifest. */
     private Manifest manifest;
 
@@ -109,9 +114,14 @@ public class ResearchObject extends Thing {
      *            RO URI
      */
     //FIXME should this be private?
+    public ResearchObject(UserMetadata user, URI uri, URI creator, DateTime created) {
+        super(user, uri, creator, created);
+        manifest = new Manifest(user, getManifestUri(), this, creator, created);
+    }
+
+
     public ResearchObject(UserMetadata user, URI uri) {
-        super(user, uri);
-        manifest = new Manifest(user, getManifestUri(), this);
+        this(user, uri, null, null);
     }
 
 
@@ -130,9 +140,7 @@ public class ResearchObject extends Thing {
      */
     public static ResearchObject create(UserMetadata user, URI uri)
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
-        ResearchObject researchObject = new ResearchObject(user, uri);
-        researchObject.setCreator(user.getUri());
-        researchObject.setCreated(DateTime.now());
+        ResearchObject researchObject = new ResearchObject(user, uri, user.getUri(), DateTime.now());
         researchObject.manifest = Manifest.create(user, researchObject.getUri().resolve(MANIFEST_PATH), researchObject);
         researchObject.save();
         return researchObject;
@@ -245,6 +253,10 @@ public class ResearchObject extends Thing {
         this.created = extractCreated(model);
         this.resources = extractResources(model);
         this.folders = extractFolders(model);
+        this.folderResourceMaps = new HashMap<>();
+        for (Folder folder : folders.values()) {
+            folderResourceMaps.put(folder.getResourceMap().getUri(), folder.getResourceMap());
+        }
         this.annotations = extractAnnotations(model);
         this.annotationsByTargetUri = HashMultimap.<URI, Annotation> create();
         for (Annotation ann : annotations.values()) {
@@ -480,8 +492,7 @@ public class ResearchObject extends Thing {
         if (!loaded) {
             load();
         }
-        Resource resource = Resource.create(user, this, resourceUri);
-        resource.save(content, contentType);
+        Resource resource = Resource.create(user, this, resourceUri, content, contentType);
         getManifest().serialize();
         this.resources.put(resource.getUri(), resource);
         this.aggregatedResources.put(resource.getUri(), resource);
@@ -699,6 +710,17 @@ public class ResearchObject extends Thing {
             load();
         }
         return aggregatedResources;
+    }
+
+
+    @Override
+    public ResourceMap getResourceMap() {
+        return getManifest();
+    }
+
+
+    public Map<URI, ResourceMap> getFolderResourceMaps() {
+        return folderResourceMaps;
     }
 
 }

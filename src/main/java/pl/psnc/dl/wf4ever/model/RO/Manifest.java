@@ -9,6 +9,7 @@ import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.model.ORE.ResourceMap;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
@@ -20,13 +21,7 @@ import com.hp.hpl.jena.query.ReadWrite;
  * ro:Manifest.
  * 
  */
-public class Manifest extends Thing {
-
-    /**
-     * RO that this manifest describes.
-     */
-    private ResearchObject researchObject;
-
+public class Manifest extends ResourceMap {
 
     /**
      * Constructor.
@@ -38,26 +33,9 @@ public class Manifest extends Thing {
      * @param researchObject
      *            research object being described
      */
-    public Manifest(UserMetadata user, URI uri, ResearchObject researchObject) {
-        super(user, uri);
-        this.researchObject = researchObject;
+    public Manifest(UserMetadata user, URI uri, ResearchObject researchObject, URI creator, DateTime created) {
+        super(user, researchObject, uri, creator, created);
         setNamedGraph(true);
-    }
-
-
-    /**
-     * Store to disk.
-     * 
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     */
-    public void serialize()
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        serialize(researchObject);
     }
 
 
@@ -67,17 +45,17 @@ public class Manifest extends Thing {
         super.save();
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            Individual ro = model.getIndividual(researchObject.getUri().toString());
+            Individual ro = model.getIndividual(aggregation.getUri().toString());
             if (ro != null) {
                 abortTransaction(transactionStarted);
                 throw new ConflictException("Research Object already exists: " + uri);
             }
-            ro = model.createIndividual(researchObject.getUri().toString(), RO.ResearchObject);
+            ro = model.createIndividual(aggregation.getUri().toString(), RO.ResearchObject);
             Individual manifest = model.createIndividual(uri.toString(), RO.Manifest);
             model.add(ro, ORE.isDescribedBy, manifest);
             model.add(manifest, ORE.describes, ro);
 
-            saveAuthor(researchObject);
+            saveAuthor((Thing) aggregation);
             saveAuthor(this);
             commitTransaction(transactionStarted);
         } finally {
@@ -87,10 +65,19 @@ public class Manifest extends Thing {
 
 
     public static Manifest create(UserMetadata user, URI uri, ResearchObject researchObject) {
-        Manifest manifest = new Manifest(user, uri, researchObject);
-        manifest.setCreator(user.getUri());
-        manifest.setCreated(DateTime.now());
+        Manifest manifest = new Manifest(user, uri, researchObject, user.getUri(), DateTime.now());
         return manifest;
+    }
+
+
+    public void saveRoResourceClass(Resource resource) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            model.createIndividual(resource.getUri().toString(), RO.Resource);
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
     }
 
 }
