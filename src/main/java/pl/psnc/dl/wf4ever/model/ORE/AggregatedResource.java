@@ -4,6 +4,7 @@ import java.net.URI;
 
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -14,6 +15,7 @@ import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.rdf.model.Resource;
 
@@ -42,8 +44,9 @@ public class AggregatedResource extends Thing {
      * @param researchObject
      *            The RO it is aggregated by
      */
-    public AggregatedResource(UserMetadata user, ResearchObject researchObject, URI uri) {
-        super(user, uri);
+    public AggregatedResource(UserMetadata user, Dataset dataset, boolean useTransactions,
+            ResearchObject researchObject, URI uri) {
+        super(user, dataset, useTransactions, uri);
         this.researchObject = researchObject;
     }
 
@@ -57,22 +60,10 @@ public class AggregatedResource extends Thing {
      *            resource URI
      * @param researchObject
      *            The RO it is aggregated by
-     * @param proxyUri
-     *            URI of the proxy
-     * @param creator
-     *            author of the resource
-     * @param created
-     *            creation date
      */
-    public AggregatedResource(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, URI creator,
-            DateTime created) {
-        super(user, uri, creator, created);
+    public AggregatedResource(UserMetadata user, ResearchObject researchObject, URI uri) {
+        super(user, uri);
         this.researchObject = researchObject;
-        if (proxyUri != null) {
-            this.proxy = new Proxy(user, proxyUri, this, researchObject);
-        } else {
-            this.proxy = null;
-        }
     }
 
 
@@ -137,5 +128,12 @@ public class AggregatedResource extends Thing {
         if (this.proxy != null) {
             this.proxy.setProxyIn(researchObject);
         }
+    }
+
+
+    public static AggregatedResource get(Builder builder, ResearchObject researchObject, URI uri, URI creator,
+            DateTime created) {
+        AggregatedResource resource = builder.buildAggregatedResource(uri, researchObject, creator, created);
+        return resource;
     }
 }

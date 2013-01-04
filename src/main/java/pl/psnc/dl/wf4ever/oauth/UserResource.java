@@ -26,6 +26,7 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.auth.UserCredentials;
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
@@ -53,9 +54,9 @@ public class UserResource {
     @Context
     UriInfo uriInfo;
 
-    /** Authenticated user. */
-    @RequestAttribute("User")
-    private UserMetadata user;
+    /** Resource builder. */
+    @RequestAttribute("Builder")
+    private Builder builder;
 
 
     /**
@@ -215,7 +216,7 @@ public class UserResource {
         Set<URI> list = ROSRService.SMS.get().findResearchObjectsByCreator(
             UserProfile.generateAbsoluteURI(null, userId));
         for (URI uri : list) {
-            ResearchObject ro = ResearchObject.get(user, uri);
+            ResearchObject ro = ResearchObject.get(builder, uri);
             ro.delete();
         }
 

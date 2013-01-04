@@ -2,11 +2,11 @@ package pl.psnc.dl.wf4ever.evo;
 
 import java.net.URI;
 
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
-import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -22,18 +22,18 @@ import pl.psnc.dl.wf4ever.rosrs.ROSRService;
  */
 public class FinalizeOperation implements Operation {
 
-    /** user calling this operation. */
-    private UserMetadata user;
+    /** resource builder. */
+    private Builder builder;
 
 
     /**
      * Constructor.
      * 
-     * @param user
+     * @param builder
      *            user calling this operation
      */
-    public FinalizeOperation(UserMetadata user) {
-        this.user = user;
+    public FinalizeOperation(Builder builder) {
+        this.builder = builder;
     }
 
 
@@ -50,16 +50,16 @@ public class FinalizeOperation implements Operation {
             }
             URI target = status.getCopyfrom().resolve("../" + status.getTarget() + "/");
             ResearchObject researchObject = null;
-            ResearchObject liveRO = ResearchObject.get(user, status.getCopyfrom());
+            ResearchObject liveRO = ResearchObject.get(builder, status.getCopyfrom());
             if (liveRO == null) {
                 throw new NotFoundException("Research Object not found " + status.getCopyfrom().toString());
             }
             switch (status.getType()) {
                 case SNAPSHOT:
-                    researchObject = SnapshotResearchObject.get(user, target, liveRO);
+                    researchObject = SnapshotResearchObject.get(builder, target, liveRO);
                     break;
                 case ARCHIVE:
-                    researchObject = ArchiveResearchObject.get(user, target, liveRO);
+                    researchObject = ArchiveResearchObject.get(builder, target, liveRO);
                     break;
                 default:
                     throw new OperationFailedException("New type must be a snaphot or archive");

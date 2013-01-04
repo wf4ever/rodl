@@ -26,6 +26,7 @@ import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.common.util.MemoryZipFile;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
@@ -62,6 +63,10 @@ public class ResearchObjectListResource {
     /** Authenticated user. */
     @RequestAttribute("User")
     private UserMetadata user;
+
+    /** Resource builder. */
+    @RequestAttribute("Builder")
+    private Builder builder;
 
 
     /**
@@ -126,7 +131,7 @@ public class ResearchObjectListResource {
             throw new BadRequestException("Research object ID cannot contain slashes, see WFE-703");
         }
         URI uri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject.create(user, uri);
+        ResearchObject researchObject = ResearchObject.create(builder, uri);
 
         RDFFormat format = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
         InputStream manifest = ROSRService.SMS.get().getNamedGraph(researchObject.getManifestUri(), format);
@@ -172,8 +177,8 @@ public class ResearchObjectListResource {
         FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
         IOUtils.copy(inputStream, fileOutputStream);
         URI roUri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
-        ResearchObject researchObject = ResearchObject
-                .create(user, roUri, new MemoryZipFile(tmpFile, researchObjectId));
+        ResearchObject researchObject = ResearchObject.create(builder, roUri, new MemoryZipFile(tmpFile,
+                researchObjectId));
         tmpFile.delete();
         return Response.created(researchObject.getUri()).build();
     }

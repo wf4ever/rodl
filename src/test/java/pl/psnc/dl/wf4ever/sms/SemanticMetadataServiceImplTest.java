@@ -1195,13 +1195,13 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public void testRemoveSpecialFilesFromAnnotations() {
         List<Annotation> annotations = new ArrayList<Annotation>();
         annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/1/"),
-                new HashSet<Thing>(), new Thing(userProfile, URI.create("http://www.example.com/ROS/1/manifest.rdf"))));
+                new Thing(userProfile, URI.create("http://www.example.com/ROS/1/manifest.rdf")), new HashSet<Thing>()));
         annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/2/"),
-                new HashSet<Thing>(), new Thing(userProfile, URI.create("http://www.example.com/ROS/1/evo_info.ttl"))));
+                new Thing(userProfile, URI.create("http://www.example.com/ROS/1/evo_info.ttl")), new HashSet<Thing>()));
         annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/3/"),
-                new HashSet<Thing>(), new Thing(userProfile, URI.create("http://www.example.com/ROS/1/body1.ttl"))));
+                new Thing(userProfile, URI.create("http://www.example.com/ROS/1/body1.ttl")), new HashSet<Thing>()));
         annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/4/"),
-                new HashSet<Thing>(), new Thing(userProfile, URI.create("http://www.example.com/ROS/1/body2.ttl"))));
+                new Thing(userProfile, URI.create("http://www.example.com/ROS/1/body2.ttl")), new HashSet<Thing>()));
         annotations = test.sms.removeSpecialFilesFromAnnotatios(annotations);
         Assert.assertEquals("Two annotations should stay", annotations.size(), 2);
     }

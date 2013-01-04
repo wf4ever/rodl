@@ -5,6 +5,7 @@ import java.net.URI;
 
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -14,6 +15,8 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
+
+import com.hp.hpl.jena.query.Dataset;
 
 /**
  * ro:Resource.
@@ -36,16 +39,9 @@ public class Resource extends AggregatedResource {
      *            The RO it is aggregated by
      * @param uri
      *            resource URI
-     * @param proxyUri
-     *            URI of the proxy
-     * @param creator
-     *            author of the resource
-     * @param created
-     *            creation date
      */
-    public Resource(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, URI creator,
-            DateTime created) {
-        super(user, researchObject, uri, proxyUri, creator, created);
+    public Resource(UserMetadata user, Dataset dataset, boolean useTransactions, ResearchObject researchObject, URI uri) {
+        super(user, dataset, useTransactions, researchObject, uri);
     }
 
 
@@ -58,39 +54,36 @@ public class Resource extends AggregatedResource {
      *            The RO it is aggregated by
      * @param uri
      *            resource URI
-     * @param proxyURI
-     *            URI of the proxy
-     * @param creator
-     *            author of the resource
-     * @param created
-     *            creation date
-     * @param stats
-     *            physical statistics (size, checksum, etc)
      */
-    public Resource(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyURI, URI creator,
-            DateTime created, ResourceMetadata stats) {
-        this(user, researchObject, uri, proxyURI, creator, created);
-        this.stats = stats;
+    public Resource(UserMetadata user, ResearchObject researchObject, URI uri) {
+        super(user, researchObject, uri);
     }
 
 
-    public static Resource create(UserMetadata user, ResearchObject researchObject, URI resourceUri)
+    public static Resource create(Builder builder, ResearchObject researchObject, URI resourceUri)
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
-        Resource resource = new Resource(user, researchObject, resourceUri, null, user.getUri(), DateTime.now());
-        resource.setProxy(Proxy.create(user, researchObject, resource));
+        Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser().getUri(),
+            DateTime.now());
+        resource.setProxy(Proxy.create(builder, researchObject, resource));
         resource.save();
         return resource;
     }
 
 
-    public static Resource create(UserMetadata user, ResearchObject researchObject, URI resourceUri,
-            InputStream content, String contentType)
+    public static Resource create(Builder builder, ResearchObject researchObject, URI resourceUri, InputStream content,
+            String contentType)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException, ConflictException {
-        Resource resource = new Resource(user, researchObject, resourceUri, null, user.getUri(), DateTime.now());
-        resource.setCreator(user.getUri());
-        resource.setCreated(DateTime.now());
-        resource.setProxy(Proxy.create(user, researchObject, resource));
+        //TODO check for conflict
+        Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser().getUri(),
+            DateTime.now());
+        resource.setProxy(Proxy.create(builder, researchObject, resource));
         resource.save(content, contentType);
+        return resource;
+    }
+
+
+    public static Resource get(Builder builder, ResearchObject researchObject, URI uri, URI creator, DateTime created) {
+        Resource resource = builder.buildResource(researchObject, uri, creator, created);
         return resource;
     }
 

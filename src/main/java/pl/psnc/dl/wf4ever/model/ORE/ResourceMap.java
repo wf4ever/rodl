@@ -2,8 +2,6 @@ package pl.psnc.dl.wf4ever.model.ORE;
 
 import java.net.URI;
 
-import org.joda.time.DateTime;
-
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
@@ -13,6 +11,7 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
 
 /**
@@ -32,8 +31,15 @@ public class ResourceMap extends Thing {
     }
 
 
-    public ResourceMap(UserMetadata user, Aggregation aggregation, URI uri, URI creator, DateTime created) {
-        super(user, uri, creator, created);
+    public ResourceMap(UserMetadata user, Aggregation aggregation, URI uri) {
+        super(user, uri);
+        this.aggregation = aggregation;
+        setNamedGraph(true);
+    }
+
+
+    public ResourceMap(UserMetadata user, Dataset dataset, boolean useTransactions, Aggregation aggregation, URI uri) {
+        super(user, dataset, useTransactions, uri);
         this.aggregation = aggregation;
         setNamedGraph(true);
     }

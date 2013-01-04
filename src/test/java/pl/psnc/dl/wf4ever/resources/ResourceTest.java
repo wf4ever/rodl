@@ -19,7 +19,9 @@ import org.junit.Test;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
+import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 
@@ -200,7 +202,7 @@ public class ResourceTest extends ResourceBase {
         StmtIterator it = manifestModel.listStatements(null, AO.body, bodyR);
         if (it.hasNext()) {
             Annotation ann = new Annotation(null, researchObject, URI.create(it.next().getSubject().getURI()), null,
-                    null);
+                    (Thing) null);
             response = webResource.uri(ann.getUri()).header("Authorization", "Bearer " + accessToken)
                     .delete(ClientResponse.class);
 

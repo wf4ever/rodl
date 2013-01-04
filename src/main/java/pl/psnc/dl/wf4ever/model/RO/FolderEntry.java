@@ -4,8 +4,9 @@ import java.net.URI;
 import java.nio.file.Paths;
 
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
-import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
+
+import com.hp.hpl.jena.query.Dataset;
 
 /**
  * Represents an ro:FolderEntry.
@@ -25,25 +26,19 @@ public class FolderEntry extends Proxy {
      * @param user
      *            user creating the instance
      */
-    public FolderEntry(UserMetadata user) {
-        super(user);
+    public FolderEntry(UserMetadata user, URI uri) {
+        super(user, uri);
     }
 
 
     /**
-     * Constructor.
+     * Default constructor.
      * 
      * @param user
      *            user creating the instance
-     * @param proxyFor
-     *            URI of resource aggregated in the ro:Folder
-     * @param entryName
-     *            name of the resource in the folder
      */
-    public FolderEntry(UserMetadata user, AggregatedResource proxyFor, String entryName) {
-        super(user);
-        this.proxyFor = proxyFor;
-        this.entryName = entryName;
+    public FolderEntry(UserMetadata user, Dataset dataset, boolean useTransactions, URI uri) {
+        super(user, dataset, useTransactions, uri);
     }
 
 

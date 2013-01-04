@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -51,6 +52,9 @@ public class CopyOperation implements Operation {
     /** user calling this operation. */
     private UserMetadata user;
 
+    /** resource builder. */
+    private Builder builder;
+
 
     /**
      * Constructor.
@@ -58,8 +62,8 @@ public class CopyOperation implements Operation {
      * @param id
      *            operation id
      */
-    public CopyOperation(UserMetadata user, String id) {
-        this.user = user;
+    public CopyOperation(Builder builder, String id) {
+        this.builder = builder;
         this.id = id;
     }
 
@@ -80,11 +84,11 @@ public class CopyOperation implements Operation {
 
             ResearchObject targetRO;
             try {
-                targetRO = ResearchObject.create(user, target);
+                targetRO = ResearchObject.create(builder, target);
             } catch (ConflictException | DigitalLibraryException | AccessDeniedException | NotFoundException e) {
                 throw new OperationFailedException("Failed to create target RO", e);
             }
-            ResearchObject sourceRO = ResearchObject.get(user, status.getCopyfrom());
+            ResearchObject sourceRO = ResearchObject.get(builder, status.getCopyfrom());
             if (sourceRO == null) {
                 throw new OperationFailedException("source Research Object does not exist");
             }

@@ -6,8 +6,11 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.ORE.Aggregation;
+
+import com.hp.hpl.jena.query.Dataset;
 
 /**
  * ro:Folder.
@@ -39,23 +42,25 @@ public class Folder extends Resource implements Aggregation {
      *            The RO it is aggregated by
      * @param uri
      *            resource URI
-     * @param proxyURI
-     *            URI of the proxy
-     * @param resourceMap
-     *            Resource map (graph with folder description) URI
-     * @param creator
-     *            author of the resource
-     * @param created
-     *            creation date
-     * @param rootFolder
-     *            is the folder a root folder in the RO
      */
-    public Folder(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyURI, URI resourceMap,
-            URI creator, DateTime created, boolean rootFolder) {
-        super(user, researchObject, uri, proxyURI, creator, created, null);
-        URI resourceMapUri = generateResourceMapUri();
-        this.resourceMap = new FolderResourceMap(user, this, resourceMapUri, creator, created);
-        this.rootFolder = rootFolder;
+    public Folder(UserMetadata user, Dataset dataset, boolean useTransactions, ResearchObject researchObject, URI uri) {
+        super(user, dataset, useTransactions, researchObject, uri);
+        this.loaded = false;
+    }
+
+
+    /**
+     * Constructor.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param researchObject
+     *            The RO it is aggregated by
+     * @param uri
+     *            resource URI
+     */
+    public Folder(UserMetadata user, ResearchObject researchObject, URI uri) {
+        super(user, researchObject, uri);
         this.loaded = false;
     }
 
@@ -71,31 +76,10 @@ public class Folder extends Resource implements Aggregation {
 
 
     public FolderResourceMap getResourceMap() {
+        if (!loaded) {
+            load();
+        }
         return resourceMap;
-    }
-
-
-    /**
-     * Return a URI of an RDF graph that describes the folder. If folder URI is null, return null. If folder URI path is
-     * empty, return folder.rdf (i.e. example.com becomes example.com/folder.rdf). Otherwise use the last path segment
-     * (i.e. example.com/foobar/ becomes example.com/foobar/foobar.rdf). RDF/XML file extension is used.
-     * 
-     * @return RDF graph URI or null if folder URI is null
-     */
-    public URI generateResourceMapUri() {
-        if (uri == null) {
-            return null;
-        }
-        String base;
-        if (uri.getPath() == null || uri.getPath().isEmpty()) {
-            base = "/folder";
-        } else if (uri.getPath().equals("/")) {
-            base = "folder";
-        } else {
-            String[] segments = uri.getRawPath().split("/");
-            base = segments[segments.length - 1];
-        }
-        return uri.resolve(base + ".rdf");
     }
 
 
@@ -106,6 +90,24 @@ public class Folder extends Resource implements Aggregation {
 
     public boolean isRootFolder() {
         return rootFolder;
+    }
+
+
+    public void setRootFolder(boolean rootFolder) {
+        this.rootFolder = rootFolder;
+    }
+
+
+    public static Folder get(Builder builder, ResearchObject researchObject, URI uri, URI creator, DateTime created) {
+        Folder folder = builder.buildFolder(researchObject, uri, creator, created);
+        return folder;
+    }
+
+
+    public void load() {
+        URI resourceMapUri = FolderResourceMap.generateResourceMapUri(this);
+        resourceMap = builder.buildFolderResourceMap(resourceMapUri, this);
+        loaded = true;
     }
 
 }

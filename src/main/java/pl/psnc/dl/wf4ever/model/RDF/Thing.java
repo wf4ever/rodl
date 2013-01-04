@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -88,6 +89,9 @@ public class Thing {
     /** Is the resource a named graph in the triplestore. True for manifest, annotation bodies and folder resource maps. */
     protected boolean namedGraph = false;
 
+    /** builder creating the instance, which may be reused for loading other resources. */
+    protected Builder builder;
+
     static {
         init();
     }
@@ -103,35 +107,14 @@ public class Thing {
      * @param useTransactions
      *            should transactions be used. Note that not using transactions on a dataset which already uses
      *            transactions may make it unreadable.
+     * @param uri
+     *            resource URI
      */
-    public Thing(UserMetadata user, Dataset dataset, Boolean useTransactions) {
+    public Thing(UserMetadata user, Dataset dataset, Boolean useTransactions, URI uri) {
         this.user = user;
         this.dataset = dataset;
         this.useTransactions = useTransactions;
-    }
-
-
-    /**
-     * Constructor that allows to specify a custom dataset that doesn't use transactions.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param dataset
-     *            custom dataset
-     */
-    public Thing(UserMetadata user, Dataset dataset) {
-        this(user, dataset, false);
-    }
-
-
-    /**
-     * Constructor that uses a default dataset on a local drive using transactions.
-     * 
-     * @param user
-     *            user creating the instance
-     */
-    public Thing(UserMetadata user) {
-        this(user, null, true);
+        this.uri = uri;
     }
 
 
@@ -144,15 +127,18 @@ public class Thing {
      *            resource URI
      */
     public Thing(UserMetadata user, URI uri) {
-        this(user);
-        this.uri = uri;
+        this(user, null, true, uri);
     }
 
 
-    public Thing(UserMetadata user, URI uri, URI creator, DateTime created) {
-        this(user, uri);
-        this.creator = creator;
-        this.created = created;
+    /**
+     * Constructor that uses a default dataset on a local drive using transactions.
+     * 
+     * @param user
+     *            user creating the instance
+     */
+    public Thing(UserMetadata user) {
+        this(user, null, true, null);
     }
 
 
@@ -237,6 +223,16 @@ public class Thing {
     }
 
 
+    public Builder getBuilder() {
+        return builder;
+    }
+
+
+    public void setBuilder(Builder builder) {
+        this.builder = builder;
+    }
+
+
     /**
      * Take out an RDF graph from the triplestore and serialize it in storage (e.g. dLibra) with relative URI
      * references.
@@ -300,20 +296,23 @@ public class Thing {
     /**
      * Find the dcterms:creator of the RO.
      * 
-     * @param model
-     *            manifest model
      * @return creator URI or null if not defined
      * @throws IncorrectModelException
      *             incorrect manifest
      */
-    protected URI extractCreator(OntModel model)
+    public URI extractCreator(Thing thing)
             throws IncorrectModelException {
-        Individual ro = model.getIndividual(uri.toString());
-        if (ro == null) {
-            throw new IncorrectModelException("RO not found in the manifest" + uri);
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            Individual ro = model.getIndividual(thing.getUri().toString());
+            if (ro == null) {
+                throw new IncorrectModelException("RO not found in the manifest" + thing.getUri());
+            }
+            com.hp.hpl.jena.rdf.model.Resource c = ro.getPropertyResourceValue(DCTerms.creator);
+            return c != null ? URI.create(c.getURI()) : null;
+        } finally {
+            endTransaction(transactionStarted);
         }
-        com.hp.hpl.jena.rdf.model.Resource c = ro.getPropertyResourceValue(DCTerms.creator);
-        return c != null ? URI.create(c.getURI()) : null;
     }
 
 
@@ -326,17 +325,22 @@ public class Thing {
      * @throws IncorrectModelException
      *             incorrect manifest
      */
-    protected DateTime extractCreated(OntModel model)
+    public DateTime extractCreated(Thing thing)
             throws IncorrectModelException {
-        Individual ro = model.getIndividual(uri.toString());
-        if (ro == null) {
-            throw new IncorrectModelException("RO not found in the manifest" + uri);
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            Individual ro = model.getIndividual(thing.getUri().toString());
+            if (ro == null) {
+                throw new IncorrectModelException("RO not found in the manifest" + thing.getUri());
+            }
+            RDFNode d = ro.getPropertyValue(DCTerms.created);
+            if (d == null || !d.isLiteral()) {
+                return null;
+            }
+            return DateTime.parse(d.asLiteral().getString());
+        } finally {
+            endTransaction(transactionStarted);
         }
-        RDFNode d = ro.getPropertyValue(DCTerms.created);
-        if (d == null || !d.isLiteral()) {
-            return null;
-        }
-        return DateTime.parse(d.asLiteral().getString());
     }
 
 
@@ -369,25 +373,23 @@ public class Thing {
      * Start a TDB transaction provided that the flag useTransactions is set, the dataset supports transactions and
      * there is no open transaction. According to TDB, many read or one write transactions are allowed.
      * 
-     * @param write
+     * @param mode
      *            read or write
      * @return true if a new transaction has been started, false otherwise
      */
-    protected boolean beginTransaction(ReadWrite write) {
+    protected boolean beginTransaction(ReadWrite mode) {
         if (dataset == null) {
             dataset = TDBFactory.createDataset(TRIPLE_STORE_DIR);
         }
+        boolean started = false;
         if (useTransactions && dataset.supportsTransactions() && !dataset.isInTransaction()) {
-            dataset.begin(write);
-            if (write == ReadWrite.READ) {
-                model = getOntModel();
-            } else {
-                model = createOntModel();
-            }
-            return true;
-        } else {
-            return false;
+            dataset.begin(mode);
+            started = true;
         }
+        if (mode == ReadWrite.WRITE || dataset.containsNamedModel(uri.toString())) {
+            model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, dataset.getNamedModel(uri.toString()));
+        }
+        return started;
     }
 
 
@@ -484,44 +486,6 @@ public class Thing {
                     relatedModel.addNamedModelsRecursively(tmpDataset);
                 }
             }
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    /**
-     * Create a new model for this resource or open an existing one.
-     * 
-     * @return an ontology model
-     */
-    public OntModel createOntModel() {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM,
-                dataset.getNamedModel(uri.toString()));
-            commitTransaction(transactionStarted);
-            return ontModel;
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    /**
-     * Get the model for this resource or null if doesn't exist.
-     * 
-     * @return an ontology model or null
-     */
-    public OntModel getOntModel() {
-        boolean transactionStarted = beginTransaction(ReadWrite.READ);
-        try {
-            if (!dataset.containsNamedModel(uri.toString())) {
-                return null;
-            }
-            OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM,
-                dataset.getNamedModel(uri.toString()));
-            return ontModel;
         } finally {
             endTransaction(transactionStarted);
         }

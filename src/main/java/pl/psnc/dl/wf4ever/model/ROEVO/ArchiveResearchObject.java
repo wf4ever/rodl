@@ -9,6 +9,7 @@ import java.net.URI;
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.common.EvoType;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
@@ -17,6 +18,8 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
+
+import com.hp.hpl.jena.query.Dataset;
 
 /**
  * A DAO for a research object.
@@ -37,8 +40,9 @@ public class ArchiveResearchObject extends FrozenResearchObject {
      * @param uri
      *            RO URI
      */
-    public ArchiveResearchObject(UserMetadata user, URI uri, ResearchObject liveRO) {
-        super(user, uri, liveRO);
+    public ArchiveResearchObject(UserMetadata user, Dataset dataset, boolean useTransactions, URI uri,
+            ResearchObject liveRO) {
+        super(user, dataset, useTransactions, uri, liveRO);
     }
 
 
@@ -52,9 +56,9 @@ public class ArchiveResearchObject extends FrozenResearchObject {
      * @return an existing Research Object or null
      * 
      */
-    public static ArchiveResearchObject get(UserMetadata user, URI uri, ResearchObject LiveRO) {
+    public static ArchiveResearchObject get(Builder builder, URI uri, ResearchObject LiveRO) {
         if (ROSRService.SMS.get().containsNamedGraph(uri.resolve(ResearchObject.MANIFEST_PATH))) {
-            return new ArchiveResearchObject(user, uri, LiveRO);
+            return builder.buildArchiveResearchObject(uri, LiveRO);
         } else {
             return null;
         }
@@ -76,9 +80,9 @@ public class ArchiveResearchObject extends FrozenResearchObject {
      * @throws AccessDeniedException
      *             no permissions
      */
-    public static ArchiveResearchObject create(UserMetadata user, URI uri, ResearchObject liveRO)
+    public static ArchiveResearchObject create(Builder builder, URI uri, ResearchObject liveRO)
             throws ConflictException, DigitalLibraryException, AccessDeniedException {
-        ArchiveResearchObject researchObject = new ArchiveResearchObject(user, uri, liveRO);
+        ArchiveResearchObject researchObject = builder.buildArchiveResearchObject(uri, liveRO);
         InputStream manifest;
         try {
             ROSRService.SMS.get().createArchivedResearchObject(researchObject, liveRO);

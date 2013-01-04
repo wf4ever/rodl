@@ -17,12 +17,12 @@ import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
-import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -566,10 +566,10 @@ public final class ROSRService {
      * @throws BadRequestException
      *             the folder description is incorrect
      */
-    public static Folder assembleFolder(UserMetadata user, ResearchObject researchObject, URI folderURI,
+    public static Folder assembleFolder(Builder builder, ResearchObject researchObject, URI folderURI,
             InputStream content)
             throws BadRequestException {
-        Folder folder = new Folder(user, researchObject, folderURI, null, null, null, null, false);
+        Folder folder = builder.buildFolder(researchObject, folderURI, null, null);
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         model.read(content, researchObject.getUri().toString());
         List<Individual> folders = model.listIndividuals(RO.Folder).toList();
@@ -585,8 +585,8 @@ public final class ROSRService {
                             throw new BadRequestException("Resource " + resUri
                                     + " is not aggregated by the research object");
                         }
-                        entries.put(resUri, new FolderEntry(user, researchObject.getAggregatedResources().get(resUri),
-                                null));
+                        entries.put(resUri,
+                            builder.buildFolderEntry(researchObject.getAggregatedResources().get(resUri), folder, null));
                     } catch (URISyntaxException e) {
                         throw new BadRequestException("Aggregated resource has an incorrect URI", e);
                     }
@@ -676,9 +676,9 @@ public final class ROSRService {
      * @throws BadRequestException
      *             the folder description is incorrect
      */
-    public static FolderEntry assembleFolderEntry(UserMetadata user, Folder folder, InputStream content)
+    public static FolderEntry assembleFolderEntry(Builder builder, Folder folder, InputStream content)
             throws BadRequestException {
-        FolderEntry entry = new FolderEntry(user);
+        FolderEntry entry = builder.buildFolderEntry(null, folder, null);
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         model.read(content, folder.getUri().toString());
         ExtendedIterator<Individual> it = model.listIndividuals(RO.FolderEntry);

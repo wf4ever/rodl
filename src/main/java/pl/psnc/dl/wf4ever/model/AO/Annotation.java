@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.joda.time.DateTime;
-
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -17,6 +15,7 @@ import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 
 /**
@@ -70,37 +69,10 @@ public class Annotation extends AggregatedResource {
      * @param body
      *            Annotation body
      */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Set<Thing> annotated, Thing body) {
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Thing body, Set<Thing> annotated) {
         super(user, researchObject, uri);
         this.annotated = annotated;
         this.body = body;
-    }
-
-
-    /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param researchObject
-     *            RO aggregating the annotation
-     * @param uri
-     *            annotation URI
-     * @param body
-     *            annotation body, may be aggregated or not, may be a ro:Resource (rarely) or not
-     * @param targets
-     *            annotated resources, must be RO/aggregated resources/proxies
-     * @param creator
-     *            annotation author
-     * @param created
-     *            annotation creation time
-     */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, Thing body,
-            Set<Thing> targets, URI creator, DateTime created) {
-        super(user, researchObject, uri, proxyUri, creator, created);
-        this.body = body;
-        this.annotated = targets;
-        this.loaded = false;
     }
 
 
@@ -122,10 +94,24 @@ public class Annotation extends AggregatedResource {
      * @param created
      *            annotation creation time
      */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI proxyUri, Thing body,
-            Thing target, URI creator, DateTime created) {
-        this(user, researchObject, uri, proxyUri, body, new HashSet<Thing>(Arrays.asList(new Thing[] { target })),
-                creator, created);
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Thing body, Thing target) {
+        this(user, researchObject, uri, body, new HashSet<Thing>(Arrays.asList(new Thing[] { target })));
+    }
+
+
+    /**
+     * Constructor.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param researchObject
+     *            RO aggregating the annotation
+     * @param uri
+     *            Resource uri
+     */
+    public Annotation(UserMetadata user, Dataset dataset, boolean useTransactions, ResearchObject researchObject,
+            URI uri) {
+        super(user, dataset, useTransactions, researchObject, uri);
     }
 
 

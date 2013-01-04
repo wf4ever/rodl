@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
-import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 
 import com.sun.jersey.api.NotFoundException;
@@ -55,9 +55,9 @@ public class CopyResource implements JobsContainer {
     @Context
     private UriInfo uriInfo;
 
-    /** Authenticated user. */
-    @RequestAttribute("User")
-    private UserMetadata user;
+    /** Resource builder. */
+    @RequestAttribute("Builder")
+    private Builder builder;
 
     /** Running jobs. */
     private static Map<UUID, Job> jobs = new ConcurrentHashMap<>(MAX_JOBS);
@@ -112,7 +112,7 @@ public class CopyResource implements JobsContainer {
             id = UUID.randomUUID().toString();
         }
 
-        CopyOperation copy = new CopyOperation(user, id);
+        CopyOperation copy = new CopyOperation(builder, id);
 
         UUID jobUUID = UUID.randomUUID();
         Job job;
@@ -120,7 +120,7 @@ public class CopyResource implements JobsContainer {
             status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + status.getTarget()).toString());
             job = new Job(jobUUID, status, this, copy);
         } else {
-            FinalizeOperation finalize = new FinalizeOperation(user);
+            FinalizeOperation finalize = new FinalizeOperation(builder);
             job = new Job(jobUUID, status, this, copy, finalize);
         }
         jobs.put(jobUUID, job);
