@@ -1,12 +1,15 @@
 package pl.psnc.dl.wf4ever.model.RO;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.common.Builder;
+import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.ORE.Aggregation;
 
@@ -21,7 +24,7 @@ import com.hp.hpl.jena.query.Dataset;
 public class Folder extends Resource implements Aggregation {
 
     /** folder entries. */
-    private List<FolderEntry> folderEntries = new ArrayList<FolderEntry>();
+    private Set<FolderEntry> folderEntries;
 
     /** Resource map (graph with folder description) URI. */
     private FolderResourceMap resourceMap;
@@ -65,17 +68,18 @@ public class Folder extends Resource implements Aggregation {
     }
 
 
-    public List<FolderEntry> getFolderEntries() {
+    public Set<FolderEntry> getFolderEntries() {
         return folderEntries;
     }
 
 
-    public void setFolderEntries(List<FolderEntry> folderEntries) {
+    public void setFolderEntries(Set<FolderEntry> folderEntries) {
         this.folderEntries = folderEntries;
     }
 
 
-    public FolderResourceMap getResourceMap() {
+    public FolderResourceMap getResourceMap()
+            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         if (!loaded) {
             load();
         }
@@ -104,9 +108,11 @@ public class Folder extends Resource implements Aggregation {
     }
 
 
-    public void load() {
+    public void load()
+            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         URI resourceMapUri = FolderResourceMap.generateResourceMapUri(this);
-        resourceMap = builder.buildFolderResourceMap(resourceMapUri, this);
+        resourceMap = FolderResourceMap.create(builder, this, resourceMapUri);
+        folderEntries = resourceMap.extractFolderEntries();
         loaded = true;
     }
 

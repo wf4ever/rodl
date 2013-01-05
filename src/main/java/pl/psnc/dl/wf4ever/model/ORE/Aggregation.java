@@ -2,6 +2,11 @@ package pl.psnc.dl.wf4ever.model.ORE;
 
 import java.net.URI;
 
+import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
+
 /**
  * ore:Aggregation, for example ro:ResearchObject and ro:Folder.
  * 
@@ -17,7 +22,12 @@ public interface Aggregation {
      * Get resource map describing this aggregation.
      * 
      * @return
+     * @throws NotFoundException
+     * @throws AccessDeniedException
+     * @throws DigitalLibraryException
+     * @throws ConflictException
      */
-    ResourceMap getResourceMap();
+    ResourceMap getResourceMap()
+            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException;
 
 }

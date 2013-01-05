@@ -202,14 +202,8 @@ public class ResearchObject extends Thing implements Aggregation {
 
     /**
      * Delete the Research Object including its resources and annotations.
-     * 
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws NotFoundException
-     *             Research Object not found neither in dLibra nor in SMS
      */
-    public void delete()
-            throws DigitalLibraryException, NotFoundException {
+    public void delete() {
         try {
             ROSRService.DL.get().deleteResearchObject(uri);
         } finally {
@@ -223,8 +217,7 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
-    public void save()
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+    public void save() {
         super.save();
         getManifest().save();
 
@@ -238,13 +231,11 @@ public class ResearchObject extends Thing implements Aggregation {
      * Load the metadata from the triplestore.
      * 
      * @return this instance, loaded
-     * @throws IncorrectModelException
      */
     //TODO should it be overridden?
     public ResearchObject load() {
         //FIXME here we could first load the manifest URI from the RO named graph
-        manifest = Manifest.get(builder, getManifestUri(), this);
-        //TODO should it be a private property?
+        this.manifest = Manifest.get(builder, getManifestUri(), this);
         this.creator = manifest.extractCreator(this);
         this.created = manifest.extractCreated(this);
         this.resources = manifest.extractResources();
@@ -283,14 +274,8 @@ public class ResearchObject extends Thing implements Aggregation {
      * @param contentType
      *            resource Content Type
      * @return the resource instance
-     * @throws NotFoundException
-     * @throws DigitalLibraryException
-     * @throws AccessDeniedException
-     * @throws ConflictException
      */
-    public Resource aggregate(String path, InputStream content, String contentType)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException, IncorrectModelException,
-            ConflictException {
+    public Resource aggregate(String path, InputStream content, String contentType) {
         URI resourceUri = UriBuilder.fromUri(uri).path(path).build();
         if (!loaded) {
             load();
@@ -310,13 +295,8 @@ public class ResearchObject extends Thing implements Aggregation {
      * @param uri
      *            resource URI
      * @return the resource instance
-     * @throws NotFoundException
-     * @throws DigitalLibraryException
-     * @throws AccessDeniedException
-     * @throws IncorrectModelException
      */
-    public Resource aggregate(URI uri)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException, IncorrectModelException {
+    public Resource aggregate(URI uri) {
         Resource resource = ROSRService.SMS.get().addResource(this, uri, null);
         resource.setProxy(ROSRService.SMS.get().addProxy(this, resource));
         // update the manifest that describes the resource in dLibra
@@ -330,8 +310,7 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
-    public Annotation annotate(Thing body, Set<Thing> targets)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
+    public Annotation annotate(Thing body, Set<Thing> targets) {
         return annotate(body, targets, null);
     }
 
@@ -346,15 +325,8 @@ public class ResearchObject extends Thing implements Aggregation {
      * @param annotationId
      *            the id of the annotation, may be null
      * @return new annotation
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
      */
-    public Annotation annotate(Thing body, Set<Thing> targets, String annotationId)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
+    public Annotation annotate(Thing body, Set<Thing> targets, String annotationId) {
         Annotation annotation = ROSRService.SMS.get().addAnnotation(this, targets, body, annotationId);
         annotation.setProxy(ROSRService.SMS.get().addProxy(this, annotation));
         getManifest().serialize();
@@ -378,18 +350,12 @@ public class ResearchObject extends Thing implements Aggregation {
      * @param zip
      *            the ZIP file
      * @return HTTP response (created in case of success, 404 in case of error)
-     * @throws BadRequestException .
-     * @throws AccessDeniedException .
      * @throws IOException
      *             error creating the temporary file
-     * @throws ConflictException
-     *             Research Object already exists
-     * @throws NotFoundException .
-     * @throws DigitalLibraryException .
+     * @throws BadRequestException
      */
     public static ResearchObject create(Builder builder, URI researchObjectUri, MemoryZipFile zip)
-            throws BadRequestException, AccessDeniedException, IOException, ConflictException, DigitalLibraryException,
-            NotFoundException {
+            throws IOException, BadRequestException {
         ResearchObject researchObject = create(builder, researchObjectUri);
         researchObject.load();
         SemanticMetadataService tmpSms = new SemanticMetadataServiceTdb(ROSRService.SMS.get().getUserProfile(),

@@ -4,8 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -636,7 +636,7 @@ public final class ROSRService {
                 }
             }
         }
-        folder.setFolderEntries(new ArrayList<>(entries.values()));
+        folder.setFolderEntries(new HashSet<>(entries.values()));
         return folder;
     }
 

@@ -19,7 +19,6 @@ import org.junit.Test;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
-import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -122,14 +121,12 @@ public class ResourceTest extends ResourceBase {
      * Ziped RO has three annotations. RO added to triple store should be this same.
      * 
      * @throws IOException
-     * @throws ManifestTraversingException
      * @throws ClassNotFoundException
      * @throws NamingException
-     * @throws SQLException
      */
     @Test
     public void createROFromZip()
-            throws IOException, IncorrectModelException, ClassNotFoundException, NamingException, SQLException {
+            throws IOException, ClassNotFoundException, NamingException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
         ClientResponse response = webResource.path("ROs").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)

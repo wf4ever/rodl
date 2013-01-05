@@ -14,7 +14,6 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
-import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.ORE.ResourceMap;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
@@ -155,13 +154,13 @@ public class Manifest extends ResourceMap {
                     QuerySolution solution = results.next();
                     AggregatedResource resource;
                     RDFNode r = solution.get("resource");
-                    URI rURI = URI.create(r.asResource().getURI());
-                    if (resources2.containsKey(rURI)) {
-                        resource = resources2.get(rURI);
-                    } else if (folders2.containsKey(rURI)) {
-                        resource = folders2.get(rURI);
-                    } else if (annotations2.containsKey(rURI)) {
-                        resource = annotations2.get(rURI);
+                    URI rUri = URI.create(r.asResource().getURI());
+                    if (resources2.containsKey(rUri)) {
+                        resource = resources2.get(rUri);
+                    } else if (folders2.containsKey(rUri)) {
+                        resource = folders2.get(rUri);
+                    } else if (annotations2.containsKey(rUri)) {
+                        resource = annotations2.get(rUri);
                     } else {
                         RDFNode p = solution.get("proxy");
                         URI pUri = p != null ? URI.create(p.asResource().getURI()) : null;
@@ -171,14 +170,12 @@ public class Manifest extends ResourceMap {
                         RDFNode createdNode = solution.get("created");
                         DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime
                                 .parse(createdNode.asLiteral().getString()) : null;
-                        //FIXME don't cast?
-                        resource = AggregatedResource.get(builder, (ResearchObject) aggregation, rURI, resCreator,
-                            resCreated);
+                        resource = builder.buildAggregatedResource(rUri, getResearchObject(), resCreator, resCreated);
                         if (pUri != null) {
-                            resource.setProxy(Proxy.get(builder, pUri, resource, (ResearchObject) aggregation));
+                            resource.setProxy(builder.buildProxy(pUri, resource, getResearchObject()));
                         }
                     }
-                    aggregated.put(rURI, resource);
+                    aggregated.put(rUri, resource);
                 }
             } finally {
                 qe.close();
@@ -193,8 +190,6 @@ public class Manifest extends ResourceMap {
     /**
      * Identify ro:Resources that are not ro:Folders, aggregated by the RO.
      * 
-     * @param model
-     *            manifest model
      * @return a set of resources (not loaded)
      */
     public Map<URI, Resource> extractResources() {
@@ -225,10 +220,9 @@ public class Manifest extends ResourceMap {
                     RDFNode createdNode = solution.get("created");
                     DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                             .asLiteral().getString()) : null;
-                    Resource resource = Resource.get(builder, (ResearchObject) aggregation, rUri, resCreator,
-                        resCreated);
+                    Resource resource = builder.buildResource(getResearchObject(), rUri, resCreator, resCreated);
                     if (pUri != null) {
-                        resource.setProxy(Proxy.get(builder, pUri, resource, (ResearchObject) aggregation));
+                        resource.setProxy(builder.buildProxy(pUri, resource, getResearchObject()));
                     }
                     resources2.put(rUri, resource);
                 }
@@ -245,8 +239,6 @@ public class Manifest extends ResourceMap {
     /**
      * Identify ro:Resources that are not ro:Folders, aggregated by the RO.
      * 
-     * @param model
-     *            manifest model
      * @return a set of folders (not loaded)
      */
     public Map<URI, Folder> extractFolders() {
@@ -289,11 +281,11 @@ public class Manifest extends ResourceMap {
                         qe2.close();
                     }
 
-                    Folder folder = Folder.get(builder, (ResearchObject) aggregation, fURI, resCreator, resCreated);
+                    Folder folder = builder.buildFolder(getResearchObject(), fURI, resCreator, resCreated);
                     folder.setRootFolder(isRootFolder);
                     folder.load();
                     if (pUri != null) {
-                        folder.setProxy(Proxy.get(builder, pUri, folder, (ResearchObject) aggregation));
+                        folder.setProxy(builder.buildProxy(pUri, folder, getResearchObject()));
                     }
                     folders2.put(fURI, folder);
                 }
@@ -310,8 +302,6 @@ public class Manifest extends ResourceMap {
     /**
      * Identify ro:AggregatedAnnotations that aggregated by the RO.
      * 
-     * @param model
-     *            manifest model
      * @return a multivalued map of annotations, with bodies not loaded
      */
     public Map<URI, Annotation> extractAnnotations() {
@@ -348,10 +338,10 @@ public class Manifest extends ResourceMap {
                         RDFNode createdNode = solution.get("created");
                         DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime
                                 .parse(createdNode.asLiteral().getString()) : null;
-                        annotation = builder.buildAnnotation((ResearchObject) aggregation, aURI, new Thing(user, bUri),
-                            new Thing(user, tUri), resCreator, resCreated);
+                        annotation = builder.buildAnnotation(getResearchObject(), aURI, builder.buildThing(bUri),
+                            builder.buildThing(tUri), resCreator, resCreated);
                         if (pUri != null) {
-                            annotation.setProxy(Proxy.get(builder, pUri, annotation, (ResearchObject) aggregation));
+                            annotation.setProxy(builder.buildProxy(pUri, annotation, getResearchObject()));
                         }
                     }
                 }
@@ -364,4 +354,8 @@ public class Manifest extends ResourceMap {
         }
     }
 
+
+    public ResearchObject getResearchObject() {
+        return (ResearchObject) aggregation;
+    }
 }

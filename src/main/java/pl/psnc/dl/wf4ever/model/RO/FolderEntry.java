@@ -3,10 +3,18 @@ package pl.psnc.dl.wf4ever.model.RO;
 import java.net.URI;
 import java.nio.file.Paths;
 
+import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
 
+import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.ReadWrite;
 
 /**
  * Represents an ro:FolderEntry.
@@ -21,7 +29,7 @@ public class FolderEntry extends Proxy {
 
 
     /**
-     * Default constructor.
+     * Constructor.
      * 
      * @param user
      *            user creating the instance
@@ -32,7 +40,7 @@ public class FolderEntry extends Proxy {
 
 
     /**
-     * Default constructor.
+     * Constructor.
      * 
      * @param user
      *            user creating the instance
@@ -69,6 +77,29 @@ public class FolderEntry extends Proxy {
             }
         } else {
             return uri.toString();
+        }
+    }
+
+
+    public Folder getFolder() {
+        return (Folder) proxyIn;
+    }
+
+
+    @Override
+    public void save()
+            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+        super.save();
+        getFolder().getResourceMap().saveProxy(this);
+        getFolder().getResourceMap().saveFolderEntryData(this);
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            Individual entryInd = model.createIndividual(uri.toString(), RO.FolderEntry);
+            Individual folderInd = model.createIndividual(getFolder().getUri().toString(), RO.Folder);
+            entryInd.addProperty(ORE.isAggregatedBy, folderInd);
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
         }
     }
 }

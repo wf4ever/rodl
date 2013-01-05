@@ -2,9 +2,6 @@ package pl.psnc.dl.wf4ever.model.ORE;
 
 import java.net.URI;
 
-import org.joda.time.DateTime;
-
-import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -130,10 +127,4 @@ public class AggregatedResource extends Thing {
         }
     }
 
-
-    public static AggregatedResource get(Builder builder, ResearchObject researchObject, URI uri, URI creator,
-            DateTime created) {
-        AggregatedResource resource = builder.buildAggregatedResource(uri, researchObject, creator, created);
-        return resource;
-    }
 }

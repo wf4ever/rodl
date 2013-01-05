@@ -18,7 +18,6 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -157,6 +156,13 @@ public class Thing {
     }
 
 
+    /**
+     * Return an RDF format specific URI.
+     * 
+     * @param format
+     *            RDF format
+     * @return the URI
+     */
     public URI getUri(RDFFormat format) {
         if (uri == null) {
             return null;
@@ -294,14 +300,13 @@ public class Thing {
 
 
     /**
-     * Find the dcterms:creator of the RO.
+     * Find the dcterms:creator of a resource in the model.
      * 
+     * @param thing
+     *            the resource
      * @return creator URI or null if not defined
-     * @throws IncorrectModelException
-     *             incorrect manifest
      */
-    public URI extractCreator(Thing thing)
-            throws IncorrectModelException {
+    public URI extractCreator(Thing thing) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             Individual ro = model.getIndividual(thing.getUri().toString());
@@ -317,16 +322,13 @@ public class Thing {
 
 
     /**
-     * Find the dcterms:created date of the RO.
+     * Find the dcterms:created date of a resource in the model.
      * 
-     * @param model
-     *            manifest model
+     * @param thing
+     *            the resource
      * @return creation date or null if not defined
-     * @throws IncorrectModelException
-     *             incorrect manifest
      */
-    public DateTime extractCreated(Thing thing)
-            throws IncorrectModelException {
+    public DateTime extractCreated(Thing thing) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             Individual ro = model.getIndividual(thing.getUri().toString());
@@ -341,25 +343,6 @@ public class Thing {
         } finally {
             endTransaction(transactionStarted);
         }
-    }
-
-
-    @Override
-    public int hashCode() {
-        return uri.hashCode();
-    }
-
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!(obj instanceof Thing)) {
-            return false;
-        }
-        Thing that = (Thing) obj;
-        return that.uri.equals(this.uri);
     }
 
 
@@ -494,14 +477,8 @@ public class Thing {
 
     /**
      * Save the resource to the triplestore and data storage backend.
-     * 
-     * @throws ConflictException
-     * @throws DigitalLibraryException
-     * @throws AccessDeniedException
-     * @throws NotFoundException
      */
-    public void save()
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+    public void save() {
         saveContributors(this);
     }
 
@@ -554,6 +531,7 @@ public class Thing {
 
 
     /**
+     * Is the resource writable only by RODL (the manifest or the evolution annotation body).
      * 
      * @return true if object represents a special object, false otherwise.
      */
