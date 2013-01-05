@@ -2,13 +2,16 @@
 
 [] lm:mapping
    [ lm:name "http://purl.org/wf4ever/ro#" ; lm:altName "file:vocabularies/ro.owl" ] ,
+   [ lm:name "http://purl.org/wf4ever/roevo#" ; lm:altName "file:vocabularies/roevo.owl" ] ,
    [ lm:name "http://xmlns.com/foaf/0.1/" ; lm:altName "file:vocabularies/foaf.rdf" ] ,
    [ lm:name "http://purl.org/wf4ever/ore-owl" ; lm:altName "file:vocabularies/ore-owl.owl" ] ,
+   [ lm:name "http://www.openarchives.org/ore/terms/" ; lm:altName "file:vocabularies/terms.rdf" ] ,
    [ lm:name "http://purl.org/NET/dc_owl2dl/terms_od" ; lm:altName "file:vocabularies/dcterms_od.owl" ] ,
-   [ lm:name "http://purl.org/ao/core/" ; lm:altName "file:vocabularies/annotation-core.owl" ] ,
+   [ lm:name "http://purl.org/ao/" ; lm:altName "file:vocabularies/annotation-core.owl" ] ,
    [ lm:name "http://purl.org/NET/dc_owl2dl/dcam" ; lm:altName "file:vocabularies/dcam.ttl" ] ,
-   [ lm:name "http://purl.org/pav/2.0/" ; lm:altName "file:vocabularies/pav.owl" ] ,
    [ lm:name "http://www.w3.org/TR/skos-reference/skos-owl1-dl.rdf" ; lm:altName "file:vocabularies/skos-owl1-dl.rdf" ] ,
+   [ lm:name "http://purl.org/pav/2.0/" ; lm:altName "file:vocabularies/pav.owl" ] ,
+   [ lm:name "http://www.w3.org/ns/prov#" ; lm:altName "file:vocabularies/prov-o.ttl" ] ,
    [ lm:name "http://purl.org/pav/authoring/2.0/" ; lm:altName "file:vocabularies/pav-authoring.owl" ] ,
    [ lm:name "http://purl.org/pav/provenance/2.0/" ; lm:altName "file:vocabularies/pav-provenance.owl" ] 
    .
