@@ -461,10 +461,9 @@ public class ResearchObjectResource {
 
         RDFFormat syntax = RDFFormat.forFileName(accept, RDFFormat.RDFXML);
         Model folderDesc = ModelFactory.createDefaultModel();
-        folderDesc.read(ROSRService.SMS.get().getNamedGraph(folder.getResourceMap().getUri(), syntax), null);
-        folderDesc.read(
-            ROSRService.SMS.get().getResource(researchObject, syntax, folder.getUri(), folder.getProxy().getUri()),
-            null);
+        folderDesc.read(folder.getResourceMap().getGraphAsInputStream(syntax), null);
+        folderDesc.read(researchObject.getManifest().getGraphAsInputStream(syntax, folder, folder.getProxy()), null);
+        folderDesc.read(folder.getProxy().getGraphAsInputStream(syntax), null);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         folderDesc.write(out);
 

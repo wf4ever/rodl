@@ -539,30 +539,6 @@ public final class ROSRService {
 
 
     /**
-     * Create a new ro:Folder with the specified folder entries.
-     * 
-     * @param researchObject
-     *            research object
-     * @param folder
-     *            folder with folder entries
-     * @return folder with all fields filled in
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     */
-    public static Folder createFolder(ResearchObject researchObject, Folder folder)
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        folder = SMS.get().addFolder(researchObject, folder);
-        folder.getResourceMap().serialize();
-        researchObject.getManifest().serialize();
-        return folder;
-    }
-
-
-    /**
      * Update a folder.
      * 
      * @param folder

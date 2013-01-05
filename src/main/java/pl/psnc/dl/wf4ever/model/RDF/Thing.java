@@ -32,6 +32,10 @@ import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -264,18 +268,18 @@ public class Thing {
     /**
      * Return this resource as a named graph in a selected RDF format.
      * 
-     * @param rdfFormat
+     * @param syntax
      *            RDF format
      * @return an input stream or null of no model is found
      */
-    public InputStream getGraphAsInputStream(RDFFormat rdfFormat) {
+    public InputStream getGraphAsInputStream(RDFFormat syntax) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             if (!dataset.containsNamedModel(uri.toString())) {
                 return null;
             }
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            if (rdfFormat.supportsContexts()) {
+            if (syntax.supportsContexts()) {
                 Dataset tmpDataset = TDBFactory.createDataset();
                 addNamedModelsRecursively(tmpDataset);
 
@@ -288,10 +292,46 @@ public class Thing {
                     List<Statement> statements = tdbModel.listStatements().toList();
                     ng4jModel.add(statements);
                 }
-                ngs.write(out, rdfFormat.getName().toUpperCase(), null);
+                ngs.write(out, syntax.getName().toUpperCase(), null);
             } else {
-                dataset.getNamedModel(uri.toString()).write(out, rdfFormat.getName().toUpperCase());
+                dataset.getNamedModel(uri.toString()).write(out, syntax.getName().toUpperCase());
             }
+            return new ByteArrayInputStream(out.toByteArray());
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    /**
+     * Return this resource as a named graph in a selected RDF format. Only triples describing the resources given as
+     * parameters will be returned.
+     * 
+     * @param syntax
+     *            RDF format
+     * @param resources
+     *            resources which will be included
+     * @return an input stream or null of no model is found
+     */
+    public InputStream getGraphAsInputStream(RDFFormat syntax, Thing... resources) {
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            Model result = ModelFactory.createDefaultModel();
+            for (Thing resource : resources) {
+                String queryString = String.format("DESCRIBE <%s>", resource.getUri().toString());
+                Query query = QueryFactory.create(queryString);
+
+                QueryExecution qexec = QueryExecutionFactory.create(query, model);
+                result.add(qexec.execDescribe());
+                qexec.close();
+            }
+            if (result.isEmpty()) {
+                return null;
+            }
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            result.removeNsPrefix("xml");
+            result.write(out, syntax.getName().toUpperCase());
             return new ByteArrayInputStream(out.toByteArray());
         } finally {
             endTransaction(transactionStarted);
