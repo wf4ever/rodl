@@ -394,7 +394,7 @@ public class Resource {
         URI uri = uriInfo.getAbsolutePath();
         Folder folder = ROSRService.SMS.get().getFolder(uri);
 
-        FolderEntry entry = ROSRService.assembleFolderEntry(builder, folder, content);
+        FolderEntry entry = FolderEntry.assemble(builder, folder, content);
         folder.getFolderEntries().add(entry);
         ROSRService.updateFolder(folder);
 

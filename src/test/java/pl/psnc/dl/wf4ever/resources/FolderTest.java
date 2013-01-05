@@ -278,6 +278,7 @@ public class FolderTest extends ResourceBase {
         List<Individual> folders = model.listIndividuals(RO.Folder).toList();
         Assert.assertEquals(1, folders.size());
         List<RDFNode> folderEntries = folders.get(0).listPropertyValues(ORE.aggregates).toList();
+        model.write(System.out);
         Assert.assertEquals(proxyFors.size(), folderEntries.size());
 
         List<Individual> entries = model.listIndividuals(RO.FolderEntry).toList();

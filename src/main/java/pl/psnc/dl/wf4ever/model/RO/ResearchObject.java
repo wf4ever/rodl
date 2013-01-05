@@ -221,6 +221,7 @@ public class ResearchObject extends Thing implements Aggregation {
         super.save();
         getManifest().save();
 
+        //TODO check if to create an RO or only serialize the manifest
         ROSRService.DL.get().createResearchObject(uri, getManifest().getGraphAsInputStream(RDFFormat.RDFXML),
             ResearchObject.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
         generateEvoInfo();
@@ -235,7 +236,7 @@ public class ResearchObject extends Thing implements Aggregation {
     //TODO should it be overridden?
     public ResearchObject load() {
         //FIXME here we could first load the manifest URI from the RO named graph
-        this.manifest = Manifest.get(builder, getManifestUri(), this);
+        this.manifest = builder.buildManifest(getManifestUri(), this);
         this.creator = manifest.extractCreator(this);
         this.created = manifest.extractCreated(this);
         this.resources = manifest.extractResources();
@@ -307,6 +308,20 @@ public class ResearchObject extends Thing implements Aggregation {
         this.resources.put(resource.getUri(), resource);
         this.aggregatedResources.put(resource.getUri(), resource);
         return resource;
+    }
+
+
+    public Folder aggregateFolder(URI folderUri, InputStream content)
+            throws BadRequestException {
+        if (!loaded) {
+            load();
+        }
+        Folder folder = Folder.create(builder, this, folderUri, content);
+        getManifest().serialize();
+        this.folders.put(folder.getUri(), folder);
+        this.aggregatedResources.put(folder.getUri(), folder);
+        this.proxies.put(folder.getProxy().getUri(), folder.getProxy());
+        return folder;
     }
 
 

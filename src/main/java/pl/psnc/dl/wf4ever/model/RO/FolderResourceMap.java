@@ -46,11 +46,14 @@ public class FolderResourceMap extends ResourceMap {
             Individual entryInd = model.createIndividual(entry.getUri().toString(), RO.FolderEntry);
             Literal name = model.createLiteral(entry.getEntryName());
             model.add(entryInd, RO.entryName, name);
+            Individual folderInd = model.createIndividual(getFolder().getUri().toString(), RO.Folder);
+            Resource proxyForR = model.getResource(entry.getProxyFor().getUri().toString());
+            proxyForR.addProperty(ORE.isAggregatedBy, folderInd);
+            folderInd.addProperty(ORE.aggregates, proxyForR);
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);
         }
-
     }
 
 
@@ -148,7 +151,7 @@ public class FolderResourceMap extends ResourceMap {
                 RO.ResearchObject);
             model.add(roInd, ORE.isDescribedBy, manifestRes);
 
-            Resource folderRMRes = model.createResource(getFolder().getResourceMap().getUri().toString());
+            Resource folderRMRes = model.createResource(uri.toString());
             Individual folderInd = model.createIndividual(getFolder().getUri().toString(), RO.Folder);
             folderInd.addRDFType(ORE.Aggregation);
             model.add(folderInd, ORE.isAggregatedBy, roInd);

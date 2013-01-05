@@ -115,6 +115,17 @@ public class Manifest extends ResourceMap {
     }
 
 
+    public void saveFolderClass(Folder folder) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            model.createIndividual(folder.getUri().toString(), RO.Folder);
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
     public void saveRoStats(Resource resource) {
         if (resource.getStats() != null) {
             boolean transactionStarted = beginTransaction(ReadWrite.WRITE);

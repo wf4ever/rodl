@@ -452,12 +452,12 @@ public class ResearchObjectResource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
+        researchObject.load();
         if (path == null) {
             path = UUID.randomUUID().toString();
         }
-        URI folderURI = uriInfo.getAbsolutePathBuilder().path(path).build();
-        Folder folder = ROSRService.assembleFolder(builder, researchObject, folderURI, content);
-        folder = ROSRService.createFolder(researchObject, folder);
+        URI folderUri = uriInfo.getAbsolutePathBuilder().path(path).build();
+        Folder folder = researchObject.aggregateFolder(folderUri, content);
 
         RDFFormat syntax = RDFFormat.forFileName(accept, RDFFormat.RDFXML);
         Model folderDesc = ModelFactory.createDefaultModel();

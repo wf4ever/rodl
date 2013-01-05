@@ -196,11 +196,6 @@ public class Builder {
     }
 
 
-    public FolderEntry buildFolderEntry(AggregatedResource aggregatedResource, Folder proxyIn, String name) {
-        return buildFolderEntry(null, aggregatedResource, proxyIn, name);
-    }
-
-
     public FolderEntry buildFolderEntry(URI uri, AggregatedResource aggregatedResource, Folder proxyIn, String name) {
         FolderEntry entry = new FolderEntry(user, dataset, useTransactions, uri);
         entry.setProxyFor(aggregatedResource);
