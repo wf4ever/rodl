@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 
 import javax.naming.NamingException;
@@ -19,15 +20,13 @@ import org.junit.Test;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
-import pl.psnc.dl.wf4ever.model.AO.Annotation;
-import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.rdf.model.Statement;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -196,17 +195,13 @@ public class ResourceTest extends ResourceBase {
 
         Resource bodyR = manifestModel.createResource(SafeURI.URItoString(researchObject
                 .getFixedEvolutionAnnotationBodyUri()));
-        StmtIterator it = manifestModel.listStatements(null, AO.body, bodyR);
-        if (it.hasNext()) {
-            Annotation ann = new Annotation(null, researchObject, URI.create(it.next().getSubject().getURI()), null,
-                    (Thing) null);
-            response = webResource.uri(ann.getUri()).header("Authorization", "Bearer " + accessToken)
-                    .delete(ClientResponse.class);
+        List<Statement> anns = manifestModel.listStatements(null, AO.body, bodyR).toList();
+        assertTrue("Cannot find annotation", !anns.isEmpty());
+        URI annUri = URI.create(anns.get(0).getSubject().getURI());
+        response = webResource.uri(annUri).header("Authorization", "Bearer " + accessToken)
+                .delete(ClientResponse.class);
+        response.close();
 
-            response.close();
-        } else {
-            assertTrue("Can not find annotation", false);
-        }
         assertEquals("Removing evo info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         response = webResource.uri(researchObject.getFixedEvolutionAnnotationBodyUri())
                 .header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);

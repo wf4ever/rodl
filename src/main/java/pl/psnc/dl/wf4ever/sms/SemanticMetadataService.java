@@ -718,8 +718,9 @@ public interface SemanticMetadataService {
      *            live Research Object
      * @param researchObject
      *            Snapshot or Archive
+     * @return
      */
-    void generateEvoInformation(ResearchObject researchObject, ResearchObject parent, EvoType type);
+    Annotation generateEvoInformation(ResearchObject researchObject, ResearchObject parent, EvoType type);
 
 
     /**

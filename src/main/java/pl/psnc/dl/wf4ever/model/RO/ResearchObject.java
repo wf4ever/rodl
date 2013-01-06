@@ -138,7 +138,9 @@ public class ResearchObject extends Thing implements Aggregation {
 
     public void generateEvoInfo()
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        ROSRService.SMS.get().generateEvoInformation(this, null, EvoType.LIVE);
+        Annotation ann = ROSRService.SMS.get().generateEvoInformation(this, null, EvoType.LIVE);
+        this.getAnnotations().put(ann.getUri(), ann);
+        this.getAnnotationsByTarget().put(ann.getAnnotated().iterator().next().getUri(), ann);
         this.getEvoInfoBody().serialize();
         this.getManifest().serialize();
     }
@@ -160,6 +162,7 @@ public class ResearchObject extends Thing implements Aggregation {
         //HACK this should be added automatically
         this.getAggregatedResources().put(getFixedEvolutionAnnotationBodyUri(),
             new AggregatedResource(user, this, getFixedEvolutionAnnotationBodyUri()));
+
         return aggregatedResources.get(getFixedEvolutionAnnotationBodyUri());
     }
 

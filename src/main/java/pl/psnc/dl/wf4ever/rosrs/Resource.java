@@ -36,6 +36,7 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
@@ -341,10 +342,9 @@ public class Resource {
                 return ROSRService.deaggregateExternalResource(researchObject, resourceUri);
             }
         }
-        if (researchObject.getAnnotations().containsKey(resourceUri)) {
-            if (ROSRService.SMS.get()
-                    .findAnnotationForBody(researchObject, researchObject.getFixedEvolutionAnnotationBodyUri())
-                    .getUri().equals(resourceUri)) {
+        Annotation annotation = researchObject.getAnnotations().get(resourceUri);
+        if (annotation != null) {
+            if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(annotation.getBody().getUri())) {
                 throw new ForbiddenException("Can't delete the evo annotation");
             }
             return ROSRService.deleteAnnotation(researchObject, resourceUri);

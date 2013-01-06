@@ -323,11 +323,12 @@ public class Manifest extends ResourceMap {
             Map<URI, Annotation> annotationsByUri = new HashMap<>();
             String queryString = String
                     .format(
-                        "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ao: <%s> PREFIX ro: <%s> SELECT ?annotation ?body ?target ?created ?creator WHERE { <%s> ore:aggregates ?annotation . ?annotation a ro:AggregatedAnnotation ; ao:body ?body ; ro:annotatesAggregatedResource ?target . ?proxy ore:proxyFor ?annotation . OPTIONAL { ?annotation dcterms:creator ?creator . } OPTIONAL { ?annotation dcterms:created ?created . } }",
+                        "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ao: <%s> PREFIX ro: <%s> SELECT ?annotation ?body ?target ?created ?creator WHERE { <%s> ore:aggregates ?annotation . ?annotation a ro:AggregatedAnnotation ; ao:body ?body ; ro:annotatesAggregatedResource ?target . OPTIONAL { ?proxy ore:proxyFor ?annotation . } OPTIONAL { ?annotation dcterms:creator ?creator . } OPTIONAL { ?annotation dcterms:created ?created . } }",
                         ORE.NAMESPACE, DCTerms.NS, AO.NAMESPACE, RO.NAMESPACE, aggregation.getUri().toString());
 
             Query query = QueryFactory.create(queryString);
             QueryExecution qe = QueryExecutionFactory.create(query, model);
+            model.write(System.out);
             try {
                 ResultSet results = qe.execSelect();
                 while (results.hasNext()) {
@@ -356,6 +357,7 @@ public class Manifest extends ResourceMap {
                         if (pUri != null) {
                             annotation.setProxy(builder.buildProxy(pUri, annotation, getResearchObject()));
                         }
+                        annotationsByUri.put(annotation.getUri(), annotation);
                     }
                 }
             } finally {
