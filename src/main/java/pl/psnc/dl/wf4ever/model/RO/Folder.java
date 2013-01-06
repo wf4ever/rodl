@@ -45,9 +45,6 @@ public class Folder extends Resource implements Aggregation {
     /** Resource map (graph with folder description) URI. */
     private FolderResourceMap resourceMap;
 
-    /** has the resource map been loaded. */
-    private boolean loaded;
-
     /** is the folder a root folder in the RO. */
     private boolean rootFolder;
 
@@ -64,7 +61,6 @@ public class Folder extends Resource implements Aggregation {
      */
     public Folder(UserMetadata user, Dataset dataset, boolean useTransactions, ResearchObject researchObject, URI uri) {
         super(user, dataset, useTransactions, researchObject, uri);
-        this.loaded = false;
     }
 
 
@@ -80,13 +76,12 @@ public class Folder extends Resource implements Aggregation {
      */
     public Folder(UserMetadata user, ResearchObject researchObject, URI uri) {
         super(user, researchObject, uri);
-        this.loaded = false;
     }
 
 
     public Set<FolderEntry> getFolderEntries() {
-        if (!loaded) {
-            load();
+        if (folderEntries == null) {
+            folderEntries = getResourceMap().extractFolderEntries();
         }
         return folderEntries;
     }
@@ -99,15 +94,11 @@ public class Folder extends Resource implements Aggregation {
 
     public FolderResourceMap getResourceMap()
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
-        if (!loaded) {
-            load();
+        if (resourceMap == null) {
+            URI resourceMapUri = FolderResourceMap.generateResourceMapUri(this);
+            resourceMap = builder.buildFolderResourceMap(resourceMapUri, this);
         }
         return resourceMap;
-    }
-
-
-    public boolean isLoaded() {
-        return loaded;
     }
 
 
@@ -129,17 +120,7 @@ public class Folder extends Resource implements Aggregation {
             return null;
         }
         ResearchObject researchObject = resourceMap.extractResearchObject();
-        researchObject.load();
         return researchObject.getFolders().get(uri);
-    }
-
-
-    public void load()
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
-        loaded = true;
-        URI resourceMapUri = FolderResourceMap.generateResourceMapUri(this);
-        resourceMap = builder.buildFolderResourceMap(resourceMapUri, this);
-        folderEntries = resourceMap.extractFolderEntries();
     }
 
 
@@ -240,7 +221,6 @@ public class Folder extends Resource implements Aggregation {
             }
         }
         folder.setFolderEntries(new HashSet<>(entries.values()));
-        folder.loaded = true;
         return folder;
     }
 

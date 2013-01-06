@@ -9,6 +9,7 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.hp.hpl.jena.ontology.Individual;
@@ -125,6 +126,18 @@ public class AggregatedResource extends Thing {
         if (this.proxy != null) {
             this.proxy.setProxyIn(researchObject);
         }
+    }
+
+
+    /**
+     * Check if the resource is internal. Resource is internal only if its content has been deployed under the control
+     * of the service. A resource that has "internal" URI but the content has not been uploaded is considered external.
+     * 
+     * @return true if the resource content is deployed under the control of the service, false otherwise
+     */
+    public boolean isInternal() {
+        String filePath = researchObject.getUri().relativize(uri).getPath();
+        return !filePath.isEmpty() && ROSRService.DL.get().fileExists(researchObject.getUri(), filePath);
     }
 
 }

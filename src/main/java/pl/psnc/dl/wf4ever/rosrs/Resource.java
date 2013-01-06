@@ -36,6 +36,7 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
@@ -247,7 +248,6 @@ public class Resource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        researchObject.load();
         URI resourceUri = uriInfo.getAbsolutePath();
         String specificName = null;
         if (original != null) {
@@ -331,44 +331,44 @@ public class Resource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        URI resource = uriInfo.getAbsolutePath();
+        URI resourceUri = uriInfo.getAbsolutePath();
 
-        if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
-            URI proxyFor = ROSRService.SMS.get().getProxyFor(researchObject, resource);
-            if (ROSRService.isInternalResource(researchObject, proxyFor)) {
-                return Response.status(Status.TEMPORARY_REDIRECT).location(proxyFor).build();
+        if (researchObject.getProxies().containsKey(resourceUri)) {
+            AggregatedResource resource = researchObject.getProxies().get(resourceUri).getProxyFor();
+            if (resource.isInternal()) {
+                return Response.status(Status.TEMPORARY_REDIRECT).location(resource.getUri()).build();
             } else {
-                return ROSRService.deaggregateExternalResource(researchObject, resource);
+                return ROSRService.deaggregateExternalResource(researchObject, resourceUri);
             }
         }
-        if (ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
+        if (researchObject.getAnnotations().containsKey(resourceUri)) {
             if (ROSRService.SMS.get()
                     .findAnnotationForBody(researchObject, researchObject.getFixedEvolutionAnnotationBodyUri())
-                    .getUri().equals(resource)) {
+                    .getUri().equals(resourceUri)) {
                 throw new ForbiddenException("Can't delete the evo annotation");
             }
-            return ROSRService.deleteAnnotation(researchObject, resource);
+            return ROSRService.deleteAnnotation(researchObject, resourceUri);
         }
-        if (ROSRService.SMS.get().isRoFolder(researchObject, resource)) {
-            Folder folder = ROSRService.SMS.get().getFolder(resource);
+        if (researchObject.getFolders().containsKey(resourceUri)) {
+            Folder folder = researchObject.getFolders().get(resourceUri);
             ROSRService.deleteFolder(folder);
             return Response.noContent().build();
         }
-        FolderEntry entry = ROSRService.SMS.get().getFolderEntry(resource);
+        FolderEntry entry = ROSRService.SMS.get().getFolderEntry(resourceUri);
         if (entry != null) {
             ROSRService.deleteFolderEntry(entry);
             return Response.noContent().build();
         }
         if (original != null) {
-            resource = resource.resolve(original);
+            resourceUri = resourceUri.resolve(original);
         }
-        if (researchObject.getManifestUri().equals(resource)) {
+        if (researchObject.getManifestUri().equals(resourceUri)) {
             throw new ForbiddenException("Can't delete the manifest");
-        } else if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(resource)) {
+        } else if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(resourceUri)) {
             throw new ForbiddenException("Can't delete the evo info");
         }
 
-        return ROSRService.deaggregateInternalResource(researchObject, resource);
+        return ROSRService.deaggregateInternalResource(researchObject, resourceUri);
     }
 
 

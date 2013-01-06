@@ -64,9 +64,6 @@ public class ResearchObject extends Thing implements Aggregation {
     /** Fixed roevo annotation file path. */
     private static final String ROEVO_PATH = ".ro/evo_info.ttl";
 
-    /** has the metadata been loaded from triplestore. */
-    protected boolean loaded;
-
     /** aggregated resources, including annotations, resources and folders. */
     protected Map<URI, AggregatedResource> aggregatedResources;
 
@@ -142,9 +139,6 @@ public class ResearchObject extends Thing implements Aggregation {
     public void generateEvoInfo()
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         ROSRService.SMS.get().generateEvoInformation(this, null, EvoType.LIVE);
-        if (!loaded) {
-            load();
-        }
         this.getEvoInfoBody().serialize();
         this.getManifest().serialize();
     }
@@ -163,19 +157,16 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     public AggregatedResource getEvoInfoBody() {
-        if (!loaded) {
-            load();
-        }
         //HACK this should be added automatically
-        this.aggregatedResources.put(getFixedEvolutionAnnotationBodyUri(), new AggregatedResource(user, this,
-                getFixedEvolutionAnnotationBodyUri()));
+        this.getAggregatedResources().put(getFixedEvolutionAnnotationBodyUri(),
+            new AggregatedResource(user, this, getFixedEvolutionAnnotationBodyUri()));
         return aggregatedResources.get(getFixedEvolutionAnnotationBodyUri());
     }
 
 
     public Manifest getManifest() {
-        if (!loaded) {
-            load();
+        if (manifest == null) {
+            this.manifest = builder.buildManifest(getManifestUri(), this);
         }
         return manifest;
     }
@@ -213,7 +204,6 @@ public class ResearchObject extends Thing implements Aggregation {
                 LOGGER.warn("URI not found in SMS: " + uri);
             }
         }
-        loaded = false;
     }
 
 
@@ -225,43 +215,6 @@ public class ResearchObject extends Thing implements Aggregation {
         ROSRService.DL.get().createResearchObject(uri, getManifest().getGraphAsInputStream(RDFFormat.RDFXML),
             ResearchObject.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
         generateEvoInfo();
-    }
-
-
-    /**
-     * Load the metadata from the triplestore.
-     * 
-     * @return this instance, loaded
-     */
-    //TODO should it be overridden?
-    public ResearchObject load() {
-        this.loaded = true;
-        //FIXME here we could first load the manifest URI from the RO named graph
-        this.manifest = builder.buildManifest(getManifestUri(), this);
-        this.creator = manifest.extractCreator(this);
-        this.created = manifest.extractCreated(this);
-        this.resources = manifest.extractResources();
-        this.folders = manifest.extractFolders();
-        this.annotations = manifest.extractAnnotations();
-        this.annotationsByTargetUri = HashMultimap.<URI, Annotation> create();
-        for (Annotation ann : annotations.values()) {
-            for (Thing target : ann.getAnnotated()) {
-                this.annotationsByTargetUri.put(target.getUri(), ann);
-            }
-        }
-        this.aggregatedResources = manifest.extractAggregatedResources(resources, folders, annotations);
-        this.folderResourceMaps = new HashMap<>();
-        for (Folder folder : folders.values()) {
-            folderResourceMaps.put(folder.getResourceMap().getUri(), folder.getResourceMap());
-        }
-        this.proxies = new HashMap<>();
-        for (AggregatedResource aggregatedResource : this.aggregatedResources.values()) {
-            Proxy proxy = aggregatedResource.getProxy();
-            if (proxy != null) {
-                this.proxies.put(proxy.getUri(), proxy);
-            }
-        }
-        return this;
     }
 
 
@@ -278,14 +231,11 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     public Resource aggregate(String path, InputStream content, String contentType) {
         URI resourceUri = UriBuilder.fromUri(uri).path(path).build();
-        if (!loaded) {
-            load();
-        }
         Resource resource = Resource.create(builder, this, resourceUri, content, contentType);
         getManifest().serialize();
-        this.resources.put(resource.getUri(), resource);
-        this.aggregatedResources.put(resource.getUri(), resource);
-        this.proxies.put(resource.getProxy().getUri(), resource.getProxy());
+        this.getResources().put(resource.getUri(), resource);
+        this.getAggregatedResources().put(resource.getUri(), resource);
+        this.getProxies().put(resource.getProxy().getUri(), resource.getProxy());
         return resource;
     }
 
@@ -301,26 +251,20 @@ public class ResearchObject extends Thing implements Aggregation {
         Resource resource = ROSRService.SMS.get().addResource(this, uri, null);
         resource.setProxy(ROSRService.SMS.get().addProxy(this, resource));
         // update the manifest that describes the resource in dLibra
-        if (!loaded) {
-            load();
-        }
         this.getManifest().serialize();
-        this.resources.put(resource.getUri(), resource);
-        this.aggregatedResources.put(resource.getUri(), resource);
+        this.getResources().put(resource.getUri(), resource);
+        this.getAggregatedResources().put(resource.getUri(), resource);
         return resource;
     }
 
 
     public Folder aggregateFolder(URI folderUri, InputStream content)
             throws BadRequestException {
-        if (!loaded) {
-            load();
-        }
         Folder folder = Folder.create(builder, this, folderUri, content);
         getManifest().serialize();
-        this.folders.put(folder.getUri(), folder);
-        this.aggregatedResources.put(folder.getUri(), folder);
-        this.proxies.put(folder.getProxy().getUri(), folder.getProxy());
+        this.getFolders().put(folder.getUri(), folder);
+        this.getAggregatedResources().put(folder.getUri(), folder);
+        this.getProxies().put(folder.getProxy().getUri(), folder.getProxy());
         return folder;
     }
 
@@ -345,14 +289,11 @@ public class ResearchObject extends Thing implements Aggregation {
         Annotation annotation = ROSRService.SMS.get().addAnnotation(this, targets, body, annotationId);
         annotation.setProxy(ROSRService.SMS.get().addProxy(this, annotation));
         getManifest().serialize();
-        if (!loaded) {
-            load();
-        }
-        this.annotations.put(annotation.getUri(), annotation);
+        this.getAnnotations().put(annotation.getUri(), annotation);
         for (Thing target : annotation.getAnnotated()) {
-            this.annotationsByTargetUri.put(target.getUri(), annotation);
+            this.getAnnotationsByTarget().put(target.getUri(), annotation);
         }
-        this.aggregatedResources.put(annotation.getUri(), annotation);
+        this.getAggregatedResources().put(annotation.getUri(), annotation);
         return annotation;
     }
 
@@ -372,7 +313,6 @@ public class ResearchObject extends Thing implements Aggregation {
     public static ResearchObject create(Builder builder, URI researchObjectUri, MemoryZipFile zip)
             throws IOException, BadRequestException {
         ResearchObject researchObject = create(builder, researchObjectUri);
-        researchObject.load();
         SemanticMetadataService tmpSms = new SemanticMetadataServiceTdb(ROSRService.SMS.get().getUserProfile(),
                 researchObject, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
 
@@ -450,35 +390,52 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
-    public boolean isLoaded() {
-        return loaded;
-    }
-
-
     public Map<URI, Resource> getResources() {
-        if (!loaded) {
-            load();
+        if (resources == null) {
+            this.resources = getManifest().extractResources();
         }
         return resources;
     }
 
 
     public Map<URI, Folder> getFolders() {
-        if (!loaded) {
-            load();
+        if (folders == null) {
+            this.folders = getManifest().extractFolders();
         }
         return folders;
     }
 
 
     public Map<URI, Proxy> getProxies() {
+        if (proxies == null) {
+            this.proxies = new HashMap<>();
+            for (AggregatedResource aggregatedResource : this.getAggregatedResources().values()) {
+                Proxy proxy = aggregatedResource.getProxy();
+                if (proxy != null) {
+                    this.proxies.put(proxy.getUri(), proxy);
+                }
+            }
+        }
         return proxies;
     }
 
 
+    public Map<URI, Annotation> getAnnotations() {
+        if (annotations == null) {
+            this.annotations = getManifest().extractAnnotations();
+        }
+        return annotations;
+    }
+
+
     public Multimap<URI, Annotation> getAnnotationsByTarget() {
-        if (!loaded) {
-            load();
+        if (annotationsByTargetUri == null) {
+            this.annotationsByTargetUri = HashMultimap.<URI, Annotation> create();
+            for (Annotation ann : getAnnotations().values()) {
+                for (Thing target : ann.getAnnotated()) {
+                    this.annotationsByTargetUri.put(target.getUri(), ann);
+                }
+            }
         }
         return annotationsByTargetUri;
     }
@@ -490,8 +447,9 @@ public class ResearchObject extends Thing implements Aggregation {
      * @return a map of aggregated resource by their URI
      */
     public Map<URI, AggregatedResource> getAggregatedResources() {
-        if (!loaded) {
-            load();
+        if (aggregatedResources == null) {
+            this.aggregatedResources = getManifest().extractAggregatedResources(getResources(), getFolders(),
+                getAnnotations());
         }
         return aggregatedResources;
     }
@@ -504,7 +462,31 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     public Map<URI, ResourceMap> getFolderResourceMaps() {
+        if (folderResourceMaps == null) {
+            this.folderResourceMaps = new HashMap<>();
+            for (Folder folder : getFolders().values()) {
+                folderResourceMaps.put(folder.getResourceMap().getUri(), folder.getResourceMap());
+            }
+        }
         return folderResourceMaps;
+    }
+
+
+    @Override
+    public DateTime getCreated() {
+        if (created == null) {
+            this.created = getManifest().extractCreated(this);
+        }
+        return super.getCreated();
+    }
+
+
+    @Override
+    public URI getCreator() {
+        if (creator == null) {
+            this.creator = getManifest().extractCreator(this);
+        }
+        return super.getCreator();
     }
 
 }

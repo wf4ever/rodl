@@ -193,7 +193,6 @@ public class ResearchObjectResource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        researchObject.load();
         if (path == null) {
             path = UUID.randomUUID().toString();
         }
@@ -358,7 +357,6 @@ public class ResearchObjectResource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        researchObject.load();
         URI body;
         Set<Thing> targets = new HashSet<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
@@ -452,7 +450,6 @@ public class ResearchObjectResource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        researchObject.load();
         if (path == null) {
             path = UUID.randomUUID().toString();
         }
