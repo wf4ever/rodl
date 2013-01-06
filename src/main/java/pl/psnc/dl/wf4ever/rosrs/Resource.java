@@ -380,23 +380,18 @@ public class Resource {
      * @return 201 Created response pointing to the folder entry
      * @throws BadRequestException
      *             wrong request body
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
      */
     @POST
     @Consumes(Constants.FOLDERENTRY_MIME_TYPE)
     public Response addFolderEntry(InputStream content)
-            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
+            throws BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
-        Folder folder = ROSRService.SMS.get().getFolder(uri);
+        Folder folder = Folder.get(builder, uri);
+        if (folder == null) {
+            throw new NotFoundException("Folder not found; " + uri);
+        }
 
-        FolderEntry entry = FolderEntry.assemble(builder, folder, content);
-        folder.getFolderEntries().add(entry);
-        ROSRService.updateFolder(folder);
+        FolderEntry entry = folder.createFolderEntry(content);
 
         return Response
                 .created(entry.getUri())

@@ -161,4 +161,22 @@ public class FolderResourceMap extends ResourceMap {
             endTransaction(transactionStarted);
         }
     }
+
+
+    public ResearchObject extractResearchObject() {
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            Resource folderR = model.getResource(getFolder().getUri().toString());
+            if (folderR == null) {
+                return null;
+            }
+            Resource roR = folderR.getPropertyResourceValue(ORE.isAggregatedBy);
+            if (roR == null) {
+                return null;
+            }
+            return builder.buildResearchObject(URI.create(roR.getURI()));
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
 }

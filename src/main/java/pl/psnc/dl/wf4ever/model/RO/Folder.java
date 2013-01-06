@@ -85,6 +85,9 @@ public class Folder extends Resource implements Aggregation {
 
 
     public Set<FolderEntry> getFolderEntries() {
+        if (!loaded) {
+            load();
+        }
         return folderEntries;
     }
 
@@ -118,18 +121,25 @@ public class Folder extends Resource implements Aggregation {
     }
 
 
-    public static Folder get(Builder builder, ResearchObject researchObject, URI uri, URI creator, DateTime created) {
-        Folder folder = builder.buildFolder(researchObject, uri, creator, created);
-        return folder;
+    public static Folder get(Builder builder, URI uri) {
+        Folder folder = builder.buildFolder(null, uri, null, null);
+        FolderResourceMap resourceMap = builder.buildFolderResourceMap(
+            FolderResourceMap.generateResourceMapUri(folder), folder);
+        if (!resourceMap.namedGraphExists()) {
+            return null;
+        }
+        ResearchObject researchObject = resourceMap.extractResearchObject();
+        researchObject.load();
+        return researchObject.getFolders().get(uri);
     }
 
 
     public void load()
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+        loaded = true;
         URI resourceMapUri = FolderResourceMap.generateResourceMapUri(this);
         resourceMap = builder.buildFolderResourceMap(resourceMapUri, this);
         folderEntries = resourceMap.extractFolderEntries();
-        loaded = true;
     }
 
 
@@ -245,6 +255,16 @@ public class Folder extends Resource implements Aggregation {
         }
         folder.getResourceMap().serialize();
         return folder;
+    }
+
+
+    public FolderEntry createFolderEntry(InputStream content)
+            throws BadRequestException {
+        FolderEntry entry = FolderEntry.assemble(builder, this, content);
+        getFolderEntries().add(entry);
+        entry.save();
+        getResourceMap().serialize();
+        return entry;
     }
 
 }

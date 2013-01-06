@@ -524,6 +524,23 @@ public class Thing {
 
 
     /**
+     * Delete the named graph if exists.
+     */
+    public void delete() {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            if (model != null) {
+                dataset.removeNamedModel(uri.toString());
+                model = null;
+            }
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    /**
      * Save the dcterms:creator and dcterms:created in the current model.
      * 
      * @param subject
@@ -580,5 +597,20 @@ public class Thing {
             return true;
         }
         return false;
+    }
+
+
+    /**
+     * Check if the dataset contains a named graph for this resource.
+     * 
+     * @return true if the named graph exists, false otherwise
+     */
+    public boolean namedGraphExists() {
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            return dataset.containsNamedModel(uri.toString());
+        } finally {
+            endTransaction(transactionStarted);
+        }
     }
 }

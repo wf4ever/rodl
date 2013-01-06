@@ -192,6 +192,7 @@ public class Builder {
 
     public FolderResourceMap buildFolderResourceMap(URI uri, Folder folder) {
         FolderResourceMap map = new FolderResourceMap(user, dataset, useTransactions, folder, uri);
+        map.setBuilder(this);
         return map;
     }
 
@@ -201,6 +202,7 @@ public class Builder {
         entry.setProxyFor(aggregatedResource);
         entry.setProxyIn(proxyIn);
         entry.setEntryName(name);
+        entry.setBuilder(this);
         return entry;
     }
 }

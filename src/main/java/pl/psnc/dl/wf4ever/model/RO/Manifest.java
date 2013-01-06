@@ -118,7 +118,10 @@ public class Manifest extends ResourceMap {
     public void saveFolderClass(Folder folder) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            model.createIndividual(folder.getUri().toString(), RO.Folder);
+            Individual folderInd = model.createIndividual(folder.getUri().toString(), RO.Folder);
+            com.hp.hpl.jena.rdf.model.Resource folderMapR = model.createResource(folder.getResourceMap().getUri()
+                    .toString());
+            folderInd.addProperty(ORE.isDescribedBy, folderMapR);
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);
@@ -294,7 +297,6 @@ public class Manifest extends ResourceMap {
 
                     Folder folder = builder.buildFolder(getResearchObject(), fURI, resCreator, resCreated);
                     folder.setRootFolder(isRootFolder);
-                    folder.load();
                     if (pUri != null) {
                         folder.setProxy(builder.buildProxy(pUri, folder, getResearchObject()));
                     }

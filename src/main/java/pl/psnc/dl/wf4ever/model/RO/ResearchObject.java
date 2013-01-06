@@ -235,16 +235,13 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     //TODO should it be overridden?
     public ResearchObject load() {
+        this.loaded = true;
         //FIXME here we could first load the manifest URI from the RO named graph
         this.manifest = builder.buildManifest(getManifestUri(), this);
         this.creator = manifest.extractCreator(this);
         this.created = manifest.extractCreated(this);
         this.resources = manifest.extractResources();
         this.folders = manifest.extractFolders();
-        this.folderResourceMaps = new HashMap<>();
-        for (Folder folder : folders.values()) {
-            folderResourceMaps.put(folder.getResourceMap().getUri(), folder.getResourceMap());
-        }
         this.annotations = manifest.extractAnnotations();
         this.annotationsByTargetUri = HashMultimap.<URI, Annotation> create();
         for (Annotation ann : annotations.values()) {
@@ -253,6 +250,10 @@ public class ResearchObject extends Thing implements Aggregation {
             }
         }
         this.aggregatedResources = manifest.extractAggregatedResources(resources, folders, annotations);
+        this.folderResourceMaps = new HashMap<>();
+        for (Folder folder : folders.values()) {
+            folderResourceMaps.put(folder.getResourceMap().getUri(), folder.getResourceMap());
+        }
         this.proxies = new HashMap<>();
         for (AggregatedResource aggregatedResource : this.aggregatedResources.values()) {
             Proxy proxy = aggregatedResource.getProxy();
@@ -260,7 +261,6 @@ public class ResearchObject extends Thing implements Aggregation {
                 this.proxies.put(proxy.getUri(), proxy);
             }
         }
-        this.loaded = true;
         return this;
     }
 
