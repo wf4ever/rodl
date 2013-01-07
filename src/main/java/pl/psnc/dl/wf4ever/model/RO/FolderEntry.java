@@ -22,6 +22,7 @@ import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
 import com.hp.hpl.jena.rdf.model.RDFNode;
@@ -103,6 +104,17 @@ public class FolderEntry extends Proxy {
         super.save();
         getFolder().getResourceMap().saveProxy(this);
         getFolder().getResourceMap().saveFolderEntryData(this);
+
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            Individual entryInd = model.createIndividual(uri.toString(), RO.FolderEntry);
+            com.hp.hpl.jena.rdf.model.Resource folderInd = model.createResource(getFolder().getUri().toString());
+            //FIXME this is not a correct relation
+            entryInd.addProperty(ORE.isAggregatedBy, folderInd);
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
     }
 
 

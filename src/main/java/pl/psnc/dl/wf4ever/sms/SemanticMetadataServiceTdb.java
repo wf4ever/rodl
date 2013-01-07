@@ -2492,9 +2492,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
      *            entry
      */
     private void deleteFolderEntry(Individual entry) {
-        Individual proxyFor = entry.getPropertyResourceValue(ORE.proxyFor).as(Individual.class);
+        Resource proxyFor = entry.getPropertyResourceValue(ORE.proxyFor);
+        entry.getModel().removeAll(proxyFor, null, null);
+        entry.getModel().removeAll(null, null, proxyFor);
         entry.remove();
-        proxyFor.remove();
         removeNamedGraph(URI.create(entry.getURI()));
     }
 
