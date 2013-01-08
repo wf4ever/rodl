@@ -1,14 +1,17 @@
 package pl.psnc.dl.wf4ever.model.ORE;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 
+import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -29,11 +32,17 @@ import com.hp.hpl.jena.rdf.model.Resource;
  */
 public class AggregatedResource extends Thing {
 
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(AggregatedResource.class);
+
     /** RO it is aggregated in. */
     protected ResearchObject researchObject;
 
     /** Proxy of this resource. */
     protected Proxy proxy;
+
+    /** physical representation metadata. */
+    private ResourceMetadata stats;
 
 
     /**
@@ -119,6 +128,19 @@ public class AggregatedResource extends Thing {
     }
 
 
+    public ResourceMetadata getStats() {
+        if (stats == null) {
+            stats = ROSRService.DL.get().getFileInfo(getResearchObject().getUri(), getPath());
+        }
+        return stats;
+    }
+
+
+    public void setStats(ResourceMetadata stats) {
+        this.stats = stats;
+    }
+
+
     /**
      * Set the aggregating RO.
      * 
@@ -133,6 +155,11 @@ public class AggregatedResource extends Thing {
     }
 
 
+    public String getPath() {
+        return getResearchObject().getUri().relativize(uri).getPath();
+    }
+
+
     /**
      * Check if the resource is internal. Resource is internal only if its content has been deployed under the control
      * of the service. A resource that has "internal" URI but the content has not been uploaded is considered external.
@@ -140,8 +167,8 @@ public class AggregatedResource extends Thing {
      * @return true if the resource content is deployed under the control of the service, false otherwise
      */
     public boolean isInternal() {
-        String filePath = researchObject.getUri().relativize(uri).getPath();
-        return !filePath.isEmpty() && ROSRService.DL.get().fileExists(researchObject.getUri(), filePath);
+        String path = getPath();
+        return !path.isEmpty() && ROSRService.DL.get().fileExists(researchObject.getUri(), path);
     }
 
 
@@ -152,28 +179,50 @@ public class AggregatedResource extends Thing {
      * @throws BadRequestException
      *             if there is no data in storage or the file format is not RDF
      */
-    public void saveAsGraph()
+    public void saveGraph()
             throws BadRequestException {
-        String filePath = researchObject.getUri().relativize(uri).getPath();
-        InputStream data = ROSRService.DL.get().getFileContents(researchObject.getUri(), filePath);
-        if (data == null) {
-            throw new BadRequestException("No data for resource: " + uri);
-        }
-        RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get().getFileInfo(researchObject.getUri(), filePath)
-                .getMimeType());
+        String filePath = getPath();
+        RDFFormat format = RDFFormat.forMIMEType(getStats().getMimeType());
         if (format == null) {
             throw new BadRequestException("Unrecognized RDF format: " + filePath);
         }
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            model.removeAll();
-            model.read(data, uri.resolve(".").toString(), format.getName().toUpperCase());
-            commitTransaction(transactionStarted);
-        } finally {
-            endTransaction(transactionStarted);
+        try (InputStream data = ROSRService.DL.get().getFileContents(researchObject.getUri(), filePath)) {
+            if (data == null) {
+                throw new BadRequestException("No data for resource: " + uri);
+            }
+            boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+            try {
+                model.removeAll();
+                model.read(data, uri.resolve(".").toString(), format.getName().toUpperCase());
+                commitTransaction(transactionStarted);
+            } finally {
+                endTransaction(transactionStarted);
+            }
+        } catch (IOException e) {
+            LOGGER.warn("Could not close stream", e);
         }
         serialize();
         setNamedGraph(true);
     }
 
+
+    public void deleteGraph() {
+        String filePath = getPath();
+        RDFFormat format = RDFFormat.forMIMEType(getStats().getMimeType());
+        try (InputStream data = getGraphAsInputStream(RDFFormat.RDFXML)) {
+            ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, data,
+                format.getDefaultMIMEType());
+        } catch (IOException e) {
+            LOGGER.warn("Could not close stream", e);
+        }
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            model.removeAll();
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+        serialize();
+        setNamedGraph(false);
+    }
 }

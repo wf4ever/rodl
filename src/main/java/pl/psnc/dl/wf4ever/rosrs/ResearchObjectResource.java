@@ -7,7 +7,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -42,21 +41,15 @@ import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
-import pl.psnc.dl.wf4ever.vocabulary.RO;
 
-import com.hp.hpl.jena.ontology.Individual;
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.NodeIterator;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.sun.jersey.api.ConflictException;
 
 /**
@@ -240,17 +233,17 @@ public class ResearchObjectResource {
             }
             String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, resource.getUri().toString(),
                 Constants.ORE_PROXY_FOR_HEADER);
-            InputStream proxyAndResourceDesc = ROSRService.SMS.get().getResource(researchObject, responseSyntax,
-                resource.getProxy().getUri(), resource.getUri());
-            ResponseBuilder builder = Response.created(resource.getProxy().getUri()).entity(proxyAndResourceDesc)
+            InputStream proxyAndResourceDesc = researchObject.getManifest().getGraphAsInputStream(responseSyntax,
+                resource.getProxy(), resource);
+            ResponseBuilder rb = Response.created(resource.getProxy().getUri()).entity(proxyAndResourceDesc)
                     .type(responseSyntax.getDefaultMIMEType()).header(Constants.LINK_HEADER, proxyForHeader);
             if (resource.getStats() != null) {
                 CacheControl cache = new CacheControl();
                 cache.setMustRevalidate(true);
-                builder = builder.cacheControl(cache).tag(resource.getStats().getChecksum())
+                rb = rb.cacheControl(cache).tag(resource.getStats().getChecksum())
                         .lastModified(resource.getStats().getLastModified().toDate());
             }
-            return builder.build();
+            return rb.build();
         }
     }
 
@@ -292,28 +285,10 @@ public class ResearchObjectResource {
             proxyFor = uriInfo.getAbsolutePathBuilder().path(slug).build();
         } else {
             // external resource
-            OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-            model.read(content, researchObject.getUri().toString());
-            ExtendedIterator<Individual> it = model.listIndividuals(ORE.Proxy);
-            if (it.hasNext()) {
-                NodeIterator it2 = it.next().listPropertyValues(ORE.proxyFor);
-                if (it2.hasNext()) {
-                    RDFNode proxyForResource = it2.next();
-                    if (proxyForResource.isURIResource()) {
-                        try {
-                            proxyFor = new URI(proxyForResource.asResource().getURI());
-                        } catch (URISyntaxException e) {
-                            throw new BadRequestException("Wrong target resource URI", e);
-                        }
-                    } else {
-                        throw new BadRequestException("The target is not an URI resource.");
-                    }
-                } else {
-                    //The ore:Proxy does not have a ore:proxyFor property.
-                    proxyFor = uriInfo.getAbsolutePathBuilder().path(UUID.randomUUID().toString()).build();
-                }
-            } else {
-                throw new BadRequestException("The entity body does not define any ore:Proxy.");
+            proxyFor = Proxy.assemble(researchObject, content);
+            if (proxyFor == null) {
+                //The ore:Proxy does not have a ore:proxyFor property.
+                proxyFor = UriBuilder.fromUri(researchObject.getUri()).path(UUID.randomUUID().toString()).build();
             }
         }
         pl.psnc.dl.wf4ever.model.RO.Resource resource = researchObject.aggregate(proxyFor);
@@ -321,7 +296,7 @@ public class ResearchObjectResource {
         RDFFormat syntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
         String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, proxyFor.toString(),
             Constants.ORE_PROXY_FOR_HEADER);
-        InputStream proxyDesc = ROSRService.SMS.get().getResource(researchObject, syntax, resource.getProxy().getUri());
+        InputStream proxyDesc = researchObject.getManifest().getGraphAsInputStream(syntax, resource.getProxy());
         return Response.created(resource.getProxy().getUri()).entity(proxyDesc).type(syntax.getDefaultMIMEType())
                 .header(Constants.LINK_HEADER, proxyForHeader).build();
 
@@ -357,57 +332,11 @@ public class ResearchObjectResource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        URI body;
-        Set<Thing> targets = new HashSet<>();
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        model.read(content, researchObject.getUri().toString());
-        List<Individual> aggregatedAnnotations = model.listIndividuals(RO.AggregatedAnnotation).toList();
-        if (!aggregatedAnnotations.isEmpty()) {
-            Individual aggregatedAnnotation = aggregatedAnnotations.get(0);
-            List<RDFNode> bodyResources = aggregatedAnnotation.listPropertyValues(AO.body).toList();
-            if (!bodyResources.isEmpty()) {
-                RDFNode bodyResource = bodyResources.get(0);
-                if (bodyResource.isURIResource()) {
-                    try {
-                        body = new URI(bodyResource.asResource().getURI());
-                    } catch (URISyntaxException e) {
-                        throw new BadRequestException("Wrong body resource URI", e);
-                    }
-                } else {
-                    throw new BadRequestException("The body is not an URI resource.");
-                }
-            } else {
-                throw new BadRequestException("The ro:AggregatedAnnotation does not have a ao:body property.");
-            }
-            List<RDFNode> targetResources = aggregatedAnnotation.listPropertyValues(AO.annotatesResource).toList();
-            for (RDFNode targetResource : targetResources) {
-                if (targetResource.isURIResource()) {
-                    targets.add(builder.buildThing(URI.create(targetResource.asResource().getURI())));
-                } else {
-                    throw new BadRequestException("The target is not an URI resource.");
-                }
-            }
-        } else {
-            throw new BadRequestException("The entity body does not define any ro:AggregatedAnnotation.");
-        }
-        for (Thing target : targets) {
-            if (!ROSRService.SMS.get().isAggregatedResource(researchObject, target.getUri())
-                    && !target.equals(researchObject.getUri())
-                    && !ROSRService.SMS.get().isProxy(researchObject, target.getUri())) {
-                throw new BadRequestException(String.format(
-                    "The annotation target %s is not RO, aggregated resource nor proxy.", target));
-            }
-        }
-        if (researchObject.getAggregatedResources().containsKey(body)) {
-            ROSRService.convertRoResourceToAnnotationBody(researchObject,
-                researchObject.getAggregatedResources().get(body));
-        }
-
-        Annotation annotation = researchObject.annotate(body, targets);
+        Annotation annotation = researchObject.annotate(content);
         String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBodyUri().toString(),
             AO.body);
         RDFFormat syntax = RDFFormat.forFileName(accept, RDFFormat.RDFXML);
-        InputStream annotationDesc = ROSRService.SMS.get().getResource(researchObject, syntax, annotation.getUri());
+        InputStream annotationDesc = researchObject.getManifest().getGraphAsInputStream(syntax, annotation);
         ResponseBuilder response = Response.created(annotation.getUri()).entity(annotationDesc)
                 .type(syntax.getDefaultMIMEType()).header(Constants.LINK_HEADER, annotationBodyHeader);
         for (Thing target : annotation.getAnnotated()) {

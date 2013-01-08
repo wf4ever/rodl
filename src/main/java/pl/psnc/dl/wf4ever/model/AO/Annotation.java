@@ -1,14 +1,18 @@
 package pl.psnc.dl.wf4ever.model.AO;
 
+import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
@@ -19,7 +23,9 @@ import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 
 /**
@@ -200,8 +206,71 @@ public class Annotation extends AggregatedResource {
     }
 
 
+    public static Annotation create(Builder builder, ResearchObject researchObject, URI uri, InputStream content)
+            throws BadRequestException {
+        Annotation annotation = assemble(builder, researchObject, uri, content);
+        annotation.setProxy(Proxy.create(builder, researchObject, annotation));
+        annotation.save();
+        return annotation;
+    }
+
+
     public void save() {
         super.save();
         researchObject.getManifest().saveAnnotationData(this);
     }
+
+
+    public static Annotation assemble(Builder builder, ResearchObject researchObject, URI uri, InputStream content)
+            throws BadRequestException {
+        URI bodyUri;
+        Set<Thing> targets = new HashSet<>();
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+        model.read(content, researchObject.getUri().toString());
+        List<Individual> aggregatedAnnotations = model.listIndividuals(RO.AggregatedAnnotation).toList();
+        if (!aggregatedAnnotations.isEmpty()) {
+            Individual aggregatedAnnotation = aggregatedAnnotations.get(0);
+            List<RDFNode> bodyResources = aggregatedAnnotation.listPropertyValues(AO.body).toList();
+            if (!bodyResources.isEmpty()) {
+                RDFNode bodyResource = bodyResources.get(0);
+                if (bodyResource.isURIResource()) {
+                    try {
+                        bodyUri = new URI(bodyResource.asResource().getURI());
+                    } catch (URISyntaxException e) {
+                        throw new BadRequestException("Wrong body resource URI", e);
+                    }
+                } else {
+                    throw new BadRequestException("The body is not an URI resource.");
+                }
+            } else {
+                throw new BadRequestException("The ro:AggregatedAnnotation does not have a ao:body property.");
+            }
+            List<RDFNode> targetResources = aggregatedAnnotation.listPropertyValues(AO.annotatesResource).toList();
+            for (RDFNode targetResource : targetResources) {
+                if (targetResource.isURIResource()) {
+                    URI targetUri = URI.create(targetResource.asResource().getURI());
+                    Thing target;
+                    if (researchObject.getResources().containsKey(targetUri)) {
+                        target = researchObject.getResources().get(targetUri);
+                    } else if (researchObject.getProxies().containsKey(targetUri)) {
+                        target = researchObject.getProxies().get(targetUri);
+                    } else if (researchObject.getUri().equals(targetUri)) {
+                        target = researchObject;
+                    } else {
+                        throw new BadRequestException(String.format(
+                            "The annotation target %s is not RO, aggregated resource nor proxy.", targetUri));
+                    }
+                    targets.add(target);
+                } else {
+                    throw new BadRequestException("The target is not an URI resource.");
+                }
+            }
+        } else {
+            throw new BadRequestException("The entity body does not define any ro:AggregatedAnnotation.");
+        }
+
+        Annotation annotation = builder.buildAnnotation(researchObject, uri, bodyUri, targets);
+        return annotation;
+    }
+
 }

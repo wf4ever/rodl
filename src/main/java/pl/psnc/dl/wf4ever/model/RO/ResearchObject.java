@@ -304,20 +304,48 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     public Annotation annotate(URI body, Set<Thing> targets, String annotationId)
             throws BadRequestException {
-        if (annotationId == null) {
-            annotationId = UUID.randomUUID().toString();
-        }
-        URI annotationUri = uri.resolve(".ro/annotations/" + annotationId);
+        URI annotationUri = getAnnotationUri(annotationId);
         Annotation annotation = Annotation.create(builder, this, annotationUri, body, targets);
-        annotation.setProxy(Proxy.create(builder, this, annotation));
+        return postAnnotate(annotation);
+    }
+
+
+    /**
+     * Add and aggregate a new annotation to the research object.
+     * 
+     * @param data
+     *            annotation description
+     * @return new annotation
+     * @throws BadRequestException
+     *             if there is no data in storage or the file format is not RDF
+     */
+    public Annotation annotate(InputStream data)
+            throws BadRequestException {
+        URI annotationUri = getAnnotationUri(null);
+        Annotation annotation = Annotation.create(builder, this, annotationUri, data);
+        return postAnnotate(annotation);
+    }
+
+
+    /**
+     * Make all changes necessary after creating the annotation.
+     * 
+     * @param annotation
+     *            new annotation
+     * @return the annotation
+     * @throws BadRequestException
+     *             if there is no data in storage or the file format is not RDF
+     */
+    private Annotation postAnnotate(Annotation annotation)
+            throws BadRequestException {
         //change the body 
         AggregatedResource resource = getAggregatedResources().get(annotation.getBodyUri());
         if (resource != null && resource.isInternal()) {
             if (resource instanceof Resource && !(resource instanceof Folder)) {
-                getManifest().removeRoResourceClass((Resource) resource);
+                //FIXME the resource is still of class Resource, not AggregatedResource
                 getResources().remove(resource.getUri());
             }
-            resource.saveAsGraph();
+            resource.saveGraph();
             updateIndexAttributes();
         }
         getManifest().serialize();
@@ -327,6 +355,15 @@ public class ResearchObject extends Thing implements Aggregation {
         }
         this.getAggregatedResources().put(annotation.getUri(), annotation);
         return annotation;
+    }
+
+
+    private URI getAnnotationUri(String annotationId) {
+        if (annotationId == null) {
+            annotationId = UUID.randomUUID().toString();
+        }
+        URI annotationUri = uri.resolve(".ro/annotations/" + annotationId);
+        return annotationUri;
     }
 
 

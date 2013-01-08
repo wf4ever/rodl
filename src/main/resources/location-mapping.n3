@@ -8,6 +8,7 @@
    [ lm:name "http://www.openarchives.org/ore/terms/" ; lm:altName "file:vocabularies/terms.rdf" ] ,
    [ lm:name "http://purl.org/NET/dc_owl2dl/terms_od" ; lm:altName "file:vocabularies/dcterms_od.owl" ] ,
    [ lm:name "http://purl.org/ao/" ; lm:altName "file:vocabularies/annotation-core.owl" ] ,
+   [ lm:name "http://purl.org/ao/core/" ; lm:altName "file:vocabularies/annotation-core.owl" ] ,
    [ lm:name "http://purl.org/NET/dc_owl2dl/dcam" ; lm:altName "file:vocabularies/dcam.ttl" ] ,
    [ lm:name "http://www.w3.org/TR/skos-reference/skos-owl1-dl.rdf" ; lm:altName "file:vocabularies/skos-owl1-dl.rdf" ] ,
    [ lm:name "http://purl.org/pav/2.0/" ; lm:altName "file:vocabularies/pav.owl" ] ,

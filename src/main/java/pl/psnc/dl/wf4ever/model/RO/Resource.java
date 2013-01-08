@@ -7,7 +7,6 @@ import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.common.Builder;
-import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
@@ -22,10 +21,6 @@ import com.hp.hpl.jena.query.Dataset;
  * @author pejot
  */
 public class Resource extends AggregatedResource {
-
-    /** physical representation metadata. */
-    private ResourceMetadata stats;
-
 
     /**
      * Constructor.
@@ -95,16 +90,6 @@ public class Resource extends AggregatedResource {
         super.save();
         researchObject.getManifest().saveRoResourceClass(this);
         researchObject.getManifest().saveRoStats(this);
-    }
-
-
-    public ResourceMetadata getStats() {
-        return stats;
-    }
-
-
-    public void setStats(ResourceMetadata stats) {
-        this.stats = stats;
     }
 
 }
