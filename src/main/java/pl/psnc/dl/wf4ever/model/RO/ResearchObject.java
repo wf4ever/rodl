@@ -272,7 +272,19 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
-    public Annotation annotate(Thing body, Set<Thing> targets) {
+    /**
+     * Add and aggregate a new annotation to the research object.
+     * 
+     * @param body
+     *            annotation body URI
+     * @param targets
+     *            list of annotated resources URIs
+     * @return new annotation
+     * @throws BadRequestException
+     *             if there is no data in storage or the file format is not RDF
+     */
+    public Annotation annotate(URI body, Set<Thing> targets)
+            throws BadRequestException {
         return annotate(body, targets, null);
     }
 
@@ -287,10 +299,27 @@ public class ResearchObject extends Thing implements Aggregation {
      * @param annotationId
      *            the id of the annotation, may be null
      * @return new annotation
+     * @throws BadRequestException
+     *             if there is no data in storage or the file format is not RDF
      */
-    public Annotation annotate(Thing body, Set<Thing> targets, String annotationId) {
-        Annotation annotation = ROSRService.SMS.get().addAnnotation(this, targets, body, annotationId);
-        annotation.setProxy(ROSRService.SMS.get().addProxy(this, annotation));
+    public Annotation annotate(URI body, Set<Thing> targets, String annotationId)
+            throws BadRequestException {
+        if (annotationId == null) {
+            annotationId = UUID.randomUUID().toString();
+        }
+        URI annotationUri = uri.resolve(".ro/annotations/" + annotationId);
+        Annotation annotation = Annotation.create(builder, this, annotationUri, body, targets);
+        annotation.setProxy(Proxy.create(builder, this, annotation));
+        //change the body 
+        AggregatedResource resource = getAggregatedResources().get(annotation.getBodyUri());
+        if (resource != null && resource.isInternal()) {
+            if (resource instanceof Resource && !(resource instanceof Folder)) {
+                getManifest().removeRoResourceClass((Resource) resource);
+                getResources().remove(resource.getUri());
+            }
+            resource.saveAsGraph();
+            updateIndexAttributes();
+        }
         getManifest().serialize();
         this.getAnnotations().put(annotation.getUri(), annotation);
         for (Thing target : annotation.getAnnotated()) {
@@ -298,6 +327,18 @@ public class ResearchObject extends Thing implements Aggregation {
         }
         this.getAggregatedResources().put(annotation.getUri(), annotation);
         return annotation;
+    }
+
+
+    private void updateIndexAttributes() {
+        //FIXME this makes no sense without dLibra
+        Multimap<URI, Object> roAttributes = ROSRService.SMS.get().getAllAttributes(uri);
+        roAttributes.put(URI.create("Identifier"), this);
+        try {
+            ROSRService.DL.get().storeAttributes(uri, roAttributes);
+        } catch (Exception e) {
+            LOGGER.error("Caught an exception when updating RO attributes, will continue", e);
+        }
     }
 
 
@@ -358,11 +399,11 @@ public class ResearchObject extends Thing implements Aggregation {
         }
         for (Annotation annotation : annotationsList) {
             try {
-                if (researchObject.getAggregatedResources().containsKey(annotation.getBody())) {
+                if (researchObject.getAggregatedResources().containsKey(annotation.getBodyUri())) {
                     ROSRService.convertRoResourceToAnnotationBody(researchObject, researchObject
-                            .getAggregatedResources().get(annotation.getBody()));
+                            .getAggregatedResources().get(annotation.getBodyUri()));
                 }
-                researchObject.annotate(annotation.getBody(), annotation.getAnnotated());
+                researchObject.annotate(annotation.getBodyUri(), annotation.getAnnotated());
             } catch (DigitalLibraryException | NotFoundException e) {
                 LOGGER.error("Error when adding annotations", e);
             }

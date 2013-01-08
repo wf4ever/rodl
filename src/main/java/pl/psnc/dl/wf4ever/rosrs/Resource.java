@@ -217,7 +217,7 @@ public class Resource {
             throw new ForbiddenException("You cannot create a new annotation using PUT, use POST instead.");
         }
         return ROSRService.updateAnnotation(researchObject,
-            builder.buildAnnotation(researchObject, resource, builder.buildThing(body), targets));
+            builder.buildAnnotation(researchObject, resource, body, targets));
     }
 
 
@@ -344,7 +344,7 @@ public class Resource {
         }
         Annotation annotation = researchObject.getAnnotations().get(resourceUri);
         if (annotation != null) {
-            if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(annotation.getBody().getUri())) {
+            if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(annotation.getBodyUri())) {
                 throw new ForbiddenException("Can't delete the evo annotation");
             }
             return ROSRService.deleteAnnotation(researchObject, resourceUri);

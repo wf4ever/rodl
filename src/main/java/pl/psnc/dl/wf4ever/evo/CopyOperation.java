@@ -16,6 +16,7 @@ import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -131,9 +132,8 @@ public class CopyOperation implements Operation {
                     try {
                         //FIXME use a dedicated class for an Annotation
                         String[] segments = resource.getURI().split("/");
-                        targetRO.annotate(new Thing(user, URI.create(annBody.getURI())), targets,
-                            segments[segments.length - 1]);
-                    } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e1) {
+                        targetRO.annotate(URI.create(annBody.getURI()), targets, segments[segments.length - 1]);
+                    } catch (AccessDeniedException | DigitalLibraryException | NotFoundException | BadRequestException e1) {
                         LOGGER.error("Could not add the annotation", e1);
                     }
                 } else {

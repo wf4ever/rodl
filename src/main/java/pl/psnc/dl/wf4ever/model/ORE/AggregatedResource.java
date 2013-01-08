@@ -1,12 +1,16 @@
 package pl.psnc.dl.wf4ever.model.ORE;
 
+import java.io.InputStream;
 import java.net.URI;
+
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
@@ -138,6 +142,38 @@ public class AggregatedResource extends Thing {
     public boolean isInternal() {
         String filePath = researchObject.getUri().relativize(uri).getPath();
         return !filePath.isEmpty() && ROSRService.DL.get().fileExists(researchObject.getUri(), filePath);
+    }
+
+
+    /**
+     * An existing aggregated resource is being used as an annotation body now. Add it to the triplestore. If the
+     * aggregated resource is external, do nothing.
+     * 
+     * @throws BadRequestException
+     *             if there is no data in storage or the file format is not RDF
+     */
+    public void saveAsGraph()
+            throws BadRequestException {
+        String filePath = researchObject.getUri().relativize(uri).getPath();
+        InputStream data = ROSRService.DL.get().getFileContents(researchObject.getUri(), filePath);
+        if (data == null) {
+            throw new BadRequestException("No data for resource: " + uri);
+        }
+        RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get().getFileInfo(researchObject.getUri(), filePath)
+                .getMimeType());
+        if (format == null) {
+            throw new BadRequestException("Unrecognized RDF format: " + filePath);
+        }
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            model.removeAll();
+            model.read(data, uri.resolve(".").toString(), format.getName().toUpperCase());
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+        serialize();
+        setNamedGraph(true);
     }
 
 }

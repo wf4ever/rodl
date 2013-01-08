@@ -449,15 +449,15 @@ public final class ROSRService {
         URI oldAnnotationBody = ROSRService.getAnnotationBody(researchObject, annotation.getUri(), null);
         ROSRService.SMS.get().updateAnnotation(researchObject, annotation);
 
-        if (oldAnnotationBody == null || !oldAnnotationBody.equals(annotation.getBody())) {
+        if (oldAnnotationBody == null || !oldAnnotationBody.equals(annotation.getBodyUri())) {
             ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, oldAnnotationBody);
-            if (researchObject.getAggregatedResources().containsKey(annotation.getBody())) {
+            if (researchObject.getAggregatedResources().containsKey(annotation.getBodyUri())) {
                 ROSRService.convertRoResourceToAnnotationBody(researchObject, researchObject.getAggregatedResources()
-                        .get(annotation.getBody()));
+                        .get(annotation.getBodyUri()));
             }
         }
 
-        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBody().toString(),
+        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBodyUri().toString(),
             AO.annotatesResource);
         ResponseBuilder response = Response.ok().header(Constants.LINK_HEADER, annotationBodyHeader);
         for (Thing target : annotation.getAnnotated()) {
@@ -488,11 +488,11 @@ public final class ROSRService {
             throws NotFoundException, DigitalLibraryException {
         Annotation annotation = ROSRService.SMS.get().getAnnotation(researchObject, annotationUri);
         RDFFormat acceptFormat = RDFFormat.forMIMEType(acceptHeader);
-        if (acceptFormat != null && isInternalResource(researchObject, annotation.getBody().getUri())) {
+        if (acceptFormat != null && isInternalResource(researchObject, annotation.getBodyUri())) {
             RDFFormat extensionFormat = RDFFormat.forFileName(annotation.getUri().getPath());
-            return createFormatSpecificURI(annotation.getBody().getUri(), extensionFormat, acceptFormat);
+            return createFormatSpecificURI(annotation.getBodyUri(), extensionFormat, acceptFormat);
         } else {
-            return annotation.getBody().getUri();
+            return annotation.getBodyUri();
         }
     }
 
@@ -516,7 +516,7 @@ public final class ROSRService {
             throws NotFoundException, DigitalLibraryException, AccessDeniedException {
         Annotation annotation = ROSRService.SMS.get().getAnnotation(researchObject, annotationUri);
         ROSRService.SMS.get().deleteAnnotation(researchObject, annotation);
-        ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotation.getBody().getUri());
+        ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotation.getBodyUri());
         return Response.noContent().build();
     }
 

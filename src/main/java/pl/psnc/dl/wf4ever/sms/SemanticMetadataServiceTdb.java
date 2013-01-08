@@ -1099,7 +1099,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public Annotation addAnnotation(ResearchObject researchObject, Set<Thing> annotationTargets, Thing annotationBody,
+    public Annotation addAnnotation(ResearchObject researchObject, Set<Thing> annotationTargets, URI annotationBodyUri,
             String annotationId) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
@@ -1108,7 +1108,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
             }
             Resource researchObjectR = manifestModel.createResource(researchObject.getUri().toString());
-            Resource bodyR = manifestModel.createResource(annotationBody.getUri().normalize().toString());
+            Resource bodyR = manifestModel.createResource(annotationBodyUri.normalize().toString());
             URI annotationURI = generateAnnotationURI(researchObject, annotationId);
             Individual annotation = manifestModel.createIndividual(annotationURI.toString(), RO.AggregatedAnnotation);
             annotation.addRDFType(ORE.AggregatedResource);
@@ -1122,7 +1122,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             Resource agent = manifestModel.createResource(user.getUri().toString());
             manifestModel.add(annotation, DCTerms.creator, agent);
             commitTransaction(transactionStarted);
-            return new Annotation(user, researchObject, annotationURI, annotationBody, annotationTargets);
+            return new Annotation(user, researchObject, annotationURI, annotationBodyUri, annotationTargets);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -1154,7 +1154,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             if (manifestModel == null) {
                 throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
             }
-            Resource body = manifestModel.createResource(annotation.getBody().getUri().normalize().toString());
+            Resource body = manifestModel.createResource(annotation.getBodyUri().normalize().toString());
             Individual annotationI = manifestModel.getIndividual(annotation.getUri().toString());
             manifestModel.removeAll(annotationI, AO.body, null);
             manifestModel.removeAll(annotationI, RO.annotatesAggregatedResource, null);
@@ -1187,7 +1187,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     targets.add(new Thing(user, URI.create(node.asResource().getURI())));
                 }
             }
-            return new Annotation(user, researchObject, annotationUri, new Thing(user, body), targets);
+            return new Annotation(user, researchObject, annotationUri, body, targets);
 
         } finally {
             endTransaction(transactionStarted);
@@ -2145,8 +2145,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         evoModel.createIndividual(ro.getURI(), ROEVO.LiveRO);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
 
-        Annotation ann = addAnnotation(researchObject, new HashSet<Thing>(Arrays.asList(researchObject)), new Thing(
-                user, researchObject.getFixedEvolutionAnnotationBodyUri()), null);
+        Annotation ann = addAnnotation(researchObject, new HashSet<Thing>(Arrays.asList(researchObject)),
+            researchObject.getFixedEvolutionAnnotationBodyUri(), null);
         ro.addProperty(ORE.aggregates,
             manifestModel.getResource(researchObject.getFixedEvolutionAnnotationBodyUri().toString()));
         return ann;
@@ -2185,7 +2185,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
         Annotation ann = addAnnotation(researchObject,
             new HashSet<>(Arrays.asList(new Thing(user, researchObject.getUri()))),
-            new Thing(user, researchObject.getFixedEvolutionAnnotationBodyUri()), null);
+            researchObject.getFixedEvolutionAnnotationBodyUri(), null);
         ro.addProperty(ORE.aggregates,
             manifestModel.createResource(researchObject.getFixedEvolutionAnnotationBodyUri().toString()));
         OntModel liveEvoModel = createOntModelForNamedGraph(liveRO.getFixedEvolutionAnnotationBodyUri());
@@ -2236,7 +2236,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
         Annotation ann = addAnnotation(researchObject,
             new HashSet<>(Arrays.asList(new Thing(user, researchObject.getUri()))),
-            new Thing(user, researchObject.getFixedEvolutionAnnotationBodyUri()), null);
+            researchObject.getFixedEvolutionAnnotationBodyUri(), null);
         ro.addProperty(ORE.aggregates,
             manifestModel.createResource(researchObject.getFixedEvolutionAnnotationBodyUri().toString()));
         OntModel liveEvoModel = createOntModelForNamedGraph(liveRO.getFixedEvolutionAnnotationBodyUri());
@@ -2576,9 +2576,9 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public List<Annotation> removeSpecialFilesFromAnnotatios(List<Annotation> annotations) {
         List<Annotation> toRemoved = new ArrayList<Annotation>();
         for (Annotation a : annotations) {
-            if (a.getBody().toString().contains("evo_info.ttl")) {
+            if (a.getBodyUri().toString().contains("evo_info.ttl")) {
                 toRemoved.add(a);
-            } else if (a.getBody().toString().contains("manifest.rdf")) {
+            } else if (a.getBodyUri().toString().contains("manifest.rdf")) {
                 toRemoved.add(a);
             }
         }

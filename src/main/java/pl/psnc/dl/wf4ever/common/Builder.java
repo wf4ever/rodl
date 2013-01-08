@@ -146,29 +146,30 @@ public class Builder {
     }
 
 
-    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, Thing body, Set<Thing> targets) {
+    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Set<Thing> targets) {
         Annotation annotation = new Annotation(user, dataset, useTransactions, researchObject, uri);
-        annotation.setBody(body);
+        annotation.setBodyUri(bodyUri);
         annotation.setAnnotated(targets);
         annotation.setBuilder(this);
         return annotation;
     }
 
 
-    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, Thing body, Set<Thing> targets,
+    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Set<Thing> targets,
             URI creator, DateTime created) {
-        Annotation annotation = buildAnnotation(researchObject, uri, body, targets);
+        Annotation annotation = buildAnnotation(researchObject, uri, bodyUri, targets);
         annotation.setCreator(creator);
         annotation.setCreated(created);
+        annotation.setBuilder(this);
         return annotation;
     }
 
 
-    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, Thing body, Thing target, URI creator,
+    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Thing target, URI creator,
             DateTime created) {
         Set<Thing> targets = new HashSet<>();
         targets.add(target);
-        return buildAnnotation(researchObject, uri, body, targets, creator, created);
+        return buildAnnotation(researchObject, uri, bodyUri, targets, creator, created);
     }
 
 

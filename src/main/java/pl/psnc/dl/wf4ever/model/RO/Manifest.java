@@ -115,6 +115,18 @@ public class Manifest extends ResourceMap {
     }
 
 
+    public void removeRoResourceClass(Resource resource) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            Individual resourceR = model.getIndividual(resource.getUri().toString());
+            resourceR.removeRDFType(RO.Resource);
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
     public void saveFolderClass(Folder folder) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
@@ -352,8 +364,8 @@ public class Manifest extends ResourceMap {
                         RDFNode createdNode = solution.get("created");
                         DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime
                                 .parse(createdNode.asLiteral().getString()) : null;
-                        annotation = builder.buildAnnotation(getResearchObject(), aURI, builder.buildThing(bUri),
-                            builder.buildThing(tUri), resCreator, resCreated);
+                        annotation = builder.buildAnnotation(getResearchObject(), aURI, bUri, builder.buildThing(tUri),
+                            resCreator, resCreated);
                         if (pUri != null) {
                             annotation.setProxy(builder.buildProxy(pUri, annotation, getResearchObject()));
                         }
@@ -373,4 +385,24 @@ public class Manifest extends ResourceMap {
     public ResearchObject getResearchObject() {
         return (ResearchObject) aggregation;
     }
+
+
+    public void saveAnnotationData(Annotation annotation) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            com.hp.hpl.jena.rdf.model.Resource bodyR = model.createResource(annotation.getBodyUri().toString());
+            Individual annotationInd = model.createIndividual(annotation.getUri().toString(), RO.AggregatedAnnotation);
+            annotationInd.addRDFType(AO.Annotation);
+            model.add(annotationInd, AO.body, bodyR);
+            for (Thing targetThing : annotation.getAnnotated()) {
+                com.hp.hpl.jena.rdf.model.Resource target = model.createResource(targetThing.getUri().normalize()
+                        .toString());
+                model.add(annotationInd, RO.annotatesAggregatedResource, target);
+            }
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
 }

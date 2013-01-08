@@ -5,9 +5,13 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.joda.time.DateTime;
+
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
@@ -28,11 +32,8 @@ public class Annotation extends AggregatedResource {
     /** Set of annotated objects. */
     private Set<Thing> annotated;
 
-    /** The annotation body. */
-    private Thing body;
-
-    /** has the annotation body been loaded. */
-    private boolean loaded;
+    /** The annotation body URI. The body may or may not be aggregated. */
+    private URI bodyUri;
 
 
     /**
@@ -69,10 +70,10 @@ public class Annotation extends AggregatedResource {
      * @param body
      *            Annotation body
      */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Thing body, Set<Thing> annotated) {
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI body, Set<Thing> annotated) {
         super(user, researchObject, uri);
         this.annotated = annotated;
-        this.body = body;
+        this.bodyUri = body;
     }
 
 
@@ -85,7 +86,7 @@ public class Annotation extends AggregatedResource {
      *            RO aggregating the annotation
      * @param uri
      *            annotation URI
-     * @param body
+     * @param bodyUri
      *            annotation body, may be aggregated or not, may be a ro:Resource (rarely) or not
      * @param target
      *            annotated resource, must be the RO/aggregated resource/proxy
@@ -94,8 +95,8 @@ public class Annotation extends AggregatedResource {
      * @param created
      *            annotation creation time
      */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Thing body, Thing target) {
-        this(user, researchObject, uri, body, new HashSet<Thing>(Arrays.asList(new Thing[] { target })));
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI bodyUri, Thing target) {
+        this(user, researchObject, uri, bodyUri, new HashSet<Thing>(Arrays.asList(new Thing[] { target })));
     }
 
 
@@ -149,7 +150,7 @@ public class Annotation extends AggregatedResource {
             throw new IncorrectModelException(String.format("Annotation %s uses a blank node %s as body",
                 uri.toString(), bodyNode.toString()));
         }
-        body = new Thing(user, URI.create(bodyNode.asResource().getURI()));
+        bodyUri = URI.create(bodyNode.asResource().getURI());
     }
 
 
@@ -158,8 +159,8 @@ public class Annotation extends AggregatedResource {
     }
 
 
-    public Thing getBody() {
-        return body;
+    public URI getBodyUri() {
+        return bodyUri;
     }
 
 
@@ -168,8 +169,39 @@ public class Annotation extends AggregatedResource {
     }
 
 
-    public void setBody(Thing body) {
-        this.body = body;
+    public void setBodyUri(URI bodyUri) {
+        this.bodyUri = bodyUri;
     }
 
+
+    /**
+     * Create a new annotation. If the body has already been aggregated, put it to the triple store and make sure it is
+     * not an ro:Resource.
+     * 
+     * @param builder
+     *            builder for creating new instances
+     * @param researchObject
+     *            RO aggregating the annotation
+     * @param uri
+     *            annotation URI
+     * @param body2
+     *            annotation body, can be external or not yet aggregated
+     * @param targets
+     *            annotated resources (RO, ro:Resources or proxies)
+     * @return the annotation
+     */
+    public static Annotation create(Builder builder, ResearchObject researchObject, URI uri, URI bodyUri,
+            Set<Thing> targets) {
+        Annotation annotation = builder.buildAnnotation(researchObject, uri, bodyUri, targets, builder.getUser()
+                .getUri(), DateTime.now());
+        annotation.setProxy(Proxy.create(builder, researchObject, annotation));
+        annotation.save();
+        return annotation;
+    }
+
+
+    public void save() {
+        super.save();
+        researchObject.getManifest().saveAnnotationData(this);
+    }
 }

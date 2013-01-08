@@ -468,7 +468,7 @@ public interface SemanticMetadataService {
      *            annotation prefix
      * @return URI of the annotation
      */
-    Annotation addAnnotation(ResearchObject researchObject, Set<Thing> annotationTargets, Thing annotationBody,
+    Annotation addAnnotation(ResearchObject researchObject, Set<Thing> annotationTargets, URI annotationBody,
             String annotationUUID);
 
 

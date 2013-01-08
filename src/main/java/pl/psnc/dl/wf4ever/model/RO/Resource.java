@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.model.RO;
 import java.io.InputStream;
 import java.net.URI;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.common.Builder;
@@ -77,8 +78,7 @@ public class Resource extends AggregatedResource {
 
 
     public static Resource get(Builder builder, ResearchObject researchObject, URI uri, URI creator, DateTime created) {
-        Resource resource = builder.buildResource(researchObject, uri, creator, created);
-        return resource;
+        throw new NotImplementedException();
     }
 
 
