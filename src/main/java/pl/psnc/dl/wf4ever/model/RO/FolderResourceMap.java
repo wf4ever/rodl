@@ -179,4 +179,10 @@ public class FolderResourceMap extends ResourceMap {
             endTransaction(transactionStarted);
         }
     }
+
+
+    @Override
+    public ResearchObject getResearchObject() {
+        return getFolder().getResearchObject();
+    }
 }

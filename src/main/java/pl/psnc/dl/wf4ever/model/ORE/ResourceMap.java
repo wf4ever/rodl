@@ -1,13 +1,17 @@
 package pl.psnc.dl.wf4ever.model.ORE;
 
+import java.io.InputStream;
 import java.net.URI;
 
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObjectComponent;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.hp.hpl.jena.ontology.Individual;
@@ -20,9 +24,13 @@ import com.hp.hpl.jena.query.ReadWrite;
  * @author piotrekhol
  * 
  */
-public class ResourceMap extends Thing {
+public abstract class ResourceMap extends Thing implements ResearchObjectComponent {
 
+    /** ore:Aggregation described by this resource map. */
     protected Aggregation aggregation;
+
+    /** physical representation metadata. */
+    private ResourceMetadata stats;
 
 
     public ResourceMap(UserMetadata user, URI uri) {
@@ -89,7 +97,38 @@ public class ResourceMap extends Thing {
      */
     public void serialize()
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        serialize(aggregation.getUri());
+        serialize(getResearchObject().getUri());
+    }
+
+
+    public String getPath() {
+        return getResearchObject().getUri().relativize(uri).getPath();
+    }
+
+
+    @Override
+    public ResourceMetadata getStats() {
+        if (stats == null) {
+            stats = ROSRService.DL.get().getFileInfo(getResearchObject().getUri(), getPath());
+        }
+        return stats;
+    }
+
+
+    public void setStats(ResourceMetadata stats) {
+        this.stats = stats;
+    }
+
+
+    @Override
+    public InputStream getSerialization() {
+        return ROSRService.DL.get().getFileContents(getResearchObject().getUri(), getPath());
+    }
+
+
+    @Override
+    public boolean isInternal() {
+        return true;
     }
 
 }

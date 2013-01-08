@@ -16,6 +16,7 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObjectComponent;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
@@ -30,7 +31,7 @@ import com.hp.hpl.jena.rdf.model.Resource;
  * @author pejot
  * 
  */
-public class AggregatedResource extends Thing {
+public class AggregatedResource extends Thing implements ResearchObjectComponent {
 
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(AggregatedResource.class);
@@ -128,6 +129,7 @@ public class AggregatedResource extends Thing {
     }
 
 
+    @Override
     public ResourceMetadata getStats() {
         if (stats == null) {
             stats = ROSRService.DL.get().getFileInfo(getResearchObject().getUri(), getPath());
@@ -166,15 +168,15 @@ public class AggregatedResource extends Thing {
      * 
      * @return true if the resource content is deployed under the control of the service, false otherwise
      */
+    @Override
     public boolean isInternal() {
         String path = getPath();
-        return !path.isEmpty() && ROSRService.DL.get().fileExists(researchObject.getUri(), path);
+        return !path.isEmpty() && ROSRService.DL.get().fileExists(getResearchObject().getUri(), path);
     }
 
 
     /**
-     * An existing aggregated resource is being used as an annotation body now. Add it to the triplestore. If the
-     * aggregated resource is external, do nothing.
+     * An existing aggregated resource is being used as an annotation body now.
      * 
      * @throws BadRequestException
      *             if there is no data in storage or the file format is not RDF
@@ -203,6 +205,8 @@ public class AggregatedResource extends Thing {
         }
         serialize();
         setNamedGraph(true);
+        researchObject.updateIndexAttributes();
+
     }
 
 
@@ -225,4 +229,11 @@ public class AggregatedResource extends Thing {
         serialize();
         setNamedGraph(false);
     }
+
+
+    @Override
+    public InputStream getSerialization() {
+        return ROSRService.DL.get().getFileContents(researchObject.getUri(), getPath());
+    }
+
 }

@@ -8,6 +8,7 @@ import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
@@ -90,6 +91,16 @@ public class Resource extends AggregatedResource {
         super.save();
         researchObject.getManifest().saveRoResourceClass(this);
         researchObject.getManifest().saveRoStats(this);
+    }
+
+
+    @Override
+    public void saveGraph()
+            throws BadRequestException {
+        super.saveGraph();
+        //FIXME the resource is still of class Resource, not AggregatedResource
+        getResearchObject().getManifest().removeRoResourceClass(this);
+        getResearchObject().getResources().remove(uri);
     }
 
 }

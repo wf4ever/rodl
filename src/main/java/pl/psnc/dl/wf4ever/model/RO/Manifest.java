@@ -382,6 +382,7 @@ public class Manifest extends ResourceMap {
     }
 
 
+    @Override
     public ResearchObject getResearchObject() {
         return (ResearchObject) aggregation;
     }

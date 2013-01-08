@@ -7,7 +7,6 @@ import java.net.URISyntaxException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
@@ -28,7 +27,6 @@ import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 
 import com.google.common.collect.Multimap;
-import com.sun.jersey.core.header.ContentDisposition;
 
 /**
  * Utility class for distributing the RO tasks to dLibra and SMS.
@@ -232,82 +230,6 @@ public final class ROSRService {
         String filePath = researchObject.getUri().relativize(original != null ? resource.resolve(original) : resource)
                 .getPath();
         return ROSRService.DL.get().getFileInfo(researchObject.getUri(), filePath);
-    }
-
-
-    /**
-     * Return the content of an internal resource.
-     * 
-     * @param researchObject
-     *            research object aggregating the resource
-     * @param resource
-     *            resource URI
-     * @param accept
-     *            requested MIME type
-     * @param original
-     *            original file name in case of annotation bodies
-     * @param resInfo
-     *            resource info, if already known, or null
-     * @return 200 OK with resource content
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     */
-    public static ResponseBuilder getInternalResource(ResearchObject researchObject, Thing resource, String accept,
-            String specific, ResourceMetadata resInfo)
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        String filePath = researchObject.getUri().relativize(resource.getUri()).getPath();
-
-        // check if request is for a specific format
-        if (specific != null) {
-            URI specificResourceUri = resource.getUri().resolve(specific);
-            filePath = researchObject.getUri().relativize(resource.getUri()).getPath();
-            if (ROSRService.SMS.get().containsNamedGraph(resource.getUri())) {
-                RDFFormat format = RDFFormat.forMIMEType(accept);
-                if (format == null) {
-                    format = RDFFormat.forFileName(specificResourceUri.getPath(), RDFFormat.RDFXML);
-                }
-                InputStream graph = ROSRService.SMS.get().getNamedGraph(resource.getUri(), format);
-                ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType())
-                        .fileName(getFilename(specificResourceUri)).build();
-                return Response.ok(graph).type(format.getDefaultMIMEType()).header("Content-disposition", cd);
-            } else {
-                return Response.status(Status.NOT_FOUND).type("text/plain").entity("Original resource not found");
-            }
-        }
-
-        if (resource.isNamedGraph()) {
-            RDFFormat acceptFormat = RDFFormat.forMIMEType(accept);
-            RDFFormat extensionFormat = RDFFormat.forFileName(resource.getUri().getPath());
-            if (extensionFormat != null && (acceptFormat == null || extensionFormat == acceptFormat)) {
-                // 1. GET manifest.rdf Accept: application/rdf+xml
-                // 2. GET manifest.rdf
-                InputStream graph = ROSRService.SMS.get().getNamedGraph(resource.getUri(), extensionFormat);
-                ContentDisposition cd = ContentDisposition.type(extensionFormat.getDefaultMIMEType())
-                        .fileName(getFilename(resource.getUri())).build();
-                return Response.ok(graph).type(extensionFormat.getDefaultMIMEType()).header("Content-disposition", cd);
-            }
-            // 3. GET manifest.rdf Accept: text/turtle
-            // 4. GET manifest Accept: application/rdf+xml
-            // 5. GET manifest
-            URI formatSpecificURI = createFormatSpecificURI(resource.getUri(), extensionFormat,
-                (acceptFormat != null ? acceptFormat : RDFFormat.RDFXML));
-            return Response.temporaryRedirect(formatSpecificURI);
-        }
-
-        if (resInfo == null) {
-            resInfo = getResourceInfo(researchObject, resource.getUri(), null);
-        }
-        if (resInfo == null) {
-            throw new NotFoundException("Resource not found: " + resource);
-        }
-        InputStream body = ROSRService.DL.get().getFileContents(researchObject.getUri(), filePath);
-        ContentDisposition cd = ContentDisposition.type(resInfo.getMimeType()).fileName(getFilename(resource.getUri()))
-                .build();
-        return Response.ok(body).type(resInfo.getMimeType()).header("Content-disposition", cd);
     }
 
 

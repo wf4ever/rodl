@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -180,6 +181,11 @@ public class Thing {
             specific = name + "." + format.getDefaultFileExtension();
         }
         return UriBuilder.fromUri(base).path(specific).queryParam("original", name).build();
+    }
+
+
+    public String getFilename() {
+        return Paths.get(uri).getFileName().toString();
     }
 
 
@@ -645,4 +651,5 @@ public class Thing {
         }
         return true;
     }
+
 }

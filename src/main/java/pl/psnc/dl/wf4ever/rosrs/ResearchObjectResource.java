@@ -40,7 +40,6 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
-import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
@@ -195,28 +194,28 @@ public class ResearchObjectResource {
         }
         Collection<URI> annotated = HeaderUtils.getLinkHeaders(links).get(AO.annotatesResource.getURI());
         Set<Thing> annotationTargets = new HashSet<>();
-        for (URI ann : annotated) {
-            annotationTargets.add(builder.buildThing(ann));
+        for (URI targetUri : annotated) {
+            Thing target;
+            if (researchObject.getResources().containsKey(targetUri)) {
+                target = researchObject.getResources().get(targetUri);
+            } else if (researchObject.getProxies().containsKey(targetUri)) {
+                target = researchObject.getProxies().get(targetUri);
+            } else if (researchObject.getUri().equals(targetUri)) {
+                target = researchObject;
+            } else {
+                throw new BadRequestException(String.format(
+                    "The annotation target %s is not RO, aggregated resource nor proxy.", targetUri));
+            }
+            annotationTargets.add(target);
         }
         if (!annotationTargets.isEmpty()) {
-            for (Thing target : annotationTargets) {
-                if (!researchObject.getAggregatedResources().containsKey(target.getUri())
-                        && !target.getUri().equals(researchObject.getUri())
-                        && !researchObject.getProxies().containsKey(target.getUri())) {
-                    throw new BadRequestException(String.format(
-                        "The annotation target %s is not RO, aggregated resource nor proxy.", target));
-                }
-            }
             pl.psnc.dl.wf4ever.model.RO.Resource roResource = researchObject.aggregate(path, content,
                 request.getContentType());
-            AggregatedResource aggregatedResource = ROSRService.convertRoResourceToAnnotationBody(researchObject,
-                roResource);
-
             Annotation annotation = researchObject.annotate(resourceUri, annotationTargets);
             String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBodyUri()
                     .toString(), AO.body);
-            InputStream annotationDesc = ROSRService.SMS.get().getResource(researchObject, responseSyntax,
-                aggregatedResource.getProxy().getUri(), aggregatedResource.getUri(), annotation.getUri());
+            InputStream annotationDesc = researchObject.getManifest().getGraphAsInputStream(responseSyntax,
+                roResource.getProxy(), roResource, annotation);
             ResponseBuilder response = Response.created(annotation.getUri()).entity(annotationDesc)
                     .type(responseSyntax.getDefaultMIMEType()).header(Constants.LINK_HEADER, annotationBodyHeader);
             for (Thing target : annotation.getAnnotated()) {
@@ -228,9 +227,6 @@ public class ResearchObjectResource {
         } else {
             pl.psnc.dl.wf4ever.model.RO.Resource resource = researchObject.aggregate(path, content,
                 request.getContentType());
-            if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource.getUri())) {
-                ROSRService.convertRoResourceToAnnotationBody(researchObject, resource);
-            }
             String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, resource.getUri().toString(),
                 Constants.ORE_PROXY_FOR_HEADER);
             InputStream proxyAndResourceDesc = researchObject.getManifest().getGraphAsInputStream(responseSyntax,

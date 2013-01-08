@@ -79,6 +79,9 @@ public class ResearchObject extends Thing implements Aggregation {
     /** aggregated annotations, grouped based on ao:annotatesResource. */
     private Multimap<URI, Annotation> annotationsByTargetUri;
 
+    /** aggregated annotations, grouped based on ao:annotatesResource. */
+    private Multimap<URI, Annotation> annotationsByBodyUri;
+
     /** aggregated annotations. */
     private Map<URI, Annotation> annotations;
 
@@ -231,10 +234,16 @@ public class ResearchObject extends Thing implements Aggregation {
      * @param contentType
      *            resource Content Type
      * @return the resource instance
+     * @throws BadRequestException
+     *             if it should be an annotation body according to an existing annotation and it's the wrong format
      */
-    public Resource aggregate(String path, InputStream content, String contentType) {
+    public Resource aggregate(String path, InputStream content, String contentType)
+            throws BadRequestException {
         URI resourceUri = UriBuilder.fromUri(uri).path(path).build();
         Resource resource = Resource.create(builder, this, resourceUri, content, contentType);
+        if (getAnnotationsByBodyUri().containsKey(resource.getUri())) {
+            resource.saveGraph();
+        }
         getManifest().serialize();
         this.getResources().put(resource.getUri(), resource);
         this.getAggregatedResources().put(resource.getUri(), resource);
@@ -338,21 +347,16 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     private Annotation postAnnotate(Annotation annotation)
             throws BadRequestException {
-        //change the body 
         AggregatedResource resource = getAggregatedResources().get(annotation.getBodyUri());
         if (resource != null && resource.isInternal()) {
-            if (resource instanceof Resource && !(resource instanceof Folder)) {
-                //FIXME the resource is still of class Resource, not AggregatedResource
-                getResources().remove(resource.getUri());
-            }
             resource.saveGraph();
-            updateIndexAttributes();
         }
         getManifest().serialize();
         this.getAnnotations().put(annotation.getUri(), annotation);
         for (Thing target : annotation.getAnnotated()) {
             this.getAnnotationsByTarget().put(target.getUri(), annotation);
         }
+        this.getAnnotationsByBodyUri().put(annotation.getBodyUri(), annotation);
         this.getAggregatedResources().put(annotation.getUri(), annotation);
         return annotation;
     }
@@ -367,7 +371,7 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
-    private void updateIndexAttributes() {
+    public void updateIndexAttributes() {
         //FIXME this makes no sense without dLibra
         Multimap<URI, Object> roAttributes = ROSRService.SMS.get().getAllAttributes(uri);
         roAttributes.put(URI.create("Identifier"), this);
@@ -519,6 +523,17 @@ public class ResearchObject extends Thing implements Aggregation {
             }
         }
         return annotationsByTargetUri;
+    }
+
+
+    public Multimap<URI, Annotation> getAnnotationsByBodyUri() {
+        if (annotationsByBodyUri == null) {
+            this.annotationsByBodyUri = HashMultimap.<URI, Annotation> create();
+            for (Annotation ann : getAnnotations().values()) {
+                this.annotationsByBodyUri.put(ann.getBodyUri(), ann);
+            }
+        }
+        return annotationsByBodyUri;
     }
 
 
