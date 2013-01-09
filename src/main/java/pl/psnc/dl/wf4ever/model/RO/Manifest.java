@@ -385,7 +385,6 @@ public class Manifest extends ResourceMap {
 
             Query query = QueryFactory.create(queryString);
             QueryExecution qe = QueryExecutionFactory.create(query, model);
-            model.write(System.out);
             try {
                 ResultSet results = qe.execSelect();
                 while (results.hasNext()) {

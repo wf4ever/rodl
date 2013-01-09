@@ -172,6 +172,9 @@ public class Thing {
         if (uri == null) {
             return null;
         }
+        if (format == null) {
+            return getUri();
+        }
         URI base = uri.resolve(".");
         String name = base.relativize(uri).getPath();
         String specific;
@@ -184,8 +187,16 @@ public class Thing {
     }
 
 
+    /**
+     * Return a shortest possible name of the Thing.
+     * 
+     * @return a filename or URI if there is no path
+     */
     public String getFilename() {
-        return Paths.get(uri).getFileName().toString();
+        if (uri.getPath() == null || uri.getPath().isEmpty()) {
+            return uri.toString();
+        }
+        return Paths.get(uri.getPath()).getFileName().toString();
     }
 
 
