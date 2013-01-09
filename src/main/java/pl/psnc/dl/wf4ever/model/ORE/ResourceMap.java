@@ -43,7 +43,6 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
      */
     public ResourceMap(UserMetadata user, URI uri) {
         super(user, uri);
-        setNamedGraph(true);
     }
 
 
@@ -60,7 +59,6 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
     public ResourceMap(UserMetadata user, Aggregation aggregation, URI uri) {
         super(user, uri);
         this.aggregation = aggregation;
-        setNamedGraph(true);
     }
 
 
@@ -82,7 +80,6 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
     public ResourceMap(UserMetadata user, Dataset dataset, boolean useTransactions, Aggregation aggregation, URI uri) {
         super(user, dataset, useTransactions, uri);
         this.aggregation = aggregation;
-        setNamedGraph(true);
     }
 
 

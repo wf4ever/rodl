@@ -23,6 +23,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.http.HttpStatus;
@@ -236,7 +237,7 @@ public class Resource {
         String specificName = null;
         if (original != null) {
             specificName = resourceUri.resolve(".").relativize(resourceUri).getPath();
-            resourceUri = resourceUri.resolve(original);
+            resourceUri = UriBuilder.fromUri(resourceUri.resolve(".")).path(original).build();
         }
         //FIXME this won't work for Accept headers with more than one RDF format
         RDFFormat format = RDFFormat.forMIMEType(accept);
@@ -275,7 +276,7 @@ public class Resource {
         if (resource.isNamedGraph()) {
             // check if request is for a specific format
             if (specificName != null) {
-                URI specificResourceUri = resource.getUri().resolve(specificName);
+                URI specificResourceUri = UriBuilder.fromUri(resource.getUri().resolve(".")).path(specificName).build();
                 if (format == null) {
                     format = RDFFormat.forFileName(specificResourceUri.getPath(), RDFFormat.RDFXML);
                 }

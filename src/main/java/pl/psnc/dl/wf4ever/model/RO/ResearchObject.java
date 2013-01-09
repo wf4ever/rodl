@@ -196,7 +196,7 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     public static ResearchObject get(Builder builder, URI uri) {
         ResearchObject researchObject = builder.buildResearchObject(uri);
-        if (researchObject.getManifest().namedGraphExists()) {
+        if (researchObject.getManifest().isNamedGraph()) {
             return researchObject;
         } else {
             return null;

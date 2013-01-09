@@ -136,7 +136,7 @@ public class Folder extends Resource implements Aggregation {
         Folder folder = builder.buildFolder(null, uri, null, null);
         FolderResourceMap resourceMap = builder.buildFolderResourceMap(
             FolderResourceMap.generateResourceMapUri(folder), folder);
-        if (!resourceMap.namedGraphExists()) {
+        if (!resourceMap.isNamedGraph()) {
             return null;
         }
         ResearchObject researchObject = resourceMap.extractResearchObject();

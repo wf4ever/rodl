@@ -18,12 +18,9 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObjectComponent;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
-import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
-import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
-import com.hp.hpl.jena.rdf.model.Resource;
 
 /**
  * Simple Aggregated Resource model.
@@ -90,16 +87,6 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         super.save();
         researchObject.getManifest().saveAggregation(this);
         researchObject.getManifest().saveAuthor(this);
-
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            Individual resource = model.createIndividual(uri.toString(), ORE.AggregatedResource);
-            Resource aggregation = model.createResource(researchObject.getUri().toString());
-            resource.addProperty(ORE.isAggregatedBy, aggregation);
-            commitTransaction(transactionStarted);
-        } finally {
-            endTransaction(transactionStarted);
-        }
     }
 
 
@@ -209,7 +196,6 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
             LOGGER.warn("Could not close stream", e);
         }
         serialize();
-        setNamedGraph(true);
         researchObject.updateIndexAttributes();
 
     }
@@ -229,13 +215,12 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         }
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            model.removeAll();
+            dataset.removeNamedModel(uri.toString());
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);
         }
         serialize();
-        setNamedGraph(false);
     }
 
 

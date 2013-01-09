@@ -76,7 +76,7 @@ public class Thing {
     protected boolean useTransactions;
 
     /** Jena dataset. */
-    private Dataset dataset;
+    protected Dataset dataset;
 
     /** Triple store location. */
     private static final String TRIPLE_STORE_DIR = getStoreDirectory("connection.properties");
@@ -89,9 +89,6 @@ public class Thing {
 
     /** User creating the instance. */
     protected UserMetadata user;
-
-    /** Is the resource a named graph in the triplestore. True for manifest, annotation bodies and folder resource maps. */
-    protected boolean namedGraph = false;
 
     /** builder creating the instance, which may be reused for loading other resources. */
     protected Builder builder;
@@ -240,13 +237,18 @@ public class Thing {
     }
 
 
+    /**
+     * Check if the dataset contains a named graph for this resource.
+     * 
+     * @return true if the named graph exists, false otherwise
+     */
     public boolean isNamedGraph() {
-        return namedGraph;
-    }
-
-
-    public void setNamedGraph(boolean namedGraph) {
-        this.namedGraph = namedGraph;
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            return dataset.containsNamedModel(uri.toString());
+        } finally {
+            endTransaction(transactionStarted);
+        }
     }
 
 
@@ -536,7 +538,6 @@ public class Thing {
      * Save the resource to the triplestore and data storage backend.
      */
     public void save() {
-        saveContributors(this);
     }
 
 
@@ -614,21 +615,6 @@ public class Thing {
             return true;
         }
         return false;
-    }
-
-
-    /**
-     * Check if the dataset contains a named graph for this resource.
-     * 
-     * @return true if the named graph exists, false otherwise
-     */
-    public boolean namedGraphExists() {
-        boolean transactionStarted = beginTransaction(ReadWrite.READ);
-        try {
-            return dataset.containsNamedModel(uri.toString());
-        } finally {
-            endTransaction(transactionStarted);
-        }
     }
 
 

@@ -305,7 +305,6 @@ public final class ROSRService {
                 res.setProxy(SMS.get().addProxy(researchObject, resource));
                 // update the named graph copy in dLibra, the manifest is not changed
                 resource.serialize();
-                resource.setNamedGraph(true);
                 updateROAttributesInDlibra(researchObject);
                 return res;
             } else {

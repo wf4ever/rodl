@@ -55,7 +55,6 @@ public class Manifest extends ResourceMap {
      */
     public Manifest(UserMetadata user, Dataset dataset, boolean useTransactions, URI uri, ResearchObject researchObject) {
         super(user, dataset, useTransactions, researchObject, uri);
-        setNamedGraph(true);
     }
 
 
@@ -71,7 +70,6 @@ public class Manifest extends ResourceMap {
      */
     public Manifest(UserMetadata user, URI uri, ResearchObject researchObject) {
         super(user, researchObject, uri);
-        setNamedGraph(true);
     }
 
 
