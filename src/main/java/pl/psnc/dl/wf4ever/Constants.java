@@ -23,9 +23,6 @@ public final class Constants {
     public static final String SLUG_HEADER = "Slug";
 
     /** See ROSR API. */
-    public static final String ORE_PROXY_FOR_HEADER = "http://www.openarchives.org/ore/terms/proxyFor";
-
-    /** See ROSR API. */
     public static final String PROXY_MIME_TYPE = "application/vnd.wf4ever.proxy";
 
     /** See ROSR API. */

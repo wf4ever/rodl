@@ -217,7 +217,7 @@ public class ResearchObjectResource {
             pl.psnc.dl.wf4ever.model.RO.Resource resource = researchObject.aggregate(path, content,
                 request.getContentType());
             String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, resource.getUri().toString(),
-                Constants.ORE_PROXY_FOR_HEADER);
+                ORE.proxyFor.getURI());
             InputStream proxyAndResourceDesc = researchObject.getManifest().getGraphAsInputStream(responseSyntax,
                 resource.getProxy(), resource);
             ResponseBuilder rb = Response.created(resource.getProxy().getUri()).entity(proxyAndResourceDesc)
@@ -274,11 +274,10 @@ public class ResearchObjectResource {
 
         RDFFormat syntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
         String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, proxyFor.toString(),
-            Constants.ORE_PROXY_FOR_HEADER);
+            ORE.proxyFor.getURI());
         InputStream proxyDesc = researchObject.getManifest().getGraphAsInputStream(syntax, resource.getProxy());
         return Response.created(resource.getProxy().getUri()).entity(proxyDesc).type(syntax.getDefaultMIMEType())
                 .header(Constants.LINK_HEADER, proxyForHeader).build();
-
     }
 
 
