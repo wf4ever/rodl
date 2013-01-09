@@ -144,16 +144,15 @@ public class CopyOperation implements Operation {
                             ClientResponse response = webResource.get(ClientResponse.class);
                             URI resourcePath = status.getCopyfrom().relativize(resourceURI);
                             URI targetURI = target.resolve(resourcePath);
-                            targetRO.aggregate(resourcePath.toString(), response.getEntityInputStream(), response
-                                    .getType().toString());
-                            //TODO improve resource type detection mechanism!!
-                            if (!resource.hasRDFType(RO.Resource)) {
-                                ROSRService.convertRoResourceToAnnotationBody(targetRO, targetRO
-                                        .getAggregatedResources().get(targetURI));
+                            try {
+                                targetRO.aggregate(resourcePath.toString(), response.getEntityInputStream(), response
+                                        .getType().toString());
+                            } catch (ConflictException e) {
+                                LOGGER.warn("Failed to aggregate the resource", e);
                             }
                             changedURIs.put(resourceURI, targetURI);
                         } catch (AccessDeniedException | DigitalLibraryException | NotFoundException
-                                | IncorrectModelException | ConflictException | BadRequestException e) {
+                                | IncorrectModelException | BadRequestException e) {
                             throw new OperationFailedException("Could not create aggregate internal resource: "
                                     + resourceURI, e);
                         }
