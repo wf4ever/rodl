@@ -648,7 +648,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         try {
             Model namedGraphModel = createOntModelForNamedGraph(graphURI);
             namedGraphModel.removeAll();
-            namedGraphModel.read(inputStream, graphURI.resolve(".").toString(), rdfFormat.getName().toUpperCase());
+            namedGraphModel.read(inputStream, graphURI.resolve("..").toString(), rdfFormat.getName().toUpperCase());
             commitTransaction(transactionStarted);
             return created;
         } finally {

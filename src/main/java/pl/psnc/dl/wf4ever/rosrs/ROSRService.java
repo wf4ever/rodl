@@ -599,6 +599,9 @@ public final class ROSRService {
                 RDFFormat format = RDFFormat.forMIMEType(ROSRService.DL.get()
                         .getFileInfo(researchObject.getUri(), filePath).getMimeType());
                 SMS.get().removeResource(researchObject, resource);
+                if (filePath.matches(".+\\.ttl$")) {
+                    format = RDFFormat.TURTLE;
+                }
                 AggregatedResource res = SMS.get().addAnnotationBody(researchObject, resource, data, format);
                 res.setProxyUri(SMS.get().addProxy(researchObject, resource));
                 // update the named graph copy in dLibra, the manifest is not changed
