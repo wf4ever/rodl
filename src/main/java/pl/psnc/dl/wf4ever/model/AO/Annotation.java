@@ -225,6 +225,8 @@ public class Annotation extends AggregatedResource {
     public static Annotation create(Builder builder, ResearchObject researchObject, URI uri, InputStream content)
             throws BadRequestException {
         Annotation annotation = assemble(builder, researchObject, uri, content);
+        annotation.setCreated(DateTime.now());
+        annotation.setCreator(builder.getUser().getUri());
         annotation.setProxy(Proxy.create(builder, researchObject, annotation));
         annotation.save();
         return annotation;

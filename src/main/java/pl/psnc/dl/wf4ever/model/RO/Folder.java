@@ -263,6 +263,8 @@ public class Folder extends Resource implements Aggregation {
     public static Folder create(Builder builder, ResearchObject researchObject, URI folderUri, InputStream content)
             throws BadRequestException {
         Folder folder = assemble(builder, researchObject, folderUri, content);
+        folder.setCreated(DateTime.now());
+        folder.setCreator(builder.getUser().getUri());
         folder.setProxy(Proxy.create(builder, researchObject, folder));
         folder.save();
         for (FolderEntry entry : folder.getFolderEntries()) {
