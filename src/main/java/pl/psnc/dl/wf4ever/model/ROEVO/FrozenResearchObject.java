@@ -8,9 +8,6 @@ import java.net.URI;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.common.EvoType;
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
@@ -29,14 +26,24 @@ public class FrozenResearchObject extends ResearchObject {
     @SuppressWarnings("unused")
     private static final Logger LOGGER = Logger.getLogger(FrozenResearchObject.class);
 
+    /** the research object that is snapshotted. */
     protected ResearchObject liveRO;
 
 
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
      * @param uri
      *            RO URI
+     * @param liveRO
+     *            the research object that is snapshotted
      */
     public FrozenResearchObject(UserMetadata user, Dataset dataset, boolean useTransactions, URI uri,
             ResearchObject liveRO) {
@@ -45,8 +52,13 @@ public class FrozenResearchObject extends ResearchObject {
     }
 
 
-    protected void generateEvoInfo(EvoType type)
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+    /**
+     * Generate evolution information.
+     * 
+     * @param type
+     *            snapshot or archive
+     */
+    protected void generateEvoInfo(EvoType type) {
         ROSRService.SMS.get().generateEvoInformation(this, liveRO, type);
         this.getEvoInfoBody().serialize();
         this.getManifest().serialize();

@@ -32,8 +32,6 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.common.Builder;
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
@@ -91,17 +89,10 @@ public class Resource {
      * @param entity
      *            resource content
      * @return 201 Created or 307 Temporary Redirect
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
      */
     @PUT
     public Response putResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
-            @QueryParam("original") String original, String entity)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
+            @QueryParam("original") String original, String entity) {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.get(builder, uri);
         if (researchObject == null) {
@@ -157,12 +148,6 @@ public class Resource {
      * @param content
      *            RDF/XML representation of an annotation
      * @return 200 OK
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
      * @throws BadRequestException
      *             the RDF/XML content is incorrect
      */
@@ -170,7 +155,7 @@ public class Resource {
     @Consumes(Constants.ANNOTATION_MIME_TYPE)
     public Response updateAnnotation(@PathParam("ro_id") String researchObjectId,
             @PathParam("filePath") String filePath, @QueryParam("original") String original, InputStream content)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
+            throws BadRequestException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.get(builder, uri);
         if (researchObject == null) {
@@ -331,11 +316,29 @@ public class Resource {
     }
 
 
+    /**
+     * Get a folder.
+     * 
+     * @param folder
+     *            folder
+     * @param format
+     *            format requested
+     * @return 303 See Other redirecting to the resource map
+     */
     private Response getFolder(Folder folder, RDFFormat format) {
         return Response.status(Status.SEE_OTHER).location(folder.getResourceMap().getUri(format)).build();
     }
 
 
+    /**
+     * Get an annotation.
+     * 
+     * @param annotation
+     *            annotation
+     * @param format
+     *            format requested
+     * @return 303 See Other redirecting to the body
+     */
     private Response getAnnotation(Annotation annotation, RDFFormat format) {
         URI bodyUri = annotation.getBodyUri();
         if (annotation.getResearchObject().getAggregatedResources().containsKey(bodyUri) && format != null) {
@@ -348,6 +351,13 @@ public class Resource {
     }
 
 
+    /**
+     * Get a proxy.
+     * 
+     * @param proxy
+     *            proxy
+     * @return 303 See Other redirecting to the proxied resource
+     */
     private Response getProxy(Proxy proxy) {
         return Response.status(Status.SEE_OTHER).location(proxy.getProxyFor().getUri()).build();
     }
@@ -363,17 +373,10 @@ public class Resource {
      * @param original
      *            original resource in case of a format-specific URI
      * @return 204 No Content or 307 Temporary Redirect
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
      */
     @DELETE
     public Response deleteResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
-            @QueryParam("original") String original)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
+            @QueryParam("original") String original) {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.get(builder, uri);
         if (researchObject == null) {

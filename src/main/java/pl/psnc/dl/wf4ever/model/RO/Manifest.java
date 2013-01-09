@@ -43,6 +43,11 @@ public class Manifest extends ResourceMap {
      * 
      * @param user
      *            user creating the instance
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
      * @param uri
      *            manifest uri
      * @param researchObject
@@ -90,20 +95,30 @@ public class Manifest extends ResourceMap {
     }
 
 
-    public static Manifest get(Builder builder, URI uri, ResearchObject researchObject) {
-        Manifest manifest = builder.buildManifest(uri, researchObject);
-        return manifest;
-    }
-
-
-    public static Manifest create(Builder builder, URI uri, ResearchObject researchObject)
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+    /**
+     * Create and save a new manifest.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param uri
+     *            manifest URI
+     * @param researchObject
+     *            research object that is described
+     * @return a new manifest
+     */
+    public static Manifest create(Builder builder, URI uri, ResearchObject researchObject) {
         Manifest manifest = builder.buildManifest(uri, researchObject, builder.getUser().getUri(), DateTime.now());
         manifest.save();
         return manifest;
     }
 
 
+    /**
+     * Save the ro:Resource RDF class for an aggregated resource.
+     * 
+     * @param resource
+     *            the ro:Resource
+     */
     public void saveRoResourceClass(Resource resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
@@ -115,6 +130,12 @@ public class Manifest extends ResourceMap {
     }
 
 
+    /**
+     * Remove the ro:Resource RDF class for an aggregated ro:Resource.
+     * 
+     * @param resource
+     *            the ro:Resource
+     */
     public void removeRoResourceClass(Resource resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
@@ -127,7 +148,13 @@ public class Manifest extends ResourceMap {
     }
 
 
-    public void saveFolderClass(Folder folder) {
+    /**
+     * Save the data specific to ro:Folder in the manifest.
+     * 
+     * @param folder
+     *            the ro:Folder
+     */
+    public void saveFolderData(Folder folder) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             Individual folderInd = model.createIndividual(folder.getUri().toString(), RO.Folder);
@@ -141,7 +168,13 @@ public class Manifest extends ResourceMap {
     }
 
 
-    public void saveRoStats(Resource resource) {
+    /**
+     * Save the metadata of the serialization.
+     * 
+     * @param resource
+     *            a resource
+     */
+    public void saveRoStats(AggregatedResource resource) {
         if (resource.getStats() != null) {
             boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
             try {
@@ -162,6 +195,17 @@ public class Manifest extends ResourceMap {
     }
 
 
+    /**
+     * Identify all aggregated resource, reusing the existing instances where possible.
+     * 
+     * @param resources2
+     *            ro:Resource instances
+     * @param folders2
+     *            ro:Folder instances
+     * @param annotations2
+     *            ro:AggregatedAnnotation instances
+     * @return all aggregated resources
+     */
     public Map<URI, AggregatedResource> extractAggregatedResources(Map<URI, Resource> resources2,
             Map<URI, Folder> folders2, Map<URI, Annotation> annotations2) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
@@ -288,6 +332,7 @@ public class Manifest extends ResourceMap {
                     URI pUri = URI.create(p.asResource().getURI());
                     RDFNode rm = solution.get("resourcemap");
                     //this is not used because the URI of resource map is fixed
+                    @SuppressWarnings("unused")
                     URI rmUri = URI.create(rm.asResource().getURI());
                     RDFNode creatorNode = solution.get("creator");
                     URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
@@ -388,6 +433,12 @@ public class Manifest extends ResourceMap {
     }
 
 
+    /**
+     * Save an annotation in the manifest.
+     * 
+     * @param annotation
+     *            an annotation
+     */
     public void saveAnnotationData(Annotation annotation) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {

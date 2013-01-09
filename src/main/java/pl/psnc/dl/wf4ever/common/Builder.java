@@ -48,7 +48,7 @@ public class Builder {
      *            Authenticated user
      * @param dataset
      *            Jena dataset
-     * @param useTransanctions
+     * @param useTransactions
      *            Use transactions on the Jena dataset
      */
     public Builder(UserMetadata user, Dataset dataset, boolean useTransactions) {
@@ -74,6 +74,13 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new Thing.
+     * 
+     * @param uri
+     *            the URI
+     * @return a new Thing instance
+     */
     public Thing buildThing(URI uri) {
         Thing thing = new Thing(user, dataset, useTransactions, uri);
         thing.setBuilder(this);
@@ -81,6 +88,17 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new research object.
+     * 
+     * @param uri
+     *            the URI
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @return a new Research Object instance
+     */
     public ResearchObject buildResearchObject(URI uri, URI creator, DateTime created) {
         ResearchObject researchObject = new ResearchObject(user, dataset, useTransactions, uri);
         researchObject.setCreator(creator);
@@ -90,6 +108,13 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new research object.
+     * 
+     * @param uri
+     *            the URI
+     * @return a new Research Object instance
+     */
     public ResearchObject buildResearchObject(URI uri) {
         ResearchObject researchObject = new ResearchObject(user, dataset, useTransactions, uri);
         researchObject.setBuilder(this);
@@ -97,6 +122,15 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new snapshot research object.
+     * 
+     * @param uri
+     *            the URI
+     * @param liveRO
+     *            the research object that is snapshotted
+     * @return a new snapshot Research Object instance
+     */
     public SnapshotResearchObject buildSnapshotResearchObject(URI uri, ResearchObject liveRO) {
         SnapshotResearchObject snapshot = new SnapshotResearchObject(user, dataset, useTransactions, uri, liveRO);
         snapshot.setBuilder(this);
@@ -104,6 +138,15 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new archive research object.
+     * 
+     * @param uri
+     *            the URI
+     * @param liveRO
+     *            the research object that is archived
+     * @return a new archive Research Object instance
+     */
     public ArchiveResearchObject buildArchiveResearchObject(URI uri, ResearchObject liveRO) {
         ArchiveResearchObject archive = new ArchiveResearchObject(user, dataset, useTransactions, uri, liveRO);
         archive.setBuilder(this);
@@ -111,6 +154,15 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new manifest.
+     * 
+     * @param uri
+     *            the URI
+     * @param researchObject
+     *            the research object that is described
+     * @return a new manifest instance
+     */
     public Manifest buildManifest(URI uri, ResearchObject researchObject) {
         Manifest manifest = new Manifest(user, dataset, useTransactions, uri, researchObject);
         manifest.setBuilder(this);
@@ -118,6 +170,19 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new manifest.
+     * 
+     * @param uri
+     *            the URI
+     * @param researchObject
+     *            the research object that is described
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @return a new manifest instance
+     */
     public Manifest buildManifest(URI uri, ResearchObject researchObject, URI creator, DateTime created) {
         Manifest manifest = new Manifest(user, dataset, useTransactions, uri, researchObject);
         manifest.setCreator(creator);
@@ -127,6 +192,19 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new aggregated resource.
+     * 
+     * @param uri
+     *            the URI
+     * @param researchObject
+     *            the research object that aggregates the resource
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @return a new aggregated resource instance
+     */
     public AggregatedResource buildAggregatedResource(URI uri, ResearchObject researchObject, URI creator,
             DateTime created) {
         AggregatedResource resource = new AggregatedResource(user, dataset, useTransactions, researchObject, uri);
@@ -137,6 +215,17 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new proxy.
+     * 
+     * @param uri
+     *            the URI
+     * @param proxyFor
+     *            the resource for which the proxy stands
+     * @param proxyIn
+     *            the aggregation aggregating the proxyFor resource
+     * @return a new proxy
+     */
     public Proxy buildProxy(URI uri, AggregatedResource proxyFor, Aggregation proxyIn) {
         Proxy proxy = new Proxy(user, dataset, useTransactions, uri);
         proxy.setProxyFor(proxyFor);
@@ -146,6 +235,19 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new annotation.
+     * 
+     * @param researchObject
+     *            research object aggregating the annotation
+     * @param uri
+     *            annotation URI
+     * @param bodyUri
+     *            annotation body URI
+     * @param targets
+     *            annotated resources
+     * @return a new annotation
+     */
     public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Set<Thing> targets) {
         Annotation annotation = new Annotation(user, dataset, useTransactions, researchObject, uri);
         annotation.setBodyUri(bodyUri);
@@ -155,6 +257,23 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new annotation.
+     * 
+     * @param researchObject
+     *            research object aggregating the annotation
+     * @param uri
+     *            annotation URI
+     * @param bodyUri
+     *            annotation body URI
+     * @param targets
+     *            annotated resources
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @return a new annotation
+     */
     public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Set<Thing> targets,
             URI creator, DateTime created) {
         Annotation annotation = buildAnnotation(researchObject, uri, bodyUri, targets);
@@ -165,6 +284,23 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new annotation with one annotated resource.
+     * 
+     * @param researchObject
+     *            research object aggregating the annotation
+     * @param uri
+     *            annotation URI
+     * @param bodyUri
+     *            annotation body URI
+     * @param target
+     *            the annotated resource
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @return a new annotation
+     */
     public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Thing target, URI creator,
             DateTime created) {
         Set<Thing> targets = new HashSet<>();
@@ -173,6 +309,19 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new ro:Resource.
+     * 
+     * @param researchObject
+     *            research object aggregating the resource
+     * @param uri
+     *            resource URI
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @return a new resource
+     */
     public Resource buildResource(ResearchObject researchObject, URI uri, URI creator, DateTime created) {
         Resource resource = new Resource(user, dataset, useTransactions, researchObject, uri);
         resource.setCreator(creator);
@@ -182,6 +331,19 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new folder.
+     * 
+     * @param researchObject
+     *            research object aggregating the folder
+     * @param uri
+     *            folder URI
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @return a new folder
+     */
     public Folder buildFolder(ResearchObject researchObject, URI uri, URI creator, DateTime created) {
         Folder folder = new Folder(user, dataset, useTransactions, researchObject, uri);
         folder.setCreator(creator);
@@ -191,6 +353,15 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new folder resource map.
+     * 
+     * @param uri
+     *            resource map URI
+     * @param folder
+     *            folder it describes
+     * @return a new folder resource map
+     */
     public FolderResourceMap buildFolderResourceMap(URI uri, Folder folder) {
         FolderResourceMap map = new FolderResourceMap(user, dataset, useTransactions, folder, uri);
         map.setBuilder(this);
@@ -198,6 +369,19 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new folder entry.
+     * 
+     * @param uri
+     *            folder entry URI
+     * @param aggregatedResource
+     *            resource it stands for
+     * @param proxyIn
+     *            folder for which it is created
+     * @param name
+     *            resource name in the folder
+     * @return a new folder entry
+     */
     public FolderEntry buildFolderEntry(URI uri, AggregatedResource aggregatedResource, Folder proxyIn, String name) {
         FolderEntry entry = new FolderEntry(user, dataset, useTransactions, uri);
         entry.setProxyFor(aggregatedResource);

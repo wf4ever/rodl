@@ -18,7 +18,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.io.IOUtils;
@@ -28,10 +27,6 @@ import org.openrdf.rio.RDFFormat;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.common.util.MemoryZipFile;
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.ConflictException;
-import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
@@ -106,24 +101,11 @@ public class ResearchObjectListResource {
      *         WORKSPACE_ID workspace
      * @throws BadRequestException
      *             the RO id is incorrect
-     * @throws NotFoundException
-     *             problem with creating the RO in dLibra
-     * @throws DigitalLibraryException
-     *             problem with creating the RO in dLibra
-     * @throws ConflictException
-     *             problem with creating the RO in dLibra
-     * @throws UriBuilderException
-     *             problem with creating the RO in dLibra
-     * @throws IllegalArgumentException
-     *             problem with creating the RO in dLibra
-     * @throws AccessDeniedException
-     *             no permissions
      */
     @POST
     public Response createResearchObject(@HeaderParam("Slug") String researchObjectId,
             @HeaderParam("Accept") String accept)
-            throws BadRequestException, IllegalArgumentException, UriBuilderException, ConflictException,
-            DigitalLibraryException, NotFoundException, AccessDeniedException {
+            throws BadRequestException {
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }
@@ -154,19 +136,11 @@ public class ResearchObjectListResource {
      *             the ZIP content is not a valid RO
      * @throws IOException
      *             error when unzipping
-     * @throws AccessDeniedException
-     *             no permissions
-     * @throws ConflictException
-     *             RO already exists
-     * @throws DigitalLibraryException
-     *             error saving data to storage
-     * @throws NotFoundException
      */
     @POST
     @Consumes("application/zip")
     public Response createResearchObjectFromZip(@HeaderParam("Slug") String researchObjectId, InputStream zipStream)
-            throws BadRequestException, IOException, AccessDeniedException, ConflictException, DigitalLibraryException,
-            NotFoundException {
+            throws BadRequestException, IOException {
         if (researchObjectId == null || researchObjectId.isEmpty()) {
             throw new BadRequestException("Research object ID is null or empty");
         }

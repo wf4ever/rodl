@@ -191,7 +191,7 @@ public final class ROSRService {
             ROSRService.SMS.get().addAnnotationBody(researchObject, resource,
                 new ByteArrayInputStream(entity.getBytes()), format);
             // update the named graph copy in dLibra, the manifest is not changed
-            researchObject.getResource(resource).serialize();
+            researchObject.getResources().get(resource).serialize();
             updateROAttributesInDlibra(researchObject);
         } else {
             ResourceMetadata resourceInfo = ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath,

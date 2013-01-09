@@ -13,10 +13,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.common.Builder;
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.ConflictException;
-import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.ORE.Aggregation;
@@ -54,6 +50,11 @@ public class Folder extends Resource implements Aggregation {
      * 
      * @param user
      *            user creating the instance
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
      * @param researchObject
      *            The RO it is aggregated by
      * @param uri
@@ -79,6 +80,11 @@ public class Folder extends Resource implements Aggregation {
     }
 
 
+    /**
+     * Get the folder entries. May be loaded lazily.
+     * 
+     * @return a set of folder entries in this folder
+     */
     public Set<FolderEntry> getFolderEntries() {
         if (folderEntries == null) {
             folderEntries = getResourceMap().extractFolderEntries();
@@ -92,8 +98,13 @@ public class Folder extends Resource implements Aggregation {
     }
 
 
-    public FolderResourceMap getResourceMap()
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+    /**
+     * Get the resource map.
+     * 
+     * @return a folder resource map
+     */
+    @Override
+    public FolderResourceMap getResourceMap() {
         if (resourceMap == null) {
             URI resourceMapUri = FolderResourceMap.generateResourceMapUri(this);
             resourceMap = builder.buildFolderResourceMap(resourceMapUri, this);
@@ -112,6 +123,15 @@ public class Folder extends Resource implements Aggregation {
     }
 
 
+    /**
+     * Get an existing folder with that URI or null if not found.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param uri
+     *            folder URI
+     * @return a folder instance or URI
+     */
     public static Folder get(Builder builder, URI uri) {
         Folder folder = builder.buildFolder(null, uri, null, null);
         FolderResourceMap resourceMap = builder.buildFolderResourceMap(
@@ -128,7 +148,7 @@ public class Folder extends Resource implements Aggregation {
     public void save() {
         super.save();
         getResourceMap().save();
-        researchObject.getManifest().saveFolderClass(this);
+        researchObject.getManifest().saveFolderData(this);
     }
 
 
@@ -225,6 +245,21 @@ public class Folder extends Resource implements Aggregation {
     }
 
 
+    /**
+     * Create and save a new folder.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param researchObject
+     *            research object aggregating the folder
+     * @param folderUri
+     *            folder URI
+     * @param content
+     *            folder description
+     * @return a folder instance
+     * @throws BadRequestException
+     *             if the description is not valid
+     */
     public static Folder create(Builder builder, ResearchObject researchObject, URI folderUri, InputStream content)
             throws BadRequestException {
         Folder folder = assemble(builder, researchObject, folderUri, content);
@@ -238,6 +273,15 @@ public class Folder extends Resource implements Aggregation {
     }
 
 
+    /**
+     * Create and save a new folder entry, refresh the properties of this folder.
+     * 
+     * @param content
+     *            folder entry description
+     * @return a folder entry instance
+     * @throws BadRequestException
+     *             if the description is not valid
+     */
     public FolderEntry createFolderEntry(InputStream content)
             throws BadRequestException {
         FolderEntry entry = FolderEntry.assemble(builder, this, content);

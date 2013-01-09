@@ -12,13 +12,30 @@ import com.sun.jersey.core.spi.component.ComponentScope;
 import com.sun.jersey.spi.inject.Injectable;
 import com.sun.jersey.spi.inject.InjectableProvider;
 
+/**
+ * An injector for request attributes.
+ * 
+ * @author piotrekhol
+ * 
+ */
 @Provider
 public class RequestAttributeInjector implements InjectableProvider<RequestAttribute, Type> {
 
+    /** the context where the properties are looked for. */
     private final HttpContext c;
+
+    /** the request where the attributes are looked for. */
     private final HttpServletRequest r;
 
 
+    /**
+     * Constructor.
+     * 
+     * @param c
+     *            the context where the properties are looked for
+     * @param r
+     *            the request where the attributes are looked for
+     */
     public RequestAttributeInjector(@Context HttpContext c, @Context HttpServletRequest r) {
         this.c = c;
         this.r = r;
@@ -30,6 +47,8 @@ public class RequestAttributeInjector implements InjectableProvider<RequestAttri
     }
 
 
+    @SuppressWarnings("rawtypes")
+    @Override
     public Injectable getInjectable(ComponentContext ic, RequestAttribute a, final Type t) {
         final String name = a.value();
 

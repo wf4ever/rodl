@@ -33,12 +33,30 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
     private ResourceMetadata stats;
 
 
+    /**
+     * Constructor.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param uri
+     *            resource map URI
+     */
     public ResourceMap(UserMetadata user, URI uri) {
         super(user, uri);
         setNamedGraph(true);
     }
 
 
+    /**
+     * Constructor.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param aggregation
+     *            aggregation described by the resource map
+     * @param uri
+     *            resource URI
+     */
     public ResourceMap(UserMetadata user, Aggregation aggregation, URI uri) {
         super(user, uri);
         this.aggregation = aggregation;
@@ -46,6 +64,21 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
     }
 
 
+    /**
+     * Constructor.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
+     * @param aggregation
+     *            aggregation described by the resource map
+     * @param uri
+     *            resource URI
+     */
     public ResourceMap(UserMetadata user, Dataset dataset, boolean useTransactions, Aggregation aggregation, URI uri) {
         super(user, dataset, useTransactions, uri);
         this.aggregation = aggregation;
@@ -53,6 +86,12 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
     }
 
 
+    /**
+     * Add a new aggregated resource and save it.
+     * 
+     * @param resource
+     *            a new aggregated resource
+     */
     public void saveAggregation(AggregatedResource resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
@@ -69,6 +108,12 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
     }
 
 
+    /**
+     * Add a new proxy and save it.
+     * 
+     * @param proxy
+     *            a new proxy
+     */
     public void saveProxy(Proxy proxy) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {

@@ -45,6 +45,8 @@ public class FolderEntry extends Proxy {
      * 
      * @param user
      *            user creating the instance
+     * @param uri
+     *            folder entry URI
      */
     public FolderEntry(UserMetadata user, URI uri) {
         super(user, uri);
@@ -56,6 +58,13 @@ public class FolderEntry extends Proxy {
      * 
      * @param user
      *            user creating the instance
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
+     * @param uri
+     *            folder entry URI
      */
     public FolderEntry(UserMetadata user, Dataset dataset, boolean useTransactions, URI uri) {
         super(user, dataset, useTransactions, uri);
@@ -121,6 +130,8 @@ public class FolderEntry extends Proxy {
     /**
      * Create a folder entry instance out of an RDF/XML description.
      * 
+     * @param builder
+     *            model instance builder
      * @param folder
      *            folder used as RDF base
      * @param content

@@ -96,10 +96,6 @@ public class Annotation extends AggregatedResource {
      *            annotation body, may be aggregated or not, may be a ro:Resource (rarely) or not
      * @param target
      *            annotated resource, must be the RO/aggregated resource/proxy
-     * @param creator
-     *            annotation author
-     * @param created
-     *            annotation creation time
      */
     public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI bodyUri, Thing target) {
         this(user, researchObject, uri, bodyUri, new HashSet<Thing>(Arrays.asList(new Thing[] { target })));
@@ -111,6 +107,11 @@ public class Annotation extends AggregatedResource {
      * 
      * @param user
      *            user creating the instance
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
      * @param researchObject
      *            RO aggregating the annotation
      * @param uri
@@ -190,7 +191,7 @@ public class Annotation extends AggregatedResource {
      *            RO aggregating the annotation
      * @param uri
      *            annotation URI
-     * @param body2
+     * @param bodyUri
      *            annotation body, can be external or not yet aggregated
      * @param targets
      *            annotated resources (RO, ro:Resources or proxies)
@@ -206,6 +207,21 @@ public class Annotation extends AggregatedResource {
     }
 
 
+    /**
+     * Create and save a new annotation based on an annotation description.
+     * 
+     * @param builder
+     *            model instances builder
+     * @param researchObject
+     *            research object aggregating the RO
+     * @param uri
+     *            annotation URI
+     * @param content
+     *            annotation description
+     * @return an annotation instance
+     * @throws BadRequestException
+     *             if the description is not valid
+     */
     public static Annotation create(Builder builder, ResearchObject researchObject, URI uri, InputStream content)
             throws BadRequestException {
         Annotation annotation = assemble(builder, researchObject, uri, content);
@@ -215,12 +231,30 @@ public class Annotation extends AggregatedResource {
     }
 
 
+    /**
+     * Save the annotation in the triple store.
+     */
     public void save() {
         super.save();
         researchObject.getManifest().saveAnnotationData(this);
     }
 
 
+    /**
+     * Create an annotation instance based on the description.
+     * 
+     * @param builder
+     *            model instances builder
+     * @param researchObject
+     *            research object aggregating the RO
+     * @param uri
+     *            annotation URI
+     * @param content
+     *            annotation description
+     * @return an annotation instance
+     * @throws BadRequestException
+     *             if the description is not valid
+     */
     public static Annotation assemble(Builder builder, ResearchObject researchObject, URI uri, InputStream content)
             throws BadRequestException {
         URI bodyUri;

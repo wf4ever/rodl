@@ -56,6 +56,8 @@ public class Proxy extends Thing {
      * 
      * @param user
      *            user creating the instance
+     * @param uri
+     *            proxy URI
      */
     public Proxy(UserMetadata user, URI uri) {
         super(user, uri);
@@ -67,6 +69,13 @@ public class Proxy extends Thing {
      * 
      * @param user
      *            user creating the instance
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
+     * @param uri
+     *            proxy URI
      */
     public Proxy(UserMetadata user, Dataset dataset, boolean useTransactions, URI uri) {
         super(user, dataset, useTransactions, uri);
@@ -93,8 +102,18 @@ public class Proxy extends Thing {
     }
 
 
-    public static Proxy create(Builder builder, ResearchObject researchObject, AggregatedResource resource)
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+    /**
+     * Create and save a new proxy.
+     * 
+     * @param builder
+     *            model instances builder
+     * @param researchObject
+     *            research object aggregating the proxy
+     * @param resource
+     *            resource for which the proxy is
+     * @return a proxy instance
+     */
+    public static Proxy create(Builder builder, ResearchObject researchObject, AggregatedResource resource) {
         URI proxyUri = researchObject.getUri().resolve(".ro/proxies/" + UUID.randomUUID());
         Proxy proxy = builder.buildProxy(proxyUri, resource, researchObject);
         proxy.save();
@@ -107,12 +126,6 @@ public class Proxy extends Thing {
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         super.save();
         proxyIn.getResourceMap().saveProxy(this);
-    }
-
-
-    public static Proxy get(Builder builder, URI pUri, AggregatedResource proxyFor, Aggregation proxyIn) {
-        Proxy proxy = builder.buildProxy(pUri, proxyFor, proxyIn);
-        return proxy;
     }
 
 

@@ -34,11 +34,9 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.common.util.HeaderUtils;
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
-import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -165,20 +163,11 @@ public class ResearchObjectResource {
      * @return 201 Created with proxy URI
      * @throws BadRequestException
      *             annotation target is an incorrect URI
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     * @throws pl.psnc.dl.wf4ever.dl.ConflictException
-     * @throws IncorrectModelException
      */
     @POST
     public Response addResource(@PathParam("ro_id") String researchObjectId, @HeaderParam("Slug") String path,
             @HeaderParam("Accept") String accept, @HeaderParam("Link") Set<String> links, InputStream content)
-            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException,
-            pl.psnc.dl.wf4ever.dl.ConflictException {
+            throws BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
         RDFFormat responseSyntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
         ResearchObject researchObject = ResearchObject.get(builder, uri);
@@ -258,18 +247,12 @@ public class ResearchObjectResource {
      * @return 201 Created response pointing to the proxy
      * @throws BadRequestException
      *             wrong request body
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
      */
     @POST
     @Consumes(Constants.PROXY_MIME_TYPE)
     public Response addProxy(@PathParam("ro_id") String researchObjectId, @HeaderParam("Slug") String slug,
             @HeaderParam("Accept") String accept, InputStream content)
-            throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
+            throws BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.get(builder, uri);
         if (researchObject == null) {
@@ -311,18 +294,12 @@ public class ResearchObjectResource {
      * @return 201 Created response pointing to the annotation stub
      * @throws BadRequestException
      *             wrong request body
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
      */
     @POST
     @Consumes(Constants.ANNOTATION_MIME_TYPE)
     public Response addAnnotation(@PathParam("ro_id") String researchObjectId, @HeaderParam("Accept") String accept,
             InputStream content)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
+            throws BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.get(builder, uri);
         if (researchObject == null) {
@@ -358,18 +335,12 @@ public class ResearchObjectResource {
      * @return 201 Created response pointing to the folder
      * @throws BadRequestException
      *             wrong request body
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
      */
     @POST
     @Consumes(Constants.FOLDER_MIME_TYPE)
     public Response addFolder(@PathParam("ro_id") String researchObjectId, @HeaderParam("Accept") String accept,
             @HeaderParam("Slug") String path, InputStream content)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException, BadRequestException {
+            throws BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.get(builder, uri);
         if (researchObject == null) {

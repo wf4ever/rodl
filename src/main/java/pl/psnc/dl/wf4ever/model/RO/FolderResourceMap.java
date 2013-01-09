@@ -5,10 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import pl.psnc.dl.wf4ever.common.Builder;
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.ConflictException;
-import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.ResourceMap;
@@ -28,18 +24,56 @@ import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 
+/**
+ * A resource map of a folder. Such resource map is considered an internal part of the research object aggregating the
+ * folder but it is not aggregated by it.
+ * 
+ * @author piotrekhol
+ * 
+ */
 public class FolderResourceMap extends ResourceMap {
 
+    /**
+     * Constructor.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
+     * @param folder
+     *            folder to be described
+     * @param uri
+     *            resource map URI
+     */
     public FolderResourceMap(UserMetadata user, Dataset dataset, boolean useTransactions, Folder folder, URI uri) {
         super(user, dataset, useTransactions, folder, uri);
     }
 
 
+    /**
+     * Constructor.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param folder
+     *            folder to be described
+     * @param uri
+     *            resource map URI
+     */
     public FolderResourceMap(UserMetadata user, Folder folder, URI uri) {
         super(user, folder, uri);
     }
 
 
+    /**
+     * Add metadata specific to a folder entry (not to a proxy).
+     * 
+     * @param entry
+     *            a folder entry
+     */
     public void saveFolderEntryData(FolderEntry entry) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
@@ -62,6 +96,8 @@ public class FolderResourceMap extends ResourceMap {
      * empty, return folder.rdf (i.e. example.com becomes example.com/folder.rdf). Otherwise use the last path segment
      * (i.e. example.com/foobar/ becomes example.com/foobar/foobar.rdf). RDF/XML file extension is used.
      * 
+     * @param folder
+     *            folder described by the resource map
      * @return RDF graph URI or null if folder URI is null
      */
     public static URI generateResourceMapUri(Folder folder) {
@@ -78,12 +114,6 @@ public class FolderResourceMap extends ResourceMap {
             base = segments[segments.length - 1];
         }
         return folder.getUri().resolve(base + ".rdf");
-    }
-
-
-    public static FolderResourceMap get(Builder builder, URI uri, Folder folder) {
-        FolderResourceMap map = builder.buildFolderResourceMap(uri, folder);
-        return map;
     }
 
 
@@ -132,8 +162,18 @@ public class FolderResourceMap extends ResourceMap {
     }
 
 
-    public static FolderResourceMap create(Builder builder, Folder folder, URI resourceMapUri)
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+    /**
+     * Create and save a new folder resource map.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param folder
+     *            folder described by the resource map
+     * @param resourceMapUri
+     *            resource map URI
+     * @return a new folder resource map instance
+     */
+    public static FolderResourceMap create(Builder builder, Folder folder, URI resourceMapUri) {
         FolderResourceMap map = builder.buildFolderResourceMap(resourceMapUri, folder);
         map.save();
         return map;
@@ -163,6 +203,11 @@ public class FolderResourceMap extends ResourceMap {
     }
 
 
+    /**
+     * Find the research object that aggregates the folder described by this resource map.
+     * 
+     * @return a research object instance or null if not found
+     */
     public ResearchObject extractResearchObject() {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {

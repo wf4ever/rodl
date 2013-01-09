@@ -39,8 +39,15 @@ public class SnapshotResearchObject extends FrozenResearchObject {
      * 
      * @param user
      *            user creating the instance
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
      * @param uri
      *            RO URI
+     * @param liveRO
+     *            the research object that is snapshotted
      */
     public SnapshotResearchObject(UserMetadata user, Dataset dataset, boolean useTransactions, URI uri,
             ResearchObject liveRO) {
@@ -51,22 +58,15 @@ public class SnapshotResearchObject extends FrozenResearchObject {
     /**
      * Create new Research Object.
      * 
-     * @param user
-     *            user creating the instance
+     * @param builder
+     *            model instance builder
      * @param uri
-     *            RO URI
+     *            uri
      * @param liveRO
-     *            live RO
+     *            live Research Object
      * @return an instance
-     * @throws ConflictException
-     *             the research object URI is already used
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             no permissions
      */
-    public static SnapshotResearchObject create(Builder builder, URI uri, ResearchObject liveRO)
-            throws ConflictException, DigitalLibraryException, AccessDeniedException {
+    public static SnapshotResearchObject create(Builder builder, URI uri, ResearchObject liveRO) {
         SnapshotResearchObject researchObject = builder.buildSnapshotResearchObject(uri, liveRO);
         InputStream manifest;
         try {
@@ -94,9 +94,9 @@ public class SnapshotResearchObject extends FrozenResearchObject {
      *            live Research Object
      * @return an existing Research Object or null
      */
-    public static SnapshotResearchObject get(Builder builder, URI uri, ResearchObject LiveRO) {
+    public static SnapshotResearchObject get(Builder builder, URI uri, ResearchObject liveRO) {
         if (ROSRService.SMS.get().containsNamedGraph(uri.resolve(ResearchObject.MANIFEST_PATH))) {
-            return builder.buildSnapshotResearchObject(uri, LiveRO);
+            return builder.buildSnapshotResearchObject(uri, liveRO);
         } else {
             return null;
         }

@@ -100,14 +100,26 @@ public class ResearchObject extends Thing implements Aggregation {
      * @param user
      *            user creating the instance
      * @param dataset
-     *            RO URI
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
+     * @param uri
+     *            the RO URI
      */
-    //FIXME should this be private?
     public ResearchObject(UserMetadata user, Dataset dataset, boolean useTransactions, URI uri) {
         super(user, dataset, useTransactions, uri);
     }
 
 
+    /**
+     * Constructor.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param uri
+     *            the RO URI
+     */
     public ResearchObject(UserMetadata user, URI uri) {
         super(user, uri);
     }
@@ -116,18 +128,13 @@ public class ResearchObject extends Thing implements Aggregation {
     /**
      * Create new Research Object.
      * 
-     * @param user
-     *            user creating the instance
+     * @param builder
+     *            model instance builder
      * @param uri
      *            RO URI
      * @return an instance
-     * @throws AccessDeniedException
-     * @throws NotFoundException
-     * @throws DigitalLibraryException
-     * @throws ConflictException
      */
-    public static ResearchObject create(Builder builder, URI uri)
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+    public static ResearchObject create(Builder builder, URI uri) {
         if (get(builder, uri) != null) {
             throw new ConflictException("Research Object already exists: " + uri);
         }
@@ -139,8 +146,10 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
-    public void generateEvoInfo()
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+    /**
+     * Generate and save the evolution information.
+     */
+    public void generateEvoInfo() {
         Annotation ann = ROSRService.SMS.get().generateEvoInformation(this, null, EvoType.LIVE);
         this.getAnnotations().put(ann.getUri(), ann);
         this.getAnnotationsByTarget().put(ann.getAnnotated().iterator().next().getUri(), ann);
@@ -150,17 +159,10 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
-     * Get a resource with a given URI or null if doesn't exist.
+     * Get the resource with the evolution metadata.
      * 
-     * @param resourceUri
-     *            resource URI
-     * @return resource instance or null
+     * @return an evolution resource
      */
-    public Resource getResource(URI resourceUri) {
-        return resources.get(resourceUri);
-    }
-
-
     public AggregatedResource getEvoInfoBody() {
         //HACK this should be added automatically
         this.getAggregatedResources().put(getFixedEvolutionAnnotationBodyUri(),
@@ -170,6 +172,11 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
+    /**
+     * Get the manifest, loaded lazily.
+     * 
+     * @return the manifest
+     */
     public Manifest getManifest() {
         if (manifest == null) {
             this.manifest = builder.buildManifest(getManifestUri(), this);
@@ -179,18 +186,18 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
-     * Get a Research Object.
+     * Get a Research Object if it exists.
      * 
-     * @param user
-     *            user creating the instance
+     * @param builder
+     *            model instance builder
      * @param uri
      *            uri
      * @return an existing Research Object or null
      */
     public static ResearchObject get(Builder builder, URI uri) {
-        if (ROSRService.SMS.get() == null
-                || ROSRService.SMS.get().containsNamedGraph(uri.resolve(ResearchObject.MANIFEST_PATH))) {
-            return builder.buildResearchObject(uri);
+        ResearchObject researchObject = builder.buildResearchObject(uri);
+        if (researchObject.getManifest().namedGraphExists()) {
+            return researchObject;
         } else {
             return null;
         }
@@ -200,6 +207,7 @@ public class ResearchObject extends Thing implements Aggregation {
     /**
      * Delete the Research Object including its resources and annotations.
      */
+    @Override
     public void delete() {
         try {
             ROSRService.DL.get().deleteResearchObject(uri);
@@ -213,6 +221,7 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
+    @Override
     public void save() {
         super.save();
         getManifest().save();
@@ -270,6 +279,17 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
+    /**
+     * Add a new folder and update the maps.
+     * 
+     * @param folderUri
+     *            folder URI
+     * @param content
+     *            folder description
+     * @return a folder instance
+     * @throws BadRequestException
+     *             the folder description is not valid
+     */
     public Folder aggregateFolder(URI folderUri, InputStream content)
             throws BadRequestException {
         Folder folder = Folder.create(builder, this, folderUri, content);
@@ -362,6 +382,13 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
+    /**
+     * Get an annotation URI based on the id.
+     * 
+     * @param annotationId
+     *            annotation id, random UUID will be used if null
+     * @return the annotation URI
+     */
     private URI getAnnotationUri(String annotationId) {
         if (annotationId == null) {
             annotationId = UUID.randomUUID().toString();
@@ -371,6 +398,9 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
+    /**
+     * Update the RO index.
+     */
     public void updateIndexAttributes() {
         //FIXME this makes no sense without dLibra
         Multimap<URI, Object> roAttributes = ROSRService.SMS.get().getAllAttributes(uri);
@@ -386,6 +416,8 @@ public class ResearchObject extends Thing implements Aggregation {
     /**
      * Create a new research object submitted in ZIP format.
      * 
+     * @param builder
+     *            model instance builder
      * @param researchObjectUri
      *            the new research object
      * @param zip
@@ -394,6 +426,7 @@ public class ResearchObject extends Thing implements Aggregation {
      * @throws IOException
      *             error creating the temporary file
      * @throws BadRequestException
+     *             the zip contains an invalid RO
      */
     public static ResearchObject create(Builder builder, URI researchObjectUri, MemoryZipFile zip)
             throws IOException, BadRequestException {
@@ -475,6 +508,11 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
+    /**
+     * Get aggregated ro:Resources, excluding ro:Folders, loaded lazily.
+     * 
+     * @return aggregated resources mapped by their URI
+     */
     public Map<URI, Resource> getResources() {
         if (resources == null) {
             this.resources = getManifest().extractResources();
@@ -483,6 +521,11 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
+    /**
+     * Get aggregated ro:Folders, loaded lazily.
+     * 
+     * @return aggregated folders mapped by their URI
+     */
     public Map<URI, Folder> getFolders() {
         if (folders == null) {
             this.folders = getManifest().extractFolders();
@@ -491,6 +534,11 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
+    /**
+     * Get proxies for aggregated resources, loaded lazily.
+     * 
+     * @return proxies mapped by their URI
+     */
     public Map<URI, Proxy> getProxies() {
         if (proxies == null) {
             this.proxies = new HashMap<>();
@@ -505,6 +553,11 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
+    /**
+     * Get aggregated annotations, loaded lazily.
+     * 
+     * @return aggregated annotations mapped by their URI
+     */
     public Map<URI, Annotation> getAnnotations() {
         if (annotations == null) {
             this.annotations = getManifest().extractAnnotations();
@@ -513,6 +566,11 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
+    /**
+     * Get aggregated annotations, mapped by the annotated resources, loaded lazily.
+     * 
+     * @return aggregated annotations mapped by annotated resources URIs
+     */
     public Multimap<URI, Annotation> getAnnotationsByTarget() {
         if (annotationsByTargetUri == null) {
             this.annotationsByTargetUri = HashMultimap.<URI, Annotation> create();
@@ -526,6 +584,11 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
+    /**
+     * Get aggregated annotations, mapped by the bodies, loaded lazily.
+     * 
+     * @return aggregated annotations mapped by body URIs
+     */
     public Multimap<URI, Annotation> getAnnotationsByBodyUri() {
         if (annotationsByBodyUri == null) {
             this.annotationsByBodyUri = HashMultimap.<URI, Annotation> create();
@@ -557,6 +620,11 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
+    /**
+     * Get all folder resource maps, loading the lazily.
+     * 
+     * @return folder resource maps mapped by their URIs
+     */
     public Map<URI, ResourceMap> getFolderResourceMaps() {
         if (folderResourceMaps == null) {
             this.folderResourceMaps = new HashMap<>();
@@ -583,6 +651,20 @@ public class ResearchObject extends Thing implements Aggregation {
             this.creator = getManifest().extractCreator(this);
         }
         return super.getCreator();
+    }
+
+
+    /**
+     * Is there already a resource in this RO with that URI.
+     * 
+     * @param uri
+     *            the URI
+     * @return true if there is an aggregated resource / proxy / folder resource map / manifest with that URI
+     */
+    public boolean isUriUsed(URI uri) {
+        //FIXME folder entries are missing
+        return getAggregatedResources().containsKey(uri) || getProxies().containsKey(uri)
+                || getFolderResourceMaps().containsKey(uri) || getManifest().getUri().equals(uri);
     }
 
 }

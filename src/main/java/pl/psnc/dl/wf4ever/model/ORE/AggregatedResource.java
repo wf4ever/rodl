@@ -51,6 +51,11 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
      * 
      * @param user
      *            user creating the instance
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
      * @param uri
      *            resource URI
      * @param researchObject
@@ -210,6 +215,9 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     }
 
 
+    /**
+     * Delete the named graph with that resource and update the serialization.
+     */
     public void deleteGraph() {
         String filePath = getPath();
         RDFFormat format = RDFFormat.forMIMEType(getStats().getMimeType());

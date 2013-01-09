@@ -11,10 +11,7 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.common.EvoType;
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
-import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
@@ -37,8 +34,17 @@ public class ArchiveResearchObject extends FrozenResearchObject {
     /**
      * Constructor.
      * 
+     * @param user
+     *            user creating the instance
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
      * @param uri
      *            RO URI
+     * @param liveRO
+     *            the research object that is snapshotted
      */
     public ArchiveResearchObject(UserMetadata user, Dataset dataset, boolean useTransactions, URI uri,
             ResearchObject liveRO) {
@@ -49,6 +55,8 @@ public class ArchiveResearchObject extends FrozenResearchObject {
     /**
      * Get an Archive of existing Research Object.
      * 
+     * @param builder
+     *            model instance builder
      * @param uri
      *            uri
      * @param liveRO
@@ -56,9 +64,9 @@ public class ArchiveResearchObject extends FrozenResearchObject {
      * @return an existing Research Object or null
      * 
      */
-    public static ArchiveResearchObject get(Builder builder, URI uri, ResearchObject LiveRO) {
+    public static ArchiveResearchObject get(Builder builder, URI uri, ResearchObject liveRO) {
         if (ROSRService.SMS.get().containsNamedGraph(uri.resolve(ResearchObject.MANIFEST_PATH))) {
-            return builder.buildArchiveResearchObject(uri, LiveRO);
+            return builder.buildArchiveResearchObject(uri, liveRO);
         } else {
             return null;
         }
@@ -68,20 +76,15 @@ public class ArchiveResearchObject extends FrozenResearchObject {
     /**
      * Create new Research Object.
      * 
+     * @param builder
+     *            model instance builder
      * @param uri
      *            RO URI
      * @param liveRO
      *            live RO
      * @return an instance
-     * @throws ConflictException
-     *             the research object URI is already used
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             no permissions
      */
-    public static ArchiveResearchObject create(Builder builder, URI uri, ResearchObject liveRO)
-            throws ConflictException, DigitalLibraryException, AccessDeniedException {
+    public static ArchiveResearchObject create(Builder builder, URI uri, ResearchObject liveRO) {
         ArchiveResearchObject researchObject = builder.buildArchiveResearchObject(uri, liveRO);
         InputStream manifest;
         try {
@@ -99,8 +102,7 @@ public class ArchiveResearchObject extends FrozenResearchObject {
 
 
     @Override
-    public void generateEvoInfo()
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
+    public void generateEvoInfo() {
         super.generateEvoInfo(EvoType.SNAPSHOT);
     }
 }
