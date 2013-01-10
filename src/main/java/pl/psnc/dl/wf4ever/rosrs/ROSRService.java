@@ -137,10 +137,10 @@ public final class ROSRService {
                     ROSRService.SMS.get().createLiveResearchObject(researchObject, sourceRO);
                     break;
                 case SNAPSHOT:
-                    ROSRService.SMS.get().createSnapshotResearchObject(researchObject, sourceRO);
+                    ROSRService.SMS.get().createResearchObjectCopy(researchObject, sourceRO);
                     break;
                 case ARCHIVE:
-                    ROSRService.SMS.get().createArchivedResearchObject(researchObject, sourceRO);
+                    ROSRService.SMS.get().createResearchObjectCopy(researchObject, sourceRO);
                     break;
             }
 

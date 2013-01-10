@@ -230,7 +230,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public void createSnapshotResearchObject(ResearchObject researchObject, ResearchObject liveResearchObject) {
+    public void createResearchObjectCopy(ResearchObject researchObject, ResearchObject liveResearchObject) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
@@ -261,53 +261,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 creator = liveRO.getPropertyResourceValue(DCTerms.creator);
                 created = liveRO.as(Individual.class).getPropertyValue(DCTerms.created);
 
-            }
-
-            manifestModel.add(ro, ORE.isDescribedBy, manifest);
-            manifestModel.add(ro, DCTerms.created, created);
-            manifestModel.add(ro, DCTerms.creator, creator);
-
-            manifestModel.add(manifest, ORE.describes, ro);
-            manifestModel.add(manifest, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
-
-            //TODO add wasRevisionOf
-            commitTransaction(transactionStarted);
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
-    public void createArchivedResearchObject(ResearchObject researchObject, ResearchObject liveResearchObject) {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
-            Individual manifest = manifestModel.getIndividual(researchObject.getManifestUri().toString());
-            if (manifest != null) {
-                throw new IllegalArgumentException("URI already exists: " + researchObject.getManifestUri());
-            }
-
-            OntModel liveManifestModel = createOntModelForNamedGraph(liveResearchObject.getManifestUri());
-            Individual liveManifest = liveManifestModel.getIndividual(liveResearchObject.getManifestUri().toString());
-
-            manifest = manifestModel.createIndividual(researchObject.getManifestUri().toString(), RO.Manifest);
-            Individual ro = manifestModel.createIndividual(researchObject.getUri().toString(), RO.ResearchObject);
-
-            RDFNode creator, created;
-            Resource liveRO;
-            if (liveManifest == null) {
-                log.warn("Live RO is not an RO: " + liveResearchObject.getManifestUri());
-                liveRO = manifestModel.createResource(liveResearchObject.getManifestUri().toString());
-                creator = manifestModel.createResource(user.getUri().toString());
-                created = manifestModel.createTypedLiteral(Calendar.getInstance());
-            } else {
-                liveRO = liveManifestModel.getIndividual(liveResearchObject.getManifestUri().toString());
-                if (liveRO == null) {
-                    throw new IllegalArgumentException("Live RO does not describe the research object");
-                }
-                creator = liveRO.getPropertyResourceValue(DCTerms.creator);
-                created = liveRO.as(Individual.class).getPropertyValue(DCTerms.created);
             }
 
             manifestModel.add(ro, ORE.isDescribedBy, manifest);
@@ -648,7 +601,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         try {
             Model namedGraphModel = createOntModelForNamedGraph(graphURI);
             namedGraphModel.removeAll();
-            namedGraphModel.read(inputStream, graphURI.resolve("..").toString(), rdfFormat.getName().toUpperCase());
+            namedGraphModel.read(inputStream, graphURI.resolve(".").toString(), rdfFormat.getName().toUpperCase());
             commitTransaction(transactionStarted);
             return created;
         } finally {
@@ -1340,6 +1293,9 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             }
             while (archiveItertator.hasNext()) {
                 URI tmpURI = URI.create(archiveItertator.next().getObject().toString());
+                if (tmpURI.equals(freshSnapshotOrArchive.getUri())) {
+                    continue;
+                }
                 RDFNode node = getIndividual(ResearchObject.create(tmpURI)).getProperty(ROEVO.archivedAtTime)
                         .getObject();
                 DateTime tmpTime = new DateTime(node.asLiteral().getValue().toString());
@@ -2224,7 +2180,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         OntModel liveEvoModel = createOntModelForNamedGraph(liveRO.getFixedEvolutionAnnotationBodyUri());
         liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
                 .getResource(liveRO.getUriString()), ROEVO.hasArchive, ro);
-        URI previousSnapshot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
+
+        URI previousSnapshot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.ARCHIVE);
         if (previousSnapshot != null) {
             storeAggregatedDifferences(researchObject, ResearchObject.create(previousSnapshot));
             evoModel.add(ro, PROV.wasRevisionOf, evoModel.createResource(previousSnapshot.toString()));
