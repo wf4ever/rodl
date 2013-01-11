@@ -254,7 +254,7 @@ public class ResearchObject extends Thing implements Aggregation {
         URI resourceUri = UriBuilder.fromUri(uri).path(path).build();
         Resource resource = Resource.create(builder, this, resourceUri, content, contentType);
         if (getAnnotationsByBodyUri().containsKey(resource.getUri())) {
-            resource.saveGraph();
+            resource.saveGraphAndSerialize();
         }
         getManifest().serialize();
         this.getResources().put(resource.getUri(), resource);
@@ -272,8 +272,8 @@ public class ResearchObject extends Thing implements Aggregation {
      * @return the resource instance
      */
     public Resource aggregate(URI uri) {
-        Resource resource = ROSRService.SMS.get().addResource(this, uri, null);
-        resource.setProxy(ROSRService.SMS.get().addProxy(this, resource));
+        Resource resource = Resource.create(builder, this, uri);
+        resource.setProxy(Proxy.create(builder, this, resource));
         // update the manifest that describes the resource in dLibra
         this.getManifest().serialize();
         this.getResources().put(resource.getUri(), resource);
@@ -372,7 +372,7 @@ public class ResearchObject extends Thing implements Aggregation {
             throws BadRequestException {
         AggregatedResource resource = getAggregatedResources().get(annotation.getBodyUri());
         if (resource != null && resource.isInternal()) {
-            resource.saveGraph();
+            resource.saveGraphAndSerialize();
             getManifest().removeRoResourceClass(resource);
         }
         getManifest().serialize();
@@ -478,8 +478,7 @@ public class ResearchObject extends Thing implements Aggregation {
         for (Annotation annotation : annotationsList) {
             try {
                 if (researchObject.getAggregatedResources().containsKey(annotation.getBodyUri())) {
-                    ROSRService.convertRoResourceToAnnotationBody(researchObject, researchObject
-                            .getAggregatedResources().get(annotation.getBodyUri()));
+                    researchObject.getAggregatedResources().get(annotation.getBodyUri()).saveGraphAndSerialize();
                 }
                 researchObject.annotate(annotation.getBodyUri(), annotation.getAnnotated());
             } catch (DigitalLibraryException | NotFoundException e) {

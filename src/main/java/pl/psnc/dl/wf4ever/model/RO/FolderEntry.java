@@ -191,4 +191,18 @@ public class FolderEntry extends Proxy {
         return entry;
     }
 
+
+    /**
+     * Update the name of the resource in the folder.
+     * 
+     * @param newEntry
+     *            the new entry description
+     * @return this entry, updated
+     */
+    public FolderEntry update(FolderEntry newEntry) {
+        setEntryName(newEntry.getEntryName());
+        save();
+        return this;
+    }
+
 }

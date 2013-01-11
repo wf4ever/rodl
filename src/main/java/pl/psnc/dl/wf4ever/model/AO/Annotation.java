@@ -251,7 +251,7 @@ public class Annotation extends AggregatedResource {
         }
         AggregatedResource resource = getResearchObject().getAggregatedResources().get(getBodyUri());
         if (resource != null && resource.isInternal()) {
-            resource.deleteGraph();
+            resource.deleteGraphAndSerialize();
             //FIXME the resource is still of class AggregatedResource and does not appear in RO collections.
             getResearchObject().getManifest().saveRoResourceClass(this);
         }
@@ -324,6 +324,32 @@ public class Annotation extends AggregatedResource {
 
         Annotation annotation = builder.buildAnnotation(researchObject, uri, bodyUri, targets);
         return annotation;
+    }
+
+
+    /**
+     * Update this annotation with body and target of the given annotation.
+     * 
+     * @param newAnnotation
+     *            the new annotation
+     * @return this annotation, updated
+     * @throws BadRequestException
+     *             the new annotation body is not a valid RDF file
+     */
+    public Annotation update(Annotation newAnnotation)
+            throws BadRequestException {
+        if (!bodyUri.equals(newAnnotation.getBodyUri())) {
+            if (getResearchObject().getAggregatedResources().containsKey(bodyUri)) {
+                getResearchObject().getAggregatedResources().get(bodyUri).deleteGraphAndSerialize();
+            }
+            setBodyUri(newAnnotation.getBodyUri());
+            if (getResearchObject().getAggregatedResources().containsKey(bodyUri)) {
+                getResearchObject().getAggregatedResources().get(bodyUri).saveGraphAndSerialize();
+            }
+        }
+        setAnnotated(newAnnotation.getAnnotated());
+        save();
+        return this;
     }
 
 }

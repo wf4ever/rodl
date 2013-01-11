@@ -121,6 +121,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     public void serialize()
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         serialize(researchObject.getUri());
+        stats = null;
     }
 
 
@@ -191,7 +192,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
      * @throws BadRequestException
      *             if there is no data in storage or the file format is not RDF
      */
-    public void saveGraph()
+    public void saveGraphAndSerialize()
             throws BadRequestException {
         String filePath = getPath();
         RDFFormat format = RDFFormat.forMIMEType(getStats().getMimeType());
@@ -215,14 +216,13 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         }
         serialize();
         researchObject.updateIndexAttributes();
-
     }
 
 
     /**
      * Delete the named graph with that resource and update the serialization.
      */
-    public void deleteGraph() {
+    public void deleteGraphAndSerialize() {
         String filePath = getPath();
         RDFFormat format = RDFFormat.forMIMEType(getStats().getMimeType());
         try (InputStream data = getGraphAsInputStream(RDFFormat.RDFXML)) {
@@ -247,4 +247,41 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         return ROSRService.DL.get().getFileContents(researchObject.getUri(), getPath());
     }
 
+
+    /**
+     * Save the resource and its content.
+     * 
+     * @param content
+     *            the resource content
+     * @param contentType
+     *            the content MIME type
+     * @throws BadRequestException
+     *             if it is expected to be an RDF file and isn't
+     */
+    public void save(InputStream content, String contentType)
+            throws BadRequestException {
+        String path = researchObject.getUri().relativize(uri).getPath();
+        setStats(ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), path, content,
+            contentType != null ? contentType : "text/plain"));
+        if (isNamedGraph()) {
+            saveGraphAndSerialize();
+        }
+        save();
+    }
+
+
+    /**
+     * Update the file contents.
+     * 
+     * @param content
+     *            the resource content
+     * @param contentType
+     *            the content MIME type
+     * @throws BadRequestException
+     *             if it is expected to be an RDF file and isn't
+     */
+    public void update(InputStream content, String contentType)
+            throws BadRequestException {
+        save(content, contentType);
+    }
 }

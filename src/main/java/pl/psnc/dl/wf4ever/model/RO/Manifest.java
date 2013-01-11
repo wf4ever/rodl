@@ -454,7 +454,9 @@ public class Manifest extends ResourceMap {
             com.hp.hpl.jena.rdf.model.Resource bodyR = model.createResource(annotation.getBodyUri().toString());
             Individual annotationInd = model.createIndividual(annotation.getUri().toString(), RO.AggregatedAnnotation);
             annotationInd.addRDFType(AO.Annotation);
+            model.removeAll(annotationInd, AO.body, null);
             model.add(annotationInd, AO.body, bodyR);
+            model.removeAll(annotationInd, RO.annotatesAggregatedResource, null);
             for (Thing targetThing : annotation.getAnnotated()) {
                 com.hp.hpl.jena.rdf.model.Resource target = model.createResource(targetThing.getUri().normalize()
                         .toString());
@@ -465,5 +467,4 @@ public class Manifest extends ResourceMap {
             endTransaction(transactionStarted);
         }
     }
-
 }

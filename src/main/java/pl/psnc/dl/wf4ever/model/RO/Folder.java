@@ -317,7 +317,21 @@ public class Folder extends Resource implements Aggregation {
     public FolderEntry createFolderEntry(InputStream content)
             throws BadRequestException {
         FolderEntry entry = FolderEntry.assemble(builder, this, content);
+        return addFolderEntry(entry);
+    }
+
+
+    /**
+     * Save folder entry, refresh the properties of this folder.
+     * 
+     * @param entry
+     *            folder entry
+     * @return a folder entry instance
+     */
+    public FolderEntry addFolderEntry(FolderEntry entry) {
         getFolderEntries().put(entry.getUri(), entry);
+        getResearchObject().getFolderEntries().put(entry.getUri(), entry);
+        getResearchObject().getFolderEntriesByResourceUri().put(entry.getProxyFor().getUri(), entry);
         entry.save();
         getResourceMap().serialize();
         return entry;
@@ -329,4 +343,27 @@ public class Folder extends Resource implements Aggregation {
         return getFolderEntries();
     }
 
+
+    /**
+     * Update the folder contents.
+     * 
+     * @param content
+     *            the resource content
+     * @param contentType
+     *            the content MIME type
+     * @throws BadRequestException
+     *             if it is expected to be an RDF file and isn't
+     */
+    @Override
+    public void update(InputStream content, String contentType)
+            throws BadRequestException {
+        Folder newFolder = assemble(builder, getResearchObject(), uri, content);
+        for (FolderEntry entry : getFolderEntries().values()) {
+            entry.delete();
+        }
+        for (FolderEntry entry : newFolder.getFolderEntries().values()) {
+            addFolderEntry(entry);
+        }
+        getResourceMap().serialize();
+    }
 }

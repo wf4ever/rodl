@@ -169,7 +169,7 @@ public class ResearchObjectResource {
             @HeaderParam("Accept") String accept, @HeaderParam("Link") Set<String> links, InputStream content)
             throws BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
-        RDFFormat responseSyntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
+        RDFFormat responseSyntax = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
         ResearchObject researchObject = ResearchObject.get(builder, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");

@@ -79,6 +79,7 @@ public class FolderResourceMap extends ResourceMap {
         try {
             Individual entryInd = model.createIndividual(entry.getUri().toString(), RO.FolderEntry);
             Literal name = model.createLiteral(entry.getEntryName());
+            model.removeAll(entryInd, RO.entryName, null);
             model.add(entryInd, RO.entryName, name);
             Individual folderInd = model.createIndividual(getFolder().getUri().toString(), RO.Folder);
             Resource proxyForR = model.getResource(entry.getProxyFor().getUri().toString());
