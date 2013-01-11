@@ -706,4 +706,9 @@ public class ResearchObject extends Thing implements Aggregation {
                 || getFolderEntries().containsKey(uri) || getResourceMaps().containsKey(uri);
     }
 
+
+    public InputStream getAsZipArchive() {
+        return ROSRService.DL.get().getZippedResearchObject(uri);
+    }
+
 }
