@@ -141,7 +141,7 @@ public class ResearchObject extends Thing implements Aggregation {
         if (get(builder, uri) != null) {
             throw new ConflictException("Research Object already exists: " + uri);
         }
-        ResearchObject researchObject = builder.buildResearchObject(uri, builder.getUser().getUri(), DateTime.now());
+        ResearchObject researchObject = builder.buildResearchObject(uri, builder.getUser(), DateTime.now());
         researchObject.manifest = Manifest.create(builder, researchObject.getUri().resolve(MANIFEST_PATH),
             researchObject);
         researchObject.save();
@@ -666,7 +666,7 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     @Override
-    public URI getCreator() {
+    public UserMetadata getCreator() {
         if (creator == null) {
             this.creator = getManifest().extractCreator(this);
         }

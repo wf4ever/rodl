@@ -167,7 +167,7 @@ public class Folder extends Resource implements Aggregation {
      */
     public static Folder assemble(Builder builder, ResearchObject researchObject, URI folderUri, InputStream content)
             throws BadRequestException {
-        Folder folder = builder.buildFolder(researchObject, folderUri, builder.getUser().getUri(), DateTime.now());
+        Folder folder = builder.buildFolder(researchObject, folderUri, builder.getUser(), DateTime.now());
         folder.resourceMap = FolderResourceMap
                 .create(builder, folder, FolderResourceMap.generateResourceMapUri(folder));
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
@@ -262,7 +262,7 @@ public class Folder extends Resource implements Aggregation {
             throws BadRequestException {
         Folder folder = assemble(builder, researchObject, folderUri, content);
         folder.setCreated(DateTime.now());
-        folder.setCreator(builder.getUser().getUri());
+        folder.setCreator(builder.getUser());
         folder.setProxy(Proxy.create(builder, researchObject, folder));
         folder.save();
         for (FolderEntry entry : folder.getFolderEntries().values()) {

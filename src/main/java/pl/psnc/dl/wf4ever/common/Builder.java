@@ -99,7 +99,7 @@ public class Builder {
      *            creation date
      * @return a new Research Object instance
      */
-    public ResearchObject buildResearchObject(URI uri, URI creator, DateTime created) {
+    public ResearchObject buildResearchObject(URI uri, UserMetadata creator, DateTime created) {
         ResearchObject researchObject = new ResearchObject(user, dataset, useTransactions, uri);
         researchObject.setCreator(creator);
         researchObject.setCreated(created);
@@ -183,7 +183,7 @@ public class Builder {
      *            creation date
      * @return a new manifest instance
      */
-    public Manifest buildManifest(URI uri, ResearchObject researchObject, URI creator, DateTime created) {
+    public Manifest buildManifest(URI uri, ResearchObject researchObject, UserMetadata creator, DateTime created) {
         Manifest manifest = new Manifest(user, dataset, useTransactions, uri, researchObject);
         manifest.setCreator(creator);
         manifest.setCreated(created);
@@ -205,7 +205,7 @@ public class Builder {
      *            creation date
      * @return a new aggregated resource instance
      */
-    public AggregatedResource buildAggregatedResource(URI uri, ResearchObject researchObject, URI creator,
+    public AggregatedResource buildAggregatedResource(URI uri, ResearchObject researchObject, UserMetadata creator,
             DateTime created) {
         AggregatedResource resource = new AggregatedResource(user, dataset, useTransactions, researchObject, uri);
         resource.setCreator(creator);
@@ -275,7 +275,7 @@ public class Builder {
      * @return a new annotation
      */
     public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Set<Thing> targets,
-            URI creator, DateTime created) {
+            UserMetadata creator, DateTime created) {
         Annotation annotation = buildAnnotation(researchObject, uri, bodyUri, targets);
         annotation.setCreator(creator);
         annotation.setCreated(created);
@@ -301,8 +301,8 @@ public class Builder {
      *            creation date
      * @return a new annotation
      */
-    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Thing target, URI creator,
-            DateTime created) {
+    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Thing target,
+            UserMetadata creator, DateTime created) {
         Set<Thing> targets = new HashSet<>();
         targets.add(target);
         return buildAnnotation(researchObject, uri, bodyUri, targets, creator, created);
@@ -322,7 +322,7 @@ public class Builder {
      *            creation date
      * @return a new resource
      */
-    public Resource buildResource(ResearchObject researchObject, URI uri, URI creator, DateTime created) {
+    public Resource buildResource(ResearchObject researchObject, URI uri, UserMetadata creator, DateTime created) {
         Resource resource = new Resource(user, dataset, useTransactions, researchObject, uri);
         resource.setCreator(creator);
         resource.setCreated(created);
@@ -344,7 +344,7 @@ public class Builder {
      *            creation date
      * @return a new folder
      */
-    public Folder buildFolder(ResearchObject researchObject, URI uri, URI creator, DateTime created) {
+    public Folder buildFolder(ResearchObject researchObject, URI uri, UserMetadata creator, DateTime created) {
         Folder folder = new Folder(user, dataset, useTransactions, researchObject, uri);
         folder.setCreator(creator);
         folder.setCreated(created);

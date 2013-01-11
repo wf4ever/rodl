@@ -7,6 +7,7 @@ import java.util.Map;
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.common.Builder;
+import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -17,6 +18,7 @@ import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.ResourceMap;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
+import pl.psnc.dl.wf4ever.vocabulary.FOAF;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
@@ -105,7 +107,7 @@ public class Manifest extends ResourceMap {
      * @return a new manifest
      */
     public static Manifest create(Builder builder, URI uri, ResearchObject researchObject) {
-        Manifest manifest = builder.buildManifest(uri, researchObject, builder.getUser().getUri(), DateTime.now());
+        Manifest manifest = builder.buildManifest(uri, researchObject, builder.getUser(), DateTime.now());
         manifest.save();
         return manifest;
     }
@@ -211,8 +213,8 @@ public class Manifest extends ResourceMap {
             Map<URI, AggregatedResource> aggregated = new HashMap<>();
             String queryString = String
                     .format(
-                        "PREFIX ore: <%s> PREFIX dcterms: <%s> SELECT ?resource ?proxy ?created ?creator WHERE { <%s> ore:aggregates ?resource . ?resource a ore:AggregatedResource . OPTIONAL { ?proxy ore:proxyFor ?resource . } OPTIONAL { ?resource dcterms:creator ?creator . } OPTIONAL { ?resource dcterms:created ?created . } }",
-                        ORE.NAMESPACE, DCTerms.NS, aggregation.getUri().toString());
+                        "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX foaf: <%s> SELECT ?resource ?proxy ?created ?creator ?creatorname WHERE { <%s> ore:aggregates ?resource . ?resource a ore:AggregatedResource . OPTIONAL { ?proxy ore:proxyFor ?resource . } OPTIONAL { ?resource dcterms:creator ?creator . OPTIONAL { ?creator foaf:name ?creatorname . } } OPTIONAL { ?resource dcterms:created ?created . } }",
+                        ORE.NAMESPACE, DCTerms.NS, FOAF.NAMESPACE, aggregation.getUri().toString());
 
             Query query = QueryFactory.create(queryString);
             QueryExecution qe = QueryExecutionFactory.create(query, model);
@@ -235,10 +237,14 @@ public class Manifest extends ResourceMap {
                         RDFNode creatorNode = solution.get("creator");
                         URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
                                 .asResource().getURI()) : null;
+                        RDFNode creatorNameNode = solution.get("creatorname");
+                        String resCreatorName = creatorNameNode != null ? creatorNameNode.asLiteral().getString()
+                                : null;
+                        UserProfile profile = new UserProfile(null, resCreatorName, null, resCreator);
                         RDFNode createdNode = solution.get("created");
                         DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime
                                 .parse(createdNode.asLiteral().getString()) : null;
-                        resource = builder.buildAggregatedResource(rUri, getResearchObject(), resCreator, resCreated);
+                        resource = builder.buildAggregatedResource(rUri, getResearchObject(), profile, resCreated);
                         if (pUri != null) {
                             resource.setProxy(builder.buildProxy(pUri, resource, getResearchObject()));
                         }
@@ -266,7 +272,7 @@ public class Manifest extends ResourceMap {
             Map<URI, Resource> resources2 = new HashMap<>();
             String queryString = String
                     .format(
-                        "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ro: <%s> SELECT ?resource ?proxy ?created ?creator WHERE { <%s> ore:aggregates ?resource . ?resource a ro:Resource . ?proxy ore:proxyFor ?resource . OPTIONAL { ?resource dcterms:creator ?creator . } OPTIONAL { ?resource dcterms:created ?created . } }",
+                        "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ro: <%s> PREFIX foaf: <%s> SELECT ?resource ?proxy ?created ?creator ?creatorname WHERE { <%s> ore:aggregates ?resource . ?resource a ro:Resource . ?proxy ore:proxyFor ?resource . OPTIONAL { ?resource dcterms:creator ?creator . OPTIONAL { ?creator foaf:name ?creatorname . } } OPTIONAL { ?resource dcterms:created ?created . } }",
                         ORE.NAMESPACE, DCTerms.NS, RO.NAMESPACE, aggregation.getUri().toString());
 
             Query query = QueryFactory.create(queryString);
@@ -285,10 +291,13 @@ public class Manifest extends ResourceMap {
                     RDFNode creatorNode = solution.get("creator");
                     URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
                             .asResource().getURI()) : null;
+                    RDFNode creatorNameNode = solution.get("creatorname");
+                    String resCreatorName = creatorNameNode != null ? creatorNameNode.asLiteral().getString() : null;
+                    UserProfile profile = new UserProfile(null, resCreatorName, null, resCreator);
                     RDFNode createdNode = solution.get("created");
                     DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                             .asLiteral().getString()) : null;
-                    Resource resource = builder.buildResource(getResearchObject(), rUri, resCreator, resCreated);
+                    Resource resource = builder.buildResource(getResearchObject(), rUri, profile, resCreated);
                     if (pUri != null) {
                         resource.setProxy(builder.buildProxy(pUri, resource, getResearchObject()));
                     }
@@ -315,7 +324,7 @@ public class Manifest extends ResourceMap {
             Map<URI, Folder> folders2 = new HashMap<>();
             String queryString = String
                     .format(
-                        "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ro: <%s> SELECT ?folder ?proxy ?resourcemap ?created ?creator WHERE { <%s> ore:aggregates ?folder . ?folder a ro:Folder ; ore:isDescribedBy ?resourcemap . ?proxy ore:proxyFor ?folder . OPTIONAL { ?folder dcterms:creator ?creator . } OPTIONAL { ?folder dcterms:created ?created . } }",
+                        "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ro: <%s> PREFIX foaf: <%s> SELECT ?folder ?proxy ?resourcemap ?created ?creator ?creatorname WHERE { <%s> ore:aggregates ?folder . ?folder a ro:Folder ; ore:isDescribedBy ?resourcemap . ?proxy ore:proxyFor ?folder . OPTIONAL { ?folder dcterms:creator ?creator . OPTIONAL { ?creator foaf:name ?creatorname . } } OPTIONAL { ?folder dcterms:created ?created . } }",
                         ORE.NAMESPACE, DCTerms.NS, RO.NAMESPACE, aggregation.getUri().toString());
 
             Query query = QueryFactory.create(queryString);
@@ -335,6 +344,9 @@ public class Manifest extends ResourceMap {
                     RDFNode creatorNode = solution.get("creator");
                     URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
                             .asResource().getURI()) : null;
+                    RDFNode creatorNameNode = solution.get("creatorname");
+                    String resCreatorName = creatorNameNode != null ? creatorNameNode.asLiteral().getString() : null;
+                    UserProfile profile = new UserProfile(null, resCreatorName, null, resCreator);
                     RDFNode createdNode = solution.get("created");
                     DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                             .asLiteral().getString()) : null;
@@ -350,7 +362,7 @@ public class Manifest extends ResourceMap {
                         qe2.close();
                     }
 
-                    Folder folder = builder.buildFolder(getResearchObject(), fURI, resCreator, resCreated);
+                    Folder folder = builder.buildFolder(getResearchObject(), fURI, profile, resCreated);
                     folder.setRootFolder(isRootFolder);
                     if (pUri != null) {
                         folder.setProxy(builder.buildProxy(pUri, folder, getResearchObject()));
@@ -378,7 +390,7 @@ public class Manifest extends ResourceMap {
             Map<URI, Annotation> annotationsByUri = new HashMap<>();
             String queryString = String
                     .format(
-                        "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ao: <%s> PREFIX ro: <%s> SELECT ?annotation ?body ?target ?created ?creator WHERE { <%s> ore:aggregates ?annotation . ?annotation a ro:AggregatedAnnotation ; ao:body ?body ; ro:annotatesAggregatedResource ?target . OPTIONAL { ?proxy ore:proxyFor ?annotation . } OPTIONAL { ?annotation dcterms:creator ?creator . } OPTIONAL { ?annotation dcterms:created ?created . } }",
+                        "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ao: <%s> PREFIX foaf: <%s> PREFIX ro: <%s> SELECT ?annotation ?body ?target ?created ?creator ?creatorname WHERE { <%s> ore:aggregates ?annotation . ?annotation a ro:AggregatedAnnotation ; ao:body ?body ; ro:annotatesAggregatedResource ?target . OPTIONAL { ?proxy ore:proxyFor ?annotation . } OPTIONAL { ?annotation dcterms:creator ?creator . OPTIONAL { ?creator foaf:name ?creatorname . } } OPTIONAL { ?annotation dcterms:created ?created . } }",
                         ORE.NAMESPACE, DCTerms.NS, AO.NAMESPACE, RO.NAMESPACE, aggregation.getUri().toString());
 
             Query query = QueryFactory.create(queryString);
@@ -403,11 +415,15 @@ public class Manifest extends ResourceMap {
                         RDFNode creatorNode = solution.get("creator");
                         URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
                                 .asResource().getURI()) : null;
+                        RDFNode creatorNameNode = solution.get("creatorname");
+                        String resCreatorName = creatorNameNode != null ? creatorNameNode.asLiteral().getString()
+                                : null;
+                        UserProfile profile = new UserProfile(null, resCreatorName, null, resCreator);
                         RDFNode createdNode = solution.get("created");
                         DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime
                                 .parse(createdNode.asLiteral().getString()) : null;
                         annotation = builder.buildAnnotation(getResearchObject(), aURI, bUri, builder.buildThing(tUri),
-                            resCreator, resCreated);
+                            profile, resCreated);
                         if (pUri != null) {
                             annotation.setProxy(builder.buildProxy(pUri, annotation, getResearchObject()));
                         }

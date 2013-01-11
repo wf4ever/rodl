@@ -18,6 +18,7 @@ import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.Builder;
+import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
@@ -26,6 +27,7 @@ import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
+import pl.psnc.dl.wf4ever.vocabulary.FOAF;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.W4E;
 
@@ -61,7 +63,7 @@ public class Thing {
     protected URI uri;
 
     /** creator URI. */
-    protected URI creator;
+    protected UserMetadata creator;
 
     /** creation date. */
     protected DateTime created;
@@ -202,12 +204,12 @@ public class Thing {
     }
 
 
-    public URI getCreator() {
+    public UserMetadata getCreator() {
         return creator;
     }
 
 
-    public void setCreator(URI creator) {
+    public void setCreator(UserMetadata creator) {
         this.creator = creator;
     }
 
@@ -365,7 +367,7 @@ public class Thing {
      *            the resource
      * @return creator URI or null if not defined
      */
-    public URI extractCreator(Thing thing) {
+    public UserMetadata extractCreator(Thing thing) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             Individual ro = model.getIndividual(thing.getUri().toString());
@@ -373,7 +375,10 @@ public class Thing {
                 throw new IncorrectModelException("RO not found in the manifest" + thing.getUri());
             }
             com.hp.hpl.jena.rdf.model.Resource c = ro.getPropertyResourceValue(DCTerms.creator);
-            return c != null ? URI.create(c.getURI()) : null;
+            URI curi = c != null ? URI.create(c.getURI()) : null;
+            RDFNode n = c.getProperty(FOAF.name).getObject();
+            String name = n != null ? n.asLiteral().getString() : null;
+            return new UserProfile(null, name, null, curi);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -572,7 +577,9 @@ public class Thing {
                 model.add(subjectR, DCTerms.created, model.createTypedLiteral(subject.getCreated().toCalendar(null)));
             }
             if (!subjectR.hasProperty(DCTerms.creator) && subject.getCreator() != null) {
-                model.add(subjectR, DCTerms.creator, model.createResource(subject.getCreator().toString()));
+                Individual author = model.createIndividual(subject.getCreator().toString(), FOAF.Agent);
+                model.add(subjectR, DCTerms.creator, author);
+                author.setPropertyValue(FOAF.name, model.createLiteral(subject.getCreator().getName()));
             }
             commitTransaction(transactionStarted);
         } finally {

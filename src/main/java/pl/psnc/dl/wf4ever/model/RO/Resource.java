@@ -73,8 +73,7 @@ public class Resource extends AggregatedResource {
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("Such resource already exists");
         }
-        Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser().getUri(),
-            DateTime.now());
+        Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser(), DateTime.now());
         resource.setProxy(Proxy.create(builder, researchObject, resource));
         resource.save();
         return resource;
@@ -101,8 +100,7 @@ public class Resource extends AggregatedResource {
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("Such resource already exists");
         }
-        Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser().getUri(),
-            DateTime.now());
+        Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser(), DateTime.now());
         resource.setProxy(Proxy.create(builder, researchObject, resource));
         resource.save(content, contentType);
         return resource;
