@@ -69,9 +69,8 @@ public class FinalizeOperation implements Operation {
             }
             Annotation annotation = ROSRService.SMS.get().findAnnotationForBody(researchObject,
                 researchObject.getFixedEvolutionAnnotationBodyUri());
-            ROSRService.deleteAnnotation(researchObject, annotation.getUri());
-            ROSRService
-                    .deaggregateInternalResource(researchObject, researchObject.getFixedEvolutionAnnotationBodyUri());
+            researchObject.getAggregatedResources().get(annotation.getBodyUri()).delete();
+            annotation.delete();
             researchObject.generateEvoInfo();
         } catch (DigitalLibraryException | NotFoundException | AccessDeniedException e) {
             throw new OperationFailedException("Could not generate evo info", e);

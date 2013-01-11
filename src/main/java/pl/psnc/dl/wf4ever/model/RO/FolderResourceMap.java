@@ -185,21 +185,21 @@ public class FolderResourceMap extends ResourceMap {
         super.save();
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            Resource manifestRes = model.createResource(getFolder().getResearchObject().getManifest().getUri()
-                    .toString());
-            Individual roInd = model.createIndividual(getFolder().getResearchObject().getUri().toString(),
-                RO.ResearchObject);
+            Resource manifestRes = model.createResource(getResearchObject().getManifest().getUri().toString());
+            Individual roInd = model.createIndividual(getResearchObject().getUri().toString(), RO.ResearchObject);
             model.add(roInd, ORE.isDescribedBy, manifestRes);
 
-            Resource folderRMRes = model.createResource(uri.toString());
-            Individual folderInd = model.createIndividual(getFolder().getUri().toString(), RO.Folder);
-            folderInd.addRDFType(ORE.Aggregation);
-            model.add(folderInd, ORE.isAggregatedBy, roInd);
-            model.add(folderInd, ORE.isDescribedBy, folderRMRes);
+            model.createIndividual(aggregation.getUri().toString(), RO.Folder);
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);
         }
+    }
+
+
+    @Override
+    public void delete() {
+        super.delete();
     }
 
 

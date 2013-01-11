@@ -15,6 +15,7 @@ import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObjectComponent;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
@@ -85,8 +86,25 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     public void save()
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         super.save();
-        researchObject.getManifest().saveAggregation(this);
+        researchObject.getManifest().saveAggregatedResource(this);
         researchObject.getManifest().saveAuthor(this);
+    }
+
+
+    /**
+     * Delete itself, the proxy, if exists, and folder entries.
+     */
+    @Override
+    public void delete() {
+        getResearchObject().getManifest().deleteResource(this);
+        getResearchObject().getManifest().serialize();
+        getResearchObject().getAggregatedResources().remove(uri);
+        ROSRService.DL.get().deleteFile(getResearchObject().getUri(), getPath());
+        getProxy().delete();
+        for (FolderEntry entry : getResearchObject().getFolderEntriesByResourceUri().get(uri)) {
+            entry.delete();
+        }
+        super.delete();
     }
 
 

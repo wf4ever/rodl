@@ -132,6 +132,13 @@ public class Resource extends AggregatedResource {
 
 
     @Override
+    public void delete() {
+        getResearchObject().getResources().remove(uri);
+        super.delete();
+    }
+
+
+    @Override
     public void saveGraph()
             throws BadRequestException {
         super.saveGraph();

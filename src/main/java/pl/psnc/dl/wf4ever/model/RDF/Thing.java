@@ -43,6 +43,7 @@ import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.tdb.TDB;
 import com.hp.hpl.jena.tdb.TDBFactory;
@@ -555,6 +556,27 @@ public class Thing {
             if (model != null) {
                 dataset.removeNamedModel(uri.toString());
                 model = null;
+            }
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    /**
+     * Delete a resource from the model.
+     * 
+     * @param resource
+     *            resource to delete
+     */
+    public void deleteResource(Thing resource) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            Resource resR = model.getResource(resource.getUri().toString());
+            if (resR != null) {
+                model.removeAll(resR, null, null);
+                model.removeAll(null, null, resR);
             }
             commitTransaction(transactionStarted);
         } finally {

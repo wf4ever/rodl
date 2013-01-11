@@ -8,10 +8,6 @@ import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.common.UserProfile;
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.ConflictException;
-import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -76,22 +72,22 @@ public class Manifest extends ResourceMap {
 
 
     @Override
-    public void save()
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+    public void save() {
         super.save();
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            Individual ro = model.createIndividual(aggregation.getUri().toString(), RO.ResearchObject);
-            Individual manifest = model.createIndividual(uri.toString(), RO.Manifest);
-            model.add(ro, ORE.isDescribedBy, manifest);
-            model.add(manifest, ORE.describes, ro);
-
-            saveAuthor((Thing) aggregation);
-            saveAuthor(this);
+            model.createIndividual(aggregation.getUri().toString(), RO.ResearchObject);
+            model.createIndividual(uri.toString(), RO.Manifest);
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);
         }
+    }
+
+
+    @Override
+    public void delete() {
+        super.delete();
     }
 
 
@@ -119,7 +115,7 @@ public class Manifest extends ResourceMap {
      * @param resource
      *            the ro:Resource
      */
-    public void saveRoResourceClass(Resource resource) {
+    public void saveRoResourceClass(AggregatedResource resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             model.createIndividual(resource.getUri().toString(), RO.Resource);
@@ -136,7 +132,7 @@ public class Manifest extends ResourceMap {
      * @param resource
      *            the ro:Resource
      */
-    public void removeRoResourceClass(Resource resource) {
+    public void removeRoResourceClass(AggregatedResource resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             Individual resourceR = model.getIndividual(resource.getUri().toString());

@@ -242,6 +242,23 @@ public class Annotation extends AggregatedResource {
     }
 
 
+    @Override
+    public void delete() {
+        getResearchObject().getAnnotations().remove(uri);
+        getResearchObject().getAnnotationsByBodyUri().get(getBodyUri()).remove(this);
+        for (Thing thing : getAnnotated()) {
+            getResearchObject().getAnnotationsByTarget().get(thing.getUri()).remove(this);
+        }
+        AggregatedResource resource = getResearchObject().getAggregatedResources().get(getBodyUri());
+        if (resource != null && resource.isInternal()) {
+            resource.deleteGraph();
+            //FIXME the resource is still of class AggregatedResource and does not appear in RO collections.
+            getResearchObject().getManifest().saveRoResourceClass(this);
+        }
+        super.delete();
+    }
+
+
     /**
      * Create an annotation instance based on the description.
      * 

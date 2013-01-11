@@ -386,42 +386,50 @@ public class Resource {
             throw new NotFoundException("Research Object not found");
         }
         URI resourceUri = uriInfo.getAbsolutePath();
-
-        if (researchObject.getProxies().containsKey(resourceUri)) {
-            AggregatedResource resource = researchObject.getProxies().get(resourceUri).getProxyFor();
-            if (resource.isInternal()) {
-                return Response.status(Status.TEMPORARY_REDIRECT).location(resource.getUri()).build();
-            } else {
-                return ROSRService.deaggregateExternalResource(researchObject, resourceUri);
-            }
-        }
-        Annotation annotation = researchObject.getAnnotations().get(resourceUri);
-        if (annotation != null) {
-            if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(annotation.getBodyUri())) {
-                throw new ForbiddenException("Can't delete the evo annotation");
-            }
-            return ROSRService.deleteAnnotation(researchObject, resourceUri);
-        }
-        if (researchObject.getFolders().containsKey(resourceUri)) {
-            Folder folder = researchObject.getFolders().get(resourceUri);
-            ROSRService.deleteFolder(folder);
-            return Response.noContent().build();
-        }
-        FolderEntry entry = ROSRService.SMS.get().getFolderEntry(resourceUri);
-        if (entry != null) {
-            ROSRService.deleteFolderEntry(entry);
-            return Response.noContent().build();
-        }
         if (original != null) {
             resourceUri = resourceUri.resolve(original);
         }
-        if (researchObject.getManifestUri().equals(resourceUri)) {
-            throw new ForbiddenException("Can't delete the manifest");
+
+        Thing resource;
+        if (researchObject.getProxies().containsKey(resourceUri)) {
+            return deleteProxy(researchObject.getProxies().get(resourceUri));
+        } else if (researchObject.getFolderEntries().containsKey(resourceUri)) {
+            resource = researchObject.getFolderEntries().get(resourceUri);
+        } else if (researchObject.getAnnotations().containsKey(resourceUri)) {
+            Annotation annotation = researchObject.getAnnotations().get(resourceUri);
+            if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(annotation.getBodyUri())) {
+                throw new ForbiddenException("Can't delete the evo annotation");
+            }
+            resource = annotation;
+        } else if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
+            resource = researchObject.getAggregatedResources().get(resourceUri);
+        } else if (researchObject.getResourceMaps().containsKey(resourceUri)) {
+            throw new ForbiddenException("Can't delete the resource map");
         } else if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(resourceUri)) {
             throw new ForbiddenException("Can't delete the evo info");
+        } else {
+            throw new NotFoundException("Resource not found");
         }
+        resource.delete();
+        return Response.noContent().build();
+    }
 
-        return ROSRService.deaggregateInternalResource(researchObject, resourceUri);
+
+    /**
+     * Delete the proxy.
+     * 
+     * @param proxy
+     *            proxy to delete
+     * @return 303 for internal resources, 204 for external.
+     */
+    private Response deleteProxy(Proxy proxy) {
+        AggregatedResource resource = proxy.getProxyFor();
+        if (resource.isInternal()) {
+            return Response.status(Status.TEMPORARY_REDIRECT).location(resource.getUri()).build();
+        } else {
+            resource.delete();
+            return Response.noContent().build();
+        }
     }
 
 

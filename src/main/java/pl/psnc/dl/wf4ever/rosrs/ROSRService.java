@@ -21,7 +21,6 @@ import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
-import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
@@ -55,61 +54,6 @@ public final class ROSRService {
 
 
     /**
-     * De-aggregate an internal resource, delete its content and proxy.
-     * 
-     * @param researchObject
-     *            research object aggregating the resource
-     * @param resource
-     *            resource to delete
-     * @return 204 No Content response
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     */
-    public static Response deaggregateInternalResource(ResearchObject researchObject, URI resource)
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        String filePath = researchObject.getUri().relativize(resource).getPath();
-        ROSRService.DL.get().deleteFile(researchObject.getUri(), filePath);
-        if (ROSRService.SMS.get().isROMetadataNamedGraph(researchObject, resource)) {
-            ROSRService.SMS.get().removeAnnotationBody(researchObject, resource);
-        } else {
-            ROSRService.SMS.get().removeResource(researchObject, resource);
-        }
-        // update the manifest that describes the resource in dLibra
-        researchObject.getManifest().serialize();
-        return Response.noContent().build();
-    }
-
-
-    /**
-     * Remove the aggregation of a resource in a research object and its proxy.
-     * 
-     * @param researchObject
-     *            research object that aggregates the resource
-     * @param proxy
-     *            external resource proxy
-     * @return 204 No Content
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     */
-    public static Response deaggregateExternalResource(ResearchObject researchObject, URI proxy)
-            throws AccessDeniedException, DigitalLibraryException, NotFoundException {
-        URI resource = ROSRService.SMS.get().getProxyFor(researchObject, proxy);
-        ROSRService.SMS.get().removeResource(researchObject, resource);
-        // update the manifest that describes the resource in dLibra
-        researchObject.getManifest().serialize();
-        return deleteProxy(researchObject, proxy);
-    }
-
-
-    /**
      * Check if the resource is internal. Resource is internal only if its content has been deployed under the control
      * of the service. A resource that has "internal" URI but the content has not been uploaded is considered external.
      * 
@@ -127,34 +71,6 @@ public final class ROSRService {
             throws NotFoundException, DigitalLibraryException {
         String filePath = researchObject.getUri().relativize(resource).getPath();
         return !filePath.isEmpty() && ROSRService.DL.get().fileExists(researchObject.getUri(), filePath);
-    }
-
-
-    /**
-     * Get The evolution Information.
-     * 
-     * @param researchObject
-     *            the RO URI
-     * @return InputStream with evolution information written in TTL format
-     **/
-    public static InputStream getEvoInfo(ResearchObject researchObject) {
-        ROSRService.SMS.get();
-        return null;
-    }
-
-
-    /**
-     * Delete the proxy. Does not delete the resource that it points to.
-     * 
-     * @param researchObject
-     *            research object that aggregates the proxy
-     * @param proxy
-     *            proxy to delete
-     * @return 204 No Content
-     */
-    private static Response deleteProxy(ResearchObject researchObject, URI proxy) {
-        ROSRService.SMS.get().deleteProxy(researchObject, proxy);
-        return Response.noContent().build();
     }
 
 
@@ -419,30 +335,6 @@ public final class ROSRService {
 
 
     /**
-     * Delete and deaggregate an annotation. Does not delete the annotation body.
-     * 
-     * @param researchObject
-     *            research object in which the annotation is defined
-     * @param annotationUri
-     *            the annotation URI
-     * @return 204 No Content
-     * @throws NotFoundException
-     *             could not find the resource in DL when checking if it's internal
-     * @throws DigitalLibraryException
-     *             could not connect to the DL to check if it's internal
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     */
-    public static Response deleteAnnotation(ResearchObject researchObject, URI annotationUri)
-            throws NotFoundException, DigitalLibraryException, AccessDeniedException {
-        Annotation annotation = ROSRService.SMS.get().getAnnotation(researchObject, annotationUri);
-        ROSRService.SMS.get().deleteAnnotation(researchObject, annotation);
-        ROSRService.convertAnnotationBodyToAggregatedResource(researchObject, annotation.getBodyUri());
-        return Response.noContent().build();
-    }
-
-
-    /**
      * Find out all annotations of the RO and store them in dLibra as attributes.
      * 
      * @param researchObject
@@ -475,47 +367,6 @@ public final class ROSRService {
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         ROSRService.SMS.get().updateFolder(folder);
         folder.getResourceMap().serialize();
-    }
-
-
-    /**
-     * Delete the folder and update the manifest.
-     * 
-     * @param folder
-     *            folder
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     */
-    public static void deleteFolder(Folder folder)
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        String filePath = folder.getResearchObject().getUri().relativize(folder.getResourceMap().getUri()).getPath();
-        ROSRService.DL.get().deleteFile(folder.getResearchObject().getUri(), filePath);
-        ROSRService.SMS.get().deleteFolder(folder);
-        folder.getResearchObject().getManifest().serialize();
-    }
-
-
-    /**
-     * Delete a folder entry.
-     * 
-     * @param entry
-     *            folder entry
-     * @throws NotFoundException
-     *             could not find the resource in DL
-     * @throws DigitalLibraryException
-     *             could not connect to the DL
-     * @throws AccessDeniedException
-     *             access denied when updating data in DL
-     */
-    public static void deleteFolderEntry(FolderEntry entry)
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        Folder folder = ROSRService.SMS.get().getFolder(entry.getProxyIn().getUri());
-        folder.getFolderEntries().remove(entry);
-        updateFolder(folder);
     }
 
 }

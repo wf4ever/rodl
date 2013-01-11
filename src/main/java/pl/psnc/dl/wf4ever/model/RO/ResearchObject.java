@@ -91,6 +91,9 @@ public class ResearchObject extends Thing implements Aggregation {
     /** folder entries. */
     private Map<URI, FolderEntry> folderEntries;
 
+    /** folder entries, grouped based on ore:proxyFor. */
+    private Multimap<URI, FolderEntry> folderEntriesByResourceUri;
+
     /** Manifest. */
     private Manifest manifest;
 
@@ -207,23 +210,6 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
-    /**
-     * Delete the Research Object including its resources and annotations.
-     */
-    @Override
-    public void delete() {
-        try {
-            ROSRService.DL.get().deleteResearchObject(uri);
-        } finally {
-            try {
-                ROSRService.SMS.get().removeResearchObject(this);
-            } catch (IllegalArgumentException e) {
-                LOGGER.warn("URI not found in SMS: " + uri);
-            }
-        }
-    }
-
-
     @Override
     public void save() {
         super.save();
@@ -233,6 +219,20 @@ public class ResearchObject extends Thing implements Aggregation {
         ROSRService.DL.get().createResearchObject(uri, getManifest().getGraphAsInputStream(RDFFormat.RDFXML),
             ResearchObject.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
         generateEvoInfo();
+    }
+
+
+    /**
+     * Delete the Research Object including its resources and annotations.
+     */
+    @Override
+    public void delete() {
+        for (AggregatedResource resource : getAggregatedResources().values()) {
+            resource.delete();
+        }
+        getManifest().delete();
+        ROSRService.DL.get().deleteResearchObject(uri);
+        super.delete();
     }
 
 
@@ -373,6 +373,7 @@ public class ResearchObject extends Thing implements Aggregation {
         AggregatedResource resource = getAggregatedResources().get(annotation.getBodyUri());
         if (resource != null && resource.isInternal()) {
             resource.saveGraph();
+            getManifest().removeRoResourceClass(resource);
         }
         getManifest().serialize();
         this.getAnnotations().put(annotation.getUri(), annotation);
@@ -554,10 +555,27 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
+     * Get folder entries grouped by the URI of the resource they proxy. Loaded lazily.
+     * 
+     * @return multimap of folder entries
+     */
+    public Multimap<URI, FolderEntry> getFolderEntriesByResourceUri() {
+        if (folderEntriesByResourceUri == null) {
+            folderEntriesByResourceUri = HashMultimap.<URI, FolderEntry> create();
+            for (FolderEntry entry : getFolderEntries().values()) {
+                folderEntriesByResourceUri.put(entry.getProxyFor().getUri(), entry);
+            }
+        }
+        return folderEntriesByResourceUri;
+    }
+
+
+    /**
      * Get proxies for aggregated resources, loaded lazily.
      * 
      * @return proxies mapped by their URI
      */
+    @Override
     public Map<URI, Proxy> getProxies() {
         if (proxies == null) {
             this.proxies = new HashMap<>();
@@ -624,6 +642,7 @@ public class ResearchObject extends Thing implements Aggregation {
      * 
      * @return a map of aggregated resource by their URI
      */
+    @Override
     public Map<URI, AggregatedResource> getAggregatedResources() {
         if (aggregatedResources == null) {
             this.aggregatedResources = getManifest().extractAggregatedResources(getResources(), getFolders(),
@@ -683,7 +702,6 @@ public class ResearchObject extends Thing implements Aggregation {
      *         URI
      */
     public boolean isUriUsed(URI uri) {
-        //FIXME folder entries are missing
         return getAggregatedResources().containsKey(uri) || getProxies().containsKey(uri)
                 || getFolderEntries().containsKey(uri) || getResourceMaps().containsKey(uri);
     }

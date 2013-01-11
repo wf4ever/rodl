@@ -13,6 +13,7 @@ import org.joda.time.DateTime;
 import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Aggregation;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -35,6 +36,9 @@ public class Folder extends Resource implements Aggregation {
 
     /** folder entries. */
     private Map<URI, FolderEntry> folderEntries;
+
+    /** aggregated resources. */
+    private Map<URI, AggregatedResource> aggregatedResources;
 
     /** Resource map (graph with folder description) URI. */
     private FolderResourceMap resourceMap;
@@ -88,6 +92,23 @@ public class Folder extends Resource implements Aggregation {
             folderEntries = getResourceMap().extractFolderEntries();
         }
         return folderEntries;
+    }
+
+
+    /**
+     * Get resources aggregated in the folder.
+     * 
+     * @return resources aggregated in the folder
+     */
+    @Override
+    public Map<URI, AggregatedResource> getAggregatedResources() {
+        if (aggregatedResources == null) {
+            aggregatedResources = new HashMap<>();
+            for (FolderEntry entry : getFolderEntries().values()) {
+                aggregatedResources.put(entry.getProxyFor().getUri(), entry.getProxyFor());
+            }
+        }
+        return aggregatedResources;
     }
 
 
@@ -147,6 +168,17 @@ public class Folder extends Resource implements Aggregation {
         super.save();
         getResourceMap().save();
         researchObject.getManifest().saveFolderData(this);
+    }
+
+
+    @Override
+    public void delete() {
+        for (FolderEntry entry : getFolderEntries().values()) {
+            entry.delete();
+        }
+        getResourceMap().delete();
+        getResearchObject().getFolders().remove(uri);
+        super.delete();
     }
 
 
@@ -289,6 +321,12 @@ public class Folder extends Resource implements Aggregation {
         entry.save();
         getResourceMap().serialize();
         return entry;
+    }
+
+
+    @Override
+    public Map<URI, ? extends Proxy> getProxies() {
+        return getFolderEntries();
     }
 
 }

@@ -128,6 +128,19 @@ public class FolderEntry extends Proxy {
 
 
     /**
+     * Delete the folder entry and the aggregation in the folder. Doesn't delete the proxied resource.
+     */
+    @Override
+    public void delete() {
+        getProxyIn().getResourceMap().deleteResource(getProxyFor());
+        getProxyIn().getAggregatedResources().remove(getProxyFor().getUri());
+        getProxyFor().getResearchObject().getFolderEntries().remove(uri);
+        getProxyFor().getResearchObject().getFolderEntriesByResourceUri().get(getProxyFor().getUri()).remove(this);
+        super.delete();
+    }
+
+
+    /**
      * Create a folder entry instance out of an RDF/XML description.
      * 
      * @param builder
