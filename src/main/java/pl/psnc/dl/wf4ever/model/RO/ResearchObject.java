@@ -86,7 +86,7 @@ public class ResearchObject extends Thing implements Aggregation {
     private Map<URI, Annotation> annotations;
 
     /** folder resource maps. */
-    private Map<URI, ResourceMap> folderResourceMaps;
+    private Map<URI, ResourceMap> resourceMaps;
 
     /** Manifest. */
     private Manifest manifest;
@@ -621,18 +621,19 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
-     * Get all folder resource maps, loading the lazily.
+     * Get manifest and folder resource maps, loading the lazily.
      * 
      * @return folder resource maps mapped by their URIs
      */
-    public Map<URI, ResourceMap> getFolderResourceMaps() {
-        if (folderResourceMaps == null) {
-            this.folderResourceMaps = new HashMap<>();
+    public Map<URI, ResourceMap> getResourceMaps() {
+        if (resourceMaps == null) {
+            this.resourceMaps = new HashMap<>();
+            this.resourceMaps.put(getManifest().getUri(), getManifest());
             for (Folder folder : getFolders().values()) {
-                folderResourceMaps.put(folder.getResourceMap().getUri(), folder.getResourceMap());
+                resourceMaps.put(folder.getResourceMap().getUri(), folder.getResourceMap());
             }
         }
-        return folderResourceMaps;
+        return resourceMaps;
     }
 
 
@@ -664,7 +665,7 @@ public class ResearchObject extends Thing implements Aggregation {
     public boolean isUriUsed(URI uri) {
         //FIXME folder entries are missing
         return getAggregatedResources().containsKey(uri) || getProxies().containsKey(uri)
-                || getFolderResourceMaps().containsKey(uri) || getManifest().getUri().equals(uri);
+                || getResourceMaps().containsKey(uri);
     }
 
 }

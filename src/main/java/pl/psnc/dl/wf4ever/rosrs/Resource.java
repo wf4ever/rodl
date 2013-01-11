@@ -255,10 +255,8 @@ public class Resource {
         ResearchObjectComponent resource;
         if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
             resource = researchObject.getAggregatedResources().get(resourceUri);
-        } else if (researchObject.getFolderResourceMaps().containsKey(resourceUri)) {
-            resource = researchObject.getFolderResourceMaps().get(resourceUri);
-        } else if (resourceUri.equals(researchObject.getManifest().getUri())) {
-            resource = researchObject.getManifest();
+        } else if (researchObject.getResourceMaps().containsKey(resourceUri)) {
+            resource = researchObject.getResourceMaps().get(resourceUri);
         } else {
             throw new NotFoundException("Resource not found");
         }
@@ -278,7 +276,8 @@ public class Resource {
             if (specificName != null) {
                 URI specificResourceUri = UriBuilder.fromUri(resource.getUri().resolve(".")).path(specificName).build();
                 if (format == null) {
-                    format = RDFFormat.forFileName(specificResourceUri.getPath(), RDFFormat.RDFXML);
+                    format = specificResourceUri.getPath() != null ? RDFFormat.forFileName(
+                        specificResourceUri.getPath(), RDFFormat.RDFXML) : RDFFormat.RDFXML;
                 }
                 data = resource.getGraphAsInputStream(format);
                 mimeType = format.getDefaultMIMEType();
