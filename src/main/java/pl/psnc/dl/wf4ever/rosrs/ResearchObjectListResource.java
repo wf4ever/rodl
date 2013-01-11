@@ -28,7 +28,6 @@ import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.common.util.MemoryZipFile;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
-import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
@@ -72,20 +71,14 @@ public class ResearchObjectListResource {
     @GET
     @Produces("text/plain")
     public Response getResearchObjectList() {
-        Set<URI> list;
-        if (user.getRole() == Role.PUBLIC) {
-            list = ROSRService.SMS.get().findResearchObjects();
-        } else {
-            list = ROSRService.SMS.get().findResearchObjectsByCreator(user.getUri());
-        }
+        Set<ResearchObject> list = ResearchObject.getAll(builder);
         StringBuilder sb = new StringBuilder();
-        for (URI id : list) {
-            sb.append(id.toString());
+        for (ResearchObject id : list) {
+            sb.append(id.getUri().toString());
             sb.append("\r\n");
         }
 
         ContentDisposition cd = ContentDisposition.type("text/plain").fileName("ROs.txt").build();
-
         return Response.ok().entity(sb.toString()).header("Content-disposition", cd).build();
     }
 

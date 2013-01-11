@@ -82,7 +82,7 @@ public class Thing {
     protected Dataset dataset;
 
     /** Triple store location. */
-    private static final String TRIPLE_STORE_DIR = getStoreDirectory("connection.properties");
+    protected static final String TRIPLE_STORE_DIR = getStoreDirectory("connection.properties");
 
     /** Logger. */
     private static final Logger LOGGER = Logger.getLogger(SemanticMetadataServiceTdb.class);

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +32,7 @@ import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
@@ -42,10 +44,21 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ReadWrite;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.tdb.TDBFactory;
+import com.hp.hpl.jena.vocabulary.DCTerms;
 
 /**
  * A research object, live by default.
@@ -710,4 +723,57 @@ public class ResearchObject extends Thing implements Aggregation {
         return ROSRService.DL.get().getZippedResearchObject(uri);
     }
 
+
+    /**
+     * Get all research objects. If the builder has a user set whose role is not public, only the user's research
+     * objects are looked for.
+     * 
+     * @param builder
+     *            builder that defines the dataset and the user
+     * @return a set of research objects
+     */
+    public static Set<ResearchObject> getAll(Builder builder) {
+        Dataset dataset = builder.getDataset();
+        if (dataset == null) {
+            dataset = TDBFactory.createDataset(TRIPLE_STORE_DIR);
+        }
+        boolean transaction;
+        if (builder.isUseTransactions() && dataset.supportsTransactions() && !dataset.isInTransaction()) {
+            dataset.begin(ReadWrite.READ);
+            transaction = true;
+        } else {
+            transaction = false;
+        }
+        try {
+            Set<ResearchObject> ros = new HashSet<>();
+            String queryString;
+            if (builder.getUser() == null || builder.getUser().getRole() == Role.PUBLIC) {
+                queryString = String.format("PREFIX ro: <%s> SELECT ?ro WHERE { ?ro a ro:ResearchObject . }",
+                    RO.NAMESPACE);
+            } else {
+                queryString = String
+                        .format(
+                            "PREFIX ro: <%s> PREFIX dcterms: <%s> SELECT ?ro WHERE { ?ro a ro:ResearchObject ; dcterms:creator <%s> . }",
+                            RO.NAMESPACE, DCTerms.NS, builder.getUser().getUri());
+            }
+            Query query = QueryFactory.create(queryString);
+            QueryExecution qe = QueryExecutionFactory.create(query, dataset.getNamedModel("urn:x-arq:UnionGraph"));
+            try {
+                ResultSet results = qe.execSelect();
+                while (results.hasNext()) {
+                    QuerySolution solution = results.next();
+                    RDFNode r = solution.get("ro");
+                    URI rUri = URI.create(r.asResource().getURI());
+                    ros.add(builder.buildResearchObject(rUri));
+                }
+            } finally {
+                qe.close();
+            }
+            return ros;
+        } finally {
+            if (builder.isUseTransactions() && dataset.supportsTransactions() && transaction) {
+                dataset.end();
+            }
+        }
+    }
 }

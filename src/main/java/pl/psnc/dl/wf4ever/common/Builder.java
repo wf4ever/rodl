@@ -69,6 +69,16 @@ public class Builder {
     }
 
 
+    public Dataset getDataset() {
+        return dataset;
+    }
+
+
+    public boolean isUseTransactions() {
+        return useTransactions;
+    }
+
+
     public UserMetadata getUser() {
         return user;
     }
