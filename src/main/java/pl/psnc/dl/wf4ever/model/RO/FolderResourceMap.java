@@ -1,8 +1,8 @@
 package pl.psnc.dl.wf4ever.model.RO;
 
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -122,10 +122,10 @@ public class FolderResourceMap extends ResourceMap {
      * 
      * @return a set of resources (not loaded)
      */
-    public Set<FolderEntry> extractFolderEntries() {
+    public Map<URI, FolderEntry> extractFolderEntries() {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
-            Set<FolderEntry> entries = new HashSet<>();
+            Map<URI, FolderEntry> entries = new HashMap<>();
             String queryString = String
                     .format(
                         "PREFIX ore: <%s> PREFIX ro: <%s> SELECT ?entry ?resource ?name WHERE { ?entry a ro:FolderEntry ; ro:entryName ?name ; ore:proxyFor ?resource ; ore:proxyIn <%s> . }",
@@ -145,7 +145,7 @@ public class FolderResourceMap extends ResourceMap {
                     RDFNode nameNode = solution.get("name");
                     String name = nameNode.asLiteral().getString();
                     FolderEntry entry = builder.buildFolderEntry(eUri, proxyFor, getFolder(), name);
-                    entries.add(entry);
+                    entries.put(entry.getUri(), entry);
                 }
             } finally {
                 qe.close();

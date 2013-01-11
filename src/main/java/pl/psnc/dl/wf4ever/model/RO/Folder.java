@@ -4,10 +4,8 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -36,7 +34,7 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 public class Folder extends Resource implements Aggregation {
 
     /** folder entries. */
-    private Set<FolderEntry> folderEntries;
+    private Map<URI, FolderEntry> folderEntries;
 
     /** Resource map (graph with folder description) URI. */
     private FolderResourceMap resourceMap;
@@ -85,7 +83,7 @@ public class Folder extends Resource implements Aggregation {
      * 
      * @return a set of folder entries in this folder
      */
-    public Set<FolderEntry> getFolderEntries() {
+    public Map<URI, FolderEntry> getFolderEntries() {
         if (folderEntries == null) {
             folderEntries = getResourceMap().extractFolderEntries();
         }
@@ -93,7 +91,7 @@ public class Folder extends Resource implements Aggregation {
     }
 
 
-    public void setFolderEntries(Set<FolderEntry> folderEntries) {
+    public void setFolderEntries(Map<URI, FolderEntry> folderEntries) {
         this.folderEntries = folderEntries;
     }
 
@@ -240,7 +238,7 @@ public class Folder extends Resource implements Aggregation {
                 }
             }
         }
-        folder.setFolderEntries(new HashSet<>(entries.values()));
+        folder.setFolderEntries(entries);
         return folder;
     }
 
@@ -267,7 +265,7 @@ public class Folder extends Resource implements Aggregation {
         folder.setCreator(builder.getUser().getUri());
         folder.setProxy(Proxy.create(builder, researchObject, folder));
         folder.save();
-        for (FolderEntry entry : folder.getFolderEntries()) {
+        for (FolderEntry entry : folder.getFolderEntries().values()) {
             entry.save();
         }
         folder.getResourceMap().serialize();
@@ -287,7 +285,7 @@ public class Folder extends Resource implements Aggregation {
     public FolderEntry createFolderEntry(InputStream content)
             throws BadRequestException {
         FolderEntry entry = FolderEntry.assemble(builder, this, content);
-        getFolderEntries().add(entry);
+        getFolderEntries().put(entry.getUri(), entry);
         entry.save();
         getResourceMap().serialize();
         return entry;

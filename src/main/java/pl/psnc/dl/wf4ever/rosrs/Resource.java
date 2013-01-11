@@ -245,6 +245,9 @@ public class Resource {
         if (researchObject.getProxies().containsKey(resourceUri)) {
             return getProxy(researchObject.getProxies().get(resourceUri));
         }
+        if (researchObject.getFolderEntries().containsKey(resourceUri)) {
+            return getProxy(researchObject.getFolderEntries().get(resourceUri));
+        }
         if (researchObject.getAnnotations().containsKey(resourceUri)) {
             return getAnnotation(researchObject.getAnnotations().get(resourceUri), format);
         }

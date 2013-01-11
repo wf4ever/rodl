@@ -2084,7 +2084,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             folderModel.add(folderInd, ORE.isAggregatedBy, roInd);
             folderModel.add(folderInd, ORE.isDescribedBy, folderRMRes);
 
-            for (FolderEntry entry : folder.getFolderEntries()) {
+            for (FolderEntry entry : folder.getFolderEntries().values()) {
                 addFolderEntry(folder, folderInd, entry);
             }
             commitTransaction(transactionStarted);
@@ -2419,7 +2419,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 entry.setProxyFor(folder.getResearchObject().getAggregatedResources().get(URI.create(proxyFor)));
                 String name = entryI.getPropertyValue(RO.entryName).asLiteral().getString();
                 entry.setEntryName(name);
-                folder.getFolderEntries().add(entry);
+                folder.getFolderEntries().put(entry.getUri(), entry);
             }
             return folder;
         } finally {
@@ -2442,7 +2442,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 deleteFolderEntry(entry);
             }
 
-            for (FolderEntry entry : folder.getFolderEntries()) {
+            for (FolderEntry entry : folder.getFolderEntries().values()) {
                 addFolderEntry(folder, folderInd, entry);
             }
             commitTransaction(transactionStarted);
@@ -2545,7 +2545,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             }
             Resource folderR = entryInd.getPropertyResourceValue(ORE.isAggregatedBy);
             Folder folder = getFolder(URI.create(folderR.getURI()));
-            for (FolderEntry entry : folder.getFolderEntries()) {
+            for (FolderEntry entry : folder.getFolderEntries().values()) {
                 if (entry.getUri().equals(entryUri)) {
                     return entry;
                 }
