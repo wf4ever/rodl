@@ -1122,7 +1122,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             Resource agent = manifestModel.createResource(user.getUri().toString());
             manifestModel.add(annotation, DCTerms.creator, agent);
             commitTransaction(transactionStarted);
-            return new Annotation(user, researchObject, annotationURI, annotationBodyUri, annotationTargets);
+            return new Annotation(user, researchObject, annotationURI, new Thing(user, annotationBodyUri),
+                    annotationTargets);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -1154,7 +1155,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             if (manifestModel == null) {
                 throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
             }
-            Resource body = manifestModel.createResource(annotation.getBodyUri().normalize().toString());
+            Resource body = manifestModel.createResource(annotation.getBody().getUri().normalize().toString());
             Individual annotationI = manifestModel.getIndividual(annotation.getUri().toString());
             manifestModel.removeAll(annotationI, AO.body, null);
             manifestModel.removeAll(annotationI, RO.annotatesAggregatedResource, null);
@@ -1187,7 +1188,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     targets.add(new Thing(user, URI.create(node.asResource().getURI())));
                 }
             }
-            return new Annotation(user, researchObject, annotationUri, body, targets);
+            return new Annotation(user, researchObject, annotationUri, new Thing(user, body), targets);
 
         } finally {
             endTransaction(transactionStarted);
@@ -2020,12 +2021,12 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     if (node.isURIResource()) {
                         URI nodeURI = URI.create(node.asResource().getURI());
                         if (isAnnotation(researchObject, nodeURI)) {
-                            annotations.add(new Annotation(user, researchObject, nodeURI, manifestModel));
+                            annotations.add(new FillUpAnnotation(user, researchObject, nodeURI, manifestModel));
                         }
                     } else if (node.isResource()) {
                         URI nodeURI = changeBlankNodeToUriResources(researchObject, manifestModel, node);
                         if (isAnnotation(researchObject, nodeURI)) {
-                            annotations.add(new Annotation(user, researchObject, nodeURI, manifestModel));
+                            annotations.add(new FillUpAnnotation(user, researchObject, nodeURI, manifestModel));
                         }
                     }
                 } catch (IncorrectModelException e) {
@@ -2576,9 +2577,9 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     public List<Annotation> removeSpecialFilesFromAnnotatios(List<Annotation> annotations) {
         List<Annotation> toRemoved = new ArrayList<Annotation>();
         for (Annotation a : annotations) {
-            if (a.getBodyUri().toString().contains("evo_info.ttl")) {
+            if (a.getBody().getUri().toString().contains("evo_info.ttl")) {
                 toRemoved.add(a);
-            } else if (a.getBodyUri().toString().contains("manifest.rdf")) {
+            } else if (a.getBody().getUri().toString().contains("manifest.rdf")) {
                 toRemoved.add(a);
             }
         }
@@ -2586,4 +2587,70 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         return annotations;
     }
 
+
+    /**
+     * The fillUp method will be finally replaced by loda method. This methos is used only in one place. We need to
+     * remove it from Annotation class in order to keep the new code clean. That is why this short class appears here.
+     * 
+     * @author pejot
+     * 
+     */
+    class FillUpAnnotation extends Annotation {
+
+        /**
+         * Constructor.
+         * 
+         * @param user
+         *            user creating the instance
+         * @param researchObject
+         *            RO aggregating the annotation
+         * @param uri
+         *            Resource uri
+         * @param model
+         *            Ontology model
+         * 
+         */
+        public FillUpAnnotation(UserMetadata user, ResearchObject researchObject, URI uri, OntModel model) {
+            super(user, researchObject, uri, null, new HashSet<Thing>());
+            fillUp(model);
+        }
+
+
+        /**
+         * Filling up annotated list and body field.
+         * 
+         * @param model
+         *            ontology model
+         * @throws IncorrectModelException
+         *             the model contains an incorrect annotation description
+         */
+        private void fillUp(OntModel model)
+                throws IncorrectModelException {
+            Individual source = model.getIndividual(uri.toString());
+            for (RDFNode resource : source.listPropertyValues(RO.annotatesAggregatedResource).toList()) {
+                if (resource.isLiteral()) {
+                    throw new IncorrectModelException(String.format("Annotation %s annotates a literal %s",
+                        uri.toString(), resource.toString()));
+                }
+                if (resource.isAnon()) {
+                    throw new IncorrectModelException(String.format("Annotation %s annotates a blank node %s",
+                        uri.toString(), resource.toString()));
+                }
+                this.getAnnotated().add(new Thing(user, URI.create(resource.asResource().getURI())));
+            }
+            RDFNode bodyNode = source.getPropertyValue(AO.body);
+            if (bodyNode == null) {
+                throw new IncorrectModelException(String.format("Annotation %s has no body", uri.toString()));
+            }
+            if (bodyNode.isLiteral()) {
+                throw new IncorrectModelException(String.format("Annotation %s uses a literal %s as body",
+                    uri.toString(), bodyNode.toString()));
+            }
+            if (bodyNode.isAnon()) {
+                throw new IncorrectModelException(String.format("Annotation %s uses a blank node %s as body",
+                    uri.toString(), bodyNode.toString()));
+            }
+            this.setBody(new Thing(user, URI.create(bodyNode.asResource().getURI())));
+        }
+    }
 }

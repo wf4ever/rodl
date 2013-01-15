@@ -616,7 +616,7 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
             test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), null);
         ann.setAnnotated(new HashSet<>(Arrays.asList(new Thing(userProfile, test.emptyRO.getUri()
                 .resolve(WORKFLOW_PATH)), new Thing(userProfile, test.emptyRO.getUri()))));
-        ann.setBodyUri(test.emptyRO.getUri().resolve(WORKFLOW_PATH_2));
+        ann.setBody(new Thing(userProfile, test.emptyRO.getUri().resolve(WORKFLOW_PATH_2)));
         test.sms.updateAnnotation(test.emptyRO, ann);
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
@@ -1194,13 +1194,13 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public void testRemoveSpecialFilesFromAnnotations() {
         List<Annotation> annotations = new ArrayList<Annotation>();
         annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/1/"),
-                URI.create("http://www.example.com/ROS/1/manifest.rdf"), new HashSet<Thing>()));
+                new Thing(userProfile, URI.create("http://www.example.com/ROS/1/manifest.rdf")), new HashSet<Thing>()));
         annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/2/"),
-                URI.create("http://www.example.com/ROS/1/evo_info.ttl"), new HashSet<Thing>()));
+                new Thing(userProfile, URI.create("http://www.example.com/ROS/1/evo_info.ttl")), new HashSet<Thing>()));
         annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/3/"),
-                URI.create("http://www.example.com/ROS/1/body1.ttl"), new HashSet<Thing>()));
+                new Thing(userProfile, URI.create("http://www.example.com/ROS/1/body1.ttl")), new HashSet<Thing>()));
         annotations.add(new Annotation(userProfile, test.ro1, URI.create("http://www.example.com/ROS/annotation/4/"),
-                URI.create("http://www.example.com/ROS/1/body2.ttl"), new HashSet<Thing>()));
+                new Thing(userProfile, URI.create("http://www.example.com/ROS/1/body2.ttl")), new HashSet<Thing>()));
         annotations = test.sms.removeSpecialFilesFromAnnotatios(annotations);
         Assert.assertEquals("Two annotations should stay", annotations.size(), 2);
     }
