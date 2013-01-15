@@ -115,7 +115,7 @@ public class ResearchObjectListResource {
         URI uri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.create(builder, uri);
 
-        RDFFormat format = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
+        RDFFormat format = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
         InputStream manifest = ROSRService.SMS.get().getNamedGraph(researchObject.getManifestUri(), format);
         ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType())
                 .fileName(ResearchObject.MANIFEST_PATH).build();
