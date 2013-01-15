@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -214,6 +215,8 @@ public class Resource {
      *            the file path
      * @param original
      *            original resource in case of a format-specific URI
+     * @param accept
+     *            Accept header
      * @param request
      *            HTTP request for cache'ing
      * @return 200 OK or 303 See Other
@@ -226,7 +229,7 @@ public class Resource {
      */
     @GET
     public Response getResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
-            @QueryParam("original") String original, @Context Request request)
+            @QueryParam("original") String original, @HeaderParam("Accept") String accept, @Context Request request)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.create(uri);
@@ -246,8 +249,7 @@ public class Resource {
         if (ROSRService.SMS.get().isRoFolder(researchObject, resource)) {
             Folder folder = new Folder();
             folder.setUri(resource);
-            RDFFormat format = RDFFormat.forMIMEType(servletRequest.getHeader(Constants.ACCEPT_HEADER),
-                RDFFormat.RDFXML);
+            RDFFormat format = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
             return Response.status(Status.SEE_OTHER).location(folder.getResourceMapUri(format)).build();
         }
 

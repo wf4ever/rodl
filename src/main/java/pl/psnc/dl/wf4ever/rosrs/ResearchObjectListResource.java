@@ -12,6 +12,7 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -90,6 +91,8 @@ public class ResearchObjectListResource {
     /**
      * Creates new RO with given RO_ID.
      * 
+     * @param accept
+     *            accept header
      * @return 201 (Created) when the RO was successfully created, 409 (Conflict) if the RO_ID is already used in the
      *         WORKSPACE_ID workspace
      * @throws BadRequestException
@@ -108,7 +111,7 @@ public class ResearchObjectListResource {
      *             no permissions
      */
     @POST
-    public Response createResearchObject()
+    public Response createResearchObject(@HeaderParam("Accept") String accept)
             throws BadRequestException, IllegalArgumentException, UriBuilderException, ConflictException,
             DigitalLibraryException, NotFoundException, AccessDeniedException {
         LOGGER.debug(String.format("%s\t\tInit create RO", new DateTime().toString()));
@@ -124,7 +127,7 @@ public class ResearchObjectListResource {
         URI researchObjectURI = ROSRService.createResearchObject(researchObject);
         LOGGER.debug(String.format("%s\t\tRO created", new DateTime().toString()));
 
-        RDFFormat format = RDFFormat.forMIMEType(request.getHeader(Constants.ACCEPT_HEADER), RDFFormat.RDFXML);
+        RDFFormat format = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
         InputStream manifest = ROSRService.SMS.get().getNamedGraph(researchObject.getManifestUri(), format);
         ContentDisposition cd = ContentDisposition.type(format.getDefaultMIMEType())
                 .fileName(ResearchObject.MANIFEST_PATH).build();

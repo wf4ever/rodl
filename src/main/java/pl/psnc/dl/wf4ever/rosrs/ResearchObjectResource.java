@@ -169,7 +169,7 @@ public class ResearchObjectResource {
             InputStream content)
             throws BadRequestException, AccessDeniedException, DigitalLibraryException, NotFoundException {
         URI uri = uriInfo.getAbsolutePath();
-        RDFFormat responseSyntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
+        RDFFormat responseSyntax = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
         ResearchObject researchObject = ResearchObject.create(uri);
         URI resourceUri;
         if (request.getHeader(Constants.SLUG_HEADER) != null) {
@@ -300,8 +300,8 @@ public class ResearchObjectResource {
                 throw new BadRequestException("The entity body does not define any ore:Proxy.");
             }
         }
-        return ROSRService.aggregateExternalResource(researchObject, proxyFor,
-            RDFFormat.forMIMEType(accept, RDFFormat.RDFXML)).build();
+        RDFFormat format = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
+        return ROSRService.aggregateExternalResource(researchObject, proxyFor, format).build();
     }
 
 
@@ -383,7 +383,7 @@ public class ResearchObjectResource {
         Annotation annotation = ROSRService.addAnnotation(researchObject, body, targets);
         String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBody().toString(),
             AO.body);
-        RDFFormat syntax = RDFFormat.forFileName(accept, RDFFormat.RDFXML);
+        RDFFormat syntax = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
         InputStream annotationDesc = ROSRService.SMS.get().getResource(researchObject, syntax, annotation.getUri());
         ResponseBuilder response = Response.created(annotation.getUri()).entity(annotationDesc)
                 .type(syntax.getDefaultMIMEType()).header(Constants.LINK_HEADER, annotationBodyHeader);
@@ -431,7 +431,7 @@ public class ResearchObjectResource {
         Folder folder = ROSRService.assembleFolder(researchObject, folderURI, content);
         folder = ROSRService.createFolder(researchObject, folder);
 
-        RDFFormat syntax = RDFFormat.forFileName(accept, RDFFormat.RDFXML);
+        RDFFormat syntax = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
         Model folderDesc = ModelFactory.createDefaultModel();
         folderDesc.read(ROSRService.SMS.get().getNamedGraph(folder.getResourceMapUri(), syntax), null);
         folderDesc.read(ROSRService.SMS.get()
