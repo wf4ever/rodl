@@ -371,5 +371,5 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
-	<version>7.0.10-SNAPSHOT</version>
+	<version>7.0.11-SNAPSHOT</version>
 </project>

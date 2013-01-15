@@ -275,7 +275,7 @@ public class ResearchObjectResource {
         }
         pl.psnc.dl.wf4ever.model.RO.Resource resource = researchObject.aggregate(proxyFor);
 
-        RDFFormat syntax = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
+        RDFFormat syntax = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
         String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, proxyFor.toString(),
             ORE.proxyFor.getURI());
         InputStream proxyDesc = researchObject.getManifest().getGraphAsInputStream(syntax, resource.getProxy());
@@ -310,7 +310,7 @@ public class ResearchObjectResource {
         Annotation annotation = researchObject.annotate(content);
         String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBodyUri().toString(),
             AO.body);
-        RDFFormat syntax = accept != null ? RDFFormat.forFileName(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
+        RDFFormat syntax = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
         InputStream annotationDesc = researchObject.getManifest().getGraphAsInputStream(syntax, annotation);
         ResponseBuilder response = Response.created(annotation.getUri()).entity(annotationDesc)
                 .type(syntax.getDefaultMIMEType()).header(Constants.LINK_HEADER, annotationBodyHeader);
@@ -354,7 +354,7 @@ public class ResearchObjectResource {
         URI folderUri = uriInfo.getAbsolutePathBuilder().path(path).build();
         Folder folder = researchObject.aggregateFolder(folderUri, content);
 
-        RDFFormat syntax = accept != null ? RDFFormat.forFileName(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
+        RDFFormat syntax = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
         Model folderDesc = ModelFactory.createDefaultModel();
         folderDesc.read(folder.getResourceMap().getGraphAsInputStream(syntax), null);
         folderDesc.read(researchObject.getManifest().getGraphAsInputStream(syntax, folder, folder.getProxy()), null);
