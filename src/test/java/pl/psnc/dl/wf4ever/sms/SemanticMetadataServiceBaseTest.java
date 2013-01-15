@@ -16,10 +16,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.FOAF;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
@@ -222,19 +222,19 @@ public class SemanticMetadataServiceBaseTest {
 
         public TestStructure()
                 throws URISyntaxException, IOException {
-            ro1 = ResearchObject.create(getResourceURI("ro1/"));
-            sp1 = ResearchObject.create(getResourceURI("ro1-sp1/"));
-            sp2 = ResearchObject.create(getResourceURI("ro1-sp2/"));
-            arch1 = ResearchObject.create(getResourceURI("ro1-arch1/"));
-            wrongRO = ResearchObject.create(getResourceURI("wrong-ro/"));
-            annotatedRO = ResearchObject.create(URI.create("http://www.example.com/annotatedRO/"));
-            simpleAnnotatedRO = ResearchObject.create(URI.create("http://www.example.com/simpleAnnotatedRO/"));
+            ro1 = new ResearchObject(userProfile, getResourceURI("ro1/"));
+            sp1 = new ResearchObject(userProfile, getResourceURI("ro1-sp1/"));
+            sp2 = new ResearchObject(userProfile, getResourceURI("ro1-sp2/"));
+            arch1 = new ResearchObject(userProfile, getResourceURI("ro1-arch1/"));
+            wrongRO = new ResearchObject(userProfile, getResourceURI("wrong-ro/"));
+            annotatedRO = new ResearchObject(userProfile, URI.create("http://www.example.com/annotatedRO/"));
+            simpleAnnotatedRO = new ResearchObject(userProfile, URI.create("http://www.example.com/simpleAnnotatedRO/"));
 
             InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1/.ro/manifest.ttl");
             sms = new SemanticMetadataServiceTdb(userProfile, ro1, is, RDFFormat.TURTLE);
 
-            emptyRO = ResearchObject.create(URI.create("http://example.org/ROs/empty-RO/"));
-            emptyRO2 = ResearchObject.create(URI.create("http://example.org/ROs/empty-RO2/"));
+            emptyRO = new ResearchObject(userProfile, URI.create("http://example.org/ROs/empty-RO/"));
+            emptyRO2 = new ResearchObject(userProfile, URI.create("http://example.org/ROs/empty-RO2/"));
             sms.createResearchObject(emptyRO);
             sms.createResearchObject(emptyRO2);
 

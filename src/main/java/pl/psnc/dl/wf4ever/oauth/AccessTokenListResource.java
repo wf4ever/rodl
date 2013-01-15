@@ -21,15 +21,15 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.BadRequestException;
-import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.AccessToken;
 import pl.psnc.dl.wf4ever.auth.AccessTokenList;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
+import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.common.UserProfile;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 
 /**
  * REST API access tokens resource.
@@ -52,6 +52,10 @@ public class AccessTokenListResource {
     @Context
     private UriInfo uriInfo;
 
+    /** Authenticated user. */
+    @RequestAttribute("User")
+    private UserMetadata user;
+
 
     /**
      * Returns list of access tokens as XML. The optional parameters are client_id and user_id.
@@ -66,8 +70,6 @@ public class AccessTokenListResource {
     @Produces("text/xml")
     public AccessTokenList getAccessTokenList(@QueryParam("client_id") String clientId,
             @QueryParam("user_id") String userId) {
-        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
-
         if (user.getRole() != UserMetadata.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
         }
@@ -96,8 +98,6 @@ public class AccessTokenListResource {
     @Produces("text/plain")
     public Response createAccessToken(String data)
             throws BadRequestException {
-        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
-
         if (user.getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
         }

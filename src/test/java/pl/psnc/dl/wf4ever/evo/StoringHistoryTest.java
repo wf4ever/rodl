@@ -73,6 +73,6 @@ public class StoringHistoryTest extends EvoTest {
 
         assertTrue("sp2 should contain Additon", sp2Evo.contains("Addition"));
         assertTrue("sp2 should contain Removal", sp2Evo.contains("Removal"));
-        assertTrue("sp2 should contain Removal", sp2Evo.contains("Modification"));
+        assertTrue("sp2 should contain Modification", sp2Evo.contains("Modification"));
     }
 }

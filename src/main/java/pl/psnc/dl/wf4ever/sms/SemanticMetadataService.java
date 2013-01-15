@@ -14,14 +14,16 @@ import javax.naming.NamingException;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.EvoType;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
-import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.ORE.Proxy;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
 
 import com.google.common.collect.Multimap;
@@ -243,7 +245,7 @@ public interface SemanticMetadataService {
      * @param fileExtension
      * @return
      */
-    InputStream getNamedGraphWithRelativeURIs(URI graphURI, ResearchObject researchObject, RDFFormat rdfFormat);
+    InputStream getNamedGraphWithRelativeURIs(URI graphURI, URI base, RDFFormat rdfFormat);
 
 
     /**
@@ -369,7 +371,7 @@ public interface SemanticMetadataService {
      *            resource for which the proxy will be
      * @return proxy URI
      */
-    URI addProxy(ResearchObject researchObject, URI resource);
+    Proxy addProxy(ResearchObject researchObject, AggregatedResource resource);
 
 
     /**
@@ -440,25 +442,11 @@ public interface SemanticMetadataService {
      *            a list of annotated resources
      * @param annotationBody
      *            the annotation body
-     * @return URI of the annotation
-     */
-    Annotation addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody);
-
-
-    /**
-     * Add an annotation to the research object.
-     * 
-     * @param researchObject
-     *            research object
-     * @param annotationTargets
-     *            a list of annotated resources
-     * @param annotationBody
-     *            the annotation body
      * @param annotationUUID
      *            annotation prefix
      * @return URI of the annotation
      */
-    Annotation addAnnotation(ResearchObject researchObject, List<URI> annotationTargets, URI annotationBody,
+    Annotation addAnnotation(ResearchObject researchObject, Set<Thing> annotationTargets, URI annotationBody,
             String annotationUUID);
 
 
@@ -665,10 +653,10 @@ public interface SemanticMetadataService {
      * @param researchObject
      *            the research object
      * @return the list of aggregated resources.
-     * @throws ManifestTraversingException .
+     * @throws IncorrectModelException .
      */
     List<AggregatedResource> getAggregatedResources(ResearchObject researchObject)
-            throws ManifestTraversingException;
+            throws IncorrectModelException;
 
 
     /**
@@ -677,10 +665,10 @@ public interface SemanticMetadataService {
      * @param researchObject
      *            the research object
      * @return the list of annotations.
-     * @throws ManifestTraversingException .
+     * @throws IncorrectModelException .
      */
     List<Annotation> getAnnotations(ResearchObject researchObject)
-            throws ManifestTraversingException;
+            throws IncorrectModelException;
 
 
     /**
@@ -708,8 +696,9 @@ public interface SemanticMetadataService {
      *            live Research Object
      * @param researchObject
      *            Snapshot or Archive
+     * @return
      */
-    void generateEvoInformation(ResearchObject researchObject, ResearchObject parent, EvoType type);
+    Annotation generateEvoInformation(ResearchObject researchObject, ResearchObject parent, EvoType type);
 
 
     /**

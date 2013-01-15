@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.utils.zip;
+package pl.psnc.dl.wf4ever.common.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,7 +9,7 @@ import java.util.zip.ZipFile;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.common.ResearchObject;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 /**
  * Create/Read zip file in memory.
@@ -77,6 +77,11 @@ public class MemoryZipFile {
             LOGGER.warn("Error when looking for ZIP entry", e);
             return null;
         }
+    }
+
+
+    public boolean containsEntry(String entryName) {
+        return zipFile.getEntry(prefix + entryName) != null;
     }
 
 

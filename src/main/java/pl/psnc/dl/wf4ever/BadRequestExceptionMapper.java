@@ -5,6 +5,8 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+
 /**
  * Maps <code>BadRequestException</code> to <code>400 (Bad Request)</code> HTTP response.
  * 

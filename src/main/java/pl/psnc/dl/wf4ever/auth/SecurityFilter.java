@@ -12,6 +12,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.Constants;
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
@@ -59,6 +60,7 @@ public class SecurityFilter implements ContainerRequestFilter {
             ROSRService.DL.set(dl);
             ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(user));
             httpRequest.setAttribute(Constants.USER, user);
+            httpRequest.setAttribute("Builder", new Builder(user));
 
             //TODO in here should go access rights control, based on dLibra for example
             //            if (!request.getMethod().equals("GET") && user.getRole() == UserProfile.Role.PUBLIC) {

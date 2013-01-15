@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever;
+package pl.psnc.dl.wf4ever.exceptions;
 
 /**
  * This exception indicates that the request is incorrect.

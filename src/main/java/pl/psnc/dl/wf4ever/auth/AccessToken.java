@@ -20,7 +20,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import pl.psnc.dl.wf4ever.common.ActiveRecord;
-import pl.psnc.dl.wf4ever.common.HibernateUtil;
+import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 
 /**
  * OAuth access token DAO.

@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.common;
+package pl.psnc.dl.wf4ever.hibernate;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;

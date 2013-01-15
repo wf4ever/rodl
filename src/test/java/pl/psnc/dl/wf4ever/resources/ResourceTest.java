@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 
 import javax.naming.NamingException;
@@ -17,16 +18,15 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
-import pl.psnc.dl.wf4ever.exceptions.ManifestTraversingException;
-import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.rdf.model.Statement;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -71,7 +71,6 @@ public class ResourceTest extends ResourceBase {
             throws URISyntaxException {
         client().setFollowRedirects(false);
         ClientResponse response = webResource.uri(ro).accept("text/turtle").get(ClientResponse.class);
-        System.out.println(response.getHeaders().get(Constants.LINK_HEADER));
         assertTrue(response.getHeaders().get(Constants.LINK_HEADER)
                 .contains(webResource.path("/evo/info").queryParam("ro", ro.toString()).toString()));
 
@@ -121,14 +120,12 @@ public class ResourceTest extends ResourceBase {
      * Ziped RO has three annotations. RO added to triple store should be this same.
      * 
      * @throws IOException
-     * @throws ManifestTraversingException
      * @throws ClassNotFoundException
      * @throws NamingException
-     * @throws SQLException
      */
     @Test
     public void createROFromZip()
-            throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
+            throws IOException, ClassNotFoundException, NamingException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
         ClientResponse response = webResource.path("ROs").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
@@ -141,7 +138,7 @@ public class ResourceTest extends ResourceBase {
 
     @Test
     public void createROFromZipWithWhitespaces()
-            throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
+            throws IOException, IncorrectModelException, ClassNotFoundException, NamingException, SQLException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/white_spaces_ro.zip");
         ClientResponse response = webResource.path("ROs/").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
@@ -154,7 +151,7 @@ public class ResourceTest extends ResourceBase {
 
     @Test
     public void createROFromZipWithEvoAnnotation()
-            throws IOException, ManifestTraversingException, ClassNotFoundException, NamingException, SQLException {
+            throws IOException, IncorrectModelException, ClassNotFoundException, NamingException, SQLException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/zip_with_evo.zip");
         ClientResponse response = webResource.path("ROs").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
@@ -192,22 +189,19 @@ public class ResourceTest extends ResourceBase {
                 .header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
         assertEquals("Updating evo_info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         response.close();
-        ResearchObject researchObject = ResearchObject.create(ro);
+        ResearchObject researchObject = new ResearchObject(null, ro);
         OntModel manifestModel = ModelFactory.createOntologyModel();
         manifestModel.read(researchObject.getManifestUri().toString());
 
         Resource bodyR = manifestModel.createResource(SafeURI.URItoString(researchObject
                 .getFixedEvolutionAnnotationBodyUri()));
-        StmtIterator it = manifestModel.listStatements(null, AO.body, bodyR);
-        if (it.hasNext()) {
-            Annotation ann = new Annotation(URI.create(it.next().getSubject().getURI()));
-            response = webResource.uri(ann.getUri()).header("Authorization", "Bearer " + accessToken)
-                    .delete(ClientResponse.class);
+        List<Statement> anns = manifestModel.listStatements(null, AO.body, bodyR).toList();
+        assertTrue("Cannot find annotation", !anns.isEmpty());
+        URI annUri = URI.create(anns.get(0).getSubject().getURI());
+        response = webResource.uri(annUri).header("Authorization", "Bearer " + accessToken)
+                .delete(ClientResponse.class);
+        response.close();
 
-            response.close();
-        } else {
-            assertTrue("Can not find annotation", false);
-        }
         assertEquals("Removing evo info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         response = webResource.uri(researchObject.getFixedEvolutionAnnotationBodyUri())
                 .header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);

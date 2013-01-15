@@ -9,7 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 
-import pl.psnc.dl.wf4ever.common.HibernateUtil;
+import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -121,6 +121,31 @@ public class W4ETest extends JerseyTest {
     protected ClientResponse addFile(URI roURI, String filePath, String accessToken) {
         return webResource.uri(roURI).header("Slug", filePath).header("Authorization", "Bearer " + accessToken)
                 .type("text/plain").post(ClientResponse.class, "lorem ipsum");
+    }
+
+
+    /**
+     * Add an external resource to the RO.
+     * 
+     * @param roURI
+     *            RO URI
+     * @param resourceUri
+     *            resource URI
+     * @param accessToken
+     *            access token
+     * @return server response
+     */
+    protected ClientResponse addFile(URI roURI, URI resourceUri, String accessToken) {
+        return webResource
+                .uri(roURI)
+                .header("Authorization", "Bearer " + accessToken)
+                .type("application/vnd.wf4ever.proxy")
+                .post(
+                    ClientResponse.class,
+                    "<rdf:RDF\n" + "   xmlns:ore=\"http://www.openarchives.org/ore/terms/\"\n"
+                            + "   xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" >\n" + "   <ore:Proxy>\n"
+                            + "     <ore:proxyFor rdf:resource=\"" + resourceUri + "\" />\n" + "   </ore:Proxy>\n"
+                            + " </rdf:RDF>");
     }
 
 

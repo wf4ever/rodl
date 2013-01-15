@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.W4ETest;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;

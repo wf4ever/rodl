@@ -1,7 +1,5 @@
 package pl.psnc.dl.wf4ever;
 
-import java.util.regex.Pattern;
-
 /**
  * RO model and HTTP request cycle constants. This class should be refactored.
  * 
@@ -25,12 +23,6 @@ public final class Constants {
     public static final String SLUG_HEADER = "Slug";
 
     /** See ROSR API. */
-    public static final String AO_ANNOTATES_HEADER = "http://purl.org/ao/annotates";
-
-    /** See ROSR API. */
-    public static final String ORE_PROXY_FOR_HEADER = "http://www.openarchives.org/ore/terms/proxyFor";
-
-    /** See ROSR API. */
     public static final String PROXY_MIME_TYPE = "application/vnd.wf4ever.proxy";
 
     /** See ROSR API. */
@@ -46,11 +38,8 @@ public final class Constants {
     public static final String LINK_HEADER_TEMPLATE = "<%s>; rel=\"%s\"";
 
     /** See ROSR API. */
-    public static final Pattern AO_LINK_HEADER_PATTERN = Pattern
-            .compile("\\s*<([^>]*)>\\s*;\\s*rel\\s*=\\s*\"http://purl.org/ao/annotatesResource\"");
-
-    /** See ROSR API. */
     public static final String FOLDER_MIME_TYPE = "application/vnd.wf4ever.folder";
 
+    /** See ROSR API. */
     public static final String FOLDERENTRY_MIME_TYPE = "application/vnd.wf4ever.folderentry";
 }

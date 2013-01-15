@@ -1,10 +1,31 @@
 package pl.psnc.dl.wf4ever.model.RO;
 
+import java.io.InputStream;
 import java.net.URI;
-import java.util.ArrayList;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-import org.openrdf.rio.RDFFormat;
+import org.joda.time.DateTime;
+
+import pl.psnc.dl.wf4ever.common.Builder;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+import pl.psnc.dl.wf4ever.model.ORE.Aggregation;
+import pl.psnc.dl.wf4ever.model.ORE.Proxy;
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
+
+import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFNode;
 
 /**
  * ro:Folder.
@@ -12,58 +33,264 @@ import org.openrdf.rio.RDFFormat;
  * @author piotrekhol
  * 
  */
-public class Folder extends Resource {
+public class Folder extends Resource implements Aggregation {
 
     /** folder entries. */
-    private List<FolderEntry> folderEntries = new ArrayList<FolderEntry>();
+    private Set<FolderEntry> folderEntries;
+
+    /** Resource map (graph with folder description) URI. */
+    private FolderResourceMap resourceMap;
+
+    /** is the folder a root folder in the RO. */
+    private boolean rootFolder;
 
 
-    public List<FolderEntry> getFolderEntries() {
+    /**
+     * Constructor.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
+     * @param researchObject
+     *            The RO it is aggregated by
+     * @param uri
+     *            resource URI
+     */
+    public Folder(UserMetadata user, Dataset dataset, boolean useTransactions, ResearchObject researchObject, URI uri) {
+        super(user, dataset, useTransactions, researchObject, uri);
+    }
+
+
+    /**
+     * Constructor.
+     * 
+     * @param user
+     *            user creating the instance
+     * @param researchObject
+     *            The RO it is aggregated by
+     * @param uri
+     *            resource URI
+     */
+    public Folder(UserMetadata user, ResearchObject researchObject, URI uri) {
+        super(user, researchObject, uri);
+    }
+
+
+    /**
+     * Get the folder entries. May be loaded lazily.
+     * 
+     * @return a set of folder entries in this folder
+     */
+    public Set<FolderEntry> getFolderEntries() {
+        if (folderEntries == null) {
+            folderEntries = getResourceMap().extractFolderEntries();
+        }
         return folderEntries;
     }
 
 
-    public void setFolderEntries(List<FolderEntry> folderEntries) {
+    public void setFolderEntries(Set<FolderEntry> folderEntries) {
         this.folderEntries = folderEntries;
     }
 
 
     /**
-     * Return a URI of an RDF graph that describes the folder. If folder URI is null, return null. If folder URI path is
-     * empty, return folder.rdf (i.e. example.com becomes example.com/folder.rdf). Otherwise use the last path segment
-     * (i.e. example.com/foobar/ becomes example.com/foobar/foobar.rdf). RDF/XML file extension is used.
+     * Get the resource map.
      * 
-     * @return RDF graph URI or null if folder URI is null
+     * @return a folder resource map
      */
-    public URI getResourceMapUri() {
-        return getResourceMapUri(null);
+    @Override
+    public FolderResourceMap getResourceMap() {
+        if (resourceMap == null) {
+            URI resourceMapUri = FolderResourceMap.generateResourceMapUri(this);
+            resourceMap = builder.buildFolderResourceMap(resourceMapUri, this);
+        }
+        return resourceMap;
+    }
+
+
+    public boolean isRootFolder() {
+        return rootFolder;
+    }
+
+
+    public void setRootFolder(boolean rootFolder) {
+        this.rootFolder = rootFolder;
     }
 
 
     /**
-     * Return the URI of resource map in a selected RDF format.
+     * Get an existing folder with that URI or null if not found.
      * 
-     * @param format
-     *            RDF format
-     * @return resource map URI or null if folder URI is null
+     * @param builder
+     *            model instance builder
+     * @param uri
+     *            folder URI
+     * @return a folder instance or URI
      */
-    public URI getResourceMapUri(RDFFormat format) {
-        if (uri == null) {
+    public static Folder get(Builder builder, URI uri) {
+        Folder folder = builder.buildFolder(null, uri, null, null);
+        FolderResourceMap resourceMap = builder.buildFolderResourceMap(
+            FolderResourceMap.generateResourceMapUri(folder), folder);
+        if (!resourceMap.isNamedGraph()) {
             return null;
         }
-        String base;
-        if (uri.getPath() == null || uri.getPath().isEmpty()) {
-            base = "/folder";
-        } else if (uri.getPath().equals("/")) {
-            base = "folder";
-        } else {
-            String[] segments = uri.getRawPath().split("/");
-            base = segments[segments.length - 1];
-        }
-        if (format == null || format.equals(RDFFormat.RDFXML)) {
-            return uri.resolve(base + ".rdf");
-        } else {
-            return uri.resolve(base + "." + format.getDefaultFileExtension() + "?original=" + base + ".rdf");
-        }
+        ResearchObject researchObject = resourceMap.extractResearchObject();
+        return researchObject.getFolders().get(uri);
     }
+
+
+    @Override
+    public void save() {
+        super.save();
+        getResourceMap().save();
+        researchObject.getManifest().saveFolderData(this);
+    }
+
+
+    /**
+     * Create a folder instance out of an RDF/XML description.
+     * 
+     * @param builder
+     *            builder for creating objects
+     * @param researchObject
+     *            research object used as RDF base
+     * @param folderUri
+     *            folder URI
+     * @param content
+     *            RDF/XML folder description
+     * @return a folder instance
+     * @throws BadRequestException
+     *             the folder description is incorrect
+     */
+    public static Folder assemble(Builder builder, ResearchObject researchObject, URI folderUri, InputStream content)
+            throws BadRequestException {
+        Folder folder = builder.buildFolder(researchObject, folderUri, builder.getUser().getUri(), DateTime.now());
+        folder.resourceMap = FolderResourceMap
+                .create(builder, folder, FolderResourceMap.generateResourceMapUri(folder));
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+        model.read(content, researchObject.getUri().toString());
+        List<Individual> folders = model.listIndividuals(RO.Folder).toList();
+        Map<URI, FolderEntry> entries = new HashMap<>();
+        if (folders.size() == 1) {
+            Individual folderInd = folders.get(0);
+            List<RDFNode> aggregatedResources = folderInd.listPropertyValues(ORE.aggregates).toList();
+            for (RDFNode aggregatedResource : aggregatedResources) {
+                if (aggregatedResource.isURIResource()) {
+                    try {
+                        URI resUri = new URI(aggregatedResource.asResource().getURI());
+                        if (!researchObject.getAggregatedResources().containsKey(resUri)) {
+                            throw new BadRequestException("Resource " + resUri
+                                    + " is not aggregated by the research object");
+                        }
+                        URI entryUri = folder.getUri().resolve("entries/" + UUID.randomUUID());
+                        FolderEntry entry = builder.buildFolderEntry(entryUri, researchObject.getAggregatedResources()
+                                .get(resUri), folder, null);
+                        entries.put(resUri, entry);
+                    } catch (URISyntaxException e) {
+                        throw new BadRequestException("Aggregated resource has an incorrect URI", e);
+                    }
+                } else {
+                    throw new BadRequestException("Aggregated resources cannot be blank nodes.");
+                }
+            }
+        } else {
+            throw new BadRequestException("The entity body must define exactly one ro:Folder.");
+        }
+        List<Individual> folderEntries = model.listIndividuals(RO.FolderEntry).toList();
+        for (Individual folderEntryInd : folderEntries) {
+            URI proxyFor;
+            if (folderEntryInd.hasProperty(ORE.proxyFor)) {
+                RDFNode proxyForNode = folderEntryInd.getPropertyValue(ORE.proxyFor);
+                if (!proxyForNode.isURIResource()) {
+                    throw new BadRequestException("Folder entry ore:proxyFor must be a URI resource.");
+                }
+                try {
+                    proxyFor = new URI(proxyForNode.asResource().getURI());
+                } catch (URISyntaxException e) {
+                    throw new BadRequestException("Folder entry proxy for URI is incorrect", e);
+                }
+            } else {
+                throw new BadRequestException("Folder entries must have the ore:proxyFor property.");
+            }
+            if (!entries.containsKey(proxyFor)) {
+                throw new BadRequestException(
+                        "Found a folder entry for a resource that is not aggregated by the folder");
+            }
+            FolderEntry folderEntry = entries.get(proxyFor);
+            if (folderEntryInd.hasProperty(RO.entryName)) {
+                RDFNode nameNode = folderEntryInd.getPropertyValue(RO.entryName);
+                if (!nameNode.isLiteral()) {
+                    throw new BadRequestException("Folder entry ro name must be a literal");
+                }
+                folderEntry.setEntryName(nameNode.asLiteral().toString());
+            }
+        }
+        for (FolderEntry folderEntry : entries.values()) {
+            if (folderEntry.getEntryName() == null) {
+                if (folderEntry.getProxyFor().getUri().getPath() != null) {
+                    String[] segments = folderEntry.getProxyFor().getUri().getPath().split("/");
+                    folderEntry.setEntryName(segments[segments.length - 1]);
+                } else {
+                    folderEntry.setEntryName(folderEntry.getProxyFor().getUri().getHost());
+                }
+            }
+        }
+        folder.setFolderEntries(new HashSet<>(entries.values()));
+        return folder;
+    }
+
+
+    /**
+     * Create and save a new folder.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param researchObject
+     *            research object aggregating the folder
+     * @param folderUri
+     *            folder URI
+     * @param content
+     *            folder description
+     * @return a folder instance
+     * @throws BadRequestException
+     *             if the description is not valid
+     */
+    public static Folder create(Builder builder, ResearchObject researchObject, URI folderUri, InputStream content)
+            throws BadRequestException {
+        Folder folder = assemble(builder, researchObject, folderUri, content);
+        folder.setCreated(DateTime.now());
+        folder.setCreator(builder.getUser().getUri());
+        folder.setProxy(Proxy.create(builder, researchObject, folder));
+        folder.save();
+        for (FolderEntry entry : folder.getFolderEntries()) {
+            entry.save();
+        }
+        folder.getResourceMap().serialize();
+        return folder;
+    }
+
+
+    /**
+     * Create and save a new folder entry, refresh the properties of this folder.
+     * 
+     * @param content
+     *            folder entry description
+     * @return a folder entry instance
+     * @throws BadRequestException
+     *             if the description is not valid
+     */
+    public FolderEntry createFolderEntry(InputStream content)
+            throws BadRequestException {
+        FolderEntry entry = FolderEntry.assemble(builder, this, content);
+        getFolderEntries().add(entry);
+        entry.save();
+        getResourceMap().serialize();
+        return entry;
+    }
+
 }

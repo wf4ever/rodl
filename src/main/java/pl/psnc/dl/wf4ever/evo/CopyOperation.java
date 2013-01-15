@@ -3,17 +3,24 @@ package pl.psnc.dl.wf4ever.evo;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.common.HibernateUtil;
-import pl.psnc.dl.wf4ever.common.ResearchObject;
+import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
+import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -43,6 +50,12 @@ public class CopyOperation implements Operation {
     /** operation id. */
     private String id;
 
+    /** user calling this operation. */
+    private UserMetadata user;
+
+    /** resource builder. */
+    private Builder builder;
+
 
     /**
      * Constructor.
@@ -50,7 +63,8 @@ public class CopyOperation implements Operation {
      * @param id
      *            operation id
      */
-    public CopyOperation(String id) {
+    public CopyOperation(Builder builder, String id) {
+        this.builder = builder;
         this.id = id;
     }
 
@@ -69,15 +83,16 @@ public class CopyOperation implements Operation {
             }
             status.setTarget(id + sufix);
 
-            ResearchObject targetRO = ResearchObject.create(target);
-            ResearchObject sourceRO = ResearchObject.create(status.getCopyfrom());
-
+            ResearchObject targetRO;
             try {
-                ROSRService.createResearchObject(targetRO, status.getType(), sourceRO);
-            } catch (ConflictException | DigitalLibraryException | NotFoundException | AccessDeniedException e) {
-                throw new OperationFailedException("Could not create the target research object", e);
+                targetRO = ResearchObject.create(builder, target);
+            } catch (ConflictException | DigitalLibraryException | AccessDeniedException | NotFoundException e) {
+                throw new OperationFailedException("Failed to create target RO", e);
             }
-
+            ResearchObject sourceRO = ResearchObject.get(builder, status.getCopyfrom());
+            if (sourceRO == null) {
+                throw new OperationFailedException("source Research Object does not exist");
+            }
             OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
             model.read(sourceRO.getManifestUri().toString());
             Individual source = model.getIndividual(sourceRO.getUri().toString());
@@ -90,7 +105,7 @@ public class CopyOperation implements Operation {
             for (RDFNode aggregatedResource : aggregatedResources) {
                 if (Thread.interrupted()) {
                     try {
-                        ROSRService.deleteResearchObject(targetRO);
+                        targetRO.delete();
                     } catch (DigitalLibraryException | NotFoundException e) {
                         LOGGER.error("Could not delete the target when aborting: " + target, e);
                     }
@@ -104,7 +119,7 @@ public class CopyOperation implements Operation {
                 URI resourceURI = URI.create(resource.getURI());
                 if (resource.hasRDFType(RO.AggregatedAnnotation)) {
                     Resource annBody = resource.getPropertyResourceValue(AO.body);
-                    List<URI> targets = new ArrayList<>();
+                    Set<Thing> targets = new HashSet<>();
                     List<RDFNode> annotationTargets = resource.listPropertyValues(RO.annotatesAggregatedResource)
                             .toList();
                     for (RDFNode annTarget : annotationTargets) {
@@ -112,18 +127,13 @@ public class CopyOperation implements Operation {
                             LOGGER.warn("Annotation target " + annTarget.toString() + " is not a URI resource");
                             continue;
                         }
-                        targets.add(URI.create(annTarget.asResource().getURI()));
+                        targets.add(new Thing(user, URI.create(annTarget.asResource().getURI())));
                     }
                     try {
                         //FIXME use a dedicated class for an Annotation
                         String[] segments = resource.getURI().split("/");
-                        if (segments.length > 0) {
-                            ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets,
-                                segments[segments.length - 1]);
-                        } else {
-                            ROSRService.addAnnotation(targetRO, URI.create(annBody.getURI()), targets);
-                        }
-                    } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e1) {
+                        targetRO.annotate(URI.create(annBody.getURI()), targets, segments[segments.length - 1]);
+                    } catch (AccessDeniedException | DigitalLibraryException | NotFoundException | BadRequestException e1) {
                         LOGGER.error("Could not add the annotation", e1);
                     }
                 } else {
@@ -134,21 +144,23 @@ public class CopyOperation implements Operation {
                             ClientResponse response = webResource.get(ClientResponse.class);
                             URI resourcePath = status.getCopyfrom().relativize(resourceURI);
                             URI targetURI = target.resolve(resourcePath);
-                            ROSRService.aggregateInternalResource(targetRO, targetURI, response.getEntityInputStream(),
-                                response.getType().toString(), null);
-                            //TODO improve resource type detection mechanism!!
-                            if (!resource.hasRDFType(RO.Resource)) {
-                                ROSRService.convertRoResourceToAnnotationBody(targetRO, targetURI);
+                            try {
+                                targetRO.aggregate(resourcePath.toString(), response.getEntityInputStream(), response
+                                        .getType().toString());
+                            } catch (ConflictException e) {
+                                LOGGER.warn("Failed to aggregate the resource", e);
                             }
                             changedURIs.put(resourceURI, targetURI);
-                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException
+                                | IncorrectModelException | BadRequestException e) {
                             throw new OperationFailedException("Could not create aggregate internal resource: "
                                     + resourceURI, e);
                         }
                     } else {
                         try {
-                            ROSRService.aggregateExternalResource(targetRO, resourceURI, null);
-                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e) {
+                            targetRO.aggregate(resourceURI);
+                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException
+                                | IncorrectModelException e) {
                             throw new OperationFailedException("Could not create aggregate external resource: "
                                     + resourceURI, e);
                         }
