@@ -367,7 +367,7 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     private Annotation postAnnotate(Annotation annotation)
             throws BadRequestException {
-        AggregatedResource resource = getAggregatedResources().get(annotation.getBodyUri());
+        AggregatedResource resource = getAggregatedResources().get(annotation.getBody().getUri());
         if (resource != null && resource.isInternal()) {
             resource.saveGraph();
         }
@@ -376,7 +376,7 @@ public class ResearchObject extends Thing implements Aggregation {
         for (Thing target : annotation.getAnnotated()) {
             this.getAnnotationsByTarget().put(target.getUri(), annotation);
         }
-        this.getAnnotationsByBodyUri().put(annotation.getBodyUri(), annotation);
+        this.getAnnotationsByBodyUri().put(annotation.getBody().getUri(), annotation);
         this.getAggregatedResources().put(annotation.getUri(), annotation);
         return annotation;
     }
@@ -473,11 +473,11 @@ public class ResearchObject extends Thing implements Aggregation {
         }
         for (Annotation annotation : annotationsList) {
             try {
-                if (researchObject.getAggregatedResources().containsKey(annotation.getBodyUri())) {
+                if (researchObject.getAggregatedResources().containsKey(annotation.getBody().getUri())) {
                     ROSRService.convertRoResourceToAnnotationBody(researchObject, researchObject
-                            .getAggregatedResources().get(annotation.getBodyUri()));
+                            .getAggregatedResources().get(annotation.getBody().getUri()));
                 }
-                researchObject.annotate(annotation.getBodyUri(), annotation.getAnnotated());
+                researchObject.annotate(annotation.getBody().getUri(), annotation.getAnnotated());
             } catch (DigitalLibraryException | NotFoundException e) {
                 LOGGER.error("Error when adding annotations", e);
             }
@@ -593,7 +593,7 @@ public class ResearchObject extends Thing implements Aggregation {
         if (annotationsByBodyUri == null) {
             this.annotationsByBodyUri = HashMultimap.<URI, Annotation> create();
             for (Annotation ann : getAnnotations().values()) {
-                this.annotationsByBodyUri.put(ann.getBodyUri(), ann);
+                this.annotationsByBodyUri.put(ann.getBody().getUri(), ann);
             }
         }
         return annotationsByBodyUri;

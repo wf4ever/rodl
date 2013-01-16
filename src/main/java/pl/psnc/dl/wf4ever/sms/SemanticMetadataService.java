@@ -72,28 +72,6 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Create a new ro:ResearchObject and ro:Manifest. The new research object will have a SnapshotRO evolution class.
-     * 
-     * @param researchObjectURI
-     *            RO URI, absolute
-     * @param liveRO
-     *            URI of a live research object, may be null
-     */
-    void createSnapshotResearchObject(ResearchObject researchObject, ResearchObject liveRO);
-
-
-    /**
-     * Create a new ro:ResearchObject and ro:Manifest. The new research object will have a ArchivedRO evolution class.
-     * 
-     * @param researchObjectURI
-     *            RO URI, absolute
-     * @param liveRO
-     *            URI of a live research object, may be null
-     */
-    void createArchivedResearchObject(ResearchObject researchObject, ResearchObject liveRO);
-
-
-    /**
      * Update the manifest of a research object.
      * 
      * @param researchObject
@@ -804,5 +782,18 @@ public interface SemanticMetadataService {
      * @return cleaned list of annotations
      */
     List<Annotation> removeSpecialFilesFromAnnotatios(List<Annotation> annotations);
+
+
+    /**
+     * Create a new ro:ResearchObject and ro:Manifest. The new research object will have a SnapshotRO or ArchiveRO
+     * evolution class.
+     * 
+     * @param researchObjectURI
+     *            RO URI, absolute
+     * @param liveRO
+     *            URI of a live research object, may be null
+     */
+
+    void createResearchObjectCopy(ResearchObject researchObject, ResearchObject liveResearchObject);
 
 }

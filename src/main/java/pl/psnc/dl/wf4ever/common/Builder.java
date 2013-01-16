@@ -248,9 +248,9 @@ public class Builder {
      *            annotated resources
      * @return a new annotation
      */
-    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Set<Thing> targets) {
+    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, Thing body, Set<Thing> targets) {
         Annotation annotation = new Annotation(user, dataset, useTransactions, researchObject, uri);
-        annotation.setBodyUri(bodyUri);
+        annotation.setBody(body);
         annotation.setAnnotated(targets);
         annotation.setBuilder(this);
         return annotation;
@@ -274,9 +274,9 @@ public class Builder {
      *            creation date
      * @return a new annotation
      */
-    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Set<Thing> targets,
+    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, Thing body, Set<Thing> targets,
             URI creator, DateTime created) {
-        Annotation annotation = buildAnnotation(researchObject, uri, bodyUri, targets);
+        Annotation annotation = buildAnnotation(researchObject, uri, body, targets);
         annotation.setCreator(creator);
         annotation.setCreated(created);
         annotation.setBuilder(this);
@@ -301,11 +301,11 @@ public class Builder {
      *            creation date
      * @return a new annotation
      */
-    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Thing target, URI creator,
+    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, Thing body, Thing target, URI creator,
             DateTime created) {
         Set<Thing> targets = new HashSet<>();
         targets.add(target);
-        return buildAnnotation(researchObject, uri, bodyUri, targets, creator, created);
+        return buildAnnotation(researchObject, uri, body, targets, creator, created);
     }
 
 

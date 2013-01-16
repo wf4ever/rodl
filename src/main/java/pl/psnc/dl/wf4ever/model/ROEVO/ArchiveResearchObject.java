@@ -88,7 +88,7 @@ public class ArchiveResearchObject extends FrozenResearchObject {
         ArchiveResearchObject researchObject = builder.buildArchiveResearchObject(uri, liveRO);
         InputStream manifest;
         try {
-            ROSRService.SMS.get().createArchivedResearchObject(researchObject, liveRO);
+            ROSRService.SMS.get().createResearchObjectCopy(researchObject, liveRO);
             manifest = ROSRService.SMS.get().getManifest(researchObject, RDFFormat.RDFXML);
         } catch (IllegalArgumentException e) {
             // RO already existed in sms, maybe created by someone else
