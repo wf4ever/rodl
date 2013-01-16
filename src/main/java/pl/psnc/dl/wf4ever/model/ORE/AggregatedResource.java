@@ -100,7 +100,9 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         getResearchObject().getManifest().serialize();
         getResearchObject().getAggregatedResources().remove(uri);
         ROSRService.DL.get().deleteFile(getResearchObject().getUri(), getPath());
-        getProxy().delete();
+        if (getProxy() != null) {
+            getProxy().delete();
+        }
         for (FolderEntry entry : getResearchObject().getFolderEntriesByResourceUri().get(uri)) {
             entry.delete();
         }
