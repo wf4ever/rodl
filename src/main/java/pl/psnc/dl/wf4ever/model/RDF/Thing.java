@@ -599,7 +599,7 @@ public class Thing {
                 model.add(subjectR, DCTerms.created, model.createTypedLiteral(subject.getCreated().toCalendar(null)));
             }
             if (!subjectR.hasProperty(DCTerms.creator) && subject.getCreator() != null) {
-                Individual author = model.createIndividual(subject.getCreator().toString(), FOAF.Agent);
+                Individual author = model.createIndividual(subject.getCreator().getUri().toString(), FOAF.Agent);
                 model.add(subjectR, DCTerms.creator, author);
                 author.setPropertyValue(FOAF.name, model.createLiteral(subject.getCreator().getName()));
             }
