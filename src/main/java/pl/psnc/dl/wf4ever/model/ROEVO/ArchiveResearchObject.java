@@ -103,6 +103,6 @@ public class ArchiveResearchObject extends FrozenResearchObject {
 
     @Override
     public void generateEvoInfo() {
-        super.generateEvoInfo(EvoType.SNAPSHOT);
+        super.generateEvoInfo(EvoType.ARCHIVE);
     }
 }
