@@ -178,7 +178,6 @@ public class CopyOperation implements Operation {
             //make me easier!
             Annotation a = targetRO.getAnnotationsByBodyUri().get(targetRO.getEvoInfoBody().getUri()).iterator().next();
             a.getBody().delete();
-            a.delete();
         } finally {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         }
