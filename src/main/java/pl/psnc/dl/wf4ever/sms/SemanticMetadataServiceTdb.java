@@ -2101,6 +2101,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
         evoModel.createIndividual(ro.getURI(), ROEVO.LiveRO);
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
+        //TODO change to a foaf:Agent pointing to RODL
+        manifestModel.add(evoInfo, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
 
         Annotation ann = addAnnotation(researchObject, new HashSet<Thing>(Arrays.asList(researchObject)),
             researchObject.getFixedEvolutionAnnotationBodyUri(), null);
@@ -2134,6 +2136,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             ORE.AggregatedResource);
 
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
+        //TODO change to a foaf:Agent pointing to RODL
+        manifestModel.add(evoInfo, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
 
         evoModel.createIndividual(ro.getURI(), ROEVO.SnapshotRO);
         evoModel.add(ro, ROEVO.isSnapshotOf, evoModel.createResource(liveRO.getUri().toString()));
@@ -2185,6 +2189,8 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             ORE.AggregatedResource);
 
         manifestModel.add(evoInfo, DCTerms.created, evoModel.createTypedLiteral(Calendar.getInstance()));
+        //TODO change to a foaf:Agent pointing to RODL
+        manifestModel.add(evoInfo, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
 
         evoModel.createIndividual(ro.getURI(), ROEVO.ArchivedRO);
         evoModel.add(ro, ROEVO.isArchiveOf, evoModel.createResource(liveRO.getUri().toString()));
