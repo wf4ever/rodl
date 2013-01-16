@@ -66,12 +66,13 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     /**
      * Test method for {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#createResearchObject(java.net.URI)} .
      */
+    /*
     @Test(expected = IllegalArgumentException.class)
     public final void testCreateResearchObject() {
         //repetition
         test.sms.createResearchObject(test.emptyRO);
     }
-
+    */
 
     /**
      * Test method for

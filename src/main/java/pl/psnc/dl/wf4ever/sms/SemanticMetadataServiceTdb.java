@@ -1298,14 +1298,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             }
             while (archiveItertator.hasNext()) {
                 URI tmpURI = URI.create(archiveItertator.next().getObject().toString());
-<<<<<<< HEAD
                 if (tmpURI.equals(freshSnapshotOrArchive.getUri())) {
                     continue;
                 }
-                RDFNode node = getIndividual(ResearchObject.create(tmpURI)).getProperty(ROEVO.archivedAtTime)
-=======
                 RDFNode node = getIndividual(new ResearchObject(user, tmpURI)).getProperty(ROEVO.archivedAtTime)
->>>>>>> refactor
                         .getObject();
                 DateTime tmpTime = new DateTime(node.asLiteral().getValue().toString());
                 if ((tmpTime.compareTo(freshTime) == -1)
@@ -2201,17 +2197,10 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         ro.addProperty(ORE.aggregates,
             manifestModel.createResource(researchObject.getFixedEvolutionAnnotationBodyUri().toString()));
         OntModel liveEvoModel = createOntModelForNamedGraph(liveRO.getFixedEvolutionAnnotationBodyUri());
-<<<<<<< HEAD
-        liveEvoModel.add(createOntModelForNamedGraph(researchObject.getManifestUri())
-                .getResource(liveRO.getUriString()), ROEVO.hasArchive, ro);
-
-        URI previousSnapshot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.ARCHIVE);
-=======
         liveEvoModel.add(
             createOntModelForNamedGraph(researchObject.getManifestUri()).getResource(liveRO.getUri().toString()),
             ROEVO.hasArchive, ro);
-        URI previousSnapshot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.SNAPSHOT);
->>>>>>> refactor
+        URI previousSnapshot = getPreviousSnapshotOrArchive(liveRO, researchObject, EvoType.ARCHIVE);
         if (previousSnapshot != null) {
             Builder builder = new Builder(user, dataset, useTransactions);
             storeAggregatedDifferences(researchObject, ResearchObject.get(builder, previousSnapshot));
