@@ -204,7 +204,7 @@ public class ResearchObjectResource {
             pl.psnc.dl.wf4ever.model.RO.Resource roResource = researchObject.aggregate(path, content,
                 request.getContentType());
             Annotation annotation = researchObject.annotate(resourceUri, annotationTargets);
-            String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBodyUri()
+            String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBody().getUri()
                     .toString(), AO.body);
             InputStream annotationDesc = researchObject.getManifest().getGraphAsInputStream(responseSyntax,
                 roResource.getProxy(), roResource, annotation);
@@ -308,8 +308,8 @@ public class ResearchObjectResource {
             throw new NotFoundException("Research Object not found");
         }
         Annotation annotation = researchObject.annotate(content);
-        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBodyUri().toString(),
-            AO.body);
+        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBody().getUri()
+                .toString(), AO.body);
         RDFFormat syntax = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
         InputStream annotationDesc = researchObject.getManifest().getGraphAsInputStream(syntax, annotation);
         ResponseBuilder response = Response.created(annotation.getUri()).entity(annotationDesc)

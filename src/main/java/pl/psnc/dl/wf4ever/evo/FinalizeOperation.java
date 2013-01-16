@@ -69,7 +69,7 @@ public class FinalizeOperation implements Operation {
             }
             Annotation annotation = ROSRService.SMS.get().findAnnotationForBody(researchObject,
                 researchObject.getFixedEvolutionAnnotationBodyUri());
-            researchObject.getAggregatedResources().get(annotation.getBodyUri()).delete();
+            researchObject.getAggregatedResources().get(annotation.getBody().getUri()).delete();
             annotation.delete();
             researchObject.generateEvoInfo();
         } catch (DigitalLibraryException | NotFoundException | AccessDeniedException e) {

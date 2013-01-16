@@ -192,8 +192,8 @@ public class Resource {
         Annotation newAnnotation = Annotation.assemble(builder, researchObject, resourceUri, content);
         annotation = annotation.update(newAnnotation);
 
-        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBodyUri().toString(),
-            AO.annotatesResource);
+        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBody().getUri()
+                .toString(), AO.annotatesResource);
         ResponseBuilder response = Response.ok().header(Constants.LINK_HEADER, annotationBodyHeader);
         for (Thing target : annotation.getAnnotated()) {
             String targetHeader = String
@@ -380,7 +380,7 @@ public class Resource {
      * @return 303 See Other redirecting to the body
      */
     private Response getAnnotation(Annotation annotation, RDFFormat format) {
-        URI bodyUri = annotation.getBodyUri();
+        URI bodyUri = annotation.getBody().getUri();
         if (annotation.getResearchObject().getAggregatedResources().containsKey(bodyUri) && format != null) {
             AggregatedResource resource = annotation.getResearchObject().getAggregatedResources().get(bodyUri);
             if (resource.isInternal()) {
@@ -434,7 +434,7 @@ public class Resource {
             resource = researchObject.getFolderEntries().get(resourceUri);
         } else if (researchObject.getAnnotations().containsKey(resourceUri)) {
             Annotation annotation = researchObject.getAnnotations().get(resourceUri);
-            if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(annotation.getBodyUri())) {
+            if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(annotation.getBody().getUri())) {
                 throw new ForbiddenException("Can't delete the evo annotation");
             }
             resource = annotation;

@@ -70,7 +70,7 @@ public class SnapshotResearchObject extends FrozenResearchObject {
         SnapshotResearchObject researchObject = builder.buildSnapshotResearchObject(uri, liveRO);
         InputStream manifest;
         try {
-            ROSRService.SMS.get().createSnapshotResearchObject(researchObject, liveRO);
+            ROSRService.SMS.get().createResearchObjectCopy(researchObject, liveRO);
             manifest = ROSRService.SMS.get().getManifest(researchObject, RDFFormat.RDFXML);
         } catch (IllegalArgumentException e) {
             // RO already existed in sms, maybe created by someone else

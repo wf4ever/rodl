@@ -13,7 +13,6 @@ import org.joda.time.DateTime;
 import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
-import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -39,27 +38,7 @@ public class Annotation extends AggregatedResource {
     private Set<Thing> annotated;
 
     /** The annotation body URI. The body may or may not be aggregated. */
-    private URI bodyUri;
-
-
-    /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param researchObject
-     *            RO aggregating the annotation
-     * @param uri
-     *            Resource uri
-     * @param model
-     *            Ontology model
-     * 
-     */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, OntModel model) {
-        super(user, researchObject, uri);
-        this.annotated = new HashSet<>();
-        fillUp(model);
-    }
+    private Thing body;
 
 
     /**
@@ -76,10 +55,10 @@ public class Annotation extends AggregatedResource {
      * @param body
      *            Annotation body
      */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI body, Set<Thing> annotated) {
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Thing body, Set<Thing> annotated) {
         super(user, researchObject, uri);
         this.annotated = annotated;
-        this.bodyUri = body;
+        this.body = body;
     }
 
 
@@ -92,13 +71,13 @@ public class Annotation extends AggregatedResource {
      *            RO aggregating the annotation
      * @param uri
      *            annotation URI
-     * @param bodyUri
+     * @param body
      *            annotation body, may be aggregated or not, may be a ro:Resource (rarely) or not
      * @param target
      *            annotated resource, must be the RO/aggregated resource/proxy
      */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, URI bodyUri, Thing target) {
-        this(user, researchObject, uri, bodyUri, new HashSet<Thing>(Arrays.asList(new Thing[] { target })));
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Thing body, Thing target) {
+        this(user, researchObject, uri, body, new HashSet<Thing>(Arrays.asList(new Thing[] { target })));
     }
 
 
@@ -123,51 +102,13 @@ public class Annotation extends AggregatedResource {
     }
 
 
-    /**
-     * Filling up annotated list and body field.
-     * 
-     * @param model
-     *            ontology model
-     * @throws IncorrectModelException
-     *             the model contains an incorrect annotation description
-     */
-    private void fillUp(OntModel model)
-            throws IncorrectModelException {
-        Individual source = model.getIndividual(uri.toString());
-        for (RDFNode resource : source.listPropertyValues(RO.annotatesAggregatedResource).toList()) {
-            if (resource.isLiteral()) {
-                throw new IncorrectModelException(String.format("Annotation %s annotates a literal %s", uri.toString(),
-                    resource.toString()));
-            }
-            if (resource.isAnon()) {
-                throw new IncorrectModelException(String.format("Annotation %s annotates a blank node %s",
-                    uri.toString(), resource.toString()));
-            }
-            annotated.add(new Thing(user, URI.create(resource.asResource().getURI())));
-        }
-        RDFNode bodyNode = source.getPropertyValue(AO.body);
-        if (bodyNode == null) {
-            throw new IncorrectModelException(String.format("Annotation %s has no body", uri.toString()));
-        }
-        if (bodyNode.isLiteral()) {
-            throw new IncorrectModelException(String.format("Annotation %s uses a literal %s as body", uri.toString(),
-                bodyNode.toString()));
-        }
-        if (bodyNode.isAnon()) {
-            throw new IncorrectModelException(String.format("Annotation %s uses a blank node %s as body",
-                uri.toString(), bodyNode.toString()));
-        }
-        bodyUri = URI.create(bodyNode.asResource().getURI());
-    }
-
-
     public Set<Thing> getAnnotated() {
         return annotated;
     }
 
 
-    public URI getBodyUri() {
-        return bodyUri;
+    public Thing getBody() {
+        return body;
     }
 
 
@@ -176,8 +117,8 @@ public class Annotation extends AggregatedResource {
     }
 
 
-    public void setBodyUri(URI bodyUri) {
-        this.bodyUri = bodyUri;
+    public void setBody(Thing body) {
+        this.body = body;
     }
 
 
@@ -199,8 +140,8 @@ public class Annotation extends AggregatedResource {
      */
     public static Annotation create(Builder builder, ResearchObject researchObject, URI uri, URI bodyUri,
             Set<Thing> targets) {
-        Annotation annotation = builder.buildAnnotation(researchObject, uri, bodyUri, targets, builder.getUser(),
-            DateTime.now());
+        Annotation annotation = builder.buildAnnotation(researchObject, uri, builder.buildThing(bodyUri), targets,
+            builder.getUser(), DateTime.now());
         annotation.setProxy(Proxy.create(builder, researchObject, annotation));
         annotation.save();
         return annotation;
@@ -245,11 +186,11 @@ public class Annotation extends AggregatedResource {
     @Override
     public void delete() {
         getResearchObject().getAnnotations().remove(uri);
-        getResearchObject().getAnnotationsByBodyUri().get(getBodyUri()).remove(this);
+        getResearchObject().getAnnotationsByBodyUri().get(getBody().getUri()).remove(this);
         for (Thing thing : getAnnotated()) {
             getResearchObject().getAnnotationsByTarget().get(thing.getUri()).remove(this);
         }
-        AggregatedResource resource = getResearchObject().getAggregatedResources().get(getBodyUri());
+        AggregatedResource resource = getResearchObject().getAggregatedResources().get(getBody().getUri());
         if (resource != null && resource.isInternal()) {
             resource.deleteGraphAndSerialize();
             //FIXME the resource is still of class AggregatedResource and does not appear in RO collections.
@@ -322,7 +263,7 @@ public class Annotation extends AggregatedResource {
             throw new BadRequestException("The entity body does not define any ro:AggregatedAnnotation.");
         }
 
-        Annotation annotation = builder.buildAnnotation(researchObject, uri, bodyUri, targets);
+        Annotation annotation = builder.buildAnnotation(researchObject, uri, builder.buildThing(bodyUri), targets);
         return annotation;
     }
 
@@ -338,18 +279,28 @@ public class Annotation extends AggregatedResource {
      */
     public Annotation update(Annotation newAnnotation)
             throws BadRequestException {
-        if (!bodyUri.equals(newAnnotation.getBodyUri())) {
-            if (getResearchObject().getAggregatedResources().containsKey(bodyUri)) {
-                getResearchObject().getAggregatedResources().get(bodyUri).deleteGraphAndSerialize();
+        if (!body.getUri().equals(newAnnotation.getBody().getUri())) {
+            if (getResearchObject().getAggregatedResources().containsKey(body.getUri())) {
+                getResearchObject().getAggregatedResources().get(body.getUri()).deleteGraphAndSerialize();
             }
-            setBodyUri(newAnnotation.getBodyUri());
-            if (getResearchObject().getAggregatedResources().containsKey(bodyUri)) {
-                getResearchObject().getAggregatedResources().get(bodyUri).saveGraphAndSerialize();
+            //FIXME will passing a thing work?
+            setBody(newAnnotation.getBody());
+            if (getResearchObject().getAggregatedResources().containsKey(body.getUri())) {
+                getResearchObject().getAggregatedResources().get(body.getUri()).saveGraphAndSerialize();
             }
         }
         setAnnotated(newAnnotation.getAnnotated());
         save();
         return this;
+    }
+
+
+    @Override
+    public Boolean isSpecialResource() {
+        if (body != null) {
+            return super.isSpecialResource() || body.isSpecialResource();
+        }
+        return super.isSpecialResource();
     }
 
 }

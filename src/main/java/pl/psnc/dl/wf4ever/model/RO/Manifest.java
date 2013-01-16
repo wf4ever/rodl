@@ -418,8 +418,9 @@ public class Manifest extends ResourceMap {
                         RDFNode createdNode = solution.get("created");
                         DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime
                                 .parse(createdNode.asLiteral().getString()) : null;
-                        annotation = builder.buildAnnotation(getResearchObject(), aURI, bUri, builder.buildThing(tUri),
-                            profile, resCreated);
+                        //FIXME don't build things, look for them
+                        annotation = builder.buildAnnotation(getResearchObject(), aURI, builder.buildThing(bUri),
+                            builder.buildThing(tUri), profile, resCreated);
                         if (pUri != null) {
                             annotation.setProxy(builder.buildProxy(pUri, annotation, getResearchObject()));
                         }
@@ -451,7 +452,7 @@ public class Manifest extends ResourceMap {
     public void saveAnnotationData(Annotation annotation) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            com.hp.hpl.jena.rdf.model.Resource bodyR = model.createResource(annotation.getBodyUri().toString());
+            com.hp.hpl.jena.rdf.model.Resource bodyR = model.createResource(annotation.getBody().getUri().toString());
             Individual annotationInd = model.createIndividual(annotation.getUri().toString(), RO.AggregatedAnnotation);
             annotationInd.addRDFType(AO.Annotation);
             model.removeAll(annotationInd, AO.body, null);

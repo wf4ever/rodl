@@ -252,15 +252,15 @@ public class Builder {
      *            research object aggregating the annotation
      * @param uri
      *            annotation URI
-     * @param bodyUri
-     *            annotation body URI
+     * @param body
+     *            annotation body
      * @param targets
      *            annotated resources
      * @return a new annotation
      */
-    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Set<Thing> targets) {
+    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, Thing body, Set<Thing> targets) {
         Annotation annotation = new Annotation(user, dataset, useTransactions, researchObject, uri);
-        annotation.setBodyUri(bodyUri);
+        annotation.setBody(body);
         annotation.setAnnotated(targets);
         annotation.setBuilder(this);
         return annotation;
@@ -274,8 +274,8 @@ public class Builder {
      *            research object aggregating the annotation
      * @param uri
      *            annotation URI
-     * @param bodyUri
-     *            annotation body URI
+     * @param body
+     *            annotation body
      * @param targets
      *            annotated resources
      * @param creator
@@ -284,9 +284,9 @@ public class Builder {
      *            creation date
      * @return a new annotation
      */
-    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Set<Thing> targets,
+    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, Thing body, Set<Thing> targets,
             UserMetadata creator, DateTime created) {
-        Annotation annotation = buildAnnotation(researchObject, uri, bodyUri, targets);
+        Annotation annotation = buildAnnotation(researchObject, uri, body, targets);
         annotation.setCreator(creator);
         annotation.setCreated(created);
         annotation.setBuilder(this);
@@ -301,8 +301,8 @@ public class Builder {
      *            research object aggregating the annotation
      * @param uri
      *            annotation URI
-     * @param bodyUri
-     *            annotation body URI
+     * @param body
+     *            annotation body
      * @param target
      *            the annotated resource
      * @param creator
@@ -311,11 +311,11 @@ public class Builder {
      *            creation date
      * @return a new annotation
      */
-    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, URI bodyUri, Thing target,
+    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, Thing body, Thing target,
             UserMetadata creator, DateTime created) {
         Set<Thing> targets = new HashSet<>();
         targets.add(target);
-        return buildAnnotation(researchObject, uri, bodyUri, targets, creator, created);
+        return buildAnnotation(researchObject, uri, body, targets, creator, created);
     }
 
 
