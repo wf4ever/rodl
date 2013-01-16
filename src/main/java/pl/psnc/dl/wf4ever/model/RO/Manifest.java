@@ -269,7 +269,7 @@ public class Manifest extends ResourceMap {
             String queryString = String
                     .format(
                         "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ro: <%s> PREFIX foaf: <%s> SELECT ?resource ?proxy ?created ?creator ?creatorname WHERE { <%s> ore:aggregates ?resource . ?resource a ro:Resource . ?proxy ore:proxyFor ?resource . OPTIONAL { ?resource dcterms:creator ?creator . OPTIONAL { ?creator foaf:name ?creatorname . } } OPTIONAL { ?resource dcterms:created ?created . } }",
-                        ORE.NAMESPACE, DCTerms.NS, RO.NAMESPACE, aggregation.getUri().toString());
+                        ORE.NAMESPACE, DCTerms.NS, RO.NAMESPACE, FOAF.NAMESPACE, aggregation.getUri().toString());
 
             Query query = QueryFactory.create(queryString);
             QueryExecution qe = QueryExecutionFactory.create(query, model);
@@ -321,7 +321,7 @@ public class Manifest extends ResourceMap {
             String queryString = String
                     .format(
                         "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ro: <%s> PREFIX foaf: <%s> SELECT ?folder ?proxy ?resourcemap ?created ?creator ?creatorname WHERE { <%s> ore:aggregates ?folder . ?folder a ro:Folder ; ore:isDescribedBy ?resourcemap . ?proxy ore:proxyFor ?folder . OPTIONAL { ?folder dcterms:creator ?creator . OPTIONAL { ?creator foaf:name ?creatorname . } } OPTIONAL { ?folder dcterms:created ?created . } }",
-                        ORE.NAMESPACE, DCTerms.NS, RO.NAMESPACE, aggregation.getUri().toString());
+                        ORE.NAMESPACE, DCTerms.NS, RO.NAMESPACE, FOAF.NAMESPACE, aggregation.getUri().toString());
 
             Query query = QueryFactory.create(queryString);
             QueryExecution qe = QueryExecutionFactory.create(query, model);
@@ -387,7 +387,8 @@ public class Manifest extends ResourceMap {
             String queryString = String
                     .format(
                         "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ao: <%s> PREFIX foaf: <%s> PREFIX ro: <%s> SELECT ?annotation ?body ?target ?created ?creator ?creatorname WHERE { <%s> ore:aggregates ?annotation . ?annotation a ro:AggregatedAnnotation ; ao:body ?body ; ro:annotatesAggregatedResource ?target . OPTIONAL { ?proxy ore:proxyFor ?annotation . } OPTIONAL { ?annotation dcterms:creator ?creator . OPTIONAL { ?creator foaf:name ?creatorname . } } OPTIONAL { ?annotation dcterms:created ?created . } }",
-                        ORE.NAMESPACE, DCTerms.NS, AO.NAMESPACE, RO.NAMESPACE, aggregation.getUri().toString());
+                        ORE.NAMESPACE, DCTerms.NS, AO.NAMESPACE, FOAF.NAMESPACE, RO.NAMESPACE, aggregation.getUri()
+                                .toString());
 
             Query query = QueryFactory.create(queryString);
             QueryExecution qe = QueryExecutionFactory.create(query, model);
