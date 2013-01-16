@@ -220,14 +220,12 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
 
 
     /**
-     * Delete the named graph with that resource and update the serialization.
+     * Update the serialization using absolute URIs and delete the named graph with that resource.
      */
     public void deleteGraphAndSerialize() {
         String filePath = getPath();
-        RDFFormat format = RDFFormat.forMIMEType(getStats().getMimeType());
         try (InputStream data = getGraphAsInputStream(RDFFormat.RDFXML)) {
-            ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, data,
-                format.getDefaultMIMEType());
+            ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, data, getStats().getMimeType());
         } catch (IOException e) {
             LOGGER.warn("Could not close stream", e);
         }
@@ -238,7 +236,6 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         } finally {
             endTransaction(transactionStarted);
         }
-        serialize();
     }
 
 

@@ -250,7 +250,7 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
-     * Add an internal resource to the research object.
+     * Create an internal resource and add it to the research object.
      * 
      * @param path
      *            resource path, relative to the RO URI, not encoded
