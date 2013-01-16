@@ -190,7 +190,8 @@ public class FolderResourceMap extends ResourceMap {
             Individual roInd = model.createIndividual(getResearchObject().getUri().toString(), RO.ResearchObject);
             model.add(roInd, ORE.isDescribedBy, manifestRes);
 
-            model.createIndividual(aggregation.getUri().toString(), RO.Folder);
+            Individual folderInd = model.createIndividual(aggregation.getUri().toString(), RO.Folder);
+            folderInd.addProperty(ORE.isAggregatedBy, roInd);
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);
