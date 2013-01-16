@@ -99,7 +99,11 @@ public class Resource {
         }
         RDFFormat responseSyntax = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
 
-        if (researchObject.getProxies().containsKey(resourceUri)) {
+        if (researchObject.getResourceMaps().containsKey(resourceUri)) {
+            throw new ForbiddenException("Can't update resource maps");
+        } else if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(resourceUri)) {
+            throw new ForbiddenException("Can't update the evo info");
+        } else if (researchObject.getProxies().containsKey(resourceUri)) {
             return updateProxy(researchObject.getProxies().get(resourceUri));
         } else if (researchObject.getAnnotations().containsKey(resourceUri)) {
             String message = String.format("This resource is an annotation, only %s media type is accepted",
@@ -109,6 +113,13 @@ public class Resource {
             String message = String.format("This resource is a folder entry, only %s media type is accepted",
                 Constants.FOLDERENTRY_MIME_TYPE);
             return Response.status(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE).entity(message).build();
+        } else if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
+            AggregatedResource resource = researchObject.getAggregatedResources().get(resourceUri);
+            resource.update(entity, servletRequest.getContentType());
+            CacheControl cache = new CacheControl();
+            cache.setMustRevalidate(true);
+            return Response.ok().cacheControl(cache).tag(resource.getStats().getChecksum())
+                    .lastModified(resource.getStats().getLastModified().toDate()).build();
         } else if (researchObject.getAnnotationsByBodyUri().containsKey(resourceUri)) {
             AggregatedResource resource = researchObject.aggregate(filePath, entity, servletRequest.getContentType());
             String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, resource.getUri().toString(),
@@ -124,17 +135,6 @@ public class Resource {
                         .lastModified(resource.getStats().getLastModified().toDate());
             }
             return rb.build();
-        } else if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
-            AggregatedResource resource = researchObject.getAggregatedResources().get(resourceUri);
-            resource.update(entity, servletRequest.getContentType());
-            CacheControl cache = new CacheControl();
-            cache.setMustRevalidate(true);
-            return Response.ok().cacheControl(cache).tag(resource.getStats().getChecksum())
-                    .lastModified(resource.getStats().getLastModified().toDate()).build();
-        } else if (researchObject.getResourceMaps().containsKey(resourceUri)) {
-            throw new ForbiddenException("Can't update resource maps");
-        } else if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(resourceUri)) {
-            throw new ForbiddenException("Can't update the evo info");
         } else {
             throw new NotFoundException(
                     "You cannot use PUT to create new resources unless they have been referenced in a proxy or an annotation. Use POST instead.");
