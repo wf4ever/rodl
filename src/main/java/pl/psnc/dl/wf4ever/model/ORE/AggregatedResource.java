@@ -101,7 +101,12 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         getResearchObject().getManifest().deleteResource(this);
         getResearchObject().getManifest().serialize();
         getResearchObject().getAggregatedResources().remove(uri);
-        ROSRService.DL.get().deleteFile(getResearchObject().getUri(), getPath());
+        if (isInternal()) {
+            // resource may no longer be internal if it is deleted by different classes independently, 
+            // or if it's a folder that has just been emptied (i.e. the resource map was deleted), 
+            // in which case it was also deleted automatically
+            ROSRService.DL.get().deleteFile(getResearchObject().getUri(), getPath());
+        }
         if (getProxy() != null) {
             getProxy().delete();
         }

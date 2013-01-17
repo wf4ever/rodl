@@ -7,6 +7,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.URI;
 import java.nio.file.DirectoryIteratorException;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -214,7 +215,7 @@ public class FilesystemDL implements DigitalLibrary {
             dao.delete(res);
             HibernateUtil.getSessionFactory().getCurrentSession().flush();
         } catch (NoSuchFileException e) {
-            throw new NotFoundException("File doesn't exist", e);
+            throw new NotFoundException("File doesn't exist: " + filePath, e);
         } catch (IOException e) {
             throw new DigitalLibraryException(e);
         }
@@ -224,9 +225,11 @@ public class FilesystemDL implements DigitalLibrary {
                 Files.delete(path);
                 path = path.getParent();
             }
-        } catch (IOException e) {
+        } catch (DirectoryNotEmptyException e) {
             //it was non empty
-            LOGGER.debug("Tried to delete a directory", e);
+            LOGGER.debug("Tried to delete a directory: " + e.getMessage());
+        } catch (IOException e) {
+            throw new DigitalLibraryException(e);
         }
     }
 
@@ -269,7 +272,7 @@ public class FilesystemDL implements DigitalLibrary {
 
             });
         } catch (NoSuchFileException e) {
-            throw new NotFoundException("File doesn't exist", e);
+            throw new NotFoundException("RO doesn't exist: " + ro.toString(), e);
         } catch (IOException e) {
             throw new DigitalLibraryException(e);
         }
