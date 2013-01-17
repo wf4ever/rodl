@@ -428,7 +428,11 @@ public class Resource {
         }
 
         Thing resource;
-        if (researchObject.getProxies().containsKey(resourceUri)) {
+        if (researchObject.getResourceMaps().containsKey(resourceUri)) {
+            throw new ForbiddenException("Can't delete the resource map");
+        } else if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(resourceUri)) {
+            throw new ForbiddenException("Can't delete the evo info");
+        } else if (researchObject.getProxies().containsKey(resourceUri)) {
             return deleteProxy(researchObject.getProxies().get(resourceUri));
         } else if (researchObject.getFolderEntries().containsKey(resourceUri)) {
             resource = researchObject.getFolderEntries().get(resourceUri);
@@ -440,10 +444,6 @@ public class Resource {
             resource = annotation;
         } else if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
             resource = researchObject.getAggregatedResources().get(resourceUri);
-        } else if (researchObject.getResourceMaps().containsKey(resourceUri)) {
-            throw new ForbiddenException("Can't delete the resource map");
-        } else if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(resourceUri)) {
-            throw new ForbiddenException("Can't delete the evo info");
         } else {
             throw new NotFoundException("Resource not found");
         }
