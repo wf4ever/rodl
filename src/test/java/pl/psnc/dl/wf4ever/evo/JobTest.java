@@ -11,7 +11,7 @@ import javax.ws.rs.core.MediaType;
 import org.junit.Assert;
 import org.junit.Test;
 
-import pl.psnc.dl.wf4ever.common.EvoType;
+import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.evo.Job.State;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 

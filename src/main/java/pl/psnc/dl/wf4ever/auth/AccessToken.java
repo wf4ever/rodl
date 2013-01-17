@@ -19,7 +19,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import pl.psnc.dl.wf4ever.common.ActiveRecord;
+import pl.psnc.dl.wf4ever.common.db.ActiveRecord;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 
 /**

@@ -7,7 +7,7 @@ import java.net.URI;
 
 import org.junit.Test;
 
-import pl.psnc.dl.wf4ever.common.EvoType;
+import pl.psnc.dl.wf4ever.common.db.EvoType;
 
 public class StoringHistoryTest extends EvoTest {
 

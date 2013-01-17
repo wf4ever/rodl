@@ -13,7 +13,7 @@ import javax.naming.NamingException;
 
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.common.EvoType;
+import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;

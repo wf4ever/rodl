@@ -5,7 +5,7 @@ package pl.psnc.dl.wf4ever.dao;
 
 import org.joda.time.DateTime;
 
-import pl.psnc.dl.wf4ever.common.ResourceInfo;
+import pl.psnc.dl.wf4ever.common.db.ResourceInfo;
 
 /**
  * RODL user model.

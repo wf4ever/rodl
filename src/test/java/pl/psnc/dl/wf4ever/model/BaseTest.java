@@ -2,7 +2,6 @@ package pl.psnc.dl.wf4ever.model;
 
 import org.junit.Before;
 
-import pl.psnc.dl.wf4ever.common.Builder;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
