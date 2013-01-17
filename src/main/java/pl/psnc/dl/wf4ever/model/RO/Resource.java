@@ -70,7 +70,7 @@ public class Resource extends AggregatedResource {
      */
     public static Resource create(Builder builder, ResearchObject researchObject, URI resourceUri) {
         if (researchObject.isUriUsed(resourceUri)) {
-            throw new ConflictException("Such resource already exists");
+            throw new ConflictException("Resource already exists: " + resourceUri);
         }
         Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser(), DateTime.now());
         resource.setProxy(Proxy.create(builder, researchObject, resource));

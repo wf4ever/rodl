@@ -144,7 +144,6 @@ public class FileTest extends ResourceBase {
 
     @Test
     public void deleteRDFFile() {
-        addRDFFIle(ro, rdfFileBody, rdfFilePath, accessToken);
         ClientResponse response = addRDFFIle(ro, rdfFileBody, rdfFilePath, accessToken);
         URI rdfProxy = response.getLocation();
         response = webResource.uri(rdfProxy).header("Authorization", "Bearer " + accessToken)
