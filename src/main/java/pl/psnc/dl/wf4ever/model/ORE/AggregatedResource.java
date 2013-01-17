@@ -3,6 +3,8 @@ package pl.psnc.dl.wf4ever.model.ORE;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
@@ -103,7 +105,9 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         if (getProxy() != null) {
             getProxy().delete();
         }
-        for (FolderEntry entry : getResearchObject().getFolderEntriesByResourceUri().get(uri)) {
+        //create another collection to avoid concurrent modification
+        Set<FolderEntry> entriesToDelete = new HashSet<>(getResearchObject().getFolderEntriesByResourceUri().get(uri));
+        for (FolderEntry entry : entriesToDelete) {
             entry.delete();
         }
         super.delete();

@@ -4,8 +4,10 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -173,7 +175,9 @@ public class Folder extends Resource implements Aggregation {
 
     @Override
     public void delete() {
-        for (FolderEntry entry : getFolderEntries().values()) {
+        //create another collection to avoid concurrent modification
+        Set<FolderEntry> entriesToDelete = new HashSet<>(getFolderEntries().values());
+        for (FolderEntry entry : entriesToDelete) {
             entry.delete();
         }
         getResourceMap().delete();

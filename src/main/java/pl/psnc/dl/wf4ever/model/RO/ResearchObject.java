@@ -240,7 +240,9 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     @Override
     public void delete() {
-        for (AggregatedResource resource : getAggregatedResources().values()) {
+        //create another collection to avoid concurrent modification
+        Set<AggregatedResource> resourcesToDelete = new HashSet<>(getAggregatedResources().values());
+        for (AggregatedResource resource : resourcesToDelete) {
             resource.delete();
         }
         getManifest().delete();
