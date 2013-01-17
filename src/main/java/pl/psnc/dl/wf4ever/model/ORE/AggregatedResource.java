@@ -206,7 +206,13 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     public void saveGraphAndSerialize()
             throws BadRequestException {
         String filePath = getPath();
-        RDFFormat format = RDFFormat.forMIMEType(getStats().getMimeType());
+        RDFFormat format;
+        if (getStats() != null && getStats().getMimeType() != null) {
+            format = RDFFormat.forMIMEType(getStats().getMimeType());
+        } else {
+            // required for resource not stored in RODL, for example new zipped ROs
+            format = RDFFormat.forFileName(getPath());
+        }
         if (format == null) {
             throw new BadRequestException("Unrecognized RDF format: " + filePath);
         }
