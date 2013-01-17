@@ -30,8 +30,8 @@ public class BaseTest {
      */
     public BaseTest() {
         dataset = TDBFactory.createDataset();
-        useTransactions = false;
         userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED);
+        useTransactions = false;
         builder = new Builder(userProfile, dataset, false);
     }
 
