@@ -297,17 +297,18 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             RDFNode creator, created;
             Resource liveRO;
             if (liveManifest == null) {
-                log.warn("Live RO is not an RO: " + liveResearchObject.getManifestUri());
-                liveRO = manifestModel.createResource(liveResearchObject.getManifestUri().toString());
+                log.warn("Live RO is not an RO: " + liveResearchObject.getUri());
+                liveRO = manifestModel.createResource(liveResearchObject.getUri().toString());
                 creator = manifestModel.createResource(user.getUri().toString());
                 created = manifestModel.createTypedLiteral(Calendar.getInstance());
             } else {
-                liveRO = liveManifestModel.getIndividual(liveResearchObject.getManifestUri().toString());
+                liveRO = liveManifestModel.getIndividual(liveResearchObject.getUri().toString());
                 if (liveRO == null) {
                     throw new IllegalArgumentException("Live RO does not describe the research object");
                 }
                 creator = liveRO.getPropertyResourceValue(DCTerms.creator);
                 created = liveRO.as(Individual.class).getPropertyValue(DCTerms.created);
+
             }
 
             manifestModel.add(ro, ORE.isDescribedBy, manifest);
@@ -1340,6 +1341,9 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             }
             while (archiveItertator.hasNext()) {
                 URI tmpURI = URI.create(archiveItertator.next().getObject().toString());
+                if (tmpURI.equals(freshSnapshotOrArchive.getUri())) {
+                    continue;
+                }
                 RDFNode node = getIndividual(ResearchObject.create(tmpURI)).getProperty(ROEVO.archivedAtTime)
                         .getObject();
                 DateTime tmpTime = new DateTime(node.asLiteral().getValue().toString());
