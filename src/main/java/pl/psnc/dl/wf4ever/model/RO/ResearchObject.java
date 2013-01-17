@@ -246,7 +246,12 @@ public class ResearchObject extends Thing implements Aggregation {
             resource.delete();
         }
         getManifest().delete();
-        ROSRService.DL.get().deleteResearchObject(uri);
+        try {
+            ROSRService.DL.get().deleteResearchObject(uri);
+        } catch (NotFoundException e) {
+            // good, nothing was left so the folder was deleted
+            LOGGER.debug("As expected. RO folder was empty and was deleted: " + e.getMessage());
+        }
         super.delete();
     }
 

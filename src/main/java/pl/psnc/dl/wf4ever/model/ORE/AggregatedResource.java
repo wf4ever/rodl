@@ -242,7 +242,11 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     public void deleteGraphAndSerialize() {
         String filePath = getPath();
         try (InputStream data = getGraphAsInputStream(RDFFormat.RDFXML)) {
-            ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, data, getStats().getMimeType());
+            // can only be null if a resource that is an annotation body exists serialized but not in the triple store
+            if (data != null) {
+                ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, data,
+                    getStats().getMimeType());
+            }
         } catch (IOException e) {
             LOGGER.warn("Could not close stream", e);
         }
