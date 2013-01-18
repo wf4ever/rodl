@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.net.URI;
 
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
@@ -83,13 +84,43 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
     }
 
 
+    @Override
+    public void save()
+            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+        super.save();
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            Individual aggregationInd = model.createIndividual(aggregation.getUri().toString(), ORE.Aggregation);
+            Individual resourceMapInd = model.createIndividual(uri.toString(), ORE.ResourceMap);
+            model.add(aggregationInd, ORE.isDescribedBy, resourceMapInd);
+            model.add(resourceMapInd, ORE.describes, aggregationInd);
+
+            saveAuthor((Thing) aggregation);
+            saveAuthor(this);
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    /**
+     * Delete the resource map from the triple store and the storage.
+     */
+    @Override
+    public void delete() {
+        ROSRService.DL.get().deleteFile(getResearchObject().getUri(), getPath());
+        super.delete();
+    }
+
+
     /**
      * Add a new aggregated resource and save it.
      * 
      * @param resource
      *            a new aggregated resource
      */
-    public void saveAggregation(AggregatedResource resource) {
+    public void saveAggregatedResource(AggregatedResource resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             Individual ro = model.getIndividual(aggregation.getUri().toString());

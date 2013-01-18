@@ -65,8 +65,9 @@ public class ArchiveResearchObject extends FrozenResearchObject {
      * 
      */
     public static ArchiveResearchObject get(Builder builder, URI uri, ResearchObject liveRO) {
-        if (ROSRService.SMS.get().containsNamedGraph(uri.resolve(ResearchObject.MANIFEST_PATH))) {
-            return builder.buildArchiveResearchObject(uri, liveRO);
+        ArchiveResearchObject researchObject = builder.buildArchiveResearchObject(uri, liveRO);
+        if (researchObject.getManifest().isNamedGraph()) {
+            return researchObject;
         } else {
             return null;
         }

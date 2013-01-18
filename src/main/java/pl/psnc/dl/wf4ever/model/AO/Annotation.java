@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.joda.time.DateTime;
@@ -57,6 +58,7 @@ public class Annotation extends AggregatedResource {
      */
     public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Thing body, Set<Thing> annotated) {
         super(user, researchObject, uri);
+        //        Objects.requireNonNull(body, "Body cannot be null");
         this.annotated = annotated;
         this.body = body;
     }
@@ -117,7 +119,17 @@ public class Annotation extends AggregatedResource {
     }
 
 
-    public void setBody(Thing body) {
+    /**
+     * Set annotation body.
+     * 
+     * @param body
+     *            the body
+     * @throws NullPointerException
+     *             if the body is null
+     */
+    public void setBody(Thing body)
+            throws NullPointerException {
+        Objects.requireNonNull(body, "Body cannot be null");
         this.body = body;
     }
 
@@ -141,7 +153,7 @@ public class Annotation extends AggregatedResource {
     public static Annotation create(Builder builder, ResearchObject researchObject, URI uri, URI bodyUri,
             Set<Thing> targets) {
         Annotation annotation = builder.buildAnnotation(researchObject, uri, builder.buildThing(bodyUri), targets,
-            builder.getUser().getUri(), DateTime.now());
+            builder.getUser(), DateTime.now());
         annotation.setProxy(Proxy.create(builder, researchObject, annotation));
         annotation.save();
         return annotation;
@@ -167,7 +179,7 @@ public class Annotation extends AggregatedResource {
             throws BadRequestException {
         Annotation annotation = assemble(builder, researchObject, uri, content);
         annotation.setCreated(DateTime.now());
-        annotation.setCreator(builder.getUser().getUri());
+        annotation.setCreator(builder.getUser());
         annotation.setProxy(Proxy.create(builder, researchObject, annotation));
         annotation.save();
         return annotation;
@@ -180,6 +192,23 @@ public class Annotation extends AggregatedResource {
     public void save() {
         super.save();
         researchObject.getManifest().saveAnnotationData(this);
+    }
+
+
+    @Override
+    public void delete() {
+        getResearchObject().getAnnotations().remove(uri);
+        getResearchObject().getAnnotationsByBodyUri().get(getBody().getUri()).remove(this);
+        for (Thing thing : getAnnotated()) {
+            getResearchObject().getAnnotationsByTarget().get(thing.getUri()).remove(this);
+        }
+        AggregatedResource resource = getResearchObject().getAggregatedResources().get(getBody().getUri());
+        if (resource != null && resource.isInternal()) {
+            resource.deleteGraphAndSerialize();
+            //FIXME the resource is still of class AggregatedResource and does not appear in RO collections.
+            getResearchObject().getManifest().saveRoResourceClass(this);
+        }
+        super.delete();
     }
 
 
@@ -248,6 +277,33 @@ public class Annotation extends AggregatedResource {
 
         Annotation annotation = builder.buildAnnotation(researchObject, uri, builder.buildThing(bodyUri), targets);
         return annotation;
+    }
+
+
+    /**
+     * Update this annotation with body and target of the given annotation.
+     * 
+     * @param newAnnotation
+     *            the new annotation
+     * @return this annotation, updated
+     * @throws BadRequestException
+     *             the new annotation body is not a valid RDF file
+     */
+    public Annotation update(Annotation newAnnotation)
+            throws BadRequestException {
+        if (!body.getUri().equals(newAnnotation.getBody().getUri())) {
+            if (getResearchObject().getAggregatedResources().containsKey(body.getUri())) {
+                getResearchObject().getAggregatedResources().get(body.getUri()).deleteGraphAndSerialize();
+            }
+            //FIXME will passing a thing work?
+            setBody(newAnnotation.getBody());
+            if (getResearchObject().getAggregatedResources().containsKey(body.getUri())) {
+                getResearchObject().getAggregatedResources().get(body.getUri()).saveGraphAndSerialize();
+            }
+        }
+        setAnnotated(newAnnotation.getAnnotated());
+        save();
+        return this;
     }
 
 

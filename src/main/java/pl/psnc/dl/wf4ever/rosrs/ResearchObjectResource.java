@@ -181,6 +181,9 @@ public class ResearchObjectResource {
         if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
             throw new ConflictException("This resource has already been aggregated. Use PUT to update it.");
         }
+        if (researchObject.isUriUsed(resourceUri)) {
+            throw new ConflictException("This URI is already used.");
+        }
         Collection<URI> annotated = HeaderUtils.getLinkHeaders(links).get(AO.annotatesResource.getURI());
         Set<Thing> annotationTargets = new HashSet<>();
         for (URI targetUri : annotated) {

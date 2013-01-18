@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,7 @@ import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -42,10 +44,21 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ReadWrite;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.tdb.TDBFactory;
+import com.hp.hpl.jena.vocabulary.DCTerms;
 
 /**
  * A research object, live by default.
@@ -85,8 +98,14 @@ public class ResearchObject extends Thing implements Aggregation {
     /** aggregated annotations. */
     private Map<URI, Annotation> annotations;
 
-    /** folder resource maps. */
-    private Map<URI, ResourceMap> folderResourceMaps;
+    /** folder resource maps and the manifest. */
+    private Map<URI, ResourceMap> resourceMaps;
+
+    /** folder entries. */
+    private Map<URI, FolderEntry> folderEntries;
+
+    /** folder entries, grouped based on ore:proxyFor. */
+    private Multimap<URI, FolderEntry> folderEntriesByResourceUri;
 
     /** Manifest. */
     private Manifest manifest;
@@ -138,7 +157,7 @@ public class ResearchObject extends Thing implements Aggregation {
         if (get(builder, uri) != null) {
             throw new ConflictException("Research Object already exists: " + uri);
         }
-        ResearchObject researchObject = builder.buildResearchObject(uri, builder.getUser().getUri(), DateTime.now());
+        ResearchObject researchObject = builder.buildResearchObject(uri, builder.getUser(), DateTime.now());
         researchObject.manifest = Manifest.create(builder, researchObject.getUri().resolve(MANIFEST_PATH),
             researchObject);
         researchObject.save();
@@ -204,23 +223,6 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
-    /**
-     * Delete the Research Object including its resources and annotations.
-     */
-    @Override
-    public void delete() {
-        try {
-            ROSRService.DL.get().deleteResearchObject(uri);
-        } finally {
-            try {
-                ROSRService.SMS.get().removeResearchObject(this);
-            } catch (IllegalArgumentException e) {
-                LOGGER.warn("URI not found in SMS: " + uri);
-            }
-        }
-    }
-
-
     @Override
     public void save() {
         super.save();
@@ -234,7 +236,28 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
-     * Add an internal resource to the research object.
+     * Delete the Research Object including its resources and annotations.
+     */
+    @Override
+    public void delete() {
+        //create another collection to avoid concurrent modification
+        Set<AggregatedResource> resourcesToDelete = new HashSet<>(getAggregatedResources().values());
+        for (AggregatedResource resource : resourcesToDelete) {
+            resource.delete();
+        }
+        getManifest().delete();
+        try {
+            ROSRService.DL.get().deleteResearchObject(uri);
+        } catch (NotFoundException e) {
+            // good, nothing was left so the folder was deleted
+            LOGGER.debug("As expected. RO folder was empty and was deleted: " + e.getMessage());
+        }
+        super.delete();
+    }
+
+
+    /**
+     * Create an internal resource and add it to the research object.
      * 
      * @param path
      *            resource path, relative to the RO URI, not encoded
@@ -251,7 +274,7 @@ public class ResearchObject extends Thing implements Aggregation {
         URI resourceUri = UriBuilder.fromUri(uri).path(path).build();
         Resource resource = Resource.create(builder, this, resourceUri, content, contentType);
         if (getAnnotationsByBodyUri().containsKey(resource.getUri())) {
-            resource.saveGraph();
+            resource.saveGraphAndSerialize();
         }
         getManifest().serialize();
         this.getResources().put(resource.getUri(), resource);
@@ -269,8 +292,8 @@ public class ResearchObject extends Thing implements Aggregation {
      * @return the resource instance
      */
     public Resource aggregate(URI uri) {
-        Resource resource = ROSRService.SMS.get().addResource(this, uri, null);
-        resource.setProxy(ROSRService.SMS.get().addProxy(this, resource));
+        Resource resource = Resource.create(builder, this, uri);
+        resource.setProxy(Proxy.create(builder, this, resource));
         // update the manifest that describes the resource in dLibra
         this.getManifest().serialize();
         this.getResources().put(resource.getUri(), resource);
@@ -369,7 +392,8 @@ public class ResearchObject extends Thing implements Aggregation {
             throws BadRequestException {
         AggregatedResource resource = getAggregatedResources().get(annotation.getBody().getUri());
         if (resource != null && resource.isInternal()) {
-            resource.saveGraph();
+            resource.saveGraphAndSerialize();
+            getManifest().removeRoResourceClass(resource);
         }
         getManifest().serialize();
         this.getAnnotations().put(annotation.getUri(), annotation);
@@ -473,9 +497,9 @@ public class ResearchObject extends Thing implements Aggregation {
         }
         for (Annotation annotation : annotationsList) {
             try {
+                //FIXME the body thing looks redundant
                 if (researchObject.getAggregatedResources().containsKey(annotation.getBody().getUri())) {
-                    ROSRService.convertRoResourceToAnnotationBody(researchObject, researchObject
-                            .getAggregatedResources().get(annotation.getBody().getUri()));
+                    researchObject.getAggregatedResources().get(annotation.getBody().getUri()).saveGraphAndSerialize();
                 }
                 researchObject.annotate(annotation.getBody().getUri(), annotation.getAnnotated());
             } catch (DigitalLibraryException | NotFoundException e) {
@@ -535,10 +559,43 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
+     * Get folder entries of all folders.
+     * 
+     * @return folder entries mapped by the URIs.
+     */
+    public Map<URI, FolderEntry> getFolderEntries() {
+        if (folderEntries == null) {
+            folderEntries = new HashMap<>();
+            for (Folder folder : getFolders().values()) {
+                folderEntries.putAll(folder.getFolderEntries());
+            }
+        }
+        return folderEntries;
+    }
+
+
+    /**
+     * Get folder entries grouped by the URI of the resource they proxy. Loaded lazily.
+     * 
+     * @return multimap of folder entries
+     */
+    public Multimap<URI, FolderEntry> getFolderEntriesByResourceUri() {
+        if (folderEntriesByResourceUri == null) {
+            folderEntriesByResourceUri = HashMultimap.<URI, FolderEntry> create();
+            for (FolderEntry entry : getFolderEntries().values()) {
+                folderEntriesByResourceUri.put(entry.getProxyFor().getUri(), entry);
+            }
+        }
+        return folderEntriesByResourceUri;
+    }
+
+
+    /**
      * Get proxies for aggregated resources, loaded lazily.
      * 
      * @return proxies mapped by their URI
      */
+    @Override
     public Map<URI, Proxy> getProxies() {
         if (proxies == null) {
             this.proxies = new HashMap<>();
@@ -605,6 +662,7 @@ public class ResearchObject extends Thing implements Aggregation {
      * 
      * @return a map of aggregated resource by their URI
      */
+    @Override
     public Map<URI, AggregatedResource> getAggregatedResources() {
         if (aggregatedResources == null) {
             this.aggregatedResources = getManifest().extractAggregatedResources(getResources(), getFolders(),
@@ -621,18 +679,19 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
-     * Get all folder resource maps, loading the lazily.
+     * Get manifest and folder resource maps, loading the lazily.
      * 
      * @return folder resource maps mapped by their URIs
      */
-    public Map<URI, ResourceMap> getFolderResourceMaps() {
-        if (folderResourceMaps == null) {
-            this.folderResourceMaps = new HashMap<>();
+    public Map<URI, ResourceMap> getResourceMaps() {
+        if (resourceMaps == null) {
+            this.resourceMaps = new HashMap<>();
+            this.resourceMaps.put(getManifest().getUri(), getManifest());
             for (Folder folder : getFolders().values()) {
-                folderResourceMaps.put(folder.getResourceMap().getUri(), folder.getResourceMap());
+                resourceMaps.put(folder.getResourceMap().getUri(), folder.getResourceMap());
             }
         }
-        return folderResourceMaps;
+        return resourceMaps;
     }
 
 
@@ -646,7 +705,7 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     @Override
-    public URI getCreator() {
+    public UserMetadata getCreator() {
         if (creator == null) {
             this.creator = getManifest().extractCreator(this);
         }
@@ -659,12 +718,70 @@ public class ResearchObject extends Thing implements Aggregation {
      * 
      * @param uri
      *            the URI
-     * @return true if there is an aggregated resource / proxy / folder resource map / manifest with that URI
+     * @return true if there is an aggregated resource / proxy / folder resource map / manifest / folder entry with that
+     *         URI
      */
     public boolean isUriUsed(URI uri) {
-        //FIXME folder entries are missing
         return getAggregatedResources().containsKey(uri) || getProxies().containsKey(uri)
-                || getFolderResourceMaps().containsKey(uri) || getManifest().getUri().equals(uri);
+                || getFolderEntries().containsKey(uri) || getResourceMaps().containsKey(uri);
     }
 
+
+    public InputStream getAsZipArchive() {
+        return ROSRService.DL.get().getZippedResearchObject(uri);
+    }
+
+
+    /**
+     * Get all research objects. If the builder has a user set whose role is not public, only the user's research
+     * objects are looked for.
+     * 
+     * @param builder
+     *            builder that defines the dataset and the user
+     * @return a set of research objects
+     */
+    public static Set<ResearchObject> getAll(Builder builder) {
+        Dataset dataset = builder.getDataset();
+        if (dataset == null) {
+            dataset = TDBFactory.createDataset(TRIPLE_STORE_DIR);
+        }
+        boolean transaction;
+        if (builder.isUseTransactions() && dataset.supportsTransactions() && !dataset.isInTransaction()) {
+            dataset.begin(ReadWrite.READ);
+            transaction = true;
+        } else {
+            transaction = false;
+        }
+        try {
+            Set<ResearchObject> ros = new HashSet<>();
+            String queryString;
+            if (builder.getUser() == null || builder.getUser().getRole() == Role.PUBLIC) {
+                queryString = String.format("PREFIX ro: <%s> SELECT ?ro WHERE { ?ro a ro:ResearchObject . }",
+                    RO.NAMESPACE);
+            } else {
+                queryString = String
+                        .format(
+                            "PREFIX ro: <%s> PREFIX dcterms: <%s> SELECT ?ro WHERE { ?ro a ro:ResearchObject ; dcterms:creator <%s> . }",
+                            RO.NAMESPACE, DCTerms.NS, builder.getUser().getUri());
+            }
+            Query query = QueryFactory.create(queryString);
+            QueryExecution qe = QueryExecutionFactory.create(query, dataset.getNamedModel("urn:x-arq:UnionGraph"));
+            try {
+                ResultSet results = qe.execSelect();
+                while (results.hasNext()) {
+                    QuerySolution solution = results.next();
+                    RDFNode r = solution.get("ro");
+                    URI rUri = URI.create(r.asResource().getURI());
+                    ros.add(builder.buildResearchObject(rUri));
+                }
+            } finally {
+                qe.close();
+            }
+            return ros;
+        } finally {
+            if (builder.isUseTransactions() && dataset.supportsTransactions() && transaction) {
+                dataset.end();
+            }
+        }
+    }
 }

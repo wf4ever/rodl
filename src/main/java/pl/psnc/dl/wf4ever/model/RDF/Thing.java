@@ -17,6 +17,7 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.common.db.UserProfile;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
@@ -26,6 +27,7 @@ import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
+import pl.psnc.dl.wf4ever.vocabulary.FOAF;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.W4E;
 
@@ -41,6 +43,7 @@ import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.tdb.TDB;
 import com.hp.hpl.jena.tdb.TDBFactory;
@@ -61,7 +64,7 @@ public class Thing {
     protected URI uri;
 
     /** creator URI. */
-    protected URI creator;
+    protected UserMetadata creator;
 
     /** creation date. */
     protected DateTime created;
@@ -79,7 +82,7 @@ public class Thing {
     protected Dataset dataset;
 
     /** Triple store location. */
-    private static final String TRIPLE_STORE_DIR = getStoreDirectory("connection.properties");
+    protected static final String TRIPLE_STORE_DIR = getStoreDirectory("connection.properties");
 
     /** Logger. */
     private static final Logger LOGGER = Logger.getLogger(SemanticMetadataServiceTdb.class);
@@ -202,12 +205,12 @@ public class Thing {
     }
 
 
-    public URI getCreator() {
+    public UserMetadata getCreator() {
         return creator;
     }
 
 
-    public void setCreator(URI creator) {
+    public void setCreator(UserMetadata creator) {
         this.creator = creator;
     }
 
@@ -365,7 +368,7 @@ public class Thing {
      *            the resource
      * @return creator URI or null if not defined
      */
-    public URI extractCreator(Thing thing) {
+    public UserMetadata extractCreator(Thing thing) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             Individual ro = model.getIndividual(thing.getUri().toString());
@@ -373,7 +376,10 @@ public class Thing {
                 throw new IncorrectModelException("RO not found in the manifest" + thing.getUri());
             }
             com.hp.hpl.jena.rdf.model.Resource c = ro.getPropertyResourceValue(DCTerms.creator);
-            return c != null ? URI.create(c.getURI()) : null;
+            URI curi = c != null ? URI.create(c.getURI()) : null;
+            RDFNode n = c.getProperty(FOAF.name).getObject();
+            String name = n != null ? n.asLiteral().getString() : null;
+            return new UserProfile(null, name, null, curi);
         } finally {
             endTransaction(transactionStarted);
         }
@@ -559,6 +565,27 @@ public class Thing {
 
 
     /**
+     * Delete a resource from the model.
+     * 
+     * @param resource
+     *            resource to delete
+     */
+    public void deleteResource(Thing resource) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            Resource resR = model.getResource(resource.getUri().toString());
+            if (resR != null) {
+                model.removeAll(resR, null, null);
+                model.removeAll(null, null, resR);
+            }
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    /**
      * Save the dcterms:creator and dcterms:created in the current model.
      * 
      * @param subject
@@ -572,7 +599,9 @@ public class Thing {
                 model.add(subjectR, DCTerms.created, model.createTypedLiteral(subject.getCreated().toCalendar(null)));
             }
             if (!subjectR.hasProperty(DCTerms.creator) && subject.getCreator() != null) {
-                model.add(subjectR, DCTerms.creator, model.createResource(subject.getCreator().toString()));
+                Individual author = model.createIndividual(subject.getCreator().getUri().toString(), FOAF.Agent);
+                model.add(subjectR, DCTerms.creator, author);
+                author.setPropertyValue(FOAF.name, model.createLiteral(subject.getCreator().getName()));
             }
             commitTransaction(transactionStarted);
         } finally {

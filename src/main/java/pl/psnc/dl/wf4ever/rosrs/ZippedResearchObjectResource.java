@@ -57,7 +57,7 @@ public class ZippedResearchObjectResource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        InputStream body = ROSRService.DL.get().getZippedResearchObject(researchObject.getUri());
+        InputStream body = researchObject.getAsZipArchive();
         //TODO add all named graphs from SMS that start with the base URI
         ContentDisposition cd = ContentDisposition.type("application/zip").fileName(researchObjectId + ".zip").build();
         return ResearchObjectResource.addLinkHeaders(Response.ok(body), uriInfo, researchObjectId)

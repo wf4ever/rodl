@@ -1143,37 +1143,36 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     //        Assert.assertNull(folderInd);
     //    }
 
-    /**
-     * annotationForBody method should return an annotation
-     */
-    @Test
-    public void testAnnotationForBody() {
-        Annotation annotation = test.sms.findAnnotationForBody(test.ro1, test.ro1.getFixedEvolutionAnnotationBodyUri());
-        Assert.assertNotNull("Annotation should not be null", annotation);
-    }
-
-
-    /**
-     * Annotation should be null if annotation can not be found.
-     */
-    @Test
-    public void testAnnotationForBodyInCaseAnnotationDoesNotExists() {
-        Annotation annotation = test.sms.findAnnotationForBody(test.wrongRO,
-            test.wrongRO.getUri().resolve(ANNOTATION_BODY_PATH));
-        Assert.assertNull("Annotation should not be null", annotation);
-    }
-
-
-    /**
-     * Annotation should be null if body does not exist.
-     */
-    @Test
-    public void testAnnotationForBodyInCaseBodyDoesNotExists() {
-        Annotation annotation = test.sms.findAnnotationForBody(test.wrongRO,
-            test.wrongRO.getUri().resolve("annotated-does-not-exist"));
-        Assert.assertNull("Annotation should not be null", annotation);
-    }
-
+    //    /**
+    //     * annotationForBody method should return an annotation
+    //     */
+    //    @Test
+    //    public void testAnnotationForBody() {
+    //        Annotation annotation = test.sms.findAnnotationForBody(test.ro1, test.ro1.getFixedEvolutionAnnotationBodyUri());
+    //        Assert.assertNotNull("Annotation should not be null", annotation);
+    //    }
+    //
+    //
+    //    /**
+    //     * Annotation should be null if annotation can not be found.
+    //     */
+    //    @Test
+    //    public void testAnnotationForBodyInCaseAnnotationDoesNotExists() {
+    //        Annotation annotation = test.sms.findAnnotationForBody(test.wrongRO,
+    //            test.wrongRO.getUri().resolve(ANNOTATION_BODY_PATH));
+    //        Assert.assertNull("Annotation should not be null", annotation);
+    //    }
+    //
+    //
+    //    /**
+    //     * Annotation should be null if body does not exist.
+    //     */
+    //    @Test
+    //    public void testAnnotationForBodyInCaseBodyDoesNotExists() {
+    //        Annotation annotation = test.sms.findAnnotationForBody(test.wrongRO,
+    //            test.wrongRO.getUri().resolve("annotated-does-not-exist"));
+    //        Assert.assertNull("Annotation should not be null", annotation);
+    //    }
 
     @Test
     public void testRemoveSpecialFilesFromAggergated() {

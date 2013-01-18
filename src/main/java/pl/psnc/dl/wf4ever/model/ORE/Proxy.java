@@ -130,6 +130,18 @@ public class Proxy extends Thing {
 
 
     /**
+     * Delete the proxy. Doesn't delete the proxied resource.
+     */
+    @Override
+    public void delete() {
+        getProxyIn().getResourceMap().deleteResource(this);
+        getProxyIn().getResourceMap().serialize();
+        getProxyIn().getProxies().remove(uri);
+        super.delete();
+    }
+
+
+    /**
      * Find the proxyFor resource URI in the proxy RDF description.
      * 
      * @param researchObject

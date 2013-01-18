@@ -11,7 +11,6 @@ import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.hp.hpl.jena.query.Dataset;
 
@@ -71,10 +70,9 @@ public class Resource extends AggregatedResource {
      */
     public static Resource create(Builder builder, ResearchObject researchObject, URI resourceUri) {
         if (researchObject.isUriUsed(resourceUri)) {
-            throw new ConflictException("Such resource already exists");
+            throw new ConflictException("Resource already exists: " + resourceUri);
         }
-        Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser().getUri(),
-            DateTime.now());
+        Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser(), DateTime.now());
         resource.setProxy(Proxy.create(builder, researchObject, resource));
         resource.save();
         return resource;
@@ -95,33 +93,19 @@ public class Resource extends AggregatedResource {
      * @param contentType
      *            the content MIME type
      * @return the new resource
+     * @throws BadRequestException
+     *             if it is expected to be an RDF file and isn't
      */
     public static Resource create(Builder builder, ResearchObject researchObject, URI resourceUri, InputStream content,
-            String contentType) {
+            String contentType)
+            throws BadRequestException {
         if (researchObject.isUriUsed(resourceUri)) {
-            throw new ConflictException("Such resource already exists");
+            throw new ConflictException("Resource already exists: " + resourceUri);
         }
-        Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser().getUri(),
-            DateTime.now());
+        Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser(), DateTime.now());
         resource.setProxy(Proxy.create(builder, researchObject, resource));
         resource.save(content, contentType);
         return resource;
-    }
-
-
-    /**
-     * Save the resource and its content.
-     * 
-     * @param content
-     *            the resource content
-     * @param contentType
-     *            the content MIME type
-     */
-    public void save(InputStream content, String contentType) {
-        String path = researchObject.getUri().relativize(uri).getPath();
-        setStats(ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), path, content,
-            contentType != null ? contentType : "text/plain"));
-        save();
     }
 
 
@@ -134,9 +118,16 @@ public class Resource extends AggregatedResource {
 
 
     @Override
-    public void saveGraph()
+    public void delete() {
+        getResearchObject().getResources().remove(uri);
+        super.delete();
+    }
+
+
+    @Override
+    public void saveGraphAndSerialize()
             throws BadRequestException {
-        super.saveGraph();
+        super.saveGraphAndSerialize();
         //FIXME the resource is still of class Resource, not AggregatedResource
         getResearchObject().getManifest().removeRoResourceClass(this);
         getResearchObject().getResources().remove(uri);

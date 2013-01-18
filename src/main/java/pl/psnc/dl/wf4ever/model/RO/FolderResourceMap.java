@@ -1,8 +1,8 @@
 package pl.psnc.dl.wf4ever.model.RO;
 
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -79,6 +79,7 @@ public class FolderResourceMap extends ResourceMap {
         try {
             Individual entryInd = model.createIndividual(entry.getUri().toString(), RO.FolderEntry);
             Literal name = model.createLiteral(entry.getEntryName());
+            model.removeAll(entryInd, RO.entryName, null);
             model.add(entryInd, RO.entryName, name);
             Individual folderInd = model.createIndividual(getFolder().getUri().toString(), RO.Folder);
             Resource proxyForR = model.getResource(entry.getProxyFor().getUri().toString());
@@ -122,10 +123,10 @@ public class FolderResourceMap extends ResourceMap {
      * 
      * @return a set of resources (not loaded)
      */
-    public Set<FolderEntry> extractFolderEntries() {
+    public Map<URI, FolderEntry> extractFolderEntries() {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
-            Set<FolderEntry> entries = new HashSet<>();
+            Map<URI, FolderEntry> entries = new HashMap<>();
             String queryString = String
                     .format(
                         "PREFIX ore: <%s> PREFIX ro: <%s> SELECT ?entry ?resource ?name WHERE { ?entry a ro:FolderEntry ; ro:entryName ?name ; ore:proxyFor ?resource ; ore:proxyIn <%s> . }",
@@ -145,7 +146,7 @@ public class FolderResourceMap extends ResourceMap {
                     RDFNode nameNode = solution.get("name");
                     String name = nameNode.asLiteral().getString();
                     FolderEntry entry = builder.buildFolderEntry(eUri, proxyFor, getFolder(), name);
-                    entries.add(entry);
+                    entries.put(entry.getUri(), entry);
                 }
             } finally {
                 qe.close();
@@ -185,21 +186,22 @@ public class FolderResourceMap extends ResourceMap {
         super.save();
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
-            Resource manifestRes = model.createResource(getFolder().getResearchObject().getManifest().getUri()
-                    .toString());
-            Individual roInd = model.createIndividual(getFolder().getResearchObject().getUri().toString(),
-                RO.ResearchObject);
+            Resource manifestRes = model.createResource(getResearchObject().getManifest().getUri().toString());
+            Individual roInd = model.createIndividual(getResearchObject().getUri().toString(), RO.ResearchObject);
             model.add(roInd, ORE.isDescribedBy, manifestRes);
 
-            Resource folderRMRes = model.createResource(uri.toString());
-            Individual folderInd = model.createIndividual(getFolder().getUri().toString(), RO.Folder);
-            folderInd.addRDFType(ORE.Aggregation);
-            model.add(folderInd, ORE.isAggregatedBy, roInd);
-            model.add(folderInd, ORE.isDescribedBy, folderRMRes);
+            Individual folderInd = model.createIndividual(aggregation.getUri().toString(), RO.Folder);
+            folderInd.addProperty(ORE.isAggregatedBy, roInd);
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);
         }
+    }
+
+
+    @Override
+    public void delete() {
+        super.delete();
     }
 
 

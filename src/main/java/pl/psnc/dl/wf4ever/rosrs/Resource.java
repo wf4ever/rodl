@@ -2,9 +2,6 @@ package pl.psnc.dl.wf4ever.rosrs;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -33,7 +30,6 @@ import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
-import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
@@ -45,15 +41,8 @@ import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObjectComponent;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
-import pl.psnc.dl.wf4ever.vocabulary.RO;
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
-import com.hp.hpl.jena.ontology.Individual;
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.NodeIterator;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.sun.jersey.core.header.ContentDisposition;
 
 /**
@@ -79,7 +68,7 @@ public class Resource {
 
 
     /**
-     * Update an exiting resource or upload a one for which a proxy exists.
+     * Update an exiting resource or upload a one for which a proxy or annotation exists.
      * 
      * @param researchObjectId
      *            RO id
@@ -87,53 +76,81 @@ public class Resource {
      *            file path relative to the RO URI
      * @param original
      *            original format in case of annotation bodies
+     * @param accept
+     *            Accept header
      * @param entity
      *            resource content
      * @return 201 Created or 307 Temporary Redirect
+     * @throws BadRequestException
+     *             if it is expected to be an RDF file and isn't
      */
     @PUT
     public Response putResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
-            @QueryParam("original") String original, String entity) {
+            @QueryParam("original") String original, @HeaderParam("Accept") String accept, InputStream entity)
+            throws BadRequestException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.get(builder, uri);
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        URI resource = uriInfo.getAbsolutePath();
-
-        if (ROSRService.SMS.get().isProxy(researchObject, resource)) {
-            return Response.status(Status.TEMPORARY_REDIRECT)
-                    .location(ROSRService.SMS.get().getProxyFor(researchObject, resource)).build();
+        URI resourceUri = uriInfo.getAbsolutePath();
+        if (original != null) {
+            resourceUri = resourceUri.resolve(original);
         }
-        if (ROSRService.SMS.get().isAggregatedResource(researchObject, resource)) {
-            if (ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
-                return Response
-                        .status(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE)
-                        .entity(
-                            "This resource is an annotation, only \"application/vnd.wf4ever.annotation\" media type is accepted")
-                        .build();
-            }
-            if (original != null) {
-                resource = resource.resolve(original);
-            }
-            if (researchObject.getManifestUri().equals(resource)) {
-                throw new ForbiddenException("Can't update the manifest");
-            } else if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(resource)) {
-                throw new ForbiddenException("Can't update the evo info");
-            }
-            ResponseBuilder rb = ROSRService.updateInternalResource(researchObject, resource, entity,
-                servletRequest.getContentType());
-            ResourceMetadata resInfo = ROSRService.getResourceInfo(researchObject, resource, original);
-            if (resInfo != null) {
+        RDFFormat responseSyntax = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
+
+        if (researchObject.getResourceMaps().containsKey(resourceUri)) {
+            throw new ForbiddenException("Can't update resource maps");
+        } else if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(resourceUri)) {
+            throw new ForbiddenException("Can't update the evo info");
+        } else if (researchObject.getProxies().containsKey(resourceUri)) {
+            return updateProxy(researchObject.getProxies().get(resourceUri));
+        } else if (researchObject.getAnnotations().containsKey(resourceUri)) {
+            String message = String.format("This resource is an annotation, only %s media type is accepted",
+                Constants.ANNOTATION_MIME_TYPE);
+            return Response.status(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE).entity(message).build();
+        } else if (researchObject.getFolderEntries().containsKey(resourceUri)) {
+            String message = String.format("This resource is a folder entry, only %s media type is accepted",
+                Constants.FOLDERENTRY_MIME_TYPE);
+            return Response.status(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE).entity(message).build();
+        } else if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
+            AggregatedResource resource = researchObject.getAggregatedResources().get(resourceUri);
+            resource.update(entity, servletRequest.getContentType());
+            CacheControl cache = new CacheControl();
+            cache.setMustRevalidate(true);
+            return Response.ok().cacheControl(cache).tag(resource.getStats().getChecksum())
+                    .lastModified(resource.getStats().getLastModified().toDate()).build();
+        } else if (researchObject.getAnnotationsByBodyUri().containsKey(resourceUri)) {
+            AggregatedResource resource = researchObject.aggregate(filePath, entity, servletRequest.getContentType());
+            String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, resource.getUri().toString(),
+                ORE.proxyFor.getURI());
+            InputStream proxyAndResourceDesc = researchObject.getManifest().getGraphAsInputStream(responseSyntax,
+                resource.getProxy(), resource);
+            ResponseBuilder rb = Response.created(resource.getProxy().getUri()).entity(proxyAndResourceDesc)
+                    .type(responseSyntax.getDefaultMIMEType()).header(Constants.LINK_HEADER, proxyForHeader);
+            if (resource.getStats() != null) {
                 CacheControl cache = new CacheControl();
                 cache.setMustRevalidate(true);
-                rb = rb.cacheControl(cache).tag(resInfo.getChecksum()).lastModified(resInfo.getLastModified().toDate());
+                rb = rb.cacheControl(cache).tag(resource.getStats().getChecksum())
+                        .lastModified(resource.getStats().getLastModified().toDate());
             }
             return rb.build();
         } else {
-            throw new ForbiddenException(
+            throw new NotFoundException(
                     "You cannot use PUT to create new resources unless they have been referenced in a proxy or an annotation. Use POST instead.");
         }
+    }
+
+
+    /**
+     * Update the proxy.
+     * 
+     * @param proxy
+     *            the proxy
+     * @return 307 with a redirection to the proxied resource
+     */
+    private Response updateProxy(Proxy proxy) {
+        return Response.status(Status.TEMPORARY_REDIRECT).location(proxy.getProxyFor().getUri()).build();
     }
 
 
@@ -162,51 +179,71 @@ public class Resource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        URI resource = uriInfo.getAbsolutePath();
-        URI body;
-        Set<Thing> targets = new HashSet<>();
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        model.read(content, researchObject.getUri().toString());
-        ExtendedIterator<Individual> it = model.listIndividuals(RO.AggregatedAnnotation);
-        if (it.hasNext()) {
-            Individual aggregatedAnnotation = it.next();
-            NodeIterator it2 = aggregatedAnnotation.listPropertyValues(AO.body);
-            if (it2.hasNext()) {
-                RDFNode bodyResource = it2.next();
-                if (bodyResource.isURIResource()) {
-                    try {
-                        body = new URI(bodyResource.asResource().getURI());
-                    } catch (URISyntaxException e) {
-                        throw new BadRequestException("Wrong body resource URI", e);
-                    }
-                } else {
-                    throw new BadRequestException("The body is not an URI resource.");
-                }
+        URI resourceUri = uriInfo.getAbsolutePath();
+        Annotation annotation = researchObject.getAnnotations().get(resourceUri);
+        if (annotation == null) {
+            if (researchObject.isUriUsed(resourceUri)) {
+                String message = "This resource is not an annotation";
+                return Response.status(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE).entity(message).build();
             } else {
-                throw new BadRequestException("The ro:AggregatedAnnotation does not have a ao:body property.");
+                throw new NotFoundException("Annotation not found");
             }
-            it2 = aggregatedAnnotation.listPropertyValues(AO.annotatesResource);
-            while (it2.hasNext()) {
-                RDFNode targetResource = it2.next();
-                if (targetResource.isURIResource()) {
-                    try {
-                        targets.add(builder.buildThing(new URI(targetResource.asResource().getURI())));
-                    } catch (URISyntaxException e) {
-                        throw new BadRequestException("Wrong target resource URI", e);
-                    }
-                } else {
-                    throw new BadRequestException("The target is not an URI resource.");
-                }
-            }
-        } else {
-            throw new BadRequestException("The entity body does not define any ro:AggregatedAnnotation.");
         }
+        Annotation newAnnotation = Annotation.assemble(builder, researchObject, resourceUri, content);
+        annotation = annotation.update(newAnnotation);
 
-        if (!ROSRService.SMS.get().isAnnotation(researchObject, resource)) {
-            throw new ForbiddenException("You cannot create a new annotation using PUT, use POST instead.");
+        String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBody().getUri()
+                .toString(), AO.annotatesResource);
+        ResponseBuilder response = Response.ok().header(Constants.LINK_HEADER, annotationBodyHeader);
+        for (Thing target : annotation.getAnnotated()) {
+            String targetHeader = String
+                    .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
+            response = response.header(Constants.LINK_HEADER, targetHeader);
         }
-        return ROSRService.updateAnnotation(researchObject,
-            builder.buildAnnotation(researchObject, resource, builder.buildThing(body), targets));
+        return response.build();
+    }
+
+
+    /**
+     * Make a PUT to update a folder entry.
+     * 
+     * @param researchObjectId
+     *            research object ID
+     * @param filePath
+     *            the file path
+     * @param original
+     *            original resource in case of a format-specific URI
+     * @param content
+     *            RDF/XML representation of a folder entry
+     * @return 200 OK
+     * @throws BadRequestException
+     *             the RDF/XML content is incorrect
+     */
+    @PUT
+    @Consumes(Constants.FOLDERENTRY_MIME_TYPE)
+    public Response updateFolderEntry(@PathParam("ro_id") String researchObjectId,
+            @PathParam("filePath") String filePath, @QueryParam("original") String original, InputStream content)
+            throws BadRequestException {
+        URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
+        ResearchObject researchObject = ResearchObject.get(builder, uri);
+        if (researchObject == null) {
+            throw new NotFoundException("Research Object not found");
+        }
+        URI resourceUri = uriInfo.getAbsolutePath();
+        FolderEntry entry = researchObject.getFolderEntries().get(resourceUri);
+        if (entry == null) {
+            if (researchObject.isUriUsed(resourceUri)) {
+                String message = "This resource is not a folder entry";
+                return Response.status(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE).entity(message).build();
+            } else {
+                throw new NotFoundException("Folder entry not found");
+            }
+        }
+        FolderEntry newEntry = FolderEntry.assemble(builder, entry.getFolder(), content);
+        entry = entry.update(newEntry);
+
+        String link = String.format(Constants.LINK_HEADER_TEMPLATE, entry.getProxyFor(), ORE.proxyFor.getURI());
+        return Response.ok().header("Link", link).build();
     }
 
 
@@ -245,6 +282,9 @@ public class Resource {
         if (researchObject.getProxies().containsKey(resourceUri)) {
             return getProxy(researchObject.getProxies().get(resourceUri));
         }
+        if (researchObject.getFolderEntries().containsKey(resourceUri)) {
+            return getProxy(researchObject.getFolderEntries().get(resourceUri));
+        }
         if (researchObject.getAnnotations().containsKey(resourceUri)) {
             return getAnnotation(researchObject.getAnnotations().get(resourceUri), format);
         }
@@ -255,10 +295,8 @@ public class Resource {
         ResearchObjectComponent resource;
         if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
             resource = researchObject.getAggregatedResources().get(resourceUri);
-        } else if (researchObject.getFolderResourceMaps().containsKey(resourceUri)) {
-            resource = researchObject.getFolderResourceMaps().get(resourceUri);
-        } else if (resourceUri.equals(researchObject.getManifest().getUri())) {
-            resource = researchObject.getManifest();
+        } else if (researchObject.getResourceMaps().containsKey(resourceUri)) {
+            resource = researchObject.getResourceMaps().get(resourceUri);
         } else {
             throw new NotFoundException("Resource not found");
         }
@@ -278,7 +316,8 @@ public class Resource {
             if (specificName != null) {
                 URI specificResourceUri = UriBuilder.fromUri(resource.getUri().resolve(".")).path(specificName).build();
                 if (format == null) {
-                    format = RDFFormat.forFileName(specificResourceUri.getPath(), RDFFormat.RDFXML);
+                    format = specificResourceUri.getPath() != null ? RDFFormat.forFileName(
+                        specificResourceUri.getPath(), RDFFormat.RDFXML) : RDFFormat.RDFXML;
                 }
                 data = resource.getGraphAsInputStream(format);
                 mimeType = format.getDefaultMIMEType();
@@ -384,42 +423,50 @@ public class Resource {
             throw new NotFoundException("Research Object not found");
         }
         URI resourceUri = uriInfo.getAbsolutePath();
-
-        if (researchObject.getProxies().containsKey(resourceUri)) {
-            AggregatedResource resource = researchObject.getProxies().get(resourceUri).getProxyFor();
-            if (resource.isInternal()) {
-                return Response.status(Status.TEMPORARY_REDIRECT).location(resource.getUri()).build();
-            } else {
-                return ROSRService.deaggregateExternalResource(researchObject, resourceUri);
-            }
-        }
-        Annotation annotation = researchObject.getAnnotations().get(resourceUri);
-        if (annotation != null) {
-            if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(annotation.getBody().getUri())) {
-                throw new ForbiddenException("Can't delete the evo annotation");
-            }
-            return ROSRService.deleteAnnotation(researchObject, resourceUri);
-        }
-        if (researchObject.getFolders().containsKey(resourceUri)) {
-            Folder folder = researchObject.getFolders().get(resourceUri);
-            ROSRService.deleteFolder(folder);
-            return Response.noContent().build();
-        }
-        FolderEntry entry = ROSRService.SMS.get().getFolderEntry(resourceUri);
-        if (entry != null) {
-            ROSRService.deleteFolderEntry(entry);
-            return Response.noContent().build();
-        }
         if (original != null) {
             resourceUri = resourceUri.resolve(original);
         }
-        if (researchObject.getManifestUri().equals(resourceUri)) {
-            throw new ForbiddenException("Can't delete the manifest");
+
+        Thing resource;
+        if (researchObject.getResourceMaps().containsKey(resourceUri)) {
+            throw new ForbiddenException("Can't delete the resource map");
         } else if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(resourceUri)) {
             throw new ForbiddenException("Can't delete the evo info");
+        } else if (researchObject.getProxies().containsKey(resourceUri)) {
+            return deleteProxy(researchObject.getProxies().get(resourceUri));
+        } else if (researchObject.getFolderEntries().containsKey(resourceUri)) {
+            resource = researchObject.getFolderEntries().get(resourceUri);
+        } else if (researchObject.getAnnotations().containsKey(resourceUri)) {
+            Annotation annotation = researchObject.getAnnotations().get(resourceUri);
+            if (researchObject.getFixedEvolutionAnnotationBodyUri().equals(annotation.getBody().getUri())) {
+                throw new ForbiddenException("Can't delete the evo annotation");
+            }
+            resource = annotation;
+        } else if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
+            resource = researchObject.getAggregatedResources().get(resourceUri);
+        } else {
+            throw new NotFoundException("Resource not found");
         }
+        resource.delete();
+        return Response.noContent().build();
+    }
 
-        return ROSRService.deaggregateInternalResource(researchObject, resourceUri);
+
+    /**
+     * Delete the proxy.
+     * 
+     * @param proxy
+     *            proxy to delete
+     * @return 303 for internal resources, 204 for external.
+     */
+    private Response deleteProxy(Proxy proxy) {
+        AggregatedResource resource = proxy.getProxyFor();
+        if (resource.isInternal()) {
+            return Response.status(Status.TEMPORARY_REDIRECT).location(resource.getUri()).build();
+        } else {
+            resource.delete();
+            return Response.noContent().build();
+        }
     }
 
 
@@ -444,11 +491,7 @@ public class Resource {
 
         FolderEntry entry = folder.createFolderEntry(content);
 
-        return Response
-                .created(entry.getUri())
-                .header(
-                    "Link",
-                    String.format(Constants.LINK_HEADER_TEMPLATE, entry.getProxyFor(),
-                        "http://www.openarchives.org/ore/terms/proxyFor")).build();
+        String link = String.format(Constants.LINK_HEADER_TEMPLATE, entry.getProxyFor(), ORE.proxyFor.getURI());
+        return Response.created(entry.getUri()).header("Link", link).build();
     }
 }

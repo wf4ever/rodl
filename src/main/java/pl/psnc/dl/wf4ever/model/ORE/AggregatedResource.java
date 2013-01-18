@@ -3,6 +3,8 @@ package pl.psnc.dl.wf4ever.model.ORE;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
@@ -15,6 +17,7 @@ import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObjectComponent;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
@@ -85,8 +88,34 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     public void save()
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         super.save();
-        researchObject.getManifest().saveAggregation(this);
+        researchObject.getManifest().saveAggregatedResource(this);
         researchObject.getManifest().saveAuthor(this);
+    }
+
+
+    /**
+     * Delete itself, the proxy, if exists, and folder entries.
+     */
+    @Override
+    public void delete() {
+        getResearchObject().getManifest().deleteResource(this);
+        getResearchObject().getManifest().serialize();
+        getResearchObject().getAggregatedResources().remove(uri);
+        if (isInternal()) {
+            // resource may no longer be internal if it is deleted by different classes independently, 
+            // or if it's a folder that has just been emptied (i.e. the resource map was deleted), 
+            // in which case it was also deleted automatically
+            ROSRService.DL.get().deleteFile(getResearchObject().getUri(), getPath());
+        }
+        if (getProxy() != null) {
+            getProxy().delete();
+        }
+        //create another collection to avoid concurrent modification
+        Set<FolderEntry> entriesToDelete = new HashSet<>(getResearchObject().getFolderEntriesByResourceUri().get(uri));
+        for (FolderEntry entry : entriesToDelete) {
+            entry.delete();
+        }
+        super.delete();
     }
 
 
@@ -103,6 +132,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     public void serialize()
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         serialize(researchObject.getUri());
+        stats = null;
     }
 
 
@@ -173,10 +203,16 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
      * @throws BadRequestException
      *             if there is no data in storage or the file format is not RDF
      */
-    public void saveGraph()
+    public void saveGraphAndSerialize()
             throws BadRequestException {
         String filePath = getPath();
-        RDFFormat format = RDFFormat.forMIMEType(getStats().getMimeType());
+        RDFFormat format;
+        if (getStats() != null && getStats().getMimeType() != null) {
+            format = RDFFormat.forMIMEType(getStats().getMimeType());
+        } else {
+            // required for resource not stored in RODL, for example new zipped ROs
+            format = RDFFormat.forFileName(getPath());
+        }
         if (format == null) {
             throw new BadRequestException("Unrecognized RDF format: " + filePath);
         }
@@ -197,19 +233,20 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         }
         serialize();
         researchObject.updateIndexAttributes();
-
     }
 
 
     /**
-     * Delete the named graph with that resource and update the serialization.
+     * Update the serialization using absolute URIs and delete the named graph with that resource.
      */
-    public void deleteGraph() {
+    public void deleteGraphAndSerialize() {
         String filePath = getPath();
-        RDFFormat format = RDFFormat.forMIMEType(getStats().getMimeType());
         try (InputStream data = getGraphAsInputStream(RDFFormat.RDFXML)) {
-            ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, data,
-                format.getDefaultMIMEType());
+            // can only be null if a resource that is an annotation body exists serialized but not in the triple store
+            if (data != null) {
+                ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), filePath, data,
+                    getStats().getMimeType());
+            }
         } catch (IOException e) {
             LOGGER.warn("Could not close stream", e);
         }
@@ -220,7 +257,6 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         } finally {
             endTransaction(transactionStarted);
         }
-        serialize();
     }
 
 
@@ -229,4 +265,41 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         return ROSRService.DL.get().getFileContents(researchObject.getUri(), getPath());
     }
 
+
+    /**
+     * Save the resource and its content.
+     * 
+     * @param content
+     *            the resource content
+     * @param contentType
+     *            the content MIME type
+     * @throws BadRequestException
+     *             if it is expected to be an RDF file and isn't
+     */
+    public void save(InputStream content, String contentType)
+            throws BadRequestException {
+        String path = researchObject.getUri().relativize(uri).getPath();
+        setStats(ROSRService.DL.get().createOrUpdateFile(researchObject.getUri(), path, content,
+            contentType != null ? contentType : "text/plain"));
+        if (isNamedGraph()) {
+            saveGraphAndSerialize();
+        }
+        save();
+    }
+
+
+    /**
+     * Update the file contents.
+     * 
+     * @param content
+     *            the resource content
+     * @param contentType
+     *            the content MIME type
+     * @throws BadRequestException
+     *             if it is expected to be an RDF file and isn't
+     */
+    public void update(InputStream content, String contentType)
+            throws BadRequestException {
+        save(content, contentType);
+    }
 }

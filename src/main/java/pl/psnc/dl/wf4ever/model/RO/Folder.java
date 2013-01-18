@@ -15,6 +15,7 @@ import org.joda.time.DateTime;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Aggregation;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -36,7 +37,10 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 public class Folder extends Resource implements Aggregation {
 
     /** folder entries. */
-    private Set<FolderEntry> folderEntries;
+    private Map<URI, FolderEntry> folderEntries;
+
+    /** aggregated resources. */
+    private Map<URI, AggregatedResource> aggregatedResources;
 
     /** Resource map (graph with folder description) URI. */
     private FolderResourceMap resourceMap;
@@ -85,7 +89,7 @@ public class Folder extends Resource implements Aggregation {
      * 
      * @return a set of folder entries in this folder
      */
-    public Set<FolderEntry> getFolderEntries() {
+    public Map<URI, FolderEntry> getFolderEntries() {
         if (folderEntries == null) {
             folderEntries = getResourceMap().extractFolderEntries();
         }
@@ -93,7 +97,24 @@ public class Folder extends Resource implements Aggregation {
     }
 
 
-    public void setFolderEntries(Set<FolderEntry> folderEntries) {
+    /**
+     * Get resources aggregated in the folder.
+     * 
+     * @return resources aggregated in the folder
+     */
+    @Override
+    public Map<URI, AggregatedResource> getAggregatedResources() {
+        if (aggregatedResources == null) {
+            aggregatedResources = new HashMap<>();
+            for (FolderEntry entry : getFolderEntries().values()) {
+                aggregatedResources.put(entry.getProxyFor().getUri(), entry.getProxyFor());
+            }
+        }
+        return aggregatedResources;
+    }
+
+
+    public void setFolderEntries(Map<URI, FolderEntry> folderEntries) {
         this.folderEntries = folderEntries;
     }
 
@@ -152,6 +173,19 @@ public class Folder extends Resource implements Aggregation {
     }
 
 
+    @Override
+    public void delete() {
+        //create another collection to avoid concurrent modification
+        Set<FolderEntry> entriesToDelete = new HashSet<>(getFolderEntries().values());
+        for (FolderEntry entry : entriesToDelete) {
+            entry.delete();
+        }
+        getResourceMap().delete();
+        getResearchObject().getFolders().remove(uri);
+        super.delete();
+    }
+
+
     /**
      * Create a folder instance out of an RDF/XML description.
      * 
@@ -169,7 +203,7 @@ public class Folder extends Resource implements Aggregation {
      */
     public static Folder assemble(Builder builder, ResearchObject researchObject, URI folderUri, InputStream content)
             throws BadRequestException {
-        Folder folder = builder.buildFolder(researchObject, folderUri, builder.getUser().getUri(), DateTime.now());
+        Folder folder = builder.buildFolder(researchObject, folderUri, builder.getUser(), DateTime.now());
         folder.resourceMap = FolderResourceMap
                 .create(builder, folder, FolderResourceMap.generateResourceMapUri(folder));
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
@@ -240,7 +274,7 @@ public class Folder extends Resource implements Aggregation {
                 }
             }
         }
-        folder.setFolderEntries(new HashSet<>(entries.values()));
+        folder.setFolderEntries(entries);
         return folder;
     }
 
@@ -264,10 +298,10 @@ public class Folder extends Resource implements Aggregation {
             throws BadRequestException {
         Folder folder = assemble(builder, researchObject, folderUri, content);
         folder.setCreated(DateTime.now());
-        folder.setCreator(builder.getUser().getUri());
+        folder.setCreator(builder.getUser());
         folder.setProxy(Proxy.create(builder, researchObject, folder));
         folder.save();
-        for (FolderEntry entry : folder.getFolderEntries()) {
+        for (FolderEntry entry : folder.getFolderEntries().values()) {
             entry.save();
         }
         folder.getResourceMap().serialize();
@@ -287,10 +321,53 @@ public class Folder extends Resource implements Aggregation {
     public FolderEntry createFolderEntry(InputStream content)
             throws BadRequestException {
         FolderEntry entry = FolderEntry.assemble(builder, this, content);
-        getFolderEntries().add(entry);
+        return addFolderEntry(entry);
+    }
+
+
+    /**
+     * Save folder entry, refresh the properties of this folder.
+     * 
+     * @param entry
+     *            folder entry
+     * @return a folder entry instance
+     */
+    public FolderEntry addFolderEntry(FolderEntry entry) {
+        getFolderEntries().put(entry.getUri(), entry);
+        getResearchObject().getFolderEntries().put(entry.getUri(), entry);
+        getResearchObject().getFolderEntriesByResourceUri().put(entry.getProxyFor().getUri(), entry);
         entry.save();
         getResourceMap().serialize();
         return entry;
     }
 
+
+    @Override
+    public Map<URI, ? extends Proxy> getProxies() {
+        return getFolderEntries();
+    }
+
+
+    /**
+     * Update the folder contents.
+     * 
+     * @param content
+     *            the resource content
+     * @param contentType
+     *            the content MIME type
+     * @throws BadRequestException
+     *             if it is expected to be an RDF file and isn't
+     */
+    @Override
+    public void update(InputStream content, String contentType)
+            throws BadRequestException {
+        Folder newFolder = assemble(builder, getResearchObject(), uri, content);
+        for (FolderEntry entry : getFolderEntries().values()) {
+            entry.delete();
+        }
+        for (FolderEntry entry : newFolder.getFolderEntries().values()) {
+            addFolderEntry(entry);
+        }
+        getResourceMap().serialize();
+    }
 }

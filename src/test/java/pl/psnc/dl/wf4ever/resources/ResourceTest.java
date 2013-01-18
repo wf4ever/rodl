@@ -185,7 +185,7 @@ public class ResourceTest extends ResourceBase {
     @Test
     public void updateEvoInfo() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
-        ClientResponse response = webResource.uri(ro).path("/.ro/evo_info")
+        ClientResponse response = webResource.uri(ro).path("/.ro/evo_info.ttl")
                 .header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
         assertEquals("Updating evo_info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         response.close();
