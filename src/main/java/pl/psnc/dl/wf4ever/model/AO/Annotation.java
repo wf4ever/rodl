@@ -73,11 +73,11 @@ public class Annotation extends AggregatedResource {
      *            annotation URI
      * @param body
      *            annotation body, may be aggregated or not, may be a ro:Resource (rarely) or not
-     * @param target
+     * @param annotated
      *            annotated resource, must be the RO/aggregated resource/proxy
      */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Thing body, Thing target) {
-        this(user, researchObject, uri, body, new HashSet<Thing>(Arrays.asList(new Thing[] { target })));
+    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Thing body, Thing annotated) {
+        this(user, researchObject, uri, body, new HashSet<Thing>(Arrays.asList(new Thing[] { annotated })));
     }
 
 
