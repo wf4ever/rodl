@@ -14,7 +14,6 @@ import org.apache.log4j.Logger;
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
-import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -52,12 +51,10 @@ public class SecurityFilter implements ContainerRequestFilter {
     public ContainerRequest filter(ContainerRequest request) {
         try {
             UserCredentials creds = authenticate(request);
-            DigitalLibrary dl = DigitalLibraryFactory.getDigitalLibrary(creds.getUserId());
-            UserMetadata user = DigitalLibraryFactory.getUserProfile(dl);
+            UserMetadata user = DigitalLibraryFactory.getUserProfile(creds.getUserId());
             if (user == null) {
                 throw new NotFoundException("User profile not found");
             }
-            ROSRService.DL.set(dl);
             ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(user));
             httpRequest.setAttribute(Constants.USER, user);
             httpRequest.setAttribute("Builder", new Builder(user));

@@ -1,6 +1,5 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
-import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 
 /**
@@ -10,9 +9,6 @@ import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
  * 
  */
 public final class ROSRService {
-
-    /** Thread local DL instance. */
-    public static final ThreadLocal<DigitalLibrary> DL = new ThreadLocal<>();
 
     /** Thread local SMS instance. */
     public static final ThreadLocal<SemanticMetadataService> SMS = new ThreadLocal<>();

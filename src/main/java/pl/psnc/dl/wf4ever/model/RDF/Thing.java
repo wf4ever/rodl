@@ -18,6 +18,7 @@ import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.db.UserProfile;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
@@ -283,7 +284,8 @@ public class Thing {
         String filePath = base.relativize(uri).toString();
         RDFFormat format = RDFFormat.forFileName(filePath, RDFFormat.RDFXML);
         InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(uri, base, format);
-        ROSRService.DL.get().createOrUpdateFile(base, filePath, dataStream, format.getDefaultMIMEType());
+        DigitalLibraryFactory.getDigitalLibrary().createOrUpdateFile(base, filePath, dataStream,
+            format.getDefaultMIMEType());
     }
 
 

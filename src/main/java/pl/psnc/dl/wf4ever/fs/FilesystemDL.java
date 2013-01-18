@@ -61,10 +61,8 @@ public class FilesystemDL implements DigitalLibrary {
      * 
      * @param basePath
      *            file path under which the files will be stored
-     * @param user
-     *            user login
      */
-    public FilesystemDL(String basePath, UserMetadata user) {
+    public FilesystemDL(String basePath) {
         if (basePath.endsWith("/")) {
             this.basePath = FileSystems.getDefault().getPath(basePath);
         } else {

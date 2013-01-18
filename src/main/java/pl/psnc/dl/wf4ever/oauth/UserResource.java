@@ -27,6 +27,7 @@ import org.openrdf.rio.RDFFormat;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.common.db.UserProfile;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -126,7 +127,7 @@ public class UserResource {
 
         QueryResult qs = ROSRService.SMS.get().getUser(UserProfile.generateAbsoluteURI(null, userId), rdfFormat);
 
-        if (ROSRService.DL.get().userExists(userId)) {
+        if (DigitalLibraryFactory.getDigitalLibrary().userExists(userId)) {
             return Response.ok(qs.getInputStream()).type(qs.getFormat().getDefaultMIMEType()).build();
         } else {
             return Response.status(Status.NOT_FOUND).type("text/plain").entity("User " + userId + " does not exist")
@@ -173,11 +174,11 @@ public class UserResource {
         }
 
         String password = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 20);
-        boolean created = ROSRService.DL.get().createUser(userId, password,
+        boolean created = DigitalLibraryFactory.getDigitalLibrary().createUser(userId, password,
             username != null && !username.isEmpty() ? username : userId);
         UserCredentials creds = new UserCredentials(userId, password);
         creds.save();
-        UserMetadata user = ROSRService.DL.get().getUserProfile(userId);
+        UserMetadata user = DigitalLibraryFactory.getDigitalLibrary().getUserProfile(userId);
         SemanticMetadataServiceFactory.getService(user).close();
 
         if (created) {
@@ -221,7 +222,7 @@ public class UserResource {
         }
 
         ROSRService.SMS.get().removeUser(URI.create(userId));
-        ROSRService.DL.get().deleteUser(userId);
+        DigitalLibraryFactory.getDigitalLibrary().deleteUser(userId);
         UserCredentials creds = UserCredentials.findByUserId(userId);
         if (creds == null) {
             throw new NotFoundException();

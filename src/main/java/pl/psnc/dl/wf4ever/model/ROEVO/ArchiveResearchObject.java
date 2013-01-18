@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.db.EvoType;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -96,7 +97,7 @@ public class ArchiveResearchObject extends FrozenResearchObject {
             throw new ConflictException("The RO with URI " + researchObject.getUri() + " already exists");
         }
 
-        ROSRService.DL.get().createResearchObject(researchObject.getUri(), manifest,
+        DigitalLibraryFactory.getDigitalLibrary().createResearchObject(researchObject.getUri(), manifest,
             ArchiveResearchObject.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
         return researchObject;
     }

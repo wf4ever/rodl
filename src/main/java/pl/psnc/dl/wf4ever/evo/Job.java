@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
@@ -90,7 +89,6 @@ public class Job extends Thread {
     public void run() {
         try {
             UserMetadata smsUser = originalSMS.getUserProfile();
-            ROSRService.DL.set(DigitalLibraryFactory.getDigitalLibrary(smsUser.getLogin()));
             ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(smsUser));
             for (Operation operation : operations) {
                 operation.execute(status);

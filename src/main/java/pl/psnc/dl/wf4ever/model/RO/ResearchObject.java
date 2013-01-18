@@ -26,6 +26,7 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.common.util.MemoryZipFile;
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -229,8 +230,9 @@ public class ResearchObject extends Thing implements Aggregation {
         getManifest().save();
 
         //TODO check if to create an RO or only serialize the manifest
-        ROSRService.DL.get().createResearchObject(uri, getManifest().getGraphAsInputStream(RDFFormat.RDFXML),
-            ResearchObject.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
+        DigitalLibraryFactory.getDigitalLibrary().createResearchObject(uri,
+            getManifest().getGraphAsInputStream(RDFFormat.RDFXML), ResearchObject.MANIFEST_PATH,
+            RDFFormat.RDFXML.getDefaultMIMEType());
         generateEvoInfo();
     }
 
@@ -247,7 +249,7 @@ public class ResearchObject extends Thing implements Aggregation {
         }
         getManifest().delete();
         try {
-            ROSRService.DL.get().deleteResearchObject(uri);
+            DigitalLibraryFactory.getDigitalLibrary().deleteResearchObject(uri);
         } catch (NotFoundException e) {
             // good, nothing was left so the folder was deleted
             LOGGER.debug("As expected. RO folder was empty and was deleted: " + e.getMessage());
@@ -430,7 +432,7 @@ public class ResearchObject extends Thing implements Aggregation {
         Multimap<URI, Object> roAttributes = ROSRService.SMS.get().getAllAttributes(uri);
         roAttributes.put(URI.create("Identifier"), this);
         try {
-            ROSRService.DL.get().storeAttributes(uri, roAttributes);
+            DigitalLibraryFactory.getDigitalLibrary().storeAttributes(uri, roAttributes);
         } catch (Exception e) {
             LOGGER.error("Caught an exception when updating RO attributes, will continue", e);
         }
@@ -728,7 +730,7 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     public InputStream getAsZipArchive() {
-        return ROSRService.DL.get().getZippedResearchObject(uri);
+        return DigitalLibraryFactory.getDigitalLibrary().getZippedResearchObject(uri);
     }
 
 
