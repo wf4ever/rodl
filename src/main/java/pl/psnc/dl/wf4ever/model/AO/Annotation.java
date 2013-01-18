@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.joda.time.DateTime;
@@ -57,6 +58,7 @@ public class Annotation extends AggregatedResource {
      */
     public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Thing body, Set<Thing> annotated) {
         super(user, researchObject, uri);
+        //        Objects.requireNonNull(body, "Body cannot be null");
         this.annotated = annotated;
         this.body = body;
     }
@@ -117,7 +119,17 @@ public class Annotation extends AggregatedResource {
     }
 
 
-    public void setBody(Thing body) {
+    /**
+     * Set annotation body.
+     * 
+     * @param body
+     *            the body
+     * @throws NullPointerException
+     *             if the body is null
+     */
+    public void setBody(Thing body)
+            throws NullPointerException {
+        Objects.requireNonNull(body, "Body cannot be null");
         this.body = body;
     }
 

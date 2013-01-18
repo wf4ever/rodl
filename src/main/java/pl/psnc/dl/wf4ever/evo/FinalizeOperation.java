@@ -12,7 +12,6 @@ import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.ArchiveResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.SnapshotResearchObject;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 /**
  * Finalize research object status transformation.
@@ -67,11 +66,10 @@ public class FinalizeOperation implements Operation {
             if (researchObject == null) {
                 throw new NotFoundException("Research Object not found " + status.getTarget());
             }
-            Annotation annotation = ROSRService.SMS.get().findAnnotationForBody(researchObject,
-                researchObject.getFixedEvolutionAnnotationBodyUri());
-            // FIXME body should never be null
-            if (annotation.getBody() != null
-                    && researchObject.getAggregatedResources().containsKey(annotation.getBody().getUri())) {
+            Annotation annotation = researchObject.getAnnotationsByBodyUri()
+                    .get(researchObject.getFixedEvolutionAnnotationBodyUri()).iterator().next();
+            //FIXME this should always be included
+            if (researchObject.getAggregatedResources().containsKey(annotation.getBody().getUri())) {
                 researchObject.getAggregatedResources().get(annotation.getBody().getUri()).delete();
             }
             annotation.delete();
