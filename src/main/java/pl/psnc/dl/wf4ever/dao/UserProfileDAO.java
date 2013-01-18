@@ -3,7 +3,7 @@
  */
 package pl.psnc.dl.wf4ever.dao;
 
-import pl.psnc.dl.wf4ever.common.UserProfile;
+import pl.psnc.dl.wf4ever.common.db.UserProfile;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 
 /**

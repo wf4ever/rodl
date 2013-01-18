@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.common;
+package pl.psnc.dl.wf4ever.common.db;
 
 import java.io.Serializable;
 import java.util.List;

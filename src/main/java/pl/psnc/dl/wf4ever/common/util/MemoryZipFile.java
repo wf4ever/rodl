@@ -80,6 +80,13 @@ public class MemoryZipFile {
     }
 
 
+    /**
+     * Check if the zip contains certain entry.
+     * 
+     * @param entryName
+     *            .
+     * @return true if contain, false otherwise.
+     */
     public boolean containsEntry(String entryName) {
         return zipFile.getEntry(prefix + entryName) != null;
     }

@@ -16,7 +16,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import pl.psnc.dl.wf4ever.common.ActiveRecord;
+import pl.psnc.dl.wf4ever.common.db.ActiveRecord;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 
 /**

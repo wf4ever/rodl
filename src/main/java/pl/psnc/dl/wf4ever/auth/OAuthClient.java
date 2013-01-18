@@ -13,7 +13,7 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import pl.psnc.dl.wf4ever.common.ActiveRecord;
+import pl.psnc.dl.wf4ever.common.db.ActiveRecord;
 
 /**
  * OAuth client application DAO.
