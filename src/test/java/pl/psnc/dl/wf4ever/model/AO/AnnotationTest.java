@@ -1,7 +1,5 @@
 package pl.psnc.dl.wf4ever.model.AO;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -16,7 +14,6 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
-import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -67,6 +64,7 @@ public class AnnotationTest extends BaseTest {
     }
 
 
+    /*
     @Test
     public void testCreate()
             throws BadRequestException, IOException {
@@ -79,7 +77,7 @@ public class AnnotationTest extends BaseTest {
         ro.aggregate("http://example.com/external.txt", annotationBodyInputStream, null);
         Annotation annotation = Annotation.create(builder, ro, annotationUri, annotationDescriptionInputStream);
     }
-
+    */
 
     @Test
     public void testIsSpecialResource() {

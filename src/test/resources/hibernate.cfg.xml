@@ -13,6 +13,9 @@
 		<property name="connection.username">wf4ever_tests</property>
 		<property name="connection.password">biQuijiu4Ii=</property>
 
+		<!-- JDBC connection pool (use the built-in) -->
+		<!-- <property name="connection.pool_size">10</property> -->
+
 		<!-- SQL dialect -->
 		<property name="dialect">org.hibernate.dialect.MySQLDialect</property>
 
