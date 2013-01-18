@@ -88,9 +88,9 @@ public class FlowTests {
     public void setUp()
             throws Exception {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        dl = new FilesystemDL(BASE, ADMIN);
+        dl = new FilesystemDL(BASE);
         dl.createUser(USER.getLogin(), USER_PASSWORD, USER.getName());
-        dl = new FilesystemDL(BASE, USER);
+        dl = new FilesystemDL(BASE);
         dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
             MAIN_FILE_MIME_TYPE);
 
@@ -109,9 +109,9 @@ public class FlowTests {
     public void tearDown()
             throws Exception {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        dl = new FilesystemDL(BASE, ADMIN);
+        dl = new FilesystemDL(BASE);
         dl.deleteResearchObject(RO_URI);
-        dl = new FilesystemDL(BASE, ADMIN);
+        dl = new FilesystemDL(BASE);
         dl.deleteUser(USER.getLogin());
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         try {
@@ -162,7 +162,7 @@ public class FlowTests {
         createOrUpdateFile(files[0]);
         createOrUpdateFile(files[1]);
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        dl = new FilesystemDL(BASE, USER);
+        dl = new FilesystemDL(BASE);
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         getFileContent(files[0]);
         getFileContent(files[1]);

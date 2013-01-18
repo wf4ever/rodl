@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.model.ORE;
 import java.io.InputStream;
 import java.net.URI;
 
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -12,7 +13,6 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObjectComponent;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.hp.hpl.jena.ontology.Individual;
@@ -109,7 +109,7 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
      */
     @Override
     public void delete() {
-        ROSRService.DL.get().deleteFile(getResearchObject().getUri(), getPath());
+        DigitalLibraryFactory.getDigitalLibrary().deleteFile(getResearchObject().getUri(), getPath());
         super.delete();
     }
 
@@ -182,7 +182,7 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
     @Override
     public ResourceMetadata getStats() {
         if (stats == null) {
-            stats = ROSRService.DL.get().getFileInfo(getResearchObject().getUri(), getPath());
+            stats = DigitalLibraryFactory.getDigitalLibrary().getFileInfo(getResearchObject().getUri(), getPath());
         }
         return stats;
     }
@@ -195,7 +195,7 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
 
     @Override
     public InputStream getSerialization() {
-        return ROSRService.DL.get().getFileContents(getResearchObject().getUri(), getPath());
+        return DigitalLibraryFactory.getDigitalLibrary().getFileContents(getResearchObject().getUri(), getPath());
     }
 
 

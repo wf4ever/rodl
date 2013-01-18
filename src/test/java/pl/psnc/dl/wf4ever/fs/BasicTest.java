@@ -75,13 +75,13 @@ public class BasicTest {
     public void tearDown()
             throws IOException {
         try {
-            DigitalLibrary dl = new FilesystemDL(BASE, ADMIN);
+            DigitalLibrary dl = new FilesystemDL(BASE);
             dl.deleteResearchObject(RO_URI);
         } catch (Exception e) {
 
         }
         try {
-            DigitalLibrary dlA = new FilesystemDL(BASE, ADMIN);
+            DigitalLibrary dlA = new FilesystemDL(BASE);
             dlA.deleteUser(USER.getLogin());
         } catch (Exception e) {
 
@@ -111,9 +111,9 @@ public class BasicTest {
     public final void testCreateVersionStringStringStringURI()
             throws DigitalLibraryException, NotFoundException, ConflictException, IOException,
             pl.psnc.dl.wf4ever.dl.AccessDeniedException {
-        DigitalLibrary dlA = new FilesystemDL(BASE, ADMIN);
+        DigitalLibrary dlA = new FilesystemDL(BASE);
         assertTrue(dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName()));
-        DigitalLibrary dl = new FilesystemDL(BASE, USER);
+        DigitalLibrary dl = new FilesystemDL(BASE);
         dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
             MAIN_FILE_MIME_TYPE);
         InputStream in = dl.getFileContents(RO_URI, MAIN_FILE_PATH);
@@ -129,10 +129,10 @@ public class BasicTest {
     @Test
     public final void testGetUserProfile()
             throws DigitalLibraryException, IOException, NotFoundException {
-        DigitalLibrary dlA = new FilesystemDL(BASE, ADMIN);
+        DigitalLibrary dlA = new FilesystemDL(BASE);
         assertTrue(dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName()));
         assertFalse(dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName()));
-        DigitalLibrary dl = new FilesystemDL(BASE, USER);
+        DigitalLibrary dl = new FilesystemDL(BASE);
         UserMetadata user = dl.getUserProfile(USER.getLogin());
         Assert.assertEquals("User login is equal", USER.getLogin(), user.getLogin());
         Assert.assertEquals("User name is equal", USER.getName(), user.getName());
@@ -142,9 +142,9 @@ public class BasicTest {
     @Test
     public final void testCreateDuplicateVersion()
             throws DigitalLibraryException, IOException, ConflictException, AccessDeniedException {
-        DigitalLibrary dlA = new FilesystemDL(BASE, ADMIN);
+        DigitalLibrary dlA = new FilesystemDL(BASE);
         dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName());
-        DigitalLibrary dl = new FilesystemDL(BASE, USER);
+        DigitalLibrary dl = new FilesystemDL(BASE);
         dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
             MAIN_FILE_MIME_TYPE);
         try {
@@ -162,9 +162,9 @@ public class BasicTest {
     @Test
     public final void testStoreAttributes()
             throws DigitalLibraryException, IOException, ConflictException, NotFoundException, AccessDeniedException {
-        DigitalLibrary dlA = new FilesystemDL(BASE, ADMIN);
+        DigitalLibrary dlA = new FilesystemDL(BASE);
         dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName());
-        DigitalLibrary dl = new FilesystemDL(BASE, USER);
+        DigitalLibrary dl = new FilesystemDL(BASE);
         dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
             MAIN_FILE_MIME_TYPE);
         Multimap<URI, Object> atts = HashMultimap.create();

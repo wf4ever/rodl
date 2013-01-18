@@ -13,9 +13,6 @@ package pl.psnc.dl.wf4ever.connection;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.UnknownHostException;
-import java.rmi.RemoteException;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -73,11 +70,8 @@ public final class DigitalLibraryFactory {
     /** dLibra public user password. */
     private static String publicPassword;
 
-    /** the user that theoretically is logged in to dLibra, a hack. */
-    private static String dLibraUser;
-
-    /** user that is logged in. */
-    private static UserMetadata user;
+    /** Thread local dLibra instance. */
+    private static final ThreadLocal<DLibraDataSource> DLIBRA = new ThreadLocal<>();
 
 
     /**
@@ -89,66 +83,56 @@ public final class DigitalLibraryFactory {
 
 
     /**
-     * Create a new connection to the digital library.
+     * Get the digital library for this thread or create a new connection if not set.
      * 
-     * @param userId
-     *            user login in digital library
-     * @return a digital library connection
-     * @throws RemoteException
-     *             no connection to dLibra
-     * @throws MalformedURLException
-     *             the host is incorrect
-     * @throws UnknownHostException
-     *             the host does not respond
+     * @return a digital library instance
      */
-    public static DigitalLibrary getDigitalLibrary(String userId)
-            throws RemoteException, MalformedURLException, UnknownHostException {
+    public static DigitalLibrary getDigitalLibrary() {
         if (dlibra) {
-            try {
-                LOGGER.debug("Creating a dLibra backend");
-                dLibraUser = userId;
-                return new DLibraDataSource(host, port, workspacesDirectory, collectionId, adminUser, adminPassword);
-            } catch (DigitalLibraryException | IOException e) {
-                throw new RuntimeException(e.getMessage());
+            if (DLIBRA.get() == null) {
+                try {
+                    LOGGER.debug("Creating a dLibra backend");
+                    DLIBRA.set(new DLibraDataSource(host, port, workspacesDirectory, collectionId, adminUser,
+                            adminPassword));
+                } catch (DigitalLibraryException | IOException e) {
+                    throw new RuntimeException(e.getMessage());
+                }
             }
+            return DLIBRA.get();
         } else {
-            LOGGER.debug("Creating a filesystem backend");
-            if (userId.equals(DigitalLibraryFactory.getAdminUser())) {
-                user = UserProfile.ADMIN;
-            } else if (userId.equals(DigitalLibraryFactory.getPublicUser())) {
-                user = UserProfile.PUBLIC;
-            } else {
-                UserProfileDAO dao = new UserProfileDAO();
-                user = dao.findByLogin(userId);
-
-            }
-            return new FilesystemDL(filesystemBase, user);
+            return new FilesystemDL(filesystemBase);
         }
     }
 
 
     /**
-     * Get profile of the user logged in the digital library.
+     * Get profile of a user, which may be stored in the digital library.
      * 
      * This is bad design and should be fixed be removing the user credentials class (the password is never used!) and
      * using the user profile instead.
      * 
-     * @param dl
-     *            digital library
+     * @param userId
+     *            user login in digital library
      * @return user profile
      * @throws DigitalLibraryException
      *             dl error
      * @throws NotFoundException
      *             user not found
      */
-    public static UserMetadata getUserProfile(DigitalLibrary dl)
+    public static UserMetadata getUserProfile(String userId)
             throws DigitalLibraryException, NotFoundException {
-        if (dl instanceof DLibraDataSource) {
-            return ((DLibraDataSource) dl).getUserProfile(dLibraUser);
-        } else if (dl instanceof FilesystemDL) {
-            return user;
+        if (dlibra) {
+            return ((DLibraDataSource) getDigitalLibrary()).getUserProfile(userId);
+        } else {
+            if (userId.equals(DigitalLibraryFactory.getAdminUser())) {
+                return UserProfile.ADMIN;
+            } else if (userId.equals(DigitalLibraryFactory.getPublicUser())) {
+                return UserProfile.PUBLIC;
+            } else {
+                UserProfileDAO dao = new UserProfileDAO();
+                return dao.findByLogin(userId);
+            }
         }
-        return null;
     }
 
 
@@ -181,16 +165,15 @@ public final class DigitalLibraryFactory {
         dlibra = "true".equals(properties.getProperty("dlibra", "false"));
         LOGGER.debug("Use dlibra: " + dlibra);
 
-        host = properties.getProperty("host");
-        port = Integer.parseInt(properties.getProperty("port"));
-        LOGGER.debug("Connection parameters: " + host + ":" + port);
-
-        workspacesDirectory = Long.parseLong(properties.getProperty("workspacesDir"));
-        LOGGER.debug("Workspaces directory: " + workspacesDirectory);
-
-        collectionId = Long.parseLong(properties.getProperty("collectionId"));
-        LOGGER.debug("Collection id: " + collectionId);
-
+        if (dlibra) {
+            host = properties.getProperty("host");
+            port = Integer.parseInt(properties.getProperty("port"));
+            LOGGER.debug("Connection parameters: " + host + ":" + port);
+            workspacesDirectory = Long.parseLong(properties.getProperty("workspacesDir"));
+            LOGGER.debug("Workspaces directory: " + workspacesDirectory);
+            collectionId = Long.parseLong(properties.getProperty("collectionId"));
+            LOGGER.debug("Collection id: " + collectionId);
+        }
         filesystemBase = properties.getProperty("filesystemBase", "/tmp/dl/");
         LOGGER.debug("Filesystem base: " + filesystemBase);
     }
