@@ -115,10 +115,12 @@ public class Resource {
             return Response.status(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE).entity(message).build();
         } else if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
             AggregatedResource resource = researchObject.getAggregatedResources().get(resourceUri);
+            boolean exists = resource.isInternal();
             resource.update(entity, servletRequest.getContentType());
             CacheControl cache = new CacheControl();
             cache.setMustRevalidate(true);
-            return Response.ok().cacheControl(cache).tag(resource.getStats().getChecksum())
+            ResponseBuilder rb = exists ? Response.ok() : Response.created(resource.getUri());
+            return rb.cacheControl(cache).tag(resource.getStats().getChecksum())
                     .lastModified(resource.getStats().getLastModified().toDate()).build();
         } else if (researchObject.getAnnotationsByBodyUri().containsKey(resourceUri)) {
             AggregatedResource resource = researchObject.aggregate(filePath, entity, servletRequest.getContentType());
