@@ -14,6 +14,8 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.model.RO.Folder;
+import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -125,6 +127,20 @@ public class CopyOperation implements Operation {
                         }
                     } catch (AccessDeniedException | DigitalLibraryException | NotFoundException e1) {
                         LOGGER.error("Could not add the annotation", e1);
+                    }
+                } else if (resource.hasRDFType(RO.Folder)) {
+                    Folder folder = ROSRService.SMS.get().getFolder(resourceURI);
+                    folder.setUri(targetRO.getUri().resolve(sourceRO.getUri().relativize(folder.getUri())));
+                    folder.setProxyUri(null);
+                    for (FolderEntry entry : folder.getFolderEntries()) {
+                        entry.setUri(null);
+                        entry.setProxyIn(folder.getUri());
+                        entry.setProxyFor(targetRO.getUri().resolve(sourceRO.getUri().relativize(entry.getProxyFor())));
+                    }
+                    try {
+                        ROSRService.createFolder(targetRO, folder);
+                    } catch (DigitalLibraryException | NotFoundException | AccessDeniedException e1) {
+                        throw new OperationFailedException("Could not create copy folder: " + resourceURI, e1);
                     }
                 } else {
                     if (isInternalResource(resourceURI, status.getCopyfrom())) {
