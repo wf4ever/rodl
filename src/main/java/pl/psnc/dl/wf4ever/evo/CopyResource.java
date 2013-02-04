@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -23,7 +24,6 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
-import pl.psnc.dl.wf4ever.Constants;
 
 import com.sun.jersey.api.NotFoundException;
 
@@ -81,6 +81,8 @@ public class CopyResource implements JobsContainer {
     /**
      * Creates a copy of a research object.
      * 
+     * @param slug
+     *            Slug header
      * @param status
      *            operation parameters
      * @return 201 Created
@@ -90,7 +92,7 @@ public class CopyResource implements JobsContainer {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createCopyJob(JobStatus status)
+    public Response createCopyJob(@HeaderParam("Slug") String slug, JobStatus status)
             throws BadRequestException {
         if (status.getCopyfrom() == null) {
             throw new BadRequestException("incorrect or missing \"copyfrom\" attribute");
@@ -98,22 +100,14 @@ public class CopyResource implements JobsContainer {
         if (status.getType() == null) {
             throw new BadRequestException("incorrect or missing \"type\" attribute");
         }
-        String id = null;
-        if (status.isFinalize() && status.getTarget() != null) {
-            id = status.getTarget().toString();
-        } else {
-            id = request.getHeader(Constants.SLUG_HEADER);
-        }
-        if (id == null) {
-            id = UUID.randomUUID().toString();
-        }
+        String id = slug != null ? slug : UUID.randomUUID().toString();
+        status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + id + "/").toString());
 
         CopyOperation copy = new CopyOperation(id);
 
         UUID jobUUID = UUID.randomUUID();
         Job job;
         if (!status.isFinalize()) {
-            status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + status.getTarget()).toString() + "/");
             job = new Job(jobUUID, status, this, copy);
         } else {
             FinalizeOperation finalize = new FinalizeOperation();
