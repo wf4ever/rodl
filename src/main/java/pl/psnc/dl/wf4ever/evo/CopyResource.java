@@ -24,6 +24,8 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.BadRequestException;
+import pl.psnc.dl.wf4ever.common.ResearchObject;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.sun.jersey.api.NotFoundException;
 
@@ -69,10 +71,10 @@ public class CopyResource implements JobsContainer {
 
     /** Statuses of finished jobs by target. */
     @SuppressWarnings("serial")
-    private static Map<String, JobStatus> finishedJobsByTarget = Collections
-            .synchronizedMap(new LinkedHashMap<String, JobStatus>() {
+    private static Map<URI, JobStatus> finishedJobsByTarget = Collections
+            .synchronizedMap(new LinkedHashMap<URI, JobStatus>() {
 
-                protected boolean removeEldestEntry(Map.Entry<String, JobStatus> eldest) {
+                protected boolean removeEldestEntry(Map.Entry<URI, JobStatus> eldest) {
                     return size() > MAX_JOBS_DONE;
                 };
             });
@@ -101,7 +103,12 @@ public class CopyResource implements JobsContainer {
             throw new BadRequestException("incorrect or missing \"type\" attribute");
         }
         String id = slug != null ? slug : UUID.randomUUID().toString();
-        status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + id + "/").toString());
+
+        status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + id + "/"));
+        int i = 1;
+        while (ROSRService.SMS.get().containsNamedGraph(status.getTarget().resolve(ResearchObject.MANIFEST_PATH))) {
+            status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + id + "-" + (i++) + "/"));
+        }
 
         CopyOperation copy = new CopyOperation(id);
 
@@ -162,7 +169,7 @@ public class CopyResource implements JobsContainer {
             jobs.remove(uuid);
         }
         if (finishedJobs.containsKey(uuid)) {
-            String target = finishedJobs.get(uuid).getTarget();
+            URI target = finishedJobs.get(uuid).getTarget();
             finishedJobs.remove(uuid);
             finishedJobsByTarget.remove(target);
         }
@@ -177,14 +184,7 @@ public class CopyResource implements JobsContainer {
      *            target RO URI
      * @return the job status
      */
-    public static JobStatus getStatusForTarget(String target) {
-        String relativeTarget = URI.create(target).resolve("..").relativize(URI.create(target)).toString();
-        if (relativeTarget.substring(relativeTarget.length() - 1, relativeTarget.length()).equals("/")) {
-            return finishedJobsByTarget.get(relativeTarget.substring(0, relativeTarget.length() - 1));
-
-        } else {
-            return null;
-        }
-
+    public static JobStatus getStatusForTarget(URI target) {
+        return finishedJobsByTarget.get(target);
     }
 }

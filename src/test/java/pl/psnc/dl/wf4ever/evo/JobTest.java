@@ -43,7 +43,7 @@ public class JobTest extends EvoTest {
     @Test
     public final void testCopyJobCreation()
             throws InterruptedException {
-        ClientResponse response = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, true));
+        ClientResponse response = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, true), null);
         URI copyJob = response.getLocation();
         assertEquals(response.getEntity(String.class), HttpServletResponse.SC_CREATED, response.getStatus());
         response.close();
@@ -55,8 +55,7 @@ public class JobTest extends EvoTest {
     public final void testCopyJobStatusDataIntegrity()
             throws InterruptedException {
         JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, true);
-        status.setTarget("testTarget");
-        URI copyJob = createCopyJob(status).getLocation();
+        URI copyJob = createCopyJob(status, "testTarget").getLocation();
         JobStatus remoteStatus = getRemoteStatus(copyJob, WAIT_FOR_COPY);
         String s = webResource.path(copyJob.getPath()).header("Authorization", "Bearer " + accessToken)
                 .accept(MediaType.APPLICATION_JSON).get(String.class);
@@ -70,18 +69,16 @@ public class JobTest extends EvoTest {
     @Test
     public final void testJobFinalization()
             throws InterruptedException {
-        URI copyJob = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, false)).getLocation();
+        URI copyJob = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, false), null).getLocation();
         JobStatus status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
         JobStatus status2 = new JobStatus();
         status2.setTarget(status.getTarget());
-        status2.setTarget(status.getCopyfrom().resolve("../" + status.getTarget() + "/").toString());
-        System.out.println(status2.getTarget());
         URI finalizeJob = createFinalizeJob(status2).getLocation();
         JobStatus remoteStatus = getRemoteStatus(finalizeJob, WAIT_FOR_FINALIZE);
         Assert.assertEquals(State.DONE, remoteStatus.getState());
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        URI snapshotURI = status.getCopyfrom().resolve("../" + status.getTarget() + "/");
+        URI snapshotURI = status.getTarget();
         model.read(snapshotURI.toString());
         Individual snapshot = model.getIndividual(snapshotURI.toString());
         Assert.assertNotNull(snapshot);
@@ -102,7 +99,7 @@ public class JobTest extends EvoTest {
     @Test
     public final void testCopyAndFinalizationJob()
             throws InterruptedException {
-        URI copyAndFinalizeJob = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, true)).getLocation();
+        URI copyAndFinalizeJob = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, true), null).getLocation();
         JobStatus remoteStatus = getRemoteStatus(copyAndFinalizeJob, WAIT_FOR_COPY + WAIT_FOR_FINALIZE);
         Assert.assertEquals(remoteStatus.toString(), State.DONE, remoteStatus.getState());
         //OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);

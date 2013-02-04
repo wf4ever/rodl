@@ -1,7 +1,5 @@
 package pl.psnc.dl.wf4ever.evo;
 
-import java.net.URI;
-
 import pl.psnc.dl.wf4ever.common.HibernateUtil;
 import pl.psnc.dl.wf4ever.common.ResearchObject;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
@@ -29,9 +27,7 @@ public class FinalizeOperation implements Operation {
             if (status.getType() == null) {
                 throw new OperationFailedException("New type must be set");
             }
-            URI target = status.getCopyfrom().resolve("../" + status.getTarget() + "/");
-
-            ResearchObject researchObject = ResearchObject.create(target);
+            ResearchObject researchObject = ResearchObject.create(status.getTarget());
             ResearchObject liveRO = ResearchObject.create(status.getCopyfrom());
 
             Annotation annotation = ROSRService.SMS.get().findAnnotationForBody(researchObject,

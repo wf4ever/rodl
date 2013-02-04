@@ -42,9 +42,6 @@ public class CopyOperation implements Operation {
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(CopyOperation.class);
 
-    /** operation id. */
-    private String id;
-
 
     /**
      * Constructor.
@@ -53,7 +50,6 @@ public class CopyOperation implements Operation {
      *            operation id
      */
     public CopyOperation(String id) {
-        this.id = id;
     }
 
 
@@ -62,16 +58,7 @@ public class CopyOperation implements Operation {
             throws OperationFailedException {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         try {
-            URI target = status.getCopyfrom().resolve("../" + id + "/");
-            int i = 1;
-            String sufix = "";
-            while (ROSRService.SMS.get().containsNamedGraph(target.resolve(ResearchObject.MANIFEST_PATH))) {
-                sufix = "-" + Integer.toString(i);
-                target = status.getCopyfrom().resolve("../" + id + "-" + (i++) + "/");
-            }
-            status.setTarget(id + sufix);
-
-            ResearchObject targetRO = ResearchObject.create(target);
+            ResearchObject targetRO = ResearchObject.create(status.getTarget());
             ResearchObject sourceRO = ResearchObject.create(status.getCopyfrom());
 
             try {
@@ -94,7 +81,7 @@ public class CopyOperation implements Operation {
                     try {
                         ROSRService.deleteResearchObject(targetRO);
                     } catch (DigitalLibraryException | NotFoundException e) {
-                        LOGGER.error("Could not delete the target when aborting: " + target, e);
+                        LOGGER.error("Could not delete the target when aborting: " + status.getTarget(), e);
                     }
                     return;
                 }
@@ -149,7 +136,7 @@ public class CopyOperation implements Operation {
                             WebResource webResource = client.resource(resourceURI.toString());
                             ClientResponse response = webResource.get(ClientResponse.class);
                             URI resourcePath = status.getCopyfrom().relativize(resourceURI);
-                            URI targetURI = target.resolve(resourcePath);
+                            URI targetURI = status.getTarget().resolve(resourcePath);
                             ROSRService.aggregateInternalResource(targetRO, targetURI, response.getEntityInputStream(),
                                 response.getType().toString(), null);
                             //TODO improve resource type detection mechanism!!
@@ -198,7 +185,7 @@ public class CopyOperation implements Operation {
         if (status.getCopyfrom() != null && annBodyUri != null && annBodyUri.toString().contains("manifest.rdf")) {
             for (URI t : targets) {
                 if (t.toString().equals(status.getCopyfrom().toString())) {
-                    results.add(status.getCopyfrom().resolve("../" + status.getTarget()));
+                    results.add(status.getTarget());
                 } else {
                     results.add(t);
                 }

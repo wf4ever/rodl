@@ -10,6 +10,7 @@ import pl.psnc.dl.wf4ever.W4ETest;
 import pl.psnc.dl.wf4ever.evo.Job.State;
 
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource.Builder;
 
 /**
  * @author piotrhol
@@ -57,9 +58,12 @@ public class EvoTest extends W4ETest {
     }
 
 
-    protected ClientResponse createCopyJob(JobStatus status) {
-        return webResource.path("evo/copy/").header("Authorization", "Bearer " + accessToken)
-                .type(MediaType.APPLICATION_JSON).post(ClientResponse.class, status);
+    protected ClientResponse createCopyJob(JobStatus status, String target) {
+        Builder builder = webResource.path("evo/copy/").header("Authorization", "Bearer " + accessToken);
+        if (target != null) {
+            builder = builder.header("Slug", target);
+        }
+        return builder.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, status);
     }
 
 
