@@ -428,6 +428,9 @@ public class ResearchObjectResource {
         } else {
             folderURI = uriInfo.getAbsolutePathBuilder().path(UUID.randomUUID().toString()).build();
         }
+        if (ROSRService.SMS.get().getFolder(folderURI) != null) {
+            throw new ConflictException("Folder already exists");
+        }
         Folder folder = ROSRService.assembleFolder(researchObject, folderURI, content);
         folder = ROSRService.createFolder(researchObject, folder);
 

@@ -48,6 +48,7 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
+import com.sun.jersey.api.ConflictException;
 
 /**
  * An aggregated resource REST API resource.
@@ -362,6 +363,13 @@ public class Resource {
         Folder folder = ROSRService.SMS.get().getFolder(uri);
 
         FolderEntry entry = ROSRService.assembleFolderEntry(folder, content);
+        //FIXME this should be checked by the Folder class
+        for (FolderEntry entry2 : folder.getFolderEntries()) {
+            if (entry2.getProxyFor().equals(entry.getProxyFor())) {
+                throw new ConflictException("Folder entry for this resource already exists");
+            }
+        }
+
         folder.getFolderEntries().add(entry);
         ROSRService.updateFolder(folder);
 
