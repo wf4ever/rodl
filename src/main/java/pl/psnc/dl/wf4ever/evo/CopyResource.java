@@ -14,6 +14,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -88,6 +89,7 @@ public class CopyResource implements JobsContainer {
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response createCopyJob(JobStatus status)
             throws BadRequestException {
         if (status.getCopyfrom() == null) {
@@ -120,7 +122,7 @@ public class CopyResource implements JobsContainer {
         jobs.put(jobUUID, job);
         job.start();
 
-        return Response.created(uriInfo.getAbsolutePath().resolve(jobUUID.toString())).build();
+        return Response.created(uriInfo.getAbsolutePath().resolve(jobUUID.toString())).entity(job.getStatus()).build();
     }
 
 
