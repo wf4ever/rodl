@@ -40,7 +40,7 @@ public class StoringHistoryTest extends EvoTest {
         URI fullModificatedFilePath = addFile(ro, modifiedResourceFile, accessToken).getLocation();
 
         JobStatus sp1Status = new JobStatus(ro, EvoType.SNAPSHOT, true);
-        URI copyJob = createCopyJob(sp1Status).getLocation();
+        URI copyJob = createCopyJob(sp1Status, null).getLocation();
         sp1Status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
 
         addFile(ro, newResourceFile, accessToken);
@@ -50,25 +50,21 @@ public class StoringHistoryTest extends EvoTest {
                 .header("Authorization", "Bearer " + accessToken).get(String.class);
 
         JobStatus sp2Status = new JobStatus(ro, EvoType.SNAPSHOT, true);
-        copyJob = createCopyJob(sp2Status).getLocation();
+        copyJob = createCopyJob(sp2Status, null).getLocation();
         sp2Status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
 
         String roManifest = webResource.uri(ro).path("/.ro/manifest.rdf")
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
-        String sp1Manifest = webResource.uri(sp1Status.getCopyfrom().resolve("../" + sp1Status.getTarget() + "/"))
-                .path("/.ro/manifest.rdf").header("Authorization", "Bearer " + accessToken).accept("text/turtle")
-                .get(String.class);
-        String sp2Manifest = webResource.uri(sp2Status.getCopyfrom().resolve("../" + sp2Status.getTarget() + "/"))
-                .path("/.ro/manifest.rdf").header("Authorization", "Bearer " + accessToken).accept("text/turtle")
-                .get(String.class);
+        String sp1Manifest = webResource.uri(sp1Status.getTarget()).path("/.ro/manifest.rdf")
+                .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
+        String sp2Manifest = webResource.uri(sp2Status.getTarget()).path("/.ro/manifest.rdf")
+                .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
 
         String roEvo = webResource.path("/evo/info").queryParam("ro", sp1Status.getCopyfrom().toString())
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
-        String sp1Evo = webResource.path("/evo/info")
-                .queryParam("ro", sp1Status.getCopyfrom().resolve("../" + sp1Status.getTarget() + "/").toString())
+        String sp1Evo = webResource.path("/evo/info").queryParam("ro", sp1Status.getTarget().toString())
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
-        String sp2Evo = webResource.path("/evo/info")
-                .queryParam("ro", sp2Status.getCopyfrom().resolve("../" + sp2Status.getTarget() + "/").toString())
+        String sp2Evo = webResource.path("/evo/info").queryParam("ro", sp2Status.getTarget().toString())
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);
 
         assertTrue("sp2 should contain Additon", sp2Evo.contains("Addition"));

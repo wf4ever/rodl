@@ -27,7 +27,7 @@ public class JobStatus {
     private boolean finalize;
 
     /** Target RO URI. */
-    private String target;
+    private URI target;
 
     /** job state. */
     private State state;
@@ -91,12 +91,12 @@ public class JobStatus {
     }
 
 
-    public synchronized String getTarget() {
+    public synchronized URI getTarget() {
         return target;
     }
 
 
-    public synchronized void setTarget(String target) {
+    public synchronized void setTarget(URI target) {
         this.target = target;
     }
 

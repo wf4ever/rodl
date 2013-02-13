@@ -6,16 +6,14 @@ import java.io.InputStream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
-
-import pl.psnc.dl.wf4ever.Constants;
 
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -49,25 +47,26 @@ public class ServiceResource {
     /**
      * Get a service description as an RDF graph.
      * 
+     * @param accept
+     *            accept header
      * @return RDF service description, format subject to content-negotiation
      */
     @GET
-    public Response getServiceDescription() {
-        RDFFormat format = RDFFormat.forMIMEType(request.getHeader(Constants.ACCEPT_HEADER));
-        if (format == null) {
-            return Response.status(Status.UNSUPPORTED_MEDIA_TYPE).build();
-        }
+    public Response getServiceDescription(@HeaderParam("Accept") String accept) {
+        RDFFormat format = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         Resource service = model.createResource(uriInfo.getAbsolutePath().toString());
         Property copy = model.createProperty("http://purl.org/ro/service/evolution/copy");
         Property finalize = model.createProperty("http://purl.org/ro/service/evolution/finalize");
         Property info = model.createProperty("http://purl.org/ro/service/evolution/info");
-        Literal copyTpl = model.createLiteral(uriInfo.getAbsolutePathBuilder().path("copy/").toString());
-        Literal finalizeTpl = model.createLiteral(uriInfo.getAbsolutePathBuilder().path("finalize/").toString());
-        Literal infoTpl = model.createLiteral(uriInfo.getAbsolutePathBuilder().path("info").toString() + "{?ro}");
-        service.addProperty(copy, copyTpl);
-        service.addProperty(finalize, finalizeTpl);
+        Resource copyR = model.createResource(uriInfo.getAbsolutePathBuilder().path("copy/").build().toString());
+        Resource finalizeR = model
+                .createResource(uriInfo.getAbsolutePathBuilder().path("finalize/").build().toString());
+        Literal infoTpl = model.createLiteral(uriInfo.getAbsolutePathBuilder().path("info").build().toString()
+                + "{?ro}");
+        service.addProperty(copy, copyR);
+        service.addProperty(finalize, finalizeR);
         service.addProperty(info, infoTpl);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();

@@ -1,11 +1,8 @@
 package pl.psnc.dl.wf4ever.evo;
 
-import java.net.URI;
-
 import pl.psnc.dl.wf4ever.common.db.EvoType;
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.RodlException;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
@@ -47,7 +44,6 @@ public class FinalizeOperation implements Operation {
             if (status.getType() == null || status.getType() == EvoType.LIVE) {
                 throw new OperationFailedException("New type must be a snaphot or archive");
             }
-            URI target = status.getCopyfrom().resolve("../" + status.getTarget() + "/");
             ResearchObject researchObject = null;
             ResearchObject liveRO = ResearchObject.get(builder, status.getCopyfrom());
             if (liveRO == null) {
@@ -55,10 +51,10 @@ public class FinalizeOperation implements Operation {
             }
             switch (status.getType()) {
                 case SNAPSHOT:
-                    researchObject = SnapshotResearchObject.get(builder, target, liveRO);
+                    researchObject = SnapshotResearchObject.get(builder, status.getTarget(), liveRO);
                     break;
                 case ARCHIVE:
-                    researchObject = ArchiveResearchObject.get(builder, target, liveRO);
+                    researchObject = ArchiveResearchObject.get(builder, status.getTarget(), liveRO);
                     break;
                 default:
                     throw new OperationFailedException("New type must be a snaphot or archive");
@@ -74,7 +70,7 @@ public class FinalizeOperation implements Operation {
             }
             annotation.delete();
             researchObject.generateEvoInfo();
-        } catch (DigitalLibraryException | NotFoundException | AccessDeniedException e) {
+        } catch (RodlException e) {
             throw new OperationFailedException("Could not generate evo info", e);
         } finally {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();

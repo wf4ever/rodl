@@ -11,9 +11,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -21,10 +23,11 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.sun.jersey.api.NotFoundException;
 
@@ -74,10 +77,10 @@ public class CopyResource implements JobsContainer {
 
     /** Statuses of finished jobs by target. */
     @SuppressWarnings("serial")
-    private static Map<String, JobStatus> finishedJobsByTarget = Collections
-            .synchronizedMap(new LinkedHashMap<String, JobStatus>() {
+    private static Map<URI, JobStatus> finishedJobsByTarget = Collections
+            .synchronizedMap(new LinkedHashMap<URI, JobStatus>() {
 
-                protected boolean removeEldestEntry(Map.Entry<String, JobStatus> eldest) {
+                protected boolean removeEldestEntry(Map.Entry<URI, JobStatus> eldest) {
                     return size() > MAX_JOBS_DONE;
                 };
             });
@@ -86,6 +89,8 @@ public class CopyResource implements JobsContainer {
     /**
      * Creates a copy of a research object.
      * 
+     * @param slug
+     *            Slug header
      * @param status
      *            operation parameters
      * @return 201 Created
@@ -94,7 +99,8 @@ public class CopyResource implements JobsContainer {
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response createCopyJob(JobStatus status)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createCopyJob(@HeaderParam("Slug") String slug, JobStatus status)
             throws BadRequestException {
         if (status.getCopyfrom() == null) {
             throw new BadRequestException("incorrect or missing \"copyfrom\" attribute");
@@ -102,22 +108,19 @@ public class CopyResource implements JobsContainer {
         if (status.getType() == null) {
             throw new BadRequestException("incorrect or missing \"type\" attribute");
         }
-        String id = null;
-        if (status.isFinalize() && status.getTarget() != null) {
-            id = status.getTarget().toString();
-        } else {
-            id = request.getHeader(Constants.SLUG_HEADER);
-        }
-        if (id == null) {
-            id = UUID.randomUUID().toString();
+        String id = slug != null ? slug : UUID.randomUUID().toString();
+
+        status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + id + "/"));
+        int i = 1;
+        while (ROSRService.SMS.get().containsNamedGraph(status.getTarget().resolve(ResearchObject.MANIFEST_PATH))) {
+            status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + id + "-" + (i++) + "/"));
         }
 
-        CopyOperation copy = new CopyOperation(builder, id);
+        CopyOperation copy = new CopyOperation(builder);
 
         UUID jobUUID = UUID.randomUUID();
         Job job;
         if (!status.isFinalize()) {
-            status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + status.getTarget()).toString());
             job = new Job(jobUUID, status, this, copy);
         } else {
             FinalizeOperation finalize = new FinalizeOperation(builder);
@@ -126,7 +129,7 @@ public class CopyResource implements JobsContainer {
         jobs.put(jobUUID, job);
         job.start();
 
-        return Response.created(uriInfo.getAbsolutePath().resolve(jobUUID.toString())).build();
+        return Response.created(uriInfo.getAbsolutePath().resolve(jobUUID.toString())).entity(job.getStatus()).build();
     }
 
 
@@ -172,7 +175,7 @@ public class CopyResource implements JobsContainer {
             jobs.remove(uuid);
         }
         if (finishedJobs.containsKey(uuid)) {
-            String target = finishedJobs.get(uuid).getTarget();
+            URI target = finishedJobs.get(uuid).getTarget();
             finishedJobs.remove(uuid);
             finishedJobsByTarget.remove(target);
         }
@@ -187,14 +190,7 @@ public class CopyResource implements JobsContainer {
      *            target RO URI
      * @return the job status
      */
-    public static JobStatus getStatusForTarget(String target) {
-        String relativeTarget = URI.create(target).resolve("..").relativize(URI.create(target)).toString();
-        if (relativeTarget.substring(relativeTarget.length() - 1, relativeTarget.length()).equals("/")) {
-            return finishedJobsByTarget.get(relativeTarget.substring(0, relativeTarget.length() - 1));
-
-        } else {
-            return null;
-        }
-
+    public static JobStatus getStatusForTarget(URI target) {
+        return finishedJobsByTarget.get(target);
     }
 }

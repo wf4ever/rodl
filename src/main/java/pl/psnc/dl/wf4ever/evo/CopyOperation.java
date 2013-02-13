@@ -10,13 +10,9 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.ConflictException;
-import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.RodlException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
-import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
@@ -48,9 +44,6 @@ public class CopyOperation implements Operation {
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(CopyOperation.class);
 
-    /** operation id. */
-    private String id;
-
     /** user calling this operation. */
     private UserMetadata user;
 
@@ -64,9 +57,8 @@ public class CopyOperation implements Operation {
      * @param id
      *            operation id
      */
-    public CopyOperation(Builder builder, String id) {
+    public CopyOperation(Builder builder) {
         this.builder = builder;
-        this.id = id;
     }
 
 
@@ -75,19 +67,10 @@ public class CopyOperation implements Operation {
             throws OperationFailedException {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         try {
-            URI target = status.getCopyfrom().resolve("../" + id + "/");
-            int i = 1;
-            String sufix = "";
-            while (ResearchObject.get(builder, target) != null) {
-                sufix = "-" + Integer.toString(i);
-                target = status.getCopyfrom().resolve("../" + id + "-" + (i++) + "/");
-            }
-            status.setTarget(id + sufix);
-
             ResearchObject targetRO;
             try {
-                targetRO = ResearchObject.create(builder, target);
-            } catch (ConflictException | DigitalLibraryException | AccessDeniedException | NotFoundException e) {
+                targetRO = ResearchObject.create(builder, status.getTarget());
+            } catch (RodlException e) {
                 throw new OperationFailedException("Failed to create target RO", e);
             }
             ResearchObject sourceRO = ResearchObject.get(builder, status.getCopyfrom());
@@ -107,8 +90,8 @@ public class CopyOperation implements Operation {
                 if (Thread.interrupted()) {
                     try {
                         targetRO.delete();
-                    } catch (DigitalLibraryException | NotFoundException e) {
-                        LOGGER.error("Could not delete the target when aborting: " + target, e);
+                    } catch (RodlException e) {
+                        LOGGER.error("Could not delete the target when aborting: " + status.getTarget(), e);
                     }
                     return;
                 }
@@ -134,9 +117,24 @@ public class CopyOperation implements Operation {
                         //FIXME use a dedicated class for an Annotation
                         String[] segments = resource.getURI().split("/");
                         targetRO.annotate(URI.create(annBody.getURI()), targets, segments[segments.length - 1]);
-                    } catch (AccessDeniedException | DigitalLibraryException | NotFoundException | BadRequestException e1) {
+                    } catch (RodlException | BadRequestException e1) {
                         LOGGER.error("Could not add the annotation", e1);
                     }
+                } else if (resource.hasRDFType(RO.Folder)) {
+                    //                    Folder folder = ROSRService.SMS.get().getFolder(resourceURI);
+                    //                    folder.setUri(targetRO.getUri().resolve(sourceRO.getUri().relativize(folder.getUri())));
+                    //                    folder.setProxy(null);
+                    //                    for (FolderEntry entry : folder.getFolderEntries().values()) {
+                    //                        entry.setUri(null);
+                    //                        entry.setProxyIn(folder);
+                    //                        entry.setProxyFor(targetRO.getUri().resolve(
+                    //                            sourceRO.getUri().relativize(entry.getProxyFor().getUri())));
+                    //                    }
+                    //                    try {
+                    //                        ROSRService.createFolder(targetRO, folder);
+                    //                    } catch (DigitalLibraryException | NotFoundException | AccessDeniedException e1) {
+                    //                        throw new OperationFailedException("Could not create copy folder: " + resourceURI, e1);
+                    //                    }
                 } else {
                     if (isInternalResource(resourceURI, status.getCopyfrom())) {
                         try {
@@ -144,24 +142,21 @@ public class CopyOperation implements Operation {
                             WebResource webResource = client.resource(resourceURI.toString());
                             ClientResponse response = webResource.get(ClientResponse.class);
                             URI resourcePath = status.getCopyfrom().relativize(resourceURI);
-                            URI targetURI = target.resolve(resourcePath);
                             try {
-                                targetRO.aggregate(resourcePath.toString(), response.getEntityInputStream(), response
-                                        .getType().toString());
-                            } catch (ConflictException e) {
+                                pl.psnc.dl.wf4ever.model.RO.Resource r = targetRO.aggregate(resourcePath.toString(),
+                                    response.getEntityInputStream(), response.getType().toString());
+                                changedURIs.put(resourceURI, r.getUri());
+                            } catch (RodlException e) {
                                 LOGGER.warn("Failed to aggregate the resource", e);
                             }
-                            changedURIs.put(resourceURI, targetURI);
-                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException
-                                | IncorrectModelException | BadRequestException e) {
+                        } catch (RodlException | BadRequestException e) {
                             throw new OperationFailedException("Could not create aggregate internal resource: "
                                     + resourceURI, e);
                         }
                     } else {
                         try {
                             targetRO.aggregate(resourceURI);
-                        } catch (AccessDeniedException | DigitalLibraryException | NotFoundException
-                                | IncorrectModelException e) {
+                        } catch (RodlException e) {
                             throw new OperationFailedException("Could not create aggregate external resource: "
                                     + resourceURI, e);
                         }
@@ -199,7 +194,7 @@ public class CopyOperation implements Operation {
         if (status.getCopyfrom() != null && annBodyUri != null && annBodyUri.toString().contains("manifest.rdf")) {
             for (URI t : targets) {
                 if (t.toString().equals(status.getCopyfrom().toString())) {
-                    results.add(status.getCopyfrom().resolve("../" + status.getTarget()));
+                    results.add(status.getTarget());
                 } else {
                     results.add(t);
                 }
