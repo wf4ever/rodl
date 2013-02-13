@@ -492,7 +492,6 @@ public class Resource {
         }
 
         FolderEntry entry = folder.createFolderEntry(content);
-
         String link = String.format(Constants.LINK_HEADER_TEMPLATE, entry.getProxyFor(), ORE.proxyFor.getURI());
         return Response.created(entry.getUri()).header("Link", link).build();
     }

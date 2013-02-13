@@ -132,12 +132,10 @@ public class ResearchObjectResource {
      *            research object id
      * @throws DigitalLibraryException
      *             could not connect to the DL
-     * @throws NotFoundException
-     *             Research Object not found neither in dLibra nor in SMS
      */
     @DELETE
     public void deleteResearchObject(@PathParam("ro_id") String researchObjectId)
-            throws DigitalLibraryException, NotFoundException {
+            throws DigitalLibraryException {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.get(builder, uri);
         if (researchObject == null) {

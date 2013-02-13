@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -286,7 +287,7 @@ public class Folder extends Resource implements Aggregation {
      *            model instance builder
      * @param researchObject
      *            research object aggregating the folder
-     * @param folderUri
+     * @param uri
      *            folder URI
      * @param content
      *            folder description
@@ -294,9 +295,12 @@ public class Folder extends Resource implements Aggregation {
      * @throws BadRequestException
      *             if the description is not valid
      */
-    public static Folder create(Builder builder, ResearchObject researchObject, URI folderUri, InputStream content)
+    public static Folder create(Builder builder, ResearchObject researchObject, URI uri, InputStream content)
             throws BadRequestException {
-        Folder folder = assemble(builder, researchObject, folderUri, content);
+        if (get(builder, uri) != null) {
+            throw new ConflictException("Folder already exists: " + uri);
+        }
+        Folder folder = assemble(builder, researchObject, uri, content);
         folder.setCreated(DateTime.now());
         folder.setCreator(builder.getUser());
         folder.setProxy(Proxy.create(builder, researchObject, folder));
@@ -321,6 +325,11 @@ public class Folder extends Resource implements Aggregation {
     public FolderEntry createFolderEntry(InputStream content)
             throws BadRequestException {
         FolderEntry entry = FolderEntry.assemble(builder, this, content);
+        for (FolderEntry entry2 : getFolderEntries().values()) {
+            if (entry2.getProxyFor().equals(entry.getProxyFor())) {
+                throw new ConflictException("Folder entry for this resource already exists");
+            }
+        }
         return addFolderEntry(entry);
     }
 

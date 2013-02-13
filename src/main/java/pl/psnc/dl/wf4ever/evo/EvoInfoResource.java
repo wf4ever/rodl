@@ -1,6 +1,5 @@
 package pl.psnc.dl.wf4ever.evo;
 
-import java.io.InputStream;
 import java.net.URI;
 
 import javax.ws.rs.GET;
@@ -13,7 +12,6 @@ import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 /**
  * REST API resource to get the evolution information of an RO.
@@ -43,8 +41,7 @@ public class EvoInfoResource {
         if (researchObject == null) {
             new NotFoundException("Research Object not found");
         }
-        //@TODO How to write the inforamtion in TTL format?
-        InputStream stream = ROSRService.SMS.get().getEvoInfo(researchObject);
-        return Response.ok(stream).header("Content-Type", "text/turtle").build();
+        return Response.ok(researchObject.getEvoInfoBody().getSerialization()).header("Content-Type", "text/turtle")
+                .build();
     }
 }

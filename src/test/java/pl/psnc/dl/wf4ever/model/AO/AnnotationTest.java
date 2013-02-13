@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.model.AO;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 
 import junit.framework.Assert;
 
@@ -26,6 +27,7 @@ import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 public class AnnotationTest extends BaseTest {
 
     private ResearchObject ro;
+    private URI annotationUri = URI.create("http://www.example.com/annotationUri/");
 
 
     @Override
@@ -36,6 +38,46 @@ public class AnnotationTest extends BaseTest {
         ro = builder.buildResearchObject(URI.create(("http://www.example.com/ROs/ro/")));
     }
 
+
+    @Test
+    public void testAnnotation() {
+        Annotation annotation = new Annotation(userProfile, dataset, useTransactions, ro, annotationUri);
+        Assert.assertEquals(annotation.getResearchObject(), ro);
+        Assert.assertEquals(annotation.getUri(), annotationUri);
+
+        Thing body = new Thing(userProfile, URI.create("http://www.example.com/body/"));
+        Set<Thing> annotated = new HashSet<Thing>();
+        annotated.add(ro.getManifest());
+
+        annotation = new Annotation(userProfile, ro, annotationUri, body, annotated);
+        Assert.assertEquals(annotation.getUri(), annotationUri);
+        Assert.assertEquals(annotation.getBody(), body);
+        Assert.assertEquals(annotation.getAnnotated(), annotated);
+        Assert.assertEquals(annotation.getResearchObject(), ro);
+
+        annotation = new Annotation(userProfile, ro, annotationUri, body, ro.getManifest());
+        Assert.assertEquals(annotation.getUri(), annotationUri);
+        Assert.assertEquals(annotation.getBody(), body);
+        Assert.assertEquals(annotation.getAnnotated().size(), 1);
+        Assert.assertEquals(annotation.getAnnotated().iterator().next(), ro.getManifest());
+        Assert.assertEquals(annotation.getResearchObject(), ro);
+    }
+
+
+    /*
+    @Test
+    public void testCreate()
+            throws BadRequestException, IOException {
+        InputStream annotationDescriptionInputStream = getClass().getClassLoader().getResourceAsStream(
+            "singleFiles/annotationDescription.rdf");
+        InputStream resourceInputStream = getClass().getClassLoader().getResourceAsStream("singleFiles/file1.txt");
+        InputStream annotationBodyInputStream = getClass().getClassLoader()
+                .getResourceAsStream("singleFiles/file2.txt");
+        ro.aggregate("http://example.com/ROs/ro_id/foo/bar.txt", resourceInputStream, null);
+        ro.aggregate("http://example.com/external.txt", annotationBodyInputStream, null);
+        Annotation annotation = Annotation.create(builder, ro, annotationUri, annotationDescriptionInputStream);
+    }
+    */
 
     @Test
     public void testIsSpecialResource() {
