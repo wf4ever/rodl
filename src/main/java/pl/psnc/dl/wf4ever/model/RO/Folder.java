@@ -297,8 +297,8 @@ public class Folder extends Resource implements Aggregation {
      */
     public static Folder create(Builder builder, ResearchObject researchObject, URI uri, InputStream content)
             throws BadRequestException {
-        if (get(builder, uri) != null) {
-            throw new ConflictException("Folder already exists: " + uri);
+        if (researchObject.isUriUsed(uri)) {
+            throw new ConflictException("Resource already exists: " + uri);
         }
         Folder folder = assemble(builder, researchObject, uri, content);
         folder.setCreated(DateTime.now());
