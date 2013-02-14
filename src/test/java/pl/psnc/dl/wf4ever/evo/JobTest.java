@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.db.EvoType;
@@ -53,7 +52,6 @@ public class JobTest extends EvoTest {
 
 
     @Test
-    @Ignore
     public final void testCopyJobStatusDataIntegrity()
             throws InterruptedException {
         JobStatus status = new JobStatus(ro, EvoType.SNAPSHOT, true);
@@ -69,7 +67,6 @@ public class JobTest extends EvoTest {
 
 
     @Test
-    @Ignore
     public final void testJobFinalization()
             throws InterruptedException {
         URI copyJob = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, false), null).getLocation();

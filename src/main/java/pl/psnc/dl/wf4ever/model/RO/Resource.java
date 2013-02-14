@@ -116,23 +116,20 @@ public class Resource extends AggregatedResource {
      *            model instance builder
      * @param researchObject
      *            research object that aggregates the resource
-     * @param resource
-     *            the resource to copy
      * @return the new resource
      * @throws BadRequestException
      *             if it is expected to be an RDF file and isn't
      */
-    public static Resource copy(Builder builder, ResearchObject researchObject, Resource resource)
+    public Resource copy(Builder builder, ResearchObject researchObject)
             throws BadRequestException {
-        URI resourceUri = researchObject.getUri().resolve(resource.getPath());
+        URI resourceUri = researchObject.getUri().resolve(getPath());
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
-        Resource resource2 = builder.buildResource(researchObject, resourceUri, resource.getCreator(),
-            resource.getCreated());
+        Resource resource2 = builder.buildResource(researchObject, resourceUri, getCreator(), getCreated());
         resource2.setProxy(Proxy.create(builder, researchObject, resource2));
-        if (resource.isInternal()) {
-            resource2.save(resource.getSerialization(), resource.getStats().getMimeType());
+        if (isInternal()) {
+            resource2.save(getSerialization(), getStats().getMimeType());
         } else {
             resource2.save();
         }

@@ -198,43 +198,40 @@ public class Annotation extends AggregatedResource {
      *            model instances builder
      * @param researchObject
      *            research object aggregating the RO
-     * @param annotation
-     *            the annotation to copy
      * @return the new annotation
      */
-    public static Annotation copy(Builder builder, ResearchObject researchObject, Annotation annotation) {
-        URI annotationUri = researchObject.getUri().resolve(annotation.getPath());
+    public Annotation copy(Builder builder, ResearchObject researchObject) {
+        URI annotationUri = researchObject.getUri().resolve(getPath());
         if (researchObject.isUriUsed(annotationUri)) {
             throw new ConflictException("Resource already exists: " + annotationUri);
         }
         URI bodyUri;
-        AggregatedResource aggregatedBody = annotation.getResearchObject().getAggregatedResources()
-                .get(annotation.getBody().getUri());
+        AggregatedResource aggregatedBody = getResearchObject().getAggregatedResources().get(getBody().getUri());
         if (aggregatedBody != null) {
             bodyUri = researchObject.getUri().resolve(aggregatedBody.getPath());
         } else {
-            bodyUri = annotation.getBody().getUri();
+            bodyUri = getBody().getUri();
         }
-        Thing body;
+        Thing body2;
         if (researchObject.getAggregatedResources().containsKey(bodyUri)) {
-            body = researchObject.getAggregatedResources().get(bodyUri);
+            body2 = researchObject.getAggregatedResources().get(bodyUri);
         } else if (aggregatedBody != null) {
             try {
-                body = researchObject.aggregateCopy(aggregatedBody);
+                body2 = researchObject.aggregateCopy(aggregatedBody);
             } catch (BadRequestException e) {
                 // impossible, this was an annotation body so it must be ok
                 LOGGER.error("The annotation body is incorrect", e);
-                body = builder.buildThing(bodyUri);
+                body2 = builder.buildThing(bodyUri);
             }
         } else {
-            body = builder.buildThing(bodyUri);
+            body2 = builder.buildThing(bodyUri);
         }
         Set<Thing> targets = new HashSet<>();
-        for (Thing target : annotation.getAnnotated()) {
+        for (Thing target : getAnnotated()) {
             URI targetUri;
-            if (annotation.getResearchObject().getAggregatedResources().containsKey(target.getUri())) {
+            if (getResearchObject().getAggregatedResources().containsKey(target.getUri())) {
                 targetUri = researchObject.getUri().resolve(
-                    annotation.getResearchObject().getAggregatedResources().get(target.getUri()).getPath());
+                    getResearchObject().getAggregatedResources().get(target.getUri()).getPath());
             } else {
                 // FIXME is this possible?
                 targetUri = target.getUri();
@@ -245,8 +242,8 @@ public class Annotation extends AggregatedResource {
                 targets.add(builder.buildThing(targetUri));
             }
         }
-        Annotation annotation2 = builder.buildAnnotation(researchObject, annotationUri, body, targets,
-            annotation.getCreator(), annotation.getCreated());
+        Annotation annotation2 = builder.buildAnnotation(researchObject, annotationUri, body2, targets, getCreator(),
+            getCreated());
         annotation2.setProxy(Proxy.create(builder, researchObject, annotation2));
         annotation2.save();
         return annotation2;

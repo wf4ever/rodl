@@ -313,9 +313,9 @@ public class ResearchObject extends Thing implements Aggregation {
      * @throws BadRequestException
      *             if it should be an annotation body according to an existing annotation and it's the wrong format
      */
-    public Resource aggregateCopy(Resource resource)
+    public Resource copy(Resource resource)
             throws BadRequestException {
-        Resource resource2 = Resource.copy(builder, this, resource);
+        Resource resource2 = resource.copy(builder, this);
         if (getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
             resource2.saveGraphAndSerialize();
         }
@@ -456,9 +456,9 @@ public class ResearchObject extends Thing implements Aggregation {
      * @throws BadRequestException
      *             if there is no data in storage or the file format is not RDF
      */
-    public Annotation annotateCopy(Annotation annotation)
+    public Annotation copy(Annotation annotation)
             throws BadRequestException {
-        Annotation annotation2 = Annotation.copy(builder, this, annotation);
+        Annotation annotation2 = annotation.copy(builder, this);
         return postAnnotate(annotation2);
     }
 
