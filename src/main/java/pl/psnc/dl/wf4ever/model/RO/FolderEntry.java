@@ -205,4 +205,22 @@ public class FolderEntry extends Proxy {
         return this;
     }
 
+
+    /**
+     * Copy the folder entry, find the aggregated resource in the new folder's research object.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param folder
+     *            folder for which the new entry will be created
+     * @return the new entry
+     */
+    public FolderEntry copy(Builder builder, Folder folder) {
+        URI entryUri = folder.getUri().resolve("entries/" + UUID.randomUUID());
+        URI resourceUri = folder.getResearchObject().getUri().resolve(getProxyFor().getPath());
+        FolderEntry entry = builder.buildFolderEntry(entryUri,
+            folder.getResearchObject().getAggregatedResources().get(resourceUri), folder, getEntryName());
+        return entry;
+    }
+
 }

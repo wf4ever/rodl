@@ -314,6 +314,32 @@ public class Folder extends Resource implements Aggregation {
 
 
     /**
+     * Copy the folder. The aggregated resources will be relativized against the original RO URI and resolved against
+     * this RO URI.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param researchObject
+     *            research object for which the folder will be created
+     * @return the new folder
+     */
+    public Folder copy(Builder builder, ResearchObject researchObject) {
+        URI folderUri = researchObject.getUri().resolve(getPath());
+        if (researchObject.isUriUsed(folderUri)) {
+            throw new ConflictException("Resource already exists: " + folderUri);
+        }
+        Folder folder2 = builder.buildFolder(researchObject, folderUri, getCreator(), getCreated());
+        folder2.setProxy(Proxy.create(builder, researchObject, folder2));
+        folder2.save();
+        for (FolderEntry entry : getFolderEntries().values()) {
+            folder2.addFolderEntry(entry.copy(builder, this));
+        }
+        folder2.getResourceMap().serialize();
+        return folder2;
+    }
+
+
+    /**
      * Create and save a new folder entry, refresh the properties of this folder.
      * 
      * @param content

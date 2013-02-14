@@ -373,6 +373,24 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
+     * Aggregate a copy of a folder. The aggregated resources will be relativized against the original RO URI and
+     * resolved against this RO URI.
+     * 
+     * @param folder
+     *            folder to copy
+     * @return the new folder
+     */
+    public Folder copy(Folder folder) {
+        Folder folder2 = folder.copy(builder, this);
+        getManifest().serialize();
+        this.getFolders().put(folder2.getUri(), folder2);
+        this.getAggregatedResources().put(folder2.getUri(), folder2);
+        this.getProxies().put(folder2.getProxy().getUri(), folder2.getProxy());
+        return folder2;
+    }
+
+
+    /**
      * Add and aggregate a new annotation to the research object.
      * 
      * @param body

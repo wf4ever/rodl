@@ -1,9 +1,7 @@
 package pl.psnc.dl.wf4ever.evo;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -14,6 +12,7 @@ import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
@@ -80,6 +79,11 @@ public class CopyOperation implements Operation {
                 } catch (BadRequestException e) {
                     LOGGER.warn("Failed to copy the annotation", e);
                 }
+            }
+            //copy the folders
+            for (Folder folder : sourceRO.getFolders().values()) {
+                Folder folder2 = targetRO.copy(folder);
+                changedURIs.put(folder.getUri(), folder2.getUri());
             }
             //            OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
             //            model.read(sourceRO.getManifestUri().toString());
@@ -180,45 +184,6 @@ public class CopyOperation implements Operation {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         }
 
-    }
-
-
-    /**
-     * Small hack done for manifest annotation problem. If the annotation is the manifest annotation the the target must
-     * be changed.
-     * 
-     * @param status
-     * @param targets
-     * @param annBodyUri
-     * @return
-     */
-    private List<URI> changeManifestAnnotationTarget(JobStatus status, List<URI> targets, URI annBodyUri) {
-        List<URI> results = new ArrayList<URI>();
-        if (status.getCopyfrom() != null && annBodyUri != null && annBodyUri.toString().contains("manifest.rdf")) {
-            for (URI t : targets) {
-                if (t.toString().equals(status.getCopyfrom().toString())) {
-                    results.add(status.getTarget());
-                } else {
-                    results.add(t);
-                }
-            }
-        }
-        return results;
-    }
-
-
-    /**
-     * Check if a resource is internal to the RO. This will not work if they have different domains, for example if the
-     * RO URI uses purl.
-     * 
-     * @param resource
-     *            resource URI
-     * @param ro
-     *            RO URI
-     * @return true if the resource URI starts with the RO URI, false otherwise
-     */
-    private boolean isInternalResource(URI resource, URI ro) {
-        return resource.normalize().toString().startsWith(ro.normalize().toString());
     }
 
 }
