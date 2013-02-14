@@ -9,8 +9,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -34,6 +36,9 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
  * @author pejot
  */
 public class Annotation extends AggregatedResource {
+
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(Annotation.class);
 
     /** Set of annotated objects. */
     private Set<Thing> annotated;
@@ -183,6 +188,68 @@ public class Annotation extends AggregatedResource {
         annotation.setProxy(Proxy.create(builder, researchObject, annotation));
         annotation.save();
         return annotation;
+    }
+
+
+    /**
+     * Create a new annotation as a copy of another one. The URI will be different but other fields will be the same.
+     * 
+     * @param builder
+     *            model instances builder
+     * @param researchObject
+     *            research object aggregating the RO
+     * @param annotation
+     *            the annotation to copy
+     * @return the new annotation
+     */
+    public static Annotation copy(Builder builder, ResearchObject researchObject, Annotation annotation) {
+        URI annotationUri = researchObject.getUri().resolve(annotation.getPath());
+        if (researchObject.isUriUsed(annotationUri)) {
+            throw new ConflictException("Resource already exists: " + annotationUri);
+        }
+        URI bodyUri;
+        AggregatedResource aggregatedBody = annotation.getResearchObject().getAggregatedResources()
+                .get(annotation.getBody().getUri());
+        if (aggregatedBody != null) {
+            bodyUri = researchObject.getUri().resolve(aggregatedBody.getPath());
+        } else {
+            bodyUri = annotation.getBody().getUri();
+        }
+        Thing body;
+        if (researchObject.getAggregatedResources().containsKey(bodyUri)) {
+            body = researchObject.getAggregatedResources().get(bodyUri);
+        } else if (aggregatedBody != null) {
+            try {
+                body = researchObject.aggregateCopy(aggregatedBody);
+            } catch (BadRequestException e) {
+                // impossible, this was an annotation body so it must be ok
+                LOGGER.error("The annotation body is incorrect", e);
+                body = builder.buildThing(bodyUri);
+            }
+        } else {
+            body = builder.buildThing(bodyUri);
+        }
+        Set<Thing> targets = new HashSet<>();
+        for (Thing target : annotation.getAnnotated()) {
+            URI targetUri;
+            if (annotation.getResearchObject().getAggregatedResources().containsKey(target.getUri())) {
+                targetUri = researchObject.getUri().resolve(
+                    annotation.getResearchObject().getAggregatedResources().get(target.getUri()).getPath());
+            } else {
+                // FIXME is this possible?
+                targetUri = target.getUri();
+            }
+            if (researchObject.getAggregatedResources().containsKey(targetUri)) {
+                targets.add(researchObject.getAggregatedResources().get(targetUri));
+            } else {
+                targets.add(builder.buildThing(targetUri));
+            }
+        }
+        Annotation annotation2 = builder.buildAnnotation(researchObject, annotationUri, body, targets,
+            annotation.getCreator(), annotation.getCreated());
+        annotation2.setProxy(Proxy.create(builder, researchObject, annotation2));
+        annotation2.save();
+        return annotation2;
     }
 
 

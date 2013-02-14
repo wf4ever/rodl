@@ -17,6 +17,7 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -81,6 +82,37 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     public AggregatedResource(UserMetadata user, ResearchObject researchObject, URI uri) {
         super(user, uri);
         this.researchObject = researchObject;
+    }
+
+
+    /**
+     * Create a new resource with all data except for the URI equal to another resource.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param researchObject
+     *            research object that aggregates the resource
+     * @param resource
+     *            the resource to copy
+     * @return the new resource
+     * @throws BadRequestException
+     *             if it is expected to be an RDF file and isn't
+     */
+    public static AggregatedResource copy(Builder builder, ResearchObject researchObject, AggregatedResource resource)
+            throws BadRequestException {
+        URI resourceUri = researchObject.getUri().resolve(resource.getPath());
+        if (researchObject.isUriUsed(resourceUri)) {
+            throw new ConflictException("Resource already exists: " + resourceUri);
+        }
+        AggregatedResource resource2 = builder.buildAggregatedResource(resourceUri, researchObject,
+            resource.getCreator(), resource.getCreated());
+        resource2.setProxy(Proxy.create(builder, researchObject, resource2));
+        if (resource.isInternal()) {
+            resource2.save(resource.getSerialization(), resource.getStats().getMimeType());
+        } else {
+            resource2.save();
+        }
+        return resource2;
     }
 
 

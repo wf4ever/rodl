@@ -1871,7 +1871,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     private int changeURIInNamedGraph(URI graph, URI oldURI, URI newURI) {
         OntModel model = getOntModelForNamedGraph(graph);
         if (model == null) {
-            throw new IllegalArgumentException("Could not load model for :" + graph);
+            throw new IllegalArgumentException("Could not load model for: " + graph);
         }
         Resource oldResource = model.createResource(SafeURI.URItoString(oldURI));
         Resource newResource = model.createResource(SafeURI.URItoString(newURI));

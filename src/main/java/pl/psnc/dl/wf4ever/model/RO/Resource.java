@@ -109,6 +109,37 @@ public class Resource extends AggregatedResource {
     }
 
 
+    /**
+     * Create a new resource with all data except for the URI equal to another resource.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param researchObject
+     *            research object that aggregates the resource
+     * @param resource
+     *            the resource to copy
+     * @return the new resource
+     * @throws BadRequestException
+     *             if it is expected to be an RDF file and isn't
+     */
+    public static Resource copy(Builder builder, ResearchObject researchObject, Resource resource)
+            throws BadRequestException {
+        URI resourceUri = researchObject.getUri().resolve(resource.getPath());
+        if (researchObject.isUriUsed(resourceUri)) {
+            throw new ConflictException("Resource already exists: " + resourceUri);
+        }
+        Resource resource2 = builder.buildResource(researchObject, resourceUri, resource.getCreator(),
+            resource.getCreated());
+        resource2.setProxy(Proxy.create(builder, researchObject, resource2));
+        if (resource.isInternal()) {
+            resource2.save(resource.getSerialization(), resource.getStats().getMimeType());
+        } else {
+            resource2.save();
+        }
+        return resource2;
+    }
+
+
     @Override
     public void save() {
         super.save();

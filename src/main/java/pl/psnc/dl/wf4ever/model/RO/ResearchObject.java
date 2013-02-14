@@ -295,12 +295,58 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     public Resource aggregate(URI uri) {
         Resource resource = Resource.create(builder, this, uri);
-        resource.setProxy(Proxy.create(builder, this, resource));
-        // update the manifest that describes the resource in dLibra
         this.getManifest().serialize();
         this.getResources().put(resource.getUri(), resource);
         this.getAggregatedResources().put(resource.getUri(), resource);
+        this.getProxies().put(resource.getProxy().getUri(), resource.getProxy());
         return resource;
+    }
+
+
+    /**
+     * Aggregate a copy of the resource. The creation date and authors will be taken from the original. The URI of the
+     * new resource will be different from the original.
+     * 
+     * @param resource
+     *            the resource to copy
+     * @return the new resource
+     * @throws BadRequestException
+     *             if it should be an annotation body according to an existing annotation and it's the wrong format
+     */
+    public Resource aggregateCopy(Resource resource)
+            throws BadRequestException {
+        Resource resource2 = Resource.copy(builder, this, resource);
+        if (getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
+            resource2.saveGraphAndSerialize();
+        }
+        getManifest().serialize();
+        this.getResources().put(resource2.getUri(), resource2);
+        this.getAggregatedResources().put(resource2.getUri(), resource2);
+        this.getProxies().put(resource2.getProxy().getUri(), resource2.getProxy());
+        return resource2;
+    }
+
+
+    /**
+     * Aggregate a copy of the resource. The creation date and authors will be taken from the original. The URI of the
+     * new resource will be different from the original.
+     * 
+     * @param resource
+     *            the resource to copy
+     * @return the new resource
+     * @throws BadRequestException
+     *             if it should be an annotation body according to an existing annotation and it's the wrong format
+     */
+    public AggregatedResource aggregateCopy(AggregatedResource resource)
+            throws BadRequestException {
+        AggregatedResource resource2 = AggregatedResource.copy(builder, this, resource);
+        if (getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
+            resource2.saveGraphAndSerialize();
+        }
+        getManifest().serialize();
+        this.getAggregatedResources().put(resource2.getUri(), resource2);
+        this.getProxies().put(resource2.getProxy().getUri(), resource2.getProxy());
+        return resource2;
     }
 
 
@@ -378,6 +424,24 @@ public class ResearchObject extends Thing implements Aggregation {
         URI annotationUri = getAnnotationUri(null);
         Annotation annotation = Annotation.create(builder, this, annotationUri, data);
         return postAnnotate(annotation);
+    }
+
+
+    /**
+     * Create a copy of an annotation and aggregated it. The annotation URI will be different, the other fields will be
+     * the same. If the body is aggregated in the original annotation's RO, and it's not aggregated in this RO, then it
+     * is also copied.
+     * 
+     * @param annotation
+     *            the annotation to copy
+     * @return the new annotation
+     * @throws BadRequestException
+     *             if there is no data in storage or the file format is not RDF
+     */
+    public Annotation annotateCopy(Annotation annotation)
+            throws BadRequestException {
+        Annotation annotation2 = Annotation.copy(builder, this, annotation);
+        return postAnnotate(annotation2);
     }
 
 
@@ -786,4 +850,5 @@ public class ResearchObject extends Thing implements Aggregation {
             }
         }
     }
+
 }
