@@ -3,7 +3,11 @@ package pl.psnc.dl.wf4ever.model.ORE;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -25,6 +29,9 @@ import pl.psnc.dl.wf4ever.model.RO.ResearchObjectComponent;
 
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.Statement;
 
 /**
  * Simple Aggregated Resource model.
@@ -163,7 +170,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
      */
     public void serialize()
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        serialize(researchObject.getUri());
+        serialize(researchObject.getUri(), RDFFormat.forMIMEType(getStats().getMimeType()));
         stats = null;
     }
 
@@ -244,6 +251,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
             format = RDFFormat.forMIMEType(getStats().getMimeType());
         } else {
             // required for resource not stored in RODL, for example new zipped ROs
+            // FIXME such resources should have the MIME type set anyway
             format = RDFFormat.forFileName(getPath());
         }
         if (format == null) {
@@ -265,6 +273,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         } catch (IOException e) {
             LOGGER.warn("Could not close stream", e);
         }
+        //FIXME this always saves in RDF/XML
         serialize();
         researchObject.updateIndexAttributes();
     }
@@ -335,5 +344,62 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     public void update(InputStream content, String contentType)
             throws BadRequestException {
         save(content, contentType);
+    }
+
+
+    /**
+     * Find all references in the resource to objects related to the provided research object and update them to
+     * reference matching objects of this research object. Matching is done by path relative to RO URI. Related objects
+     * are all aggregated resources, the manifest and the RO itself.
+     * 
+     * Example: if the provided RO has URI "/ro1/", it aggregates "/ro1/x" and this RO "/ro2/" aggregates "/ro2/x", then
+     * all references to "/ro1/x" will be replaced with "/ro2/x".
+     * 
+     * If this resource has no RDF representation in the triplestore, this method does nothing.
+     * 
+     * Warning: note that if that method is called before aggregating all resources in this RO, then references to the
+     * yet unaggregated resources will remain unchanged.
+     * 
+     * @param researchObject2
+     *            research object whose aggregated resources should not be referenced in this resource
+     * @return number of triples updated
+     */
+    public int updateReferences(ResearchObject researchObject2) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            if (model == null) {
+                return 0;
+            }
+            int changes = 0;
+            Map<URI, URI> uris = new HashMap<>();
+            uris.put(researchObject2.getUri(), getResearchObject().getUri());
+            uris.put(researchObject2.getManifest().getUri(), getResearchObject().getManifest().getUri());
+            for (AggregatedResource r1 : researchObject2.getAggregatedResources().values()) {
+                URI r2Uri = getResearchObject().getUri().resolve(r1.getPath());
+                if (getResearchObject().getAggregatedResources().containsKey(r2Uri)) {
+                    uris.put(r1.getUri(), r2Uri);
+                }
+            }
+            for (Entry<URI, URI> e : uris.entrySet()) {
+                Resource oldResource = model.createResource(e.getKey().toString());
+                Resource newResource = model.createResource(e.getValue().toString());
+
+                List<Statement> s1 = model.listStatements(oldResource, null, (RDFNode) null).toList();
+                for (Statement s : s1) {
+                    model.remove(s.getSubject(), s.getPredicate(), s.getObject());
+                    model.add(newResource, s.getPredicate(), s.getObject());
+                }
+                List<Statement> s2 = model.listStatements(null, null, oldResource).toList();
+                for (Statement s : s2) {
+                    model.remove(s.getSubject(), s.getPredicate(), s.getObject());
+                    model.add(s.getSubject(), s.getPredicate(), newResource);
+                }
+                changes += s1.size() + s2.size();
+            }
+            commitTransaction(transactionStarted);
+            return changes;
+        } finally {
+            endTransaction(transactionStarted);
+        }
     }
 }

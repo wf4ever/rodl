@@ -31,6 +31,7 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
@@ -185,8 +186,9 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     public AggregatedResource getEvoInfoBody() {
         //HACK this should be added automatically
-        this.getAggregatedResources().put(getFixedEvolutionAnnotationBodyUri(),
-            new AggregatedResource(user, this, getFixedEvolutionAnnotationBodyUri()));
+        AggregatedResource resource = new AggregatedResource(user, this, getFixedEvolutionAnnotationBodyUri());
+        resource.setStats(new ResourceMetadata(null, null, null, 0, null, null, RDFFormat.TURTLE.getDefaultMIMEType()));
+        this.getAggregatedResources().put(getFixedEvolutionAnnotationBodyUri(), resource);
 
         return aggregatedResources.get(getFixedEvolutionAnnotationBodyUri());
     }
@@ -342,6 +344,8 @@ public class ResearchObject extends Thing implements Aggregation {
         AggregatedResource resource2 = AggregatedResource.copy(builder, this, resource);
         if (getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
             resource2.saveGraphAndSerialize();
+            //            int c = resource2.updateReferences(resource.getResearchObject());
+            //            LOGGER.debug(String.format("Updated %d triples in %s", c, uri));
         }
         getManifest().serialize();
         this.getAggregatedResources().put(resource2.getUri(), resource2);

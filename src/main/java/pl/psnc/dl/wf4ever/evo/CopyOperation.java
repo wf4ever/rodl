@@ -81,11 +81,15 @@ public class CopyOperation implements Operation {
                 Folder folder2 = targetRO.copy(folder);
                 changedURIs.put(folder.getUri(), folder2.getUri());
             }
+            //            for (Map.Entry<URI, URI> e : changedURIs.entrySet()) {
+            //                ROSRService.SMS.get().changeURIInManifestAndAnnotationBodies(targetRO, e.getKey(), e.getValue(), false);
+            //            }
             for (Map.Entry<URI, URI> e : changedURIs.entrySet()) {
-                ROSRService.SMS.get().changeURIInManifestAndAnnotationBodies(targetRO, e.getKey(), e.getValue(), false);
-            }
-            for (Map.Entry<URI, URI> e : changedURIs.entrySet()) {
-                ROSRService.SMS.get().changeURIInManifestAndAnnotationBodies(targetRO, e.getKey(), e.getValue(), true);
+                int c = ROSRService.SMS.get().changeURIInManifestAndAnnotationBodies(targetRO, e.getKey(),
+                    e.getValue(), true);
+                if (c > 0) {
+                    System.out.println(c);
+                }
             }
             //TODO!!
             //make me easier!

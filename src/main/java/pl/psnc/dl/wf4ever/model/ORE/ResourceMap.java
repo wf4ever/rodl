@@ -3,6 +3,8 @@ package pl.psnc.dl.wf4ever.model.ORE;
 import java.io.InputStream;
 import java.net.URI;
 
+import org.openrdf.rio.RDFFormat;
+
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
@@ -170,7 +172,7 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
      */
     public void serialize()
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        serialize(getResearchObject().getUri());
+        serialize(getResearchObject().getUri(), RDFFormat.forMIMEType(getStats().getMimeType()));
     }
 
 

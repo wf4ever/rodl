@@ -272,6 +272,8 @@ public class Thing {
      * 
      * @param base
      *            the object whose URI is the base
+     * @param format
+     *            in which the resource should be saved
      * @throws NotFoundException
      *             could not find the resource in DL
      * @throws DigitalLibraryException
@@ -279,10 +281,9 @@ public class Thing {
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public void serialize(URI base)
+    public void serialize(URI base, RDFFormat format)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         String filePath = base.relativize(uri).toString();
-        RDFFormat format = RDFFormat.forFileName(filePath, RDFFormat.RDFXML);
         InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(uri, base, format);
         DigitalLibraryFactory.getDigitalLibrary().createOrUpdateFile(base, filePath, dataStream,
             format.getDefaultMIMEType());

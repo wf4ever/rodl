@@ -2,6 +2,8 @@ package pl.psnc.dl.wf4ever.evo;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.util.Set;
 
@@ -13,11 +15,14 @@ import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.evo.Job.State;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.Literal;
+import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -107,4 +112,34 @@ public class JobTest extends EvoTest {
         //TODO verify correct finalized RO
     }
 
+
+    /**
+     * References in annotations should be updated to point to resources of the new RO.
+     * 
+     * @throws InterruptedException
+     *             if the copy job was interrupted
+     */
+    @Test
+    public final void testUriUpdate()
+            throws InterruptedException {
+        Model model1 = ModelFactory.createDefaultModel();
+        Resource roR = model1.createResource(ro.toString());
+        Resource manifestR = model1.createResource(ro.resolve(ResearchObject.MANIFEST_PATH).toString());
+        Resource fileR = model1.createResource(ro.resolve(filePath).toString());
+        Literal title = model1.createLiteral("Title");
+        model1.add(roR, DCTerms.requires, manifestR);
+        model1.add(fileR, DCTerms.title, title);
+        model1.add(manifestR, DCTerms.isFormatOf, fileR);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        model1.write(out, "TURTLE");
+        addAnnotation(new ByteArrayInputStream(out.toByteArray()), ro, "ann1", accessToken);
+
+        URI copyAndFinalizeJob = createCopyJob(new JobStatus(ro, EvoType.SNAPSHOT, true), null).getLocation();
+        JobStatus remoteStatus = getRemoteStatus(copyAndFinalizeJob, WAIT_FOR_COPY + WAIT_FOR_FINALIZE);
+        Assert.assertEquals(remoteStatus.toString(), State.DONE, remoteStatus.getState());
+
+        Model model2 = ModelFactory.createDefaultModel();
+        model2.read(ro.resolve("ann1").toString());
+        Assert.assertTrue(model2.isIsomorphicWith(model1));
+    }
 }
