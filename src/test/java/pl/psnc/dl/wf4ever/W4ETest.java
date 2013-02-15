@@ -162,8 +162,8 @@ public class W4ETest extends JerseyTest {
 
 
     protected ClientResponse addRDFFile(URI roURI, String body, String rdfFilePath, String accessToken) {
-        return webResource.uri(ro).header("Authorization", "Bearer " + accessToken)
-                .type("application/vnd.wf4ever.proxy").header("Slug", rdfFilePath).post(ClientResponse.class, body);
+        return webResource.uri(ro).header("Authorization", "Bearer " + accessToken).type("application/rdf+xml")
+                .header("Slug", rdfFilePath).post(ClientResponse.class, body);
     }
 
 
