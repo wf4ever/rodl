@@ -53,7 +53,7 @@ public class ManifestTest extends ResourceBase {
     @Test
     public void getManifest() {
         addFile(ro, filePath, accessToken);
-        rdfProxy = addRDFFIle(ro, rdfFileBody, rdfFilePath, accessToken).getLocation();
+        rdfProxy = addRDFFile(ro, rdfFileBody, rdfFilePath, accessToken).getLocation();
         String manifest = webResource.uri(ro).path("/.ro/manifest.rdf")
                 .header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue("Manifest should contain user id", manifest.contains(userId));
@@ -97,7 +97,7 @@ public class ManifestTest extends ResourceBase {
     @Test
     public void getManifestWithAnnotationBody() {
         addFile(ro, filePath, accessToken);
-        rdfProxy = addRDFFIle(ro, rdfFileBody, rdfFilePath, accessToken).getLocation();
+        rdfProxy = addRDFFile(ro, rdfFileBody, rdfFilePath, accessToken).getLocation();
         String manifest = webResource.uri(ro).path("/.ro/manifest.rdf")
                 .header("Authorization", "Bearer " + accessToken).accept("application/x-trig").get(String.class);
         assertTrue("Manifest should contain user id", manifest.contains(userId));

@@ -97,7 +97,7 @@ public class FileTest extends ResourceBase {
     @Test
     public void testAddAndGetRDFFile() {
         DateTime addRdfFileTime = new DateTime();
-        ClientResponse response = addRDFFIle(ro, rdfFileBody, rdfFilePath, accessToken);
+        ClientResponse response = addRDFFile(ro, rdfFileBody, rdfFilePath, accessToken);
         assertEquals("RDF file should be created correctly via post method", HttpServletResponse.SC_CREATED,
             response.getStatus());
         response.close();
@@ -144,7 +144,7 @@ public class FileTest extends ResourceBase {
 
     @Test
     public void deleteRDFFile() {
-        ClientResponse response = addRDFFIle(ro, rdfFileBody, rdfFilePath, accessToken);
+        ClientResponse response = addRDFFile(ro, rdfFileBody, rdfFilePath, accessToken);
         URI rdfProxy = response.getLocation();
         response = webResource.uri(rdfProxy).header("Authorization", "Bearer " + accessToken)
                 .type(RDFFormat.RDFXML.getDefaultMIMEType()).delete(ClientResponse.class);
