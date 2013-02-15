@@ -339,13 +339,11 @@ public class ResearchObject extends Thing implements Aggregation {
      * @throws BadRequestException
      *             if it should be an annotation body according to an existing annotation and it's the wrong format
      */
-    public AggregatedResource aggregateCopy(AggregatedResource resource)
+    public AggregatedResource copy(AggregatedResource resource)
             throws BadRequestException {
         AggregatedResource resource2 = AggregatedResource.copy(builder, this, resource);
         if (getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
             resource2.saveGraphAndSerialize();
-            //            int c = resource2.updateReferences(resource.getResearchObject());
-            //            LOGGER.debug(String.format("Updated %d triples in %s", c, uri));
         }
         getManifest().serialize();
         this.getAggregatedResources().put(resource2.getUri(), resource2);
@@ -481,6 +479,8 @@ public class ResearchObject extends Thing implements Aggregation {
         AggregatedResource resource = getAggregatedResources().get(annotation.getBody().getUri());
         if (resource != null && resource.isInternal()) {
             resource.saveGraphAndSerialize();
+            int c = resource.updateReferences(resource.getResearchObject());
+            LOGGER.debug(String.format("Updated %d triples in %s", c, resource.getUri()));
             getManifest().removeRoResourceClass(resource);
         }
         getManifest().serialize();

@@ -609,23 +609,6 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Change all occurrences of one URI into another in the context (manifest and annotation bodies) of one research
-     * object.
-     * 
-     * @param researchObject
-     *            RO URI
-     * @param oldURI
-     *            Old URI
-     * @param newURI
-     *            New URI
-     * @param withBodies
-     *            Change bodies in case of true, change only manifest otherwise
-     * @return number of changed triples
-     */
-    int changeURIInManifestAndAnnotationBodies(ResearchObject researchObject, URI oldURI, URI newURI, Boolean withBodies);
-
-
-    /**
      * Get resolved URI from base and relative path. Created because of the JAVA URI bug.
      * 
      * @param base

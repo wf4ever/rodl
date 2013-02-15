@@ -749,32 +749,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
 
     /**
-     * changeURIInManifestAndAnnotationsBodies should change URIs in manifest in bodies if bodies parameter equals true.
-     */
-    @Test
-    public final void testChangeURIInManifestAndAnnotationBodies()
-            throws ClassNotFoundException, IOException, NamingException, SQLException {
-        int cnt = test.sms.changeURIInManifestAndAnnotationBodies(test.annotatedRO,
-            test.annotatedRO.getUri().resolve(WORKFLOW_PATH), URI.create("http://www.example.com/complete_new_uri"),
-            true);
-        Assert.assertEquals("9 URIs should be changed", 9, cnt);
-    }
-
-
-    /**
-     * changeURIInManifestAndAnnotationsBodies should change URIs only in manifest if bodies parameter equals false.
-     */
-    @Test
-    public final void testChangeURIInManifest()
-            throws ClassNotFoundException, IOException, NamingException, SQLException {
-        int cnt = test.sms.changeURIInManifestAndAnnotationBodies(test.annotatedRO,
-            test.annotatedRO.getUri().resolve(WORKFLOW_PATH), URI.create("http://www.example.com/complete_new_uri"),
-            false);
-        Assert.assertEquals("6 URIs should be changed", 6, cnt);
-    }
-
-
-    /**
      * getAggregatedResource function should return the complete list of aggregated resources.
      * 
      * @throws ManifestTraversingException .

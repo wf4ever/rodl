@@ -1844,53 +1844,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public int changeURIInManifestAndAnnotationBodies(ResearchObject researchObject, URI oldURI, URI newURI,
-            Boolean withBodies) {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            int cnt = changeURIInNamedGraph(researchObject.getManifestUri(), oldURI, newURI);
-            if (withBodies) {
-                OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
-                if (manifestModel == null) {
-                    throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
-                }
-                List<RDFNode> bodies = manifestModel.listObjectsOfProperty(AO.body).toList();
-                for (RDFNode body : bodies) {
-                    URI bodyURI = URI.create(body.asResource().getURI());
-                    cnt += changeURIInNamedGraph(bodyURI, oldURI, newURI);
-                }
-            }
-            commitTransaction(transactionStarted);
-            return cnt;
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    private int changeURIInNamedGraph(URI graph, URI oldURI, URI newURI) {
-        OntModel model = getOntModelForNamedGraph(graph);
-        if (model == null) {
-            throw new IllegalArgumentException("Could not load model for: " + graph);
-        }
-        Resource oldResource = model.createResource(SafeURI.URItoString(oldURI));
-        Resource newResource = model.createResource(SafeURI.URItoString(newURI));
-
-        List<Statement> s1 = model.listStatements(oldResource, null, (RDFNode) null).toList();
-        for (Statement s : s1) {
-            model.remove(s.getSubject(), s.getPredicate(), s.getObject());
-            model.add(newResource, s.getPredicate(), s.getObject());
-        }
-        List<Statement> s2 = model.listStatements(null, null, oldResource).toList();
-        for (Statement s : s2) {
-            model.remove(s.getSubject(), s.getPredicate(), s.getObject());
-            model.add(s.getSubject(), s.getPredicate(), newResource);
-        }
-        return s1.size() + s2.size();
-    }
-
-
-    @Override
     public InputStream getEvoInfo(ResearchObject researchObject) {
         return getNamedGraph((researchObject.getFixedEvolutionAnnotationBodyUri()), RDFFormat.TURTLE);
     }

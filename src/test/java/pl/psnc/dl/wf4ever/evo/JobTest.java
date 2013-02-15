@@ -141,5 +141,18 @@ public class JobTest extends EvoTest {
         Model model2 = ModelFactory.createDefaultModel();
         model2.read(ro.resolve("ann1").toString());
         Assert.assertTrue(model2.isIsomorphicWith(model1));
+
+        URI ro2 = remoteStatus.getTarget();
+        Model model3 = ModelFactory.createDefaultModel();
+        roR = model3.createResource(ro2.toString());
+        manifestR = model3.createResource(ro2.resolve(ResearchObject.MANIFEST_PATH).toString());
+        fileR = model3.createResource(ro2.resolve(filePath).toString());
+        model3.add(roR, DCTerms.requires, manifestR);
+        model3.add(fileR, DCTerms.title, title);
+        model3.add(manifestR, DCTerms.isFormatOf, fileR);
+
+        Model model4 = ModelFactory.createDefaultModel();
+        model4.read(ro2.resolve("ann1").toString());
+        Assert.assertTrue(model4.isIsomorphicWith(model3));
     }
 }

@@ -217,7 +217,7 @@ public class Annotation extends AggregatedResource {
             body2 = researchObject.getAggregatedResources().get(bodyUri);
         } else if (aggregatedBody != null) {
             try {
-                body2 = researchObject.aggregateCopy(aggregatedBody);
+                body2 = researchObject.copy(aggregatedBody);
             } catch (BadRequestException e) {
                 // impossible, this was an annotation body so it must be ok
                 LOGGER.error("The annotation body is incorrect", e);

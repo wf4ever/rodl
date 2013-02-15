@@ -273,7 +273,6 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         } catch (IOException e) {
             LOGGER.warn("Could not close stream", e);
         }
-        //FIXME this always saves in RDF/XML
         serialize();
         researchObject.updateIndexAttributes();
     }
