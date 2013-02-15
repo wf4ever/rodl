@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.Date;
 
@@ -116,7 +117,7 @@ public class FlowTests {
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         try {
             Files.delete(Paths.get(BASE));
-        } catch (DirectoryNotEmptyException e) {
+        } catch (DirectoryNotEmptyException | NoSuchFileException e) {
             // was not empty
         }
     }

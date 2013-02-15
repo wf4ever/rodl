@@ -253,6 +253,10 @@ public class FilesystemDL implements DigitalLibrary {
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                         throws IOException {
                     Files.delete(file);
+                    ResourceInfoDAO dao = new ResourceInfoDAO();
+                    ResourceInfo res = dao.findByPath(file.toString());
+                    dao.delete(res);
+                    HibernateUtil.getSessionFactory().getCurrentSession().flush();
                     return FileVisitResult.CONTINUE;
                 }
 
