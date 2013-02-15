@@ -2040,7 +2040,7 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     private Annotation generateLiveRoEvoInf(ResearchObject researchObject) {
         OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
         if (manifestModel == null) {
-            throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
+            throw new IllegalArgumentException("Could not load manifest model for: " + researchObject.getUri());
         }
         Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
         OntModel evoModel = createOntModelForNamedGraph(researchObject.getFixedEvolutionAnnotationBodyUri());

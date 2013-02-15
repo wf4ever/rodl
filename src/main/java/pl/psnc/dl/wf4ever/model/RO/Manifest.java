@@ -110,6 +110,23 @@ public class Manifest extends ResourceMap {
 
 
     /**
+     * Create an initial manifest copying the static facts (creation date and author) from the provided manifest.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param researchObject
+     *            research object described by the new manifest
+     * @return the new manifest
+     */
+    public Manifest copy(Builder builder, ResearchObject researchObject) {
+        URI manifestUri = researchObject.getUri().resolve(ResearchObject.MANIFEST_PATH);
+        Manifest manifest = builder.buildManifest(manifestUri, researchObject, getCreator(), getCreated());
+        manifest.save();
+        return manifest;
+    }
+
+
+    /**
      * Save the ro:Resource RDF class for an aggregated resource.
      * 
      * @param resource
@@ -469,4 +486,5 @@ public class Manifest extends ResourceMap {
             endTransaction(transactionStarted);
         }
     }
+
 }

@@ -168,6 +168,49 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
+     * Create a new research object as a copy of this one. Copies all aggregated resources, changes URIs in annotation
+     * bodies.
+     * 
+     * @param uri
+     *            URI of the copy
+     * @return the new research object
+     */
+    public ResearchObject copy(URI uri) {
+        if (get(builder, uri) != null) {
+            throw new ConflictException("Research Object already exists: " + uri);
+        }
+        ResearchObject researchObject = builder.buildResearchObject(uri, getCreator(), getCreated());
+        researchObject.manifest = getManifest().copy(builder, researchObject);
+        researchObject.save();
+        // copy the ro:Resources
+        for (pl.psnc.dl.wf4ever.model.RO.Resource resource : getResources().values()) {
+            try {
+                researchObject.copy(resource);
+            } catch (BadRequestException e) {
+                LOGGER.warn("Failed to copy the resource", e);
+            }
+        }
+        //copy the annotations
+        for (Annotation annotation : getAnnotations().values()) {
+            try {
+                researchObject.copy(annotation);
+            } catch (BadRequestException e) {
+                LOGGER.warn("Failed to copy the annotation", e);
+            }
+        }
+        //copy the folders
+        for (Folder folder : getFolders().values()) {
+            researchObject.copy(folder);
+        }
+        //TODO!!
+        //make me easier!
+        //            Annotation a = targetRO.getAnnotationsByBodyUri().get(targetRO.getEvoInfoBody().getUri()).iterator().next();
+        //            a.getBody().delete();
+        return researchObject;
+    }
+
+
+    /**
      * Generate and save the evolution information.
      */
     public void generateEvoInfo() {
