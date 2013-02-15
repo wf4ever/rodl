@@ -285,7 +285,7 @@ public class Thing {
      */
     public ResourceMetadata serialize(URI base, RDFFormat format)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        String filePath = base.relativize(uri).toString();
+        String filePath = base.relativize(uri).getPath();
         InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(uri, base, format);
         return DigitalLibraryFactory.getDigitalLibrary().createOrUpdateFile(base, filePath, dataStream,
             format.getDefaultMIMEType());
