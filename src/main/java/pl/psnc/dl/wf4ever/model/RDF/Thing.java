@@ -26,7 +26,9 @@ import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.Builder;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
+import pl.psnc.dl.wf4ever.sms.RO_RDFXMLWriter;
+import pl.psnc.dl.wf4ever.sms.RO_TurtleWriter;
+import pl.psnc.dl.wf4ever.sms.ResearchObjectRelativeWriter;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.FOAF;
@@ -286,7 +288,7 @@ public class Thing {
     public ResourceMetadata serialize(URI base, RDFFormat format)
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         String filePath = base.relativize(uri).getPath();
-        InputStream dataStream = ROSRService.SMS.get().getNamedGraphWithRelativeURIs(uri, base, format);
+        InputStream dataStream = getGraphAsInputStreamWithRelativeURIs(base, format);
         return DigitalLibraryFactory.getDigitalLibrary().createOrUpdateFile(base, filePath, dataStream,
             format.getDefaultMIMEType());
     }
@@ -359,6 +361,43 @@ public class Thing {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             result.removeNsPrefix("xml");
             result.write(out, syntax.getName().toUpperCase());
+            return new ByteArrayInputStream(out.toByteArray());
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    /**
+     * Return this resource as a named graph in a selected RDF format, with all URIs relativized against this resource's
+     * URI. Only RDF/XML and Turtle formats are supported.
+     * 
+     * @param filterUri
+     *            the URI used to determine which URIs will be relativized. Only URIs with the same host and paths
+     *            having the filter path as suffix will be relativized.
+     * @param syntax
+     *            RDF/XML or Turtle format
+     * @return an input stream or null of no model is found
+     */
+    public InputStream getGraphAsInputStreamWithRelativeURIs(URI filterUri, RDFFormat syntax) {
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            ResearchObjectRelativeWriter writer;
+            if (syntax != RDFFormat.RDFXML && syntax != RDFFormat.TURTLE) {
+                throw new IllegalArgumentException("Format " + syntax + " is not supported");
+            } else if (syntax == RDFFormat.RDFXML) {
+                writer = new RO_RDFXMLWriter();
+            } else {
+                writer = new RO_TurtleWriter();
+            }
+            if (model == null) {
+                return null;
+            }
+            writer.setResearchObjectURI(filterUri);
+            writer.setBaseURI(uri);
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            writer.write(model, out, null);
             return new ByteArrayInputStream(out.toByteArray());
         } finally {
             endTransaction(transactionStarted);

@@ -27,7 +27,6 @@ import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.sun.jersey.api.NotFoundException;
 
@@ -112,7 +111,7 @@ public class CopyResource implements JobsContainer {
 
         status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + id + "/"));
         int i = 1;
-        while (ROSRService.SMS.get().containsNamedGraph(status.getTarget().resolve(ResearchObject.MANIFEST_PATH))) {
+        while (ResearchObject.get(builder, status.getTarget()) != null) {
             status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + id + "-" + (i++) + "/"));
         }
 
