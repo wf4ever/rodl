@@ -1,9 +1,12 @@
 package pl.psnc.dl.wf4ever.model;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -20,8 +23,12 @@ import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
 import pl.psnc.dl.wf4ever.model.ROEVO.ArchiveResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.SnapshotResearchObject;
+import pl.psnc.dl.wf4ever.vocabulary.W4E;
 
 import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.ReadWrite;
+import com.hp.hpl.jena.tdb.TDB;
+import com.hp.hpl.jena.tdb.TDBFactory;
 
 /**
  * Builder in the builder design pattern. Used to build ROSR and EVO model instances.
@@ -31,6 +38,11 @@ import com.hp.hpl.jena.query.Dataset;
  */
 public class Builder {
 
+    /** Triple store location. */
+    protected static final String TRIPLE_STORE_DIR = getStoreDirectory("connection.properties");
+
+    /** Logger. */
+    private static final Logger LOGGER = Logger.getLogger(Builder.class);
     /** Jena dataset. */
     private final Dataset dataset;
 
@@ -39,6 +51,10 @@ public class Builder {
 
     /** Authenticated user. */
     private final UserMetadata user;
+
+    static {
+        init();
+    }
 
 
     /**
@@ -65,7 +81,37 @@ public class Builder {
      *            Authenticated user
      */
     public Builder(UserMetadata user) {
-        this(user, null, true);
+        this(user, TDBFactory.createDataset(TRIPLE_STORE_DIR), true);
+    }
+
+
+    /**
+     * Load the triple store location from the properties file. In case of any exceptions, log them and return null.
+     * 
+     * @param filename
+     *            properties file name
+     * @return the path to the triple store directory
+     */
+    private static String getStoreDirectory(String filename) {
+        try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(filename)) {
+            Properties props = new Properties();
+            props.load(is);
+            return props.getProperty("store.directory");
+
+        } catch (Exception e) {
+            LOGGER.error("Trple store location can not be loaded from the properties file", e);
+        }
+        return null;
+    }
+
+
+    /**
+     * Init .
+     * 
+     */
+    public static void init() {
+        TDB.getContext().set(TDB.symUnionDefaultGraph, true);
+        W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
     }
 
 
@@ -81,6 +127,67 @@ public class Builder {
 
     public UserMetadata getUser() {
         return user;
+    }
+
+
+    /**
+     * Start a TDB transaction provided that the flag useTransactions is set, the dataset supports transactions and
+     * there is no open transaction. According to TDB, many read or one write transactions are allowed.
+     * 
+     * @param mode
+     *            read or write
+     * @return true if a new transaction has been started, false otherwise
+     */
+    public boolean beginTransaction(ReadWrite mode) {
+        boolean started = false;
+        if (useTransactions && dataset.supportsTransactions() && !dataset.isInTransaction()) {
+            dataset.begin(mode);
+            started = true;
+        }
+        return started;
+    }
+
+
+    /**
+     * Commit the transaction provided that the flag useTransactions is set, the dataset supports transactions and the
+     * parameter is true.
+     * 
+     * @param wasStarted
+     *            a convenience parameter to specify if the transaction should be committed
+     */
+    public void commitTransaction(boolean wasStarted) {
+        if (useTransactions && dataset.supportsTransactions() && wasStarted) {
+            dataset.commit();
+        }
+    }
+
+
+    /**
+     * End the transaction provided that the flag useTransactions is set, the dataset supports transactions and the
+     * parameter is true.
+     * 
+     * @param wasStarted
+     *            a convenience parameter to specify if the transaction should be ended
+     */
+    public void endTransaction(boolean wasStarted) {
+        if (useTransactions && dataset.supportsTransactions() && wasStarted) {
+            TDB.sync(dataset);
+            dataset.end();
+        }
+    }
+
+
+    /**
+     * Abort the transaction provided that the flag useTransactions is set, the dataset supports transactions and the
+     * parameter is true.
+     * 
+     * @param wasStarted
+     *            a convenience parameter to specify if the transaction should be aborted
+     */
+    public void abortTransaction(boolean wasStarted) {
+        if (useTransactions && dataset.supportsTransactions() && wasStarted) {
+            dataset.abort();
+        }
     }
 
 

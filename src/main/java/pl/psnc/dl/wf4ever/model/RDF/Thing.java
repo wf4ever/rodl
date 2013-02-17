@@ -8,7 +8,6 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.ws.rs.core.UriBuilder;
@@ -33,7 +32,6 @@ import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.FOAF;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
-import pl.psnc.dl.wf4ever.vocabulary.W4E;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
@@ -85,9 +83,6 @@ public class Thing {
     /** Jena dataset. */
     protected Dataset dataset;
 
-    /** Triple store location. */
-    protected static final String TRIPLE_STORE_DIR = getStoreDirectory("connection.properties");
-
     /** Logger. */
     private static final Logger LOGGER = Logger.getLogger(SemanticMetadataServiceTdb.class);
 
@@ -99,10 +94,6 @@ public class Thing {
 
     /** builder creating the instance, which may be reused for loading other resources. */
     protected Builder builder;
-
-    static {
-        init();
-    }
 
 
     /**
@@ -147,16 +138,6 @@ public class Thing {
      */
     public Thing(UserMetadata user) {
         this(user, null, true, null);
-    }
-
-
-    /**
-     * Init .
-     * 
-     */
-    public static void init() {
-        TDB.getContext().set(TDB.symUnionDefaultGraph, true);
-        W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
     }
 
 
@@ -470,9 +451,6 @@ public class Thing {
      * @return true if a new transaction has been started, false otherwise
      */
     protected boolean beginTransaction(ReadWrite mode) {
-        if (dataset == null) {
-            dataset = TDBFactory.createDataset(TRIPLE_STORE_DIR);
-        }
         boolean started = false;
         if (useTransactions && dataset.supportsTransactions() && !dataset.isInTransaction()) {
             dataset.begin(mode);
@@ -532,26 +510,6 @@ public class Thing {
 
 
     // *****Private***** 
-
-    /**
-     * Load the triple store location from the properties file. In case of any exceptions, log them and return null.
-     * 
-     * @param filename
-     *            properties file name
-     * @return the path to the triple store directory
-     */
-    private static String getStoreDirectory(String filename) {
-        try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(filename)) {
-            Properties props = new Properties();
-            props.load(is);
-            return props.getProperty("store.directory");
-
-        } catch (Exception e) {
-            LOGGER.error("Trple store location can not be loaded from the properties file", e);
-        }
-        return null;
-    }
-
 
     /**
      * Add this model to a dataset and call this method recursively for all dependent models, unless they have already

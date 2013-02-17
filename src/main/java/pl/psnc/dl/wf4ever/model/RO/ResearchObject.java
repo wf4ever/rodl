@@ -59,7 +59,6 @@ import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.tdb.TDBFactory;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 
 /**
@@ -872,17 +871,7 @@ public class ResearchObject extends Thing implements Aggregation {
      * @return a set of research objects
      */
     public static Set<ResearchObject> getAll(Builder builder) {
-        Dataset dataset = builder.getDataset();
-        if (dataset == null) {
-            dataset = TDBFactory.createDataset(TRIPLE_STORE_DIR);
-        }
-        boolean transaction;
-        if (builder.isUseTransactions() && dataset.supportsTransactions() && !dataset.isInTransaction()) {
-            dataset.begin(ReadWrite.READ);
-            transaction = true;
-        } else {
-            transaction = false;
-        }
+        boolean wasStarted = builder.beginTransaction(ReadWrite.READ);
         try {
             Set<ResearchObject> ros = new HashSet<>();
             String queryString;
@@ -896,7 +885,8 @@ public class ResearchObject extends Thing implements Aggregation {
                             RO.NAMESPACE, DCTerms.NS, builder.getUser().getUri());
             }
             Query query = QueryFactory.create(queryString);
-            QueryExecution qe = QueryExecutionFactory.create(query, dataset.getNamedModel("urn:x-arq:UnionGraph"));
+            QueryExecution qe = QueryExecutionFactory.create(query,
+                builder.getDataset().getNamedModel("urn:x-arq:UnionGraph"));
             try {
                 ResultSet results = qe.execSelect();
                 while (results.hasNext()) {
@@ -910,9 +900,7 @@ public class ResearchObject extends Thing implements Aggregation {
             }
             return ros;
         } finally {
-            if (builder.isUseTransactions() && dataset.supportsTransactions() && transaction) {
-                dataset.end();
-            }
+            builder.endTransaction(wasStarted);
         }
     }
 
