@@ -16,9 +16,6 @@ public final class Constants {
     }
 
 
-    /** dLibra user request cycle key. */
-    public static final String USER = "User";
-
     /** HTTP Slug header. */
     public static final String SLUG_HEADER = "Slug";
 

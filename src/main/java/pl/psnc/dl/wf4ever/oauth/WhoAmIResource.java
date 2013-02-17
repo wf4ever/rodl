@@ -10,12 +10,13 @@ import javax.ws.rs.core.UriInfo;
 
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.AuthenticationException;
+import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.auth.SecurityFilter;
 import pl.psnc.dl.wf4ever.common.db.UserProfile;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
+import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
 
@@ -35,6 +36,10 @@ public class WhoAmIResource {
     /** URI info. */
     @Context
     UriInfo uriInfo;
+
+    /** Resource builder. */
+    @RequestAttribute("Builder")
+    private Builder builder;
 
 
     /**
@@ -80,7 +85,7 @@ public class WhoAmIResource {
      * @return 200 OK with user metadata serialized in RDF
      */
     private Response getUser(RDFFormat rdfFormat) {
-        UserMetadata user = (UserMetadata) request.getAttribute(Constants.USER);
+        UserMetadata user = builder.getUser();
         if (user.getRole() == Role.PUBLIC) {
             throw new AuthenticationException("Only authenticated users can use this resource", SecurityFilter.REALM);
         }

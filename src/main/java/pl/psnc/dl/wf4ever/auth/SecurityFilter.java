@@ -11,7 +11,6 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -56,7 +55,6 @@ public class SecurityFilter implements ContainerRequestFilter {
                 throw new NotFoundException("User profile not found");
             }
             ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(user));
-            httpRequest.setAttribute(Constants.USER, user);
             httpRequest.setAttribute("Builder", new Builder(user));
 
             //TODO in here should go access rights control, based on dLibra for example
