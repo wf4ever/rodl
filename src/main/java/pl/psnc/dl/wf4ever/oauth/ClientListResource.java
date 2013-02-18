@@ -22,7 +22,7 @@ import pl.psnc.dl.wf4ever.auth.OAuthClient;
 import pl.psnc.dl.wf4ever.auth.OAuthClientList;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.common.db.UserProfile;
-import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.model.Builder;
 
 /**
  * OAuth client list REST API resource.
@@ -41,9 +41,9 @@ public class ClientListResource {
     @Context
     private UriInfo uriInfo;
 
-    /** Authenticated user. */
-    @RequestAttribute("User")
-    private UserMetadata user;
+    /** Resource builder. */
+    @RequestAttribute("Builder")
+    private Builder builder;
 
 
     /**
@@ -54,7 +54,7 @@ public class ClientListResource {
     @GET
     @Produces("text/xml")
     public OAuthClientList getClientList() {
-        if (user.getRole() != UserProfile.Role.ADMIN) {
+        if (builder.getUser().getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
         }
         List<OAuthClient> list = OAuthClient.findAll();
@@ -73,7 +73,7 @@ public class ClientListResource {
     @Consumes("text/plain")
     @Produces("text/plain")
     public Response createClient(String data) {
-        if (user.getRole() != UserProfile.Role.ADMIN) {
+        if (builder.getUser().getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
         }
         String[] lines = data.split("[\\r\\n]+");

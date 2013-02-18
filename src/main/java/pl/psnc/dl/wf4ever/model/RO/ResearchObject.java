@@ -228,7 +228,8 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     public AggregatedResource getEvoInfoBody() {
         //HACK this should be added automatically
-        AggregatedResource resource = new AggregatedResource(user, this, getFixedEvolutionAnnotationBodyUri());
+        AggregatedResource resource = builder.buildAggregatedResource(getFixedEvolutionAnnotationBodyUri(), this, null,
+            null);
         resource.setStats(new ResourceMetadata(null, null, null, 0, null, null, RDFFormat.TURTLE.getDefaultMIMEType()));
         this.getAggregatedResources().put(getFixedEvolutionAnnotationBodyUri(), resource);
 

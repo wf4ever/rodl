@@ -532,7 +532,7 @@ public class Thing {
                 URI childURI = URI.create(namedModelRef.asResource().getURI());
                 if (dataset.containsNamedModel(childURI.toString())
                         && !tmpDataset.containsNamedModel(childURI.toString())) {
-                    Thing relatedModel = new Thing(user, childURI);
+                    Thing relatedModel = builder.buildThing(childURI);
                     relatedModel.addNamedModelsRecursively(tmpDataset);
                 }
             }

@@ -30,6 +30,7 @@ import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.common.db.UserProfile;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+import pl.psnc.dl.wf4ever.model.Builder;
 
 /**
  * REST API access tokens resource.
@@ -52,9 +53,9 @@ public class AccessTokenListResource {
     @Context
     private UriInfo uriInfo;
 
-    /** Authenticated user. */
-    @RequestAttribute("User")
-    private UserMetadata user;
+    /** Resource builder. */
+    @RequestAttribute("Builder")
+    private Builder builder;
 
 
     /**
@@ -70,7 +71,7 @@ public class AccessTokenListResource {
     @Produces("text/xml")
     public AccessTokenList getAccessTokenList(@QueryParam("client_id") String clientId,
             @QueryParam("user_id") String userId) {
-        if (user.getRole() != UserMetadata.Role.ADMIN) {
+        if (builder.getUser().getRole() != UserMetadata.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
         }
         if (userId != null) {
@@ -98,7 +99,7 @@ public class AccessTokenListResource {
     @Produces("text/plain")
     public Response createAccessToken(String data)
             throws BadRequestException {
-        if (user.getRole() != UserProfile.Role.ADMIN) {
+        if (builder.getUser().getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
         }
         String[] lines = data.split("[\\r\\n]+");
