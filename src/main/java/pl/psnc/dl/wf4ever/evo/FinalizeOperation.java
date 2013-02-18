@@ -1,5 +1,8 @@
 package pl.psnc.dl.wf4ever.evo;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.RodlException;
@@ -62,13 +65,12 @@ public class FinalizeOperation implements Operation {
             if (researchObject == null) {
                 throw new NotFoundException("Research Object not found " + status.getTarget());
             }
-            Annotation annotation = researchObject.getAnnotationsByBodyUri()
-                    .get(researchObject.getFixedEvolutionAnnotationBodyUri()).iterator().next();
-            //FIXME this should always be included
-            if (researchObject.getAggregatedResources().containsKey(annotation.getBody().getUri())) {
-                researchObject.getAggregatedResources().get(annotation.getBody().getUri()).delete();
+            Set<Annotation> evoAnnotations = new HashSet<>(researchObject.getAnnotationsByBodyUri().get(
+                researchObject.getEvoInfoBody().getUri()));
+            for (Annotation a : evoAnnotations) {
+                a.delete();
             }
-            annotation.delete();
+            researchObject.getEvoInfoBody().delete();
             researchObject.generateEvoInfo();
         } catch (RodlException e) {
             throw new OperationFailedException("Could not generate evo info", e);

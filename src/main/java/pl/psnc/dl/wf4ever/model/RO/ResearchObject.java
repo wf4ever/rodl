@@ -201,10 +201,6 @@ public class ResearchObject extends Thing implements Aggregation {
         for (Folder folder : getFolders().values()) {
             researchObject.copy(folder);
         }
-        //TODO!!
-        //make me easier!
-        //            Annotation a = targetRO.getAnnotationsByBodyUri().get(targetRO.getEvoInfoBody().getUri()).iterator().next();
-        //            a.getBody().delete();
         return researchObject;
     }
 
