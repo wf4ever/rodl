@@ -13,7 +13,8 @@ import javax.ws.rs.core.Response.Status;
 
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
+import pl.psnc.dl.wf4ever.auth.RequestAttribute;
+import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 
@@ -28,6 +29,11 @@ import com.sun.jersey.multipart.FormDataParam;
  */
 @Path(("sparql/"))
 public class SparqlResource {
+
+    /** Resource builder. */
+    @RequestAttribute("Builder")
+    private Builder builder;
+
 
     /**
      * Execute a SPARQL query and return an XML response.
@@ -215,8 +221,9 @@ public class SparqlResource {
      * @return 200 OK or 400 Bad Request
      */
     private Response executeSparql(String query, RDFFormat inFormat) {
+        SparqlEngine engine = new SparqlEngine(builder);
         try {
-            QueryResult queryResult = ROSRService.SMS.get().executeSparql(query, inFormat);
+            QueryResult queryResult = engine.executeSparql(query, inFormat);
             RDFFormat outFormat = queryResult.getFormat();
             ContentDisposition cd = ContentDisposition.type(outFormat.getDefaultMIMEType())
                     .fileName("result." + outFormat.getDefaultFileExtension()).build();

@@ -30,12 +30,12 @@
     dct:creator [ a foaf:Person; foaf:name "Stian Soiland-Reyes" ] .
 
 :ann1 a ro:AggregatedAnnotation ;
-    ao:body <.ro/ann1> ;
+    ao:body <.ro/annotationBody.ttl> ;
     ro:annotatesAggregatedResource <a%20workflow.t2flow> ;
     dct:created "2011-12-02T15:02:13Z"^^xsd:dateTime ;
     dct:creator [ a foaf:Agent ; foaf:name "t2flow workflow annotation extractor" ] .
 
-<.ro/ann1> a rdfg:Graph ;
+<.ro/annotationBody.ttl> a rdfg:Graph ;
     dct:created "2010-05-14T12:02:12Z"^^xsd:dateTime ;
     dct:creator [ a foaf:Person ; foaf:name "Marco Roos" ] .
         

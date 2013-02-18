@@ -58,8 +58,6 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.query.ResultSetFormatter;
-import com.hp.hpl.jena.query.Syntax;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -95,9 +93,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     private final UserMetadata user;
 
     private boolean useTransactions;
-
-    /** SPARQL query syntax. */
-    private static final Syntax SPARQL_SYNTAX = Syntax.syntaxARQ;
 
 
     public SemanticMetadataServiceTdb(UserMetadata user, boolean useDb)
@@ -716,90 +711,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         } finally {
             endTransaction(transactionStarted);
         }
-    }
-
-
-    @Override
-    public QueryResult executeSparql(String queryS, RDFFormat rdfFormat) {
-        boolean transactionStarted = beginTransaction(ReadWrite.READ);
-        try {
-            if (queryS == null) {
-                throw new NullPointerException("Query cannot be null");
-            }
-            Query query = null;
-            try {
-                query = QueryFactory.create(queryS, SPARQL_SYNTAX);
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Wrong query syntax: " + e.getMessage());
-            }
-
-            switch (query.getQueryType()) {
-                case Query.QueryTypeSelect:
-                    return processSelectQuery(query, rdfFormat);
-                case Query.QueryTypeConstruct:
-                    return processConstructQuery(query, rdfFormat);
-                case Query.QueryTypeDescribe:
-                    return processDescribeQuery(query, rdfFormat);
-                case Query.QueryTypeAsk:
-                    return processAskQuery(query, rdfFormat);
-                default:
-                    return null;
-            }
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    private QueryResult processSelectQuery(Query query, RDFFormat rdfFormat) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        RDFFormat outputFormat;
-        QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
-        if (SemanticMetadataService.SPARQL_JSON.equals(rdfFormat)) {
-            outputFormat = SemanticMetadataService.SPARQL_JSON;
-            ResultSetFormatter.outputAsJSON(out, qexec.execSelect());
-        } else {
-            outputFormat = SemanticMetadataService.SPARQL_XML;
-            ResultSetFormatter.outputAsXML(out, qexec.execSelect());
-        }
-        qexec.close();
-
-        return new QueryResult(new ByteArrayInputStream(out.toByteArray()), outputFormat);
-    }
-
-
-    private QueryResult processAskQuery(Query query, RDFFormat rdfFormat) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        RDFFormat outputFormat;
-        QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
-        if ("application/sparql-results+json".equals(rdfFormat.getDefaultMIMEType())) {
-            outputFormat = SemanticMetadataService.SPARQL_JSON;
-            ResultSetFormatter.outputAsJSON(out, qexec.execAsk());
-        } else {
-            outputFormat = SemanticMetadataService.SPARQL_XML;
-            ResultSetFormatter.outputAsXML(out, qexec.execAsk());
-        }
-        qexec.close();
-
-        return new QueryResult(new ByteArrayInputStream(out.toByteArray()), outputFormat);
-    }
-
-
-    private QueryResult processConstructQuery(Query query, RDFFormat rdfFormat) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
-        Model resultModel = qexec.execConstruct();
-        qexec.close();
-
-        RDFFormat outputFormat;
-        if (RDFFormat.values().contains(rdfFormat)) {
-            outputFormat = rdfFormat;
-        } else {
-            outputFormat = RDFFormat.RDFXML;
-        }
-
-        resultModel.write(out, outputFormat.getName().toUpperCase());
-        return new QueryResult(new ByteArrayInputStream(out.toByteArray()), outputFormat);
     }
 
 

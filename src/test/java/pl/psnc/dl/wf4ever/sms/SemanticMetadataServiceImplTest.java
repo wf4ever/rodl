@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +14,6 @@ import java.util.Set;
 
 import javax.naming.NamingException;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
@@ -442,64 +440,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         test.sms.removeNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH));
         Assert.assertNull("A deleted named graph no longer exists",
             test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), RDFFormat.RDFXML));
-    }
-
-
-    @Test
-    public final void testExecuteSparql()
-            throws IOException {
-        String describeQuery = String.format("DESCRIBE <%s>", test.annotatedRO.getUri().resolve(WORKFLOW_PATH)
-                .toString());
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        QueryResult res = test.sms.executeSparql(describeQuery, RDFFormat.RDFXML);
-        model.read(res.getInputStream(), null, "RDF/XML");
-        Individual resource = model.getIndividual(test.annotatedRO.getUri().resolve(WORKFLOW_PATH).toString());
-        Assert.assertNotNull("Resource cannot be null", resource);
-        Assert.assertTrue(
-            String.format("Resource %s must be a ro:Resource", test.annotatedRO.getUri().resolve(WORKFLOW_PATH)),
-            resource.hasRDFType(RO.NAMESPACE + "Resource"));
-
-        InputStream is = getClass().getClassLoader().getResourceAsStream("sparql/direct-annotations-construct.sparql");
-        String constructQuery = IOUtils.toString(is, "UTF-8");
-        model.removeAll();
-        model.read(test.sms.executeSparql(constructQuery, RDFFormat.RDFXML).getInputStream(), null, "RDF/XML");
-        Assert.assertTrue("Construct contains triple 1", model.contains(
-            model.createResource(test.annotatedRO.getUri().resolve(WORKFLOW_PATH).toString()), DCTerms.title, "A test"));
-        Assert.assertTrue("Construct contains triple 2", model.contains(
-            model.createResource(test.annotatedRO.getUri().resolve(WORKFLOW_PATH).toString()), DCTerms.license, "GPL"));
-
-        is = getClass().getClassLoader().getResourceAsStream("sparql/direct-annotations-select.sparql");
-        String selectQuery = IOUtils.toString(is, "UTF-8");
-        String xml = IOUtils.toString(test.sms.executeSparql(selectQuery, SemanticMetadataService.SPARQL_XML)
-                .getInputStream(), "UTF-8");
-        // FIXME make more in-depth XML validation
-        Assert.assertTrue("XML looks correct", xml.contains("Marco Roos"));
-
-        String json = IOUtils.toString(test.sms.executeSparql(selectQuery, SemanticMetadataService.SPARQL_JSON)
-                .getInputStream(), "UTF-8");
-        // FIXME make more in-depth JSON validation
-        Assert.assertTrue("JSON looks correct", json.contains("Marco Roos"));
-
-        is = getClass().getClassLoader().getResourceAsStream("sparql/direct-annotations-ask-true.sparql");
-        String askTrueQuery = IOUtils.toString(is, "UTF-8");
-        xml = IOUtils.toString(test.sms.executeSparql(askTrueQuery, SemanticMetadataService.SPARQL_XML)
-                .getInputStream(), "UTF-8");
-        Assert.assertTrue("XML looks correct", xml.contains("true"));
-        is = getClass().getClassLoader().getResourceAsStream("sparql/direct-annotations-ask-false.sparql");
-        String askFalseQuery = IOUtils.toString(is, "UTF-8");
-        xml = IOUtils.toString(test.sms.executeSparql(askFalseQuery, SemanticMetadataService.SPARQL_XML)
-                .getInputStream(), "UTF-8");
-        Assert.assertTrue("XML looks correct", xml.contains("false"));
-
-        RDFFormat jpeg = new RDFFormat("JPEG", "image/jpeg", Charset.forName("UTF-8"), "jpeg", false, false);
-        res = test.sms.executeSparql(describeQuery, jpeg);
-        Assert.assertEquals("RDF/XML is the default format", RDFFormat.RDFXML, res.getFormat());
-        res = test.sms.executeSparql(constructQuery, jpeg);
-        Assert.assertEquals("RDF/XML is the default format", RDFFormat.RDFXML, res.getFormat());
-        res = test.sms.executeSparql(selectQuery, jpeg);
-        Assert.assertEquals("SPARQL XML is the default format", SemanticMetadataService.SPARQL_XML, res.getFormat());
-        res = test.sms.executeSparql(askTrueQuery, jpeg);
-        Assert.assertEquals("SPARQL XML is the default format", SemanticMetadataService.SPARQL_XML, res.getFormat());
     }
 
 
