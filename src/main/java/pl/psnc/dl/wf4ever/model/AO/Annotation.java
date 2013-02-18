@@ -16,6 +16,7 @@ import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -196,11 +197,13 @@ public class Annotation extends AggregatedResource {
      * 
      * @param builder
      *            model instances builder
+     * @param evoBuilder
+     *            builder of evolution properties
      * @param researchObject
      *            research object aggregating the RO
      * @return the new annotation
      */
-    public Annotation copy(Builder builder, ResearchObject researchObject) {
+    public Annotation copy(Builder builder, EvoBuilder evoBuilder, ResearchObject researchObject) {
         URI annotationUri = researchObject.getUri().resolve(getPath());
         if (researchObject.isUriUsed(annotationUri)) {
             throw new ConflictException("Resource already exists: " + annotationUri);
@@ -217,7 +220,7 @@ public class Annotation extends AggregatedResource {
             body2 = researchObject.getAggregatedResources().get(bodyUri);
         } else if (aggregatedBody != null) {
             try {
-                body2 = researchObject.copy(aggregatedBody);
+                body2 = researchObject.copy(aggregatedBody, evoBuilder);
             } catch (BadRequestException e) {
                 // impossible, this was an annotation body so it must be ok
                 LOGGER.error("The annotation body is incorrect", e);
@@ -244,6 +247,8 @@ public class Annotation extends AggregatedResource {
         }
         Annotation annotation2 = builder.buildAnnotation(researchObject, annotationUri, body2, targets, getCreator(),
             getCreated());
+        evoBuilder.setFrozenAt(annotation2, DateTime.now());
+        evoBuilder.setFrozenBy(annotation2, builder.getUser());
         annotation2.setProxy(Proxy.create(builder, researchObject, annotation2));
         annotation2.save();
         return annotation2;

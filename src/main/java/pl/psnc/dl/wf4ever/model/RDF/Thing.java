@@ -95,6 +95,18 @@ public class Thing {
     /** builder creating the instance, which may be reused for loading other resources. */
     protected Builder builder;
 
+    /** Snapshotting date (if this resource has been shapshotted). */
+    protected DateTime snapshottedAt;
+
+    /** Archival date (if this resource has been archived). */
+    protected DateTime archivedAt;
+
+    /** User snapshotting this resource (if this resource has been shapshotted). */
+    protected UserMetadata snapshottedBy;
+
+    /** User archiving this resource (if this resource has been archived). */
+    protected UserMetadata archivedBy;
+
 
     /**
      * Constructor that allows to specify a custom dataset.
@@ -646,6 +658,46 @@ public class Thing {
             return true;
         }
         return false;
+    }
+
+
+    public DateTime getSnapshottedAt() {
+        return snapshottedAt;
+    }
+
+
+    public void setSnapshottedAt(DateTime snapshottedAt) {
+        this.snapshottedAt = snapshottedAt;
+    }
+
+
+    public DateTime getArchivedAt() {
+        return archivedAt;
+    }
+
+
+    public void setArchivedAt(DateTime archivedAt) {
+        this.archivedAt = archivedAt;
+    }
+
+
+    public UserMetadata getSnapshottedBy() {
+        return snapshottedBy;
+    }
+
+
+    public void setSnapshottedBy(UserMetadata snapshottedBy) {
+        this.snapshottedBy = snapshottedBy;
+    }
+
+
+    public UserMetadata getArchivedBy() {
+        return archivedBy;
+    }
+
+
+    public void setArchivedBy(UserMetadata archivedBy) {
+        this.archivedBy = archivedBy;
     }
 
 

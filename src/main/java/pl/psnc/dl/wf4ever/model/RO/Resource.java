@@ -9,6 +9,7 @@ import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 
@@ -114,19 +115,23 @@ public class Resource extends AggregatedResource {
      * 
      * @param builder
      *            model instance builder
+     * @param evoBuilder
+     *            builder of evolution properties
      * @param researchObject
      *            research object that aggregates the resource
      * @return the new resource
      * @throws BadRequestException
      *             if it is expected to be an RDF file and isn't
      */
-    public Resource copy(Builder builder, ResearchObject researchObject)
+    public Resource copy(Builder builder, EvoBuilder evoBuilder, ResearchObject researchObject)
             throws BadRequestException {
         URI resourceUri = researchObject.getUri().resolve(getPath());
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
         Resource resource2 = builder.buildResource(researchObject, resourceUri, getCreator(), getCreated());
+        evoBuilder.setFrozenAt(resource2, DateTime.now());
+        evoBuilder.setFrozenBy(resource2, builder.getUser());
         resource2.setProxy(Proxy.create(builder, researchObject, resource2));
         if (isInternal()) {
             resource2.save(getSerialization(), getStats().getMimeType());

@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
@@ -22,6 +23,7 @@ import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -97,25 +99,27 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
      * 
      * @param builder
      *            model instance builder
+     * @param evoBuilder
+     *            builder of evolution properties
      * @param researchObject
      *            research object that aggregates the resource
-     * @param resource
-     *            the resource to copy
      * @return the new resource
      * @throws BadRequestException
      *             if it is expected to be an RDF file and isn't
      */
-    public static AggregatedResource copy(Builder builder, ResearchObject researchObject, AggregatedResource resource)
+    public AggregatedResource copy(Builder builder, EvoBuilder evoBuilder, ResearchObject researchObject)
             throws BadRequestException {
-        URI resourceUri = researchObject.getUri().resolve(resource.getPath());
+        URI resourceUri = researchObject.getUri().resolve(getPath());
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
-        AggregatedResource resource2 = builder.buildAggregatedResource(resourceUri, researchObject,
-            resource.getCreator(), resource.getCreated());
+        AggregatedResource resource2 = builder.buildAggregatedResource(resourceUri, researchObject, getCreator(),
+            getCreated());
+        evoBuilder.setFrozenAt(resource2, DateTime.now());
+        evoBuilder.setFrozenBy(resource2, builder.getUser());
         resource2.setProxy(Proxy.create(builder, researchObject, resource2));
-        if (resource.isInternal()) {
-            resource2.save(resource.getSerialization(), resource.getStats().getMimeType());
+        if (isInternal()) {
+            resource2.save(getSerialization(), getStats().getMimeType());
         } else {
             resource2.save();
         }

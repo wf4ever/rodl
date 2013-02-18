@@ -37,6 +37,7 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Aggregation;
@@ -172,19 +173,23 @@ public class ResearchObject extends Thing implements Aggregation {
      * 
      * @param uri
      *            URI of the copy
+     * @param evoBuilder
+     *            builder of evolution properties
      * @return the new research object
      */
-    public ResearchObject copy(URI uri) {
+    public ResearchObject copy(URI uri, EvoBuilder evoBuilder) {
         if (get(builder, uri) != null) {
             throw new ConflictException("Research Object already exists: " + uri);
         }
         ResearchObject researchObject = builder.buildResearchObject(uri, getCreator(), getCreated());
+        evoBuilder.setFrozenAt(researchObject, DateTime.now());
+        evoBuilder.setFrozenBy(researchObject, builder.getUser());
         researchObject.manifest = getManifest().copy(builder, researchObject);
         researchObject.save();
         // copy the ro:Resources
         for (pl.psnc.dl.wf4ever.model.RO.Resource resource : getResources().values()) {
             try {
-                researchObject.copy(resource);
+                researchObject.copy(resource, evoBuilder);
             } catch (BadRequestException e) {
                 LOGGER.warn("Failed to copy the resource", e);
             }
@@ -192,14 +197,14 @@ public class ResearchObject extends Thing implements Aggregation {
         //copy the annotations
         for (Annotation annotation : getAnnotations().values()) {
             try {
-                researchObject.copy(annotation);
+                researchObject.copy(annotation, evoBuilder);
             } catch (BadRequestException e) {
                 LOGGER.warn("Failed to copy the annotation", e);
             }
         }
         //copy the folders
         for (Folder folder : getFolders().values()) {
-            researchObject.copy(folder);
+            researchObject.copy(folder, evoBuilder);
         }
         return researchObject;
     }
@@ -350,13 +355,15 @@ public class ResearchObject extends Thing implements Aggregation {
      * 
      * @param resource
      *            the resource to copy
+     * @param evoBuilder
+     *            builder of evolution properties
      * @return the new resource
      * @throws BadRequestException
      *             if it should be an annotation body according to an existing annotation and it's the wrong format
      */
-    public Resource copy(Resource resource)
+    public Resource copy(Resource resource, EvoBuilder evoBuilder)
             throws BadRequestException {
-        Resource resource2 = resource.copy(builder, this);
+        Resource resource2 = resource.copy(builder, evoBuilder, this);
         if (getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
             resource2.saveGraphAndSerialize();
         }
@@ -374,13 +381,15 @@ public class ResearchObject extends Thing implements Aggregation {
      * 
      * @param resource
      *            the resource to copy
+     * @param evoBuilder
+     *            builder of evolution properties
      * @return the new resource
      * @throws BadRequestException
      *             if it should be an annotation body according to an existing annotation and it's the wrong format
      */
-    public AggregatedResource copy(AggregatedResource resource)
+    public AggregatedResource copy(AggregatedResource resource, EvoBuilder evoBuilder)
             throws BadRequestException {
-        AggregatedResource resource2 = AggregatedResource.copy(builder, this, resource);
+        AggregatedResource resource2 = resource.copy(builder, evoBuilder, this);
         if (getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
             resource2.saveGraphAndSerialize();
         }
@@ -419,10 +428,12 @@ public class ResearchObject extends Thing implements Aggregation {
      * 
      * @param folder
      *            folder to copy
+     * @param evoBuilder
+     *            builder of evolution properties
      * @return the new folder
      */
-    public Folder copy(Folder folder) {
-        Folder folder2 = folder.copy(builder, this);
+    public Folder copy(Folder folder, EvoBuilder evoBuilder) {
+        Folder folder2 = folder.copy(builder, evoBuilder, this);
         getManifest().serialize();
         this.getFolders().put(folder2.getUri(), folder2);
         this.getAggregatedResources().put(folder2.getUri(), folder2);
@@ -493,13 +504,15 @@ public class ResearchObject extends Thing implements Aggregation {
      * 
      * @param annotation
      *            the annotation to copy
+     * @param evoBuilder
+     *            builder of evolution properties
      * @return the new annotation
      * @throws BadRequestException
      *             if there is no data in storage or the file format is not RDF
      */
-    public Annotation copy(Annotation annotation)
+    public Annotation copy(Annotation annotation, EvoBuilder evoBuilder)
             throws BadRequestException {
-        Annotation annotation2 = annotation.copy(builder, this);
+        Annotation annotation2 = annotation.copy(builder, evoBuilder, this);
         return postAnnotate(annotation2);
     }
 

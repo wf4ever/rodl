@@ -16,6 +16,7 @@ import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Aggregation;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
@@ -319,16 +320,20 @@ public class Folder extends Resource implements Aggregation {
      * 
      * @param builder
      *            model instance builder
+     * @param evoBuilder
+     *            builder of evolution properties
      * @param researchObject
      *            research object for which the folder will be created
      * @return the new folder
      */
-    public Folder copy(Builder builder, ResearchObject researchObject) {
+    public Folder copy(Builder builder, EvoBuilder evoBuilder, ResearchObject researchObject) {
         URI folderUri = researchObject.getUri().resolve(getPath());
         if (researchObject.isUriUsed(folderUri)) {
             throw new ConflictException("Resource already exists: " + folderUri);
         }
         Folder folder2 = builder.buildFolder(researchObject, folderUri, getCreator(), getCreated());
+        evoBuilder.setFrozenAt(folder2, DateTime.now());
+        evoBuilder.setFrozenBy(folder2, builder.getUser());
         folder2.setProxy(Proxy.create(builder, researchObject, folder2));
         folder2.save();
         for (FolderEntry entry : getFolderEntries().values()) {
