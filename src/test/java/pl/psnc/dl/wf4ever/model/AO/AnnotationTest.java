@@ -41,15 +41,11 @@ public class AnnotationTest extends BaseTest {
 
     @Test
     public void testAnnotation() {
-        Annotation annotation = new Annotation(userProfile, dataset, useTransactions, ro, annotationUri);
-        Assert.assertEquals(annotation.getResearchObject(), ro);
-        Assert.assertEquals(annotation.getUri(), annotationUri);
-
         Thing body = new Thing(userProfile, URI.create("http://www.example.com/body/"));
         Set<Thing> annotated = new HashSet<Thing>();
         annotated.add(ro.getManifest());
 
-        annotation = new Annotation(userProfile, ro, annotationUri, body, annotated);
+        Annotation annotation = new Annotation(userProfile, ro, annotationUri, body, annotated);
         Assert.assertEquals(annotation.getUri(), annotationUri);
         Assert.assertEquals(annotation.getBody(), body);
         Assert.assertEquals(annotation.getAnnotated(), annotated);

@@ -1,16 +1,20 @@
 package pl.psnc.dl.wf4ever.model;
 
+import java.net.URI;
+
+import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.ConflictException;
-import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 
 import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.tdb.TDBFactory;
+import com.hp.hpl.jena.util.FileManager;
 
 /**
  * Base test class for model package.
@@ -18,83 +22,114 @@ import com.hp.hpl.jena.tdb.TDBFactory;
  */
 public class BaseTest {
 
-    /** Temporary dataset. */
+    /** Temporary in-memory dataset. */
     protected Dataset dataset;
-    protected Boolean useTransactions;
+
+    /** Test user. */
     protected static UserMetadata userProfile;
+
+    /** Builder using the temporary dataset and the test user. */
     protected Builder builder;
+
+    /** RO URI as String, mapped using location-mapping.n3 to a local file. */
+    protected static final String RESEARCH_OBJECT = "http://example.org/mess-ro/";
+
+    /** Manifest URI as String, mapped. */
+    protected static final String MANIFEST = "http://example.org/mess-ro/.ro/manifest.ttl";
+
+    /** Annotation body URI as String, mapped. */
+    protected static final String ANNOTATION_BODY = "http://example.org/mess-ro/.ro/annotationBody.ttl";
+
+    /** Resource URI as String, mapped. */
+    protected static final String RESOURCE1 = "http://example.org/mess-ro/a%20workflow.t2flow";
+
+    /** Resource URI as String, mapped. */
+    protected static final String RESOURCE2 = "http://workflows.org/a%20workflow.scufl";
 
 
     /**
-     * Constructor.
+     * Create the dataset, load the RDF files.
      */
-    public BaseTest() {
+    @Before
+    public void setUp() {
         dataset = TDBFactory.createDataset();
+        Model model;
+        model = FileManager.get().loadModel(MANIFEST, MANIFEST, "TURTLE");
+        dataset.addNamedModel(MANIFEST, model);
+        model = FileManager.get().loadModel(ANNOTATION_BODY, ANNOTATION_BODY, "TURTLE");
+        dataset.addNamedModel(ANNOTATION_BODY, model);
+
         userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED);
-        useTransactions = false;
         builder = new Builder(userProfile, dataset, false);
     }
 
 
-    @Before
-    public void setUp()
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
-    }
-    //try to throw it out!
-    /*
-    protected boolean addNamedGraph(URI graphURI, InputStream inputStream, RDFFormat rdfFormat) {
-        boolean created = !containsNamedGraph(graphURI);
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            Model namedGraphModel = createOntModelForNamedGraph(graphURI);
-            namedGraphModel.removeAll();
-            namedGraphModel.read(inputStream, graphURI.resolve(".").toString(), rdfFormat.getName().toUpperCase());
-            commitTransaction(transactionStarted);
-            return created;
-        } finally {
-            endTransaction(transactionStarted);
-        }
+    /**
+     * Close the dataset.
+     */
+    @After
+    public void tearDown() {
+        builder.getDataset().close();
     }
 
 
-    private OntModel createOntModelForNamedGraph(URI namedGraphURI) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM,
-            dataset.getNamedModel(namedGraphURI.toString()));
-        return ontModel;
+    /**
+     * Check if the model contains a triple.
+     * 
+     * @param model
+     *            model that should contain the triple
+     * @param subjectURI
+     *            triple subject
+     * @param propertyURI
+     *            triple property
+     * @param object
+     *            triple object (a literal)
+     */
+    protected void verifyTriple(Model model, URI subjectURI, URI propertyURI, String object) {
+        Resource subject = model.createResource(subjectURI.toString());
+        Property property = model.createProperty(propertyURI.toString());
+        Assert.assertTrue(String.format("Annotation body must contain a triple <%s> <%s> <%s>", subject.getURI(),
+            property.getURI(), object), model.contains(subject, property, object));
     }
 
 
-    protected boolean beginTransaction(ReadWrite write) {
-        if (useTransactions && dataset.supportsTransactions() && !dataset.isInTransaction()) {
-            dataset.begin(write);
-            return true;
-        } else {
-            return false;
-        }
+    /**
+     * Check if the model contains a triple.
+     * 
+     * @param model
+     *            model that should contain the triple
+     * @param subjectURI
+     *            triple subject as String
+     * @param propertyURI
+     *            triple property
+     * @param object
+     *            triple object (a literal)
+     */
+    protected void verifyTriple(Model model, String subjectURI, URI propertyURI, String object) {
+        Resource subject = model.createResource(subjectURI);
+        Property property = model.createProperty(propertyURI.toString());
+        Assert.assertTrue(String.format("Annotation body must contain a triple <%s> <%s> <%s>", subject.getURI(),
+            property.getURI(), object), model.contains(subject, property, object));
     }
 
 
-    protected void commitTransaction(boolean wasStarted) {
-        if (useTransactions && dataset.supportsTransactions() && wasStarted) {
-            dataset.commit();
-        }
+    /**
+     * Check if the model contains a triple.
+     * 
+     * @param model
+     *            model that should contain the triple
+     * @param subjectURI
+     *            triple subject as String
+     * @param propertyURI
+     *            triple property
+     * @param object
+     *            triple object (a resource)
+     */
+    protected void verifyTriple(Model model, String subjectURI, URI propertyURI, Resource object) {
+        Resource subject = model.createResource(subjectURI);
+        Property property = model.createProperty(propertyURI.toString());
+        Assert.assertTrue(String.format("Annotation body must contain a triple <%s> <%s> <%s>", subject.getURI(),
+            property.getURI(), object), model.contains(subject, property, object));
     }
 
-
-    protected void endTransaction(boolean wasStarted) {
-        if (useTransactions && dataset.supportsTransactions() && wasStarted) {
-            dataset.end();
-        }
-    }
-
-
-    public boolean containsNamedGraph(URI graphURI) {
-        boolean transactionStarted = beginTransaction(ReadWrite.READ);
-        try {
-            return dataset.containsNamedModel(SafeURI.URItoString(graphURI));
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-    */
 }

@@ -33,7 +33,6 @@ import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.datatypes.xsd.XSDDateTime;
-import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -47,10 +46,6 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.vocabulary.DCTerms;
-
-import de.fuberlin.wiwiss.ng4j.NamedGraphSet;
-import de.fuberlin.wiwiss.ng4j.Quad;
-import de.fuberlin.wiwiss.ng4j.impl.NamedGraphSetImpl;
 
 /**
  * Test Class for SementicMetadaService.
@@ -223,28 +218,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public final void testGetManifestWithAnnotationBodiesWhenManifestDoesNotExists() {
         Assert.assertNull("Returns null when manifest does not exist", test.sms.getManifest(new ResearchObject(
                 userProfile, URI.create("http://example.org/null/")), RDFFormat.TRIG));
-    }
-
-
-    /**
-     * Test method for
-     * {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#getManifest(java.net.URI, org.openrdf.rio.RDFFormat)} .
-     */
-    @Test
-    public final void testGetManifestWithAnnotationBodies() {
-
-        NamedGraphSet graphset = new NamedGraphSetImpl();
-        graphset.read(test.sms.getManifest(test.annotatedRO, RDFFormat.TRIG), "TRIG", null);
-
-        Quad sampleAgg = new Quad(Node.createURI(test.annotatedRO.getManifestUri().toString()),
-                Node.createURI(test.annotatedRO.getUri().toString()), Node.createURI(ORE.aggregates.getURI()),
-                Node.createURI(test.annotatedRO.getUri().resolve(WORKFLOW_PATH).toString()));
-        Assert.assertTrue("Contains a sample aggregation", graphset.containsQuad(sampleAgg));
-
-        Quad sampleAnn = new Quad(Node.createURI(test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH).toString()),
-                Node.createURI(test.annotatedRO.getUri().resolve(WORKFLOW_PATH).toString()),
-                Node.createURI("http://purl.org/dc/terms/license"), Node.createLiteral("GPL"));
-        Assert.assertTrue("Contains a sample annotation", graphset.containsQuad(sampleAnn));
     }
 
 
@@ -463,21 +436,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     }
 
 
-    @Test
-    public void testGetNamedGraphWithRelativeURIs() {
-
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(test.sms.getNamedGraphWithRelativeURIs(test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH),
-            test.annotatedRO.getUri(), RDFFormat.RDFXML), "", "RDF/XML");
-        //FIXME this does not work correctly, for some reason ".." is stripped when reading the model
-        verifyTriple(model, /* "../a_workflow.t2flow" */"a%20workflow.t2flow",
-            URI.create("http://purl.org/dc/terms/title"), "A test");
-        verifyTriple(model, URI.create(WORKFLOW_PATH), URI.create(DCTerms.license.getURI()), "GPL");
-        verifyTriple(model, URI.create(WORKFLOW_ORG_WORFLOW_SCUF_PATH), URI.create(DCTerms.description.getURI()),
-            "Something interesting");
-        verifyTriple(model, /* "../a_workflow.t2flow#somePartOfIt" */"a%20workflow.t2flow#somePartOfIt",
-            URI.create(DCTerms.description.getURI()), "The key part");
-    }
 
 
     @Test

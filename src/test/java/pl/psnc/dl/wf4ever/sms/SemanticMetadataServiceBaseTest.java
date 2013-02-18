@@ -51,7 +51,7 @@ public class SemanticMetadataServiceBaseTest {
     protected final static String WORKFLOW_PATH_2 = "runme.t2flow";
     protected final static String FAKE_PATH = "fake";
     protected final static String FOLDER_PATH = "afolder/";
-    protected final static String ANNOTATION_BODY_PATH = ".ro/ann1";
+    protected final static String ANNOTATION_BODY_PATH = ".ro/annotationBody.ttl";
     protected final static String ANNOTATION_PATH = "ann1";
     protected final static String EVO_ANNOTATION = "evo_info";
 

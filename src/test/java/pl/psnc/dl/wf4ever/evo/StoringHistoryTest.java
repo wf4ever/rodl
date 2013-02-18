@@ -5,9 +5,12 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.net.URI;
 
+import junit.framework.Assert;
+
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.common.db.EvoType;
+import pl.psnc.dl.wf4ever.evo.Job.State;
 
 public class StoringHistoryTest extends EvoTest {
 
@@ -42,6 +45,7 @@ public class StoringHistoryTest extends EvoTest {
         JobStatus sp1Status = new JobStatus(ro, EvoType.SNAPSHOT, true);
         URI copyJob = createCopyJob(sp1Status, null).getLocation();
         sp1Status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
+        Assert.assertEquals(State.DONE, sp1Status.getState());
 
         addFile(ro, newResourceFile, accessToken);
         removeFile(ro, oldResourceFile, accessToken);
@@ -52,6 +56,7 @@ public class StoringHistoryTest extends EvoTest {
         JobStatus sp2Status = new JobStatus(ro, EvoType.SNAPSHOT, true);
         copyJob = createCopyJob(sp2Status, null).getLocation();
         sp2Status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
+        Assert.assertEquals(State.DONE, sp2Status.getState());
 
         String roManifest = webResource.uri(ro).path("/.ro/manifest.rdf")
                 .header("Authorization", "Bearer " + accessToken).accept("text/turtle").get(String.class);

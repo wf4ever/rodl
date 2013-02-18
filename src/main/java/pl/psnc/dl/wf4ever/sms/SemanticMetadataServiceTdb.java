@@ -438,34 +438,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     }
 
 
-    @Override
-    public InputStream getNamedGraphWithRelativeURIs(URI namedGraphURI, URI base, RDFFormat rdfFormat) {
-        boolean transactionStarted = beginTransaction(ReadWrite.READ);
-        try {
-            ResearchObjectRelativeWriter writer;
-            if (rdfFormat != RDFFormat.RDFXML && rdfFormat != RDFFormat.TURTLE) {
-                throw new RuntimeException("Format " + rdfFormat + " is not supported");
-            } else if (rdfFormat == RDFFormat.RDFXML) {
-                writer = new RO_RDFXMLWriter();
-            } else {
-                writer = new RO_TurtleWriter();
-            }
-            namedGraphURI = namedGraphURI.normalize();
-            if (!dataset.containsNamedModel(namedGraphURI.toString())) {
-                return null;
-            }
-            writer.setResearchObjectURI(base);
-            writer.setBaseURI(namedGraphURI);
-
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            writer.write(dataset.getNamedModel(namedGraphURI.toString()), out, null);
-            return new ByteArrayInputStream(out.toByteArray());
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
     private void addNamedModelsRecursively(Dataset tmpDataset, URI namedGraphURI) {
         tmpDataset.addNamedModel(namedGraphURI.toString(), dataset.getNamedModel(namedGraphURI.toString()));
 

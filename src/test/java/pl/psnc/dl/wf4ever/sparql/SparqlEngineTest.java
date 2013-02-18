@@ -2,20 +2,16 @@ package pl.psnc.dl.wf4ever.sparql;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.dl.UserMetadata;
-import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
-import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
 import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
@@ -23,30 +19,42 @@ import pl.psnc.dl.wf4ever.vocabulary.RO;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.query.Dataset;
-import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.tdb.TDBFactory;
-import com.hp.hpl.jena.util.FileManager;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 
-public class SparqlEngineTest {
+/**
+ * Test the class that performs SPARQL queries.
+ * 
+ * @author piotrekhol
+ * 
+ */
+public class SparqlEngineTest extends BaseTest {
 
+    /** The instance under test. */
     private SparqlEngine engine;
+
+    /** A describe query. */
     private static String describeQuery;
+
+    /** A construct query. */
     private static String constructQuery;
+
+    /** A select query. */
     private static String selectQuery;
+
+    /** An ask query that should return "true". */
     private static String askTrueQuery;
+
+    /** An ask query that should return "false". */
     private static String askFalseQuery;
-    private Builder builder;
-
-    private static final String MANIFEST = "http://example.org/mess-ro/.ro/manifest.ttl";
-
-    private static final String ANNOTATION_BODY = "http://example.org/mess-ro/.ro/annotationBody.ttl";
-
-    private static final String RESOURCE1 = "http://example.org/mess-ro/a%20workflow.t2flow";
 
 
+    /**
+     * Load the queries.
+     * 
+     * @throws IOException
+     *             when there is a problem with opening the resources with queries
+     */
     @BeforeClass
     public static void setUpBeforeClass()
             throws IOException {
@@ -64,34 +72,21 @@ public class SparqlEngineTest {
     }
 
 
+    /**
+     * Init the instance under test.
+     */
     @Before
-    public void setUp()
-            throws Exception {
-        Dataset dataset = TDBFactory.createDataset();
-        Model model;
-        model = FileManager.get().loadModel(MANIFEST, MANIFEST, "TURTLE");
-        dataset.addNamedModel(MANIFEST, model);
-        model.write(System.out, "TURTLE");
-        model = FileManager.get().loadModel(ANNOTATION_BODY, ANNOTATION_BODY, "TURTLE");
-        model.write(System.out, "TURTLE");
-        dataset.addNamedModel(ANNOTATION_BODY, model);
-
-        UserMetadata user = new UserMetadata("x", "x", Role.AUTHENTICATED, URI.create("http://x"));
-        builder = new Builder(user, dataset, false);
+    public void setUp() {
+        super.setUp();
         engine = new SparqlEngine(builder);
     }
 
 
-    @After
-    public void tearDown()
-            throws Exception {
-        builder.getDataset().close();
-    }
-
-
+    /**
+     * Test executing a describe query.
+     */
     @Test
-    public final void testExecuteDescribeSparql()
-            throws IOException {
+    public final void testExecuteDescribeSparql() {
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         QueryResult res = engine.executeSparql(describeQuery, RDFFormat.RDFXML);
         model.read(res.getInputStream(), null, "RDF/XML");
@@ -102,9 +97,11 @@ public class SparqlEngineTest {
     }
 
 
+    /**
+     * Test executing a construct query.
+     */
     @Test
-    public final void testExecuteConstructSparql()
-            throws IOException {
+    public final void testExecuteConstructSparql() {
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(engine.executeSparql(constructQuery, RDFFormat.RDFXML).getInputStream(), null, "RDF/XML");
         Assert.assertTrue("Construct contains triple 1",
@@ -114,6 +111,12 @@ public class SparqlEngineTest {
     }
 
 
+    /**
+     * Test executing a select query that returns an XML.
+     * 
+     * @throws IOException
+     *             when converting the result to a string
+     */
     @Test
     public final void testExecuteSelectXmlSparql()
             throws IOException {
@@ -124,6 +127,12 @@ public class SparqlEngineTest {
     }
 
 
+    /**
+     * Test executing a select query that returns a JSON.
+     * 
+     * @throws IOException
+     *             when converting the result to a string
+     */
     @Test
     public final void testExecuteSelectJsonSparql()
             throws IOException {
@@ -134,6 +143,12 @@ public class SparqlEngineTest {
     }
 
 
+    /**
+     * Test executing an ask query that returns false.
+     * 
+     * @throws IOException
+     *             when converting the result to a string
+     */
     @Test
     public final void testExecuteAskFalseSparql()
             throws IOException {
@@ -143,6 +158,12 @@ public class SparqlEngineTest {
     }
 
 
+    /**
+     * Test executing an ask query that returns true.
+     * 
+     * @throws IOException
+     *             when converting the result to a string
+     */
     @Test
     public final void testExecuteAskTrueSparql()
             throws IOException {
@@ -152,6 +173,9 @@ public class SparqlEngineTest {
     }
 
 
+    /**
+     * Test that default response formats are correct even if an unexpected format is requested.
+     */
     @Test
     public void testDefaultFormat() {
         RDFFormat jpeg = new RDFFormat("JPEG", "image/jpeg", Charset.forName("UTF-8"), "jpeg", false, false);
