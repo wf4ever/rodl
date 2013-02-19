@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -551,6 +552,34 @@ public class Thing {
         } finally {
             endTransaction(transactionStarted);
         }
+    }
+
+
+    /**
+     * Replace all occurrences of a blank node with a URI resource in this resource's model.
+     * 
+     * @param nodeUri
+     *            the URI to use instead of the blank node id
+     * @param node
+     *            the blank node
+     * @return the URI resource
+     */
+    protected Resource changeBlankNodeToUriResources(URI nodeUri, RDFNode node) {
+        Resource r = model.createResource(nodeUri.toString());
+        List<Statement> statements = new ArrayList<Statement>();
+        for (Statement s : model.listStatements(node.asResource(), null, (RDFNode) null).toList()) {
+            Statement s2 = model.createStatement(r, s.getPredicate(), s.getObject());
+            statements.add(s);
+            model.add(s2);
+        }
+
+        for (Statement s : model.listStatements(null, null, node).toList()) {
+            Statement s2 = model.createStatement(s.getSubject(), s.getPredicate(), r);
+            model.add(s2);
+            statements.add(s);
+        }
+        model.remove(statements);
+        return r;
     }
 
 

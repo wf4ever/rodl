@@ -3,6 +3,8 @@ package pl.psnc.dl.wf4ever.model.RO;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 
@@ -253,7 +255,10 @@ public class Manifest extends ResourceMap {
                         RDFNode creatorNameNode = solution.get("creatorname");
                         String resCreatorName = creatorNameNode != null ? creatorNameNode.asLiteral().getString()
                                 : null;
-                        UserProfile profile = new UserProfile(null, resCreatorName, null, resCreator);
+                        UserProfile profile = null;
+                        if (resCreatorName != null || resCreator != null) {
+                            profile = new UserProfile(resCreatorName, resCreatorName, null, resCreator);
+                        }
                         RDFNode createdNode = solution.get("created");
                         DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime
                                 .parse(createdNode.asLiteral().getString()) : null;
@@ -306,7 +311,10 @@ public class Manifest extends ResourceMap {
                             .asResource().getURI()) : null;
                     RDFNode creatorNameNode = solution.get("creatorname");
                     String resCreatorName = creatorNameNode != null ? creatorNameNode.asLiteral().getString() : null;
-                    UserProfile profile = new UserProfile(resCreatorName, resCreatorName, null, resCreator);
+                    UserProfile profile = null;
+                    if (resCreatorName != null || resCreator != null) {
+                        profile = new UserProfile(resCreatorName, resCreatorName, null, resCreator);
+                    }
                     RDFNode createdNode = solution.get("created");
                     DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                             .asLiteral().getString()) : null;
@@ -359,7 +367,10 @@ public class Manifest extends ResourceMap {
                             .asResource().getURI()) : null;
                     RDFNode creatorNameNode = solution.get("creatorname");
                     String resCreatorName = creatorNameNode != null ? creatorNameNode.asLiteral().getString() : null;
-                    UserProfile profile = new UserProfile(resCreatorName, resCreatorName, null, resCreator);
+                    UserProfile profile = null;
+                    if (resCreatorName != null || resCreator != null) {
+                        profile = new UserProfile(resCreatorName, resCreatorName, null, resCreator);
+                    }
                     RDFNode createdNode = solution.get("created");
                     DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                             .asLiteral().getString()) : null;
@@ -410,11 +421,18 @@ public class Manifest extends ResourceMap {
             Query query = QueryFactory.create(queryString);
             QueryExecution qe = QueryExecutionFactory.create(query, model);
             try {
+                Map<RDFNode, URI> blankNodes = new HashMap<>();
                 ResultSet results = qe.execSelect();
                 while (results.hasNext()) {
                     QuerySolution solution = results.next();
                     RDFNode a = solution.get("annotation");
-                    URI aURI = URI.create(a.asResource().getURI());
+                    URI aURI;
+                    if (a.isURIResource()) {
+                        aURI = URI.create(a.asResource().getURI());
+                    } else {
+                        aURI = getUri().resolve(UUID.randomUUID().toString());
+                        blankNodes.put(a, aURI);
+                    }
                     RDFNode p = solution.get("proxy");
                     URI pUri = p != null ? URI.create(p.asResource().getURI()) : null;
                     RDFNode t = solution.get("target");
@@ -432,7 +450,10 @@ public class Manifest extends ResourceMap {
                         RDFNode creatorNameNode = solution.get("creatorname");
                         String resCreatorName = creatorNameNode != null ? creatorNameNode.asLiteral().getString()
                                 : null;
-                        UserProfile profile = new UserProfile(resCreatorName, resCreatorName, null, resCreator);
+                        UserProfile profile = null;
+                        if (resCreatorName != null || resCreator != null) {
+                            profile = new UserProfile(resCreatorName, resCreatorName, null, resCreator);
+                        }
                         RDFNode createdNode = solution.get("created");
                         DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime
                                 .parse(createdNode.asLiteral().getString()) : null;
@@ -444,6 +465,9 @@ public class Manifest extends ResourceMap {
                         }
                         annotationsByUri.put(annotation.getUri(), annotation);
                     }
+                }
+                for (Entry<RDFNode, URI> e : blankNodes.entrySet()) {
+                    changeBlankNodeToUriResources(e.getValue(), e.getKey());
                 }
             } finally {
                 qe.close();
