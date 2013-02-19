@@ -227,7 +227,7 @@ public class SemanticMetadataServiceBaseTest {
             sp2 = new ResearchObject(userProfile, getResourceURI("ro1-sp2/"));
             arch1 = new ResearchObject(userProfile, getResourceURI("ro1-arch1/"));
             wrongRO = new ResearchObject(userProfile, getResourceURI("wrong-ro/"));
-            annotatedRO = new ResearchObject(userProfile, URI.create("http://www.example.com/annotatedRO/"));
+            annotatedRO = new ResearchObject(userProfile, URI.create("http://example.org/mess-ro/"));
             simpleAnnotatedRO = new ResearchObject(userProfile, URI.create("http://www.example.com/simpleAnnotatedRO/"));
 
             InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1/.ro/manifest.ttl");
@@ -265,18 +265,18 @@ public class SemanticMetadataServiceBaseTest {
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/wrong-ro/.ro/evo_info.ttl");
             sms.addNamedGraph(wrongRO.getFixedEvolutionAnnotationBodyUri(), is, RDFFormat.TURTLE);
 
-            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.ttl");
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.rdf");
             sms.createResearchObject(annotatedRO);
-            sms.updateManifest(annotatedRO, is, RDFFormat.TURTLE);
+            sms.updateManifest(annotatedRO, is, RDFFormat.RDFXML);
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/evo_info.ttl");
             sms.addNamedGraph(annotatedRO.getFixedEvolutionAnnotationBodyUri(), is, RDFFormat.TURTLE);
             //sms.addResource(annotatedRO, annotatedRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
             sms.addNamedGraph(annotatedRO.getUri().resolve(".ro/ann1"), is, RDFFormat.TURTLE);
 
-            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.ttl");
+            is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.rdf");
             sms.createResearchObject(simpleAnnotatedRO);
-            sms.updateManifest(simpleAnnotatedRO, is, RDFFormat.TURTLE);
+            sms.updateManifest(simpleAnnotatedRO, is, RDFFormat.RDFXML);
             is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/evo_info.ttl");
             sms.addNamedGraph(simpleAnnotatedRO.getFixedEvolutionAnnotationBodyUri(), is, RDFFormat.TURTLE);
             //sms.addResource(annotatedRO, annotatedRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);

@@ -31,17 +31,9 @@ import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 
 import com.google.common.collect.Multimap;
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.datatypes.xsd.XSDDateTime;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -66,77 +58,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         test.sms.createResearchObject(test.emptyRO);
     }
     */
-
-    /**
-     * Test method for
-     * {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#updateManifest(java.net.URI, java.io.InputStream, org.openrdf.rio.RDFFormat)}
-     * .
-     */
-    @Test
-    public final void testUpdateManifest() {
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH), resourceFakeInfo);
-
-        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.ttl");
-        test.sms.updateManifest(test.emptyRO, is, RDFFormat.TURTLE);
-
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
-
-        Individual manifest = model.getIndividual(test.emptyRO.getManifestUri().toString());
-        Individual ro = model.getIndividual(test.emptyRO.getUri().toString());
-
-        Assert.assertEquals("Manifest created has been updated", "2011-12-02T16:01:10Z",
-            manifest.getPropertyValue(DCTerms.created).asLiteral().getString());
-        Assert.assertEquals("RO created has been updated", "2011-12-02T15:01:10Z", ro.getPropertyValue(DCTerms.created)
-                .asLiteral().getString());
-
-        Set<String> creators = new HashSet<String>();
-        String creatorsQuery = String.format("PREFIX dcterms: <%s> PREFIX foaf: <%s> SELECT ?name "
-                + "WHERE { <%s> dcterms:creator ?x . ?x foaf:name ?name . }", DCTerms.NS, "http://xmlns.com/foaf/0.1/",
-            test.emptyRO.getUri().toString());
-        Query query = QueryFactory.create(creatorsQuery);
-        QueryExecution qexec = QueryExecutionFactory.create(query, model);
-        try {
-            ResultSet results = qexec.execSelect();
-            while (results.hasNext()) {
-                creators.add(results.nextSolution().getLiteral("name").getString());
-            }
-        } finally {
-            qexec.close();
-        }
-
-        Assert.assertTrue("New creator has been added", creators.contains("Stian Soiland-Reyes"));
-        Assert.assertTrue("Old creator has been deleted", !creators.contains(userProfile.getName()));
-
-        Assert.assertTrue(
-            "RO must aggregate resources",
-            model.contains(ro, ORE.aggregates,
-                model.createResource(test.emptyRO.getUri().resolve(WORKFLOW_PATH).toString())));
-        Assert.assertTrue(
-            "RO must aggregate resources",
-            model.contains(ro, ORE.aggregates,
-                model.createResource(test.emptyRO.getUri().resolve(ANNOTATION_PATH).toString())));
-        Assert.assertTrue(
-            "RO must not aggregate previous resources",
-            !model.contains(ro, ORE.aggregates,
-                model.createResource(test.emptyRO.getUri().resolve(FAKE_PATH).toString())));
-        validateProxy(model, manifest, test.emptyRO.getUri().toString() + "proxy1",
-            test.emptyRO.getUri().resolve(WORKFLOW_PATH).toString());
-    }
-
-
-    private void validateProxy(OntModel model, Individual manifest, String proxyURI, String proxyForURI) {
-        Individual proxy = model.getIndividual(proxyURI);
-        Assert.assertNotNull("Manifest must contain " + proxyURI, proxy);
-        Assert.assertTrue(String.format("Proxy %s must be a ore:Proxy", proxyURI),
-            proxy.hasRDFType("http://www.openarchives.org/ore/terms/Proxy"));
-        Assert.assertEquals("Proxy for must be valid", proxyForURI, proxy.getPropertyResourceValue(ORE.proxyFor)
-                .getURI());
-        Assert.assertEquals("Proxy in must be valid", test.emptyRO.getUri().toString(),
-            proxy.getPropertyResourceValue(ORE.proxyIn).getURI());
-    }
-
 
     /**
      * Test method for
@@ -167,45 +88,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
     public final void testGetManifestInCaseRODoesNotExists() {
         Assert.assertNull("Returns null when manifest does not exist", test.sms.getManifest(new ResearchObject(
                 userProfile, URI.create("http://example.org/null/")), RDFFormat.RDFXML));
-    }
-
-
-    /**
-     * Test method for
-     * {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#getManifest(java.net.URI, org.openrdf.rio.RDFFormat)} .
-     */
-    @Test
-    public final void testGetManifest() {
-
-        Calendar before = Calendar.getInstance();
-        ResearchObject researchObject = new ResearchObject(userProfile, URI.create("http://www.example.com/null/"));
-        test.sms.createResearchObject(researchObject);
-        Calendar after = Calendar.getInstance();
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        model.read(test.sms.getManifest(researchObject, RDFFormat.RDFXML), null);
-
-        Individual manifest = model.getIndividual(researchObject.getManifestUri().toString());
-        Individual ro = model.getIndividual(researchObject.getUri().toString());
-        Assert.assertNotNull("Manifest must contain ro:Manifest", manifest);
-        Assert.assertNotNull("Manifest must contain ro:ResearchObject", ro);
-        Assert.assertTrue("Manifest must be a ro:Manifest", manifest.hasRDFType(RO.NAMESPACE + "Manifest"));
-        Assert.assertTrue("RO must be a ro:ResearchObject", ro.hasRDFType(RO.NAMESPACE + "ResearchObject"));
-
-        Literal createdLiteral = manifest.getPropertyValue(DCTerms.created).asLiteral();
-        Assert.assertNotNull("Manifest must contain dcterms:created", createdLiteral);
-        Assert.assertEquals("Date type is xsd:dateTime", XSDDatatype.XSDdateTime, createdLiteral.getDatatype());
-        Calendar created = ((XSDDateTime) createdLiteral.getValue()).asCalendar();
-        Assert.assertTrue("Created is a valid date", !before.after(created) && !after.before(created));
-        Resource creatorResource = ro.getPropertyResourceValue(DCTerms.creator);
-        Assert.assertNotNull("RO must contain dcterms:creator", creatorResource);
-
-        OntModel userModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        userModel.read(test.sms.getNamedGraph(URI.create(creatorResource.getURI()), RDFFormat.RDFXML), "");
-
-        Individual creator = userModel.getIndividual(creatorResource.getURI());
-        Assert.assertTrue("Creator must be a foaf:Agent", creator.hasRDFType("http://xmlns.com/foaf/0.1/Agent"));
-        Assert.assertEquals("Creator name must be correct", userProfile.getName(), creator.getPropertyValue(FOAF.name)
-                .asLiteral().getString());
     }
 
 
@@ -250,17 +132,15 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH));
         test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH));
 
-        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.ttl");
-        test.sms.updateManifest(test.emptyRO, is, RDFFormat.TURTLE);
-        test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH));
+        test.sms.removeResource(test.annotatedRO, test.annotatedRO.getUri().resolve(WORKFLOW_PATH));
         Assert.assertNull("There should be no annotation body after a resource is deleted",
-            test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_PATH), RDFFormat.RDFXML));
+            test.sms.getNamedGraph(test.annotatedRO.getUri().resolve(ANNOTATION_PATH), RDFFormat.RDFXML));
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        model.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
+        model.read(test.sms.getManifest(test.annotatedRO, RDFFormat.RDFXML), null);
         Assert.assertFalse(model.listStatements(null, null,
-            model.createResource(test.emptyRO.getUri().resolve(ANNOTATION_PATH).toString())).hasNext());
+            model.createResource(test.annotatedRO.getUri().resolve(ANNOTATION_PATH).toString())).hasNext());
         Assert.assertFalse(model.listStatements(
-            model.createResource(test.emptyRO.getUri().resolve(ANNOTATION_PATH).toString()), null, (RDFNode) null)
+            model.createResource(test.annotatedRO.getUri().resolve(ANNOTATION_PATH).toString()), null, (RDFNode) null)
                 .hasNext());
     }
 
@@ -342,8 +222,8 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
      */
     @Test
     public final void testIsRoFolder() {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.ttl");
-        test.sms.updateManifest(test.emptyRO, is, RDFFormat.TURTLE);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.rdf");
+        test.sms.updateManifest(test.emptyRO, is, RDFFormat.RDFXML);
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         model.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
@@ -434,8 +314,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
             atts.get(URI.create(DCTerms.creator.toString())).contains("Stian Soiland-Reyes"));
 
     }
-
-
 
 
     @Test

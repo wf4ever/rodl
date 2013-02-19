@@ -306,7 +306,7 @@ public class Manifest extends ResourceMap {
                             .asResource().getURI()) : null;
                     RDFNode creatorNameNode = solution.get("creatorname");
                     String resCreatorName = creatorNameNode != null ? creatorNameNode.asLiteral().getString() : null;
-                    UserProfile profile = new UserProfile(null, resCreatorName, null, resCreator);
+                    UserProfile profile = new UserProfile(resCreatorName, resCreatorName, null, resCreator);
                     RDFNode createdNode = solution.get("created");
                     DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                             .asLiteral().getString()) : null;
@@ -359,7 +359,7 @@ public class Manifest extends ResourceMap {
                             .asResource().getURI()) : null;
                     RDFNode creatorNameNode = solution.get("creatorname");
                     String resCreatorName = creatorNameNode != null ? creatorNameNode.asLiteral().getString() : null;
-                    UserProfile profile = new UserProfile(null, resCreatorName, null, resCreator);
+                    UserProfile profile = new UserProfile(resCreatorName, resCreatorName, null, resCreator);
                     RDFNode createdNode = solution.get("created");
                     DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                             .asLiteral().getString()) : null;
@@ -432,7 +432,7 @@ public class Manifest extends ResourceMap {
                         RDFNode creatorNameNode = solution.get("creatorname");
                         String resCreatorName = creatorNameNode != null ? creatorNameNode.asLiteral().getString()
                                 : null;
-                        UserProfile profile = new UserProfile(null, resCreatorName, null, resCreator);
+                        UserProfile profile = new UserProfile(resCreatorName, resCreatorName, null, resCreator);
                         RDFNode createdNode = solution.get("created");
                         DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime
                                 .parse(createdNode.asLiteral().getString()) : null;

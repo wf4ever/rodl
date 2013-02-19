@@ -5,9 +5,12 @@ import java.net.URI;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 
+import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
+import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -35,7 +38,7 @@ public class BaseTest {
     protected static final String RESEARCH_OBJECT = "http://example.org/mess-ro/";
 
     /** Manifest URI as String, mapped. */
-    protected static final String MANIFEST = "http://example.org/mess-ro/.ro/manifest.ttl";
+    protected static final String MANIFEST = "http://example.org/mess-ro/.ro/manifest.rdf";
 
     /** Annotation body URI as String, mapped. */
     protected static final String ANNOTATION_BODY = "http://example.org/mess-ro/.ro/annotationBody.ttl";
@@ -48,28 +51,47 @@ public class BaseTest {
 
 
     /**
+     * Prepare filesystem DL.
+     * 
+     * @throws Exception
+     *             when something unexpected happens, declared for subclasses
+     */
+    @BeforeClass
+    public static void setUpBeforeClass()
+            throws Exception {
+        DigitalLibraryFactory.loadDigitalLibraryConfiguration("connection.properties");
+    }
+
+
+    /**
      * Create the dataset, load the RDF files.
      */
     @Before
     public void setUp() {
         dataset = TDBFactory.createDataset();
         Model model;
-        model = FileManager.get().loadModel(MANIFEST, MANIFEST, "TURTLE");
+        model = FileManager.get().loadModel(MANIFEST, MANIFEST, "RDF/XML");
         dataset.addNamedModel(MANIFEST, model);
         model = FileManager.get().loadModel(ANNOTATION_BODY, ANNOTATION_BODY, "TURTLE");
         dataset.addNamedModel(ANNOTATION_BODY, model);
 
-        userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED);
+        userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED, URI.create("http://jank"));
         builder = new Builder(userProfile, dataset, false);
+        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
     }
 
 
     /**
      * Close the dataset.
+     * 
+     * @throws Exception
+     *             when the filesystem can't be accessed
      */
     @After
-    public void tearDown() {
+    public void tearDown()
+            throws Exception {
         builder.getDataset().close();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
     }
 
 

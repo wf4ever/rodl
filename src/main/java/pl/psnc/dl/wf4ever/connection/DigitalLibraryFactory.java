@@ -236,4 +236,9 @@ public final class DigitalLibraryFactory {
     public static String getPublicPassword() {
         return publicPassword;
     }
+
+
+    public static String getFilesystemBase() {
+        return filesystemBase;
+    }
 }
