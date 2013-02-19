@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
@@ -60,6 +61,9 @@ public class FrozenResearchObject extends ResearchObject {
      */
     protected void generateEvoInfo(EvoType type) {
         ROSRService.SMS.get().generateEvoInformation(this, liveRO, type);
+        //HACK
+        this.getAggregatedResources().put(getFixedEvolutionAnnotationBodyUri(),
+            (AggregatedResource) getEvoInfoAnnotation().getBody());
         this.getEvoInfoBody().serialize();
         this.getManifest().serialize();
         if (liveRO != null) {

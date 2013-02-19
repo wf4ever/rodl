@@ -22,6 +22,7 @@ import pl.psnc.dl.wf4ever.model.RO.Manifest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
 import pl.psnc.dl.wf4ever.model.ROEVO.ArchiveResearchObject;
+import pl.psnc.dl.wf4ever.model.ROEVO.EvoInfo;
 import pl.psnc.dl.wf4ever.model.ROEVO.SnapshotResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.W4E;
 
@@ -506,5 +507,27 @@ public class Builder {
         entry.setEntryName(name);
         entry.setBuilder(this);
         return entry;
+    }
+
+
+    /**
+     * Build a new evolution information resource.
+     * 
+     * @param uri
+     *            the URI
+     * @param researchObject
+     *            the research object that is described
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @return a new evo info instance
+     */
+    public EvoInfo buildEvoInfo(URI uri, ResearchObject researchObject, UserMetadata creator, DateTime created) {
+        EvoInfo evoInfo = new EvoInfo(user, dataset, useTransactions, researchObject, uri);
+        evoInfo.setCreator(creator);
+        evoInfo.setCreated(created);
+        evoInfo.setBuilder(this);
+        return evoInfo;
     }
 }
