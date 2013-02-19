@@ -19,7 +19,6 @@ import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.util.SafeURI;
-import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -61,26 +60,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
     /**
      * Test method for
-     * {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#removeResearchObject(java.net.URI, java.net.URI)} .
-     */
-    @Test
-    public final void testRemoveManifest() {
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
-        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), is, RDFFormat.TURTLE);
-        test.sms.removeResearchObject(test.emptyRO);
-
-        //Should not throw an exception
-        test.sms.removeResearchObject(test.emptyRO);
-
-        Assert.assertNotNull("Get other named graph must not return null",
-            test.sms.getNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), RDFFormat.RDFXML));
-    }
-
-
-    /**
-     * Test method for
      * {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#getManifest(java.net.URI, org.openrdf.rio.RDFFormat)} .
      * Expect null in case manifest does not exists.
      */
@@ -116,50 +95,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         Assert.assertNotNull(test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH),
             ann1Info));
         Assert.assertNotNull(test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), null));
-    }
-
-
-    /**
-     * Test method for
-     * {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#removeResource(java.net.URI, java.net.URI)} .
-     */
-    @Test
-    public final void testRemoveResource() {
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
-        test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH));
-        // no longer throws exceptions
-        test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH));
-        test.sms.removeResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH));
-
-        test.sms.removeResource(test.annotatedRO, test.annotatedRO.getUri().resolve(WORKFLOW_PATH));
-        Assert.assertNull("There should be no annotation body after a resource is deleted",
-            test.sms.getNamedGraph(test.annotatedRO.getUri().resolve(ANNOTATION_PATH), RDFFormat.RDFXML));
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        model.read(test.sms.getManifest(test.annotatedRO, RDFFormat.RDFXML), null);
-        Assert.assertFalse(model.listStatements(null, null,
-            model.createResource(test.annotatedRO.getUri().resolve(ANNOTATION_PATH).toString())).hasNext());
-        Assert.assertFalse(model.listStatements(
-            model.createResource(test.annotatedRO.getUri().resolve(ANNOTATION_PATH).toString()), null, (RDFNode) null)
-                .hasNext());
-    }
-
-
-    /**
-     * Test method for
-     * {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#getResource(java.net.URI, org.openrdf.rio.RDFFormat)} .
-     * 
-     * @throws URISyntaxException
-     */
-    @Test
-    public final void testGetResource()
-            throws URISyntaxException {
-        Assert.assertNull("Returns null when resource does not exist",
-            test.sms.getResource(test.emptyRO, RDFFormat.RDFXML, test.emptyRO.getUri().resolve(WORKFLOW_PATH)));
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH), workflowInfo);
-        test.sms.addResource(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH), ann1Info);
-        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), is, RDFFormat.TURTLE);
     }
 
 
@@ -218,28 +153,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
 
 
     /**
-     * Test method for {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#isRoFolder(java.net.URI)} .
-     */
-    @Test
-    public final void testIsRoFolder() {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/manifest.rdf");
-        test.sms.updateManifest(test.emptyRO, is, RDFFormat.RDFXML);
-
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(test.sms.getManifest(test.emptyRO, RDFFormat.RDFXML), null);
-
-        Assert.assertTrue("<afolder> is an ro:Folder",
-            test.sms.isRoFolder(test.emptyRO, test.emptyRO.getUri().resolve(FOLDER_PATH)));
-        Assert.assertTrue("<ann1> is not an ro:Folder",
-            !test.sms.isRoFolder(test.emptyRO, test.emptyRO.getUri().resolve(ANNOTATION_PATH)));
-        Assert.assertTrue("Fake resource is not an ro:Folder",
-            !test.sms.isRoFolder(test.emptyRO, test.emptyRO.getUri().resolve(FAKE_PATH)));
-        Assert.assertTrue("<afolder> is not an ro:Folder according to other RO",
-            !test.sms.isRoFolder(test.emptyRO2, test.emptyRO.getUri().resolve(FOLDER_PATH)));
-    }
-
-
-    /**
      * Test method for
      * {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#addNamedGraph(java.net.URI, java.io.InputStream, org.openrdf.rio.RDFFormat)}
      * .
@@ -251,30 +164,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
         Assert.assertTrue(test.sms.addNamedGraph(test.emptyRO.getUri().resolve(ANNOTATION_BODY_PATH), is,
             RDFFormat.TURTLE));
-    }
-
-
-    /**
-     * Test method for {@link pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceImpl#isROMetadataNamedGraph(java.net.URI)} .
-     */
-    @Test
-    public final void testIsROMetadataNamedGraph() {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        test.sms.addNamedGraph(test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH).resolve("fake"), is,
-            RDFFormat.TURTLE);
-
-        Assert.assertTrue("Annotation body is an RO metadata named graph",
-            test.sms.isROMetadataNamedGraph(test.annotatedRO, test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH)));
-        Assert.assertTrue(
-            "An random named graph is not an RO metadata named graph",
-            !test.sms.isROMetadataNamedGraph(test.annotatedRO, test.annotatedRO.getUri().resolve(ANNOTATION_BODY_PATH)
-                    .resolve("fake")));
-        Assert.assertTrue("Manifest is an RO metadata named graph",
-            test.sms.isROMetadataNamedGraph(test.annotatedRO, test.annotatedRO.getManifestUri()));
-        Assert.assertTrue("A resource is not an RO metadata named graph",
-            !test.sms.isROMetadataNamedGraph(test.emptyRO, test.emptyRO.getUri().resolve(WORKFLOW_PATH)));
-        Assert.assertTrue("A fake resource is not an RO metadata named graph",
-            !test.sms.isROMetadataNamedGraph(test.annotatedRO, test.emptyRO.getUri().resolve(FAKE_PATH)));
     }
 
 
@@ -521,65 +410,6 @@ public class SemanticMetadataServiceImplTest extends SemanticMetadataServiceBase
             throws ClassNotFoundException, IOException, NamingException, SQLException, URISyntaxException {
         URI liveFromRO = test.sms.getLiveURIFromSnapshotOrArchive(test.ro1);
         Assert.assertNull("live RO does not have a parent RO", liveFromRO);
-    }
-
-
-    /**
-     * getAggregatedResource function should return the complete list of aggregated resources.
-     * 
-     * @throws ManifestTraversingException .
-     */
-    @Test
-    public final void testGetAggregatedResources()
-            throws IncorrectModelException {
-        List<AggregatedResource> list = test.sms.getAggregatedResources(test.ro1);
-        Assert.assertTrue(list.contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve(
-            "final-agregated-resource-file"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve(
-            ".ro/ann-blank.ttl"))));
-        Assert.assertTrue(list
-                .contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve("res2"))));
-        Assert.assertTrue(list
-                .contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve("res1"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve(
-            ".ro/evo_info.ttl"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve(
-            ".ro/ann1-body.ttl"))));
-        Assert.assertTrue(list.contains(new AggregatedResource(userProfile, test.ro1, test.ro1.getUri().resolve(
-            "afinalfolder"))));
-
-    }
-
-
-    /**
-     * GetAnnotation function should return the complete list of annotations.
-     * 
-     * @throws ManifestTraversingException .
-     */
-    @Test
-    public final void testGetAnnotations()
-            throws IncorrectModelException {
-        List<Annotation> list = test.sms.getAnnotations(test.ro1);
-        int cnt = 0;
-        Boolean evo = true;
-        Boolean ann = true;
-        Boolean blank = true;
-        for (Annotation a : list) {
-            if (SafeURI.URItoString(test.ro1.getUri().resolve(ANNOTATION_PATH)).equals(SafeURI.URItoString(a.getUri()))
-                    && ann) {
-                ann = false;
-                cnt++;
-            } else if (SafeURI.URItoString(test.ro1.getUri().resolve(EVO_ANNOTATION)).equals(
-                SafeURI.URItoString(a.getUri()))
-                    && evo) {
-                evo = false;
-                cnt++;
-            } else if (blank) {
-                blank = false;
-                cnt++;
-            }
-        }
-        Assert.assertEquals("Three annotations should be found", cnt, 3);
     }
 
 

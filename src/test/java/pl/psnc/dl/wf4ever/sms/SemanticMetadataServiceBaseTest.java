@@ -231,7 +231,9 @@ public class SemanticMetadataServiceBaseTest {
             simpleAnnotatedRO = new ResearchObject(userProfile, URI.create("http://www.example.com/simpleAnnotatedRO/"));
 
             InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/ro1/.ro/manifest.ttl");
-            sms = new SemanticMetadataServiceTdb(userProfile, ro1, is, RDFFormat.TURTLE);
+            sms = new SemanticMetadataServiceTdb(userProfile, false);
+            sms.createResearchObject(ro1);
+            sms.updateManifest(ro1, is, RDFFormat.TURTLE);
 
             emptyRO = new ResearchObject(userProfile, URI.create("http://example.org/ROs/empty-RO/"));
             emptyRO2 = new ResearchObject(userProfile, URI.create("http://example.org/ROs/empty-RO2/"));

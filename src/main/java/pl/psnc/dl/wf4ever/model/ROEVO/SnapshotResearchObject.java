@@ -3,22 +3,17 @@
  */
 package pl.psnc.dl.wf4ever.model.ROEVO;
 
-import java.io.InputStream;
 import java.net.URI;
 
 import org.apache.log4j.Logger;
-import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.db.EvoType;
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.hp.hpl.jena.query.Dataset;
 
@@ -53,34 +48,6 @@ public class SnapshotResearchObject extends FrozenResearchObject {
     public SnapshotResearchObject(UserMetadata user, Dataset dataset, boolean useTransactions, URI uri,
             ResearchObject liveRO) {
         super(user, dataset, useTransactions, uri, liveRO);
-    }
-
-
-    /**
-     * Create new Research Object.
-     * 
-     * @param builder
-     *            model instance builder
-     * @param uri
-     *            uri
-     * @param liveRO
-     *            live Research Object
-     * @return an instance
-     */
-    public static SnapshotResearchObject create(Builder builder, URI uri, ResearchObject liveRO) {
-        SnapshotResearchObject researchObject = builder.buildSnapshotResearchObject(uri, liveRO);
-        InputStream manifest;
-        try {
-            ROSRService.SMS.get().createResearchObjectCopy(researchObject, liveRO);
-            manifest = ROSRService.SMS.get().getManifest(researchObject, RDFFormat.RDFXML);
-        } catch (IllegalArgumentException e) {
-            // RO already existed in sms, maybe created by someone else
-            throw new ConflictException("The RO with URI " + researchObject.getUri() + " already exists");
-        }
-
-        DigitalLibraryFactory.getDigitalLibrary().createResearchObject(researchObject.getUri(), manifest,
-            SnapshotResearchObject.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
-        return researchObject;
     }
 
 

@@ -9,7 +9,6 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
@@ -95,11 +94,11 @@ public class SparqlEngine {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         RDFFormat outputFormat;
         QueryExecution qexec = QueryExecutionFactory.create(query, builder.getDataset());
-        if (SemanticMetadataService.SPARQL_JSON.equals(rdfFormat)) {
-            outputFormat = SemanticMetadataService.SPARQL_JSON;
+        if (SPARQL_JSON.equals(rdfFormat)) {
+            outputFormat = SPARQL_JSON;
             ResultSetFormatter.outputAsJSON(out, qexec.execSelect());
         } else {
-            outputFormat = SemanticMetadataService.SPARQL_XML;
+            outputFormat = SPARQL_XML;
             ResultSetFormatter.outputAsXML(out, qexec.execSelect());
         }
         qexec.close();
@@ -113,10 +112,10 @@ public class SparqlEngine {
         RDFFormat outputFormat;
         QueryExecution qexec = QueryExecutionFactory.create(query, builder.getDataset());
         if ("application/sparql-results+json".equals(rdfFormat.getDefaultMIMEType())) {
-            outputFormat = SemanticMetadataService.SPARQL_JSON;
+            outputFormat = SPARQL_JSON;
             ResultSetFormatter.outputAsJSON(out, qexec.execAsk());
         } else {
-            outputFormat = SemanticMetadataService.SPARQL_XML;
+            outputFormat = SPARQL_XML;
             ResultSetFormatter.outputAsXML(out, qexec.execAsk());
         }
         qexec.close();

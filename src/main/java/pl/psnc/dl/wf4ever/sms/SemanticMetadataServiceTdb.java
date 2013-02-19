@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -16,8 +15,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
-
-import javax.naming.NamingException;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -31,10 +28,8 @@ import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
-import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
-import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.FOAF;
@@ -80,8 +75,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
     private final Dataset dataset;
 
-    private final String getResourceQueryTmpl = "DESCRIBE <%s> WHERE { }";
-
     private final String getUserQueryTmpl = "DESCRIBE <%s> WHERE { }";
 
     private final String findResearchObjectsQueryTmpl = "PREFIX ro: <" + RO.NAMESPACE + "> SELECT ?ro "
@@ -113,15 +106,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         }
         W4E.DEFAULT_MODEL.setNsPrefixes(W4E.STANDARD_NAMESPACES);
         createUserProfile(user);
-    }
-
-
-    public SemanticMetadataServiceTdb(UserMetadata user, ResearchObject researchObject, InputStream manifest,
-            RDFFormat rdfFormat)
-            throws IOException {
-        this(user, false);
-        createResearchObject(researchObject);
-        updateManifest(researchObject, manifest, rdfFormat);
     }
 
 
@@ -227,55 +211,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public void createResearchObjectCopy(ResearchObject researchObject, ResearchObject liveResearchObject) {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            OntModel manifestModel = createOntModelForNamedGraph(researchObject.getManifestUri());
-            Individual manifest = manifestModel.getIndividual(researchObject.getManifestUri().toString());
-            if (manifest != null) {
-                throw new IllegalArgumentException("URI already exists: " + researchObject.getManifestUri());
-            }
-
-            OntModel liveManifestModel = createOntModelForNamedGraph(liveResearchObject.getManifestUri());
-
-            Individual liveManifest = liveManifestModel.getIndividual(liveResearchObject.getManifestUri().toString());
-
-            manifest = manifestModel.createIndividual(researchObject.getManifestUri().toString(), RO.Manifest);
-            Individual ro = manifestModel.createIndividual(researchObject.getUri().toString(), RO.ResearchObject);
-
-            RDFNode creator, created;
-            Resource liveRO;
-            if (liveManifest == null) {
-                log.warn("Live RO is not an RO: " + liveResearchObject.getUri());
-                liveRO = manifestModel.createResource(liveResearchObject.getUri().toString());
-                creator = manifestModel.createResource(user.getUri().toString());
-                created = manifestModel.createTypedLiteral(Calendar.getInstance());
-            } else {
-                liveRO = liveManifestModel.getIndividual(liveResearchObject.getUri().toString());
-                if (liveRO == null) {
-                    throw new IllegalArgumentException("Live RO does not describe the research object");
-                }
-                creator = liveRO.getPropertyResourceValue(DCTerms.creator);
-                created = liveRO.as(Individual.class).getPropertyValue(DCTerms.created);
-
-            }
-
-            manifestModel.add(ro, ORE.isDescribedBy, manifest);
-            manifestModel.add(ro, DCTerms.created, created);
-            manifestModel.add(ro, DCTerms.creator, creator);
-
-            manifestModel.add(manifest, ORE.describes, ro);
-            manifestModel.add(manifest, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
-
-            //TODO add wasRevisionOf
-            commitTransaction(transactionStarted);
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
     public void updateManifest(ResearchObject researchObject, InputStream is, RDFFormat rdfFormat) {
         addNamedGraph(researchObject.getManifestUri(), is, rdfFormat);
     }
@@ -326,79 +261,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                     resourceURI);
             r.setStats(resourceInfo);
             return r;
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
-    public void removeResource(ResearchObject researchObject, URI resourceURI) {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            resourceURI = resourceURI.normalize();
-            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
-            if (manifestModel == null) {
-                throw new IllegalArgumentException("Manifest not found: " + researchObject.getUri());
-            }
-            Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
-            if (ro == null) {
-                throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
-            }
-            Resource resource = manifestModel.getResource(resourceURI.toString());
-            manifestModel.remove(ro, ORE.aggregates, resource);
-            manifestModel.removeAll(resource, null, null);
-
-            ResIterator it2 = manifestModel.listSubjectsWithProperty(RO.annotatesAggregatedResource, resource);
-            while (it2.hasNext()) {
-                Resource ann = it2.next();
-                manifestModel.remove(ann, RO.annotatesAggregatedResource, resource);
-                if (!ann.hasProperty(RO.annotatesAggregatedResource)) {
-                    Resource annBody = ann.getPropertyResourceValue(AO.body);
-                    if (annBody != null && annBody.isURIResource()) {
-                        URI annBodyURI = URI.create(annBody.getURI());
-                        if (dataset.containsNamedModel(SafeURI.URItoString(annBodyURI))) {
-                            removeNamedGraph(annBodyURI);
-                        }
-                    }
-                    manifestModel.removeAll(ann, null, null);
-                    manifestModel.removeAll(null, null, ann);
-                }
-            }
-
-            URI proxy = getProxyForResource(researchObject, resourceURI);
-            if (proxy != null) {
-                deleteProxy(researchObject, proxy);
-            }
-            commitTransaction(transactionStarted);
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
-    public InputStream getResource(ResearchObject researchObject, RDFFormat rdfFormat, URI... resources) {
-        boolean transactionStarted = beginTransaction(ReadWrite.READ);
-        try {
-            Model source = dataset.getNamedModel(researchObject.getManifestUri().toString());
-            Model result = ModelFactory.createDefaultModel();
-            for (URI resource : resources) {
-                String queryString = String.format(getResourceQueryTmpl, resource.toString());
-                Query query = QueryFactory.create(queryString);
-
-                QueryExecution qexec = QueryExecutionFactory.create(query, source);
-                result.add(qexec.execDescribe());
-                qexec.close();
-            }
-            if (result.isEmpty()) {
-                return null;
-            }
-
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            result.removeNsPrefix("xml");
-            result.write(out, rdfFormat.getName().toUpperCase());
-            return new ByteArrayInputStream(out.toByteArray());
         } finally {
             endTransaction(transactionStarted);
         }
@@ -513,12 +375,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
     }
 
 
-    @Override
-    public Set<URI> findResearchObjects() {
-        return findResearchObjectsByPrefix(null);
-    }
-
-
     /**
      * @param namedGraphURI
      * @return
@@ -548,26 +404,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public boolean isRoFolder(ResearchObject researchObject, URI resourceURI) {
-        boolean transactionStarted = beginTransaction(ReadWrite.READ);
-        try {
-            resourceURI = resourceURI.normalize();
-            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
-            if (manifestModel == null) {
-                return false;
-            }
-            Individual resource = manifestModel.getIndividual(resourceURI.toString());
-            if (resource == null) {
-                return false;
-            }
-            return resource.hasRDFType(RO.Folder);
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
     public boolean addNamedGraph(URI graphURI, InputStream inputStream, RDFFormat rdfFormat) {
         boolean created = !containsNamedGraph(graphURI);
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
@@ -577,23 +413,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             namedGraphModel.read(inputStream, graphURI.resolve(".").toString(), rdfFormat.getName().toUpperCase());
             commitTransaction(transactionStarted);
             return created;
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
-    public boolean isROMetadataNamedGraph(ResearchObject researchObject, URI graphURI) {
-        boolean transactionStarted = beginTransaction(ReadWrite.READ);
-        try {
-            Model manifest = dataset.getNamedModel(researchObject.getManifestUri().toString());
-            Resource annBody = manifest.createResource(graphURI.toString());
-            boolean isManifest = researchObject.getManifestUri().equals(graphURI);
-            boolean isAnnotationBody = manifest.contains(null, AO.body, annBody);
-            //FIXME this actually covers the manifest as well
-            boolean isDescription = manifest.contains(null, ORE.isDescribedBy, annBody);
-            return isManifest || isAnnotationBody || isDescription;
         } finally {
             endTransaction(transactionStarted);
         }
@@ -666,12 +485,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
         OntModel ontModel = ModelFactory.createOntologyModel(spec, dataset.getNamedModel("urn:x-arq:UnionGraph"));
         //        ontModel.addSubModel(W4E.defaultModel);
         return ontModel;
-    }
-
-
-    @Override
-    public void removeResearchObject(ResearchObject researchObject) {
-        removeNamedGraph(researchObject.getManifestUri());
     }
 
 
@@ -822,59 +635,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public Proxy addProxy(ResearchObject researchObject, AggregatedResource resource) {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
-            if (manifestModel == null) {
-                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
-            }
-            Resource researchObjectR = manifestModel.createResource(researchObject.getUri().toString());
-            Resource resourceR = manifestModel.createResource(resource.getUri().normalize().toString());
-            URI proxyURI = generateProxyURI(researchObject);
-            Individual proxyR = manifestModel.createIndividual(proxyURI.toString(), ORE.Proxy);
-            manifestModel.add(proxyR, ORE.proxyIn, researchObjectR);
-            manifestModel.add(proxyR, ORE.proxyFor, resourceR);
-            commitTransaction(transactionStarted);
-            Proxy proxy = new Proxy(user, proxyURI);
-            proxy.setProxyFor(resource);
-            proxy.setProxyIn(researchObject);
-            return proxy;
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    private static URI generateProxyURI(ResearchObject researchObject) {
-        return researchObject.getUri().resolve(".ro/proxies/" + UUID.randomUUID());
-    }
-
-
-    @Override
-    public boolean isProxy(ResearchObject researchObject, URI resource) {
-        boolean transactionStarted = beginTransaction(ReadWrite.READ);
-        try {
-            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
-            if (manifestModel == null) {
-                log.warn("Could not load manifest model for :" + researchObject.getUri());
-                return false;
-            }
-            Individual resourceR = manifestModel.getIndividual(resource.normalize().toString());
-            return resourceR != null && resourceR.hasRDFType(ORE.Proxy);
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
-    public boolean existsProxyForResource(ResearchObject researchObject, URI resource) {
-        return getProxyForResource(researchObject, resource) != null;
-    }
-
-
-    @Override
     public URI getProxyForResource(ResearchObject researchObject, URI resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
@@ -891,26 +651,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
                 }
             }
             return null;
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
-    public URI getProxyFor(ResearchObject researchObject, URI proxy) {
-        boolean transactionStarted = beginTransaction(ReadWrite.READ);
-        try {
-            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
-            if (manifestModel == null) {
-                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
-            }
-            Individual proxyR = manifestModel.getIndividual(proxy.normalize().toString());
-            if (proxyR.hasProperty(ORE.proxyFor)) {
-                return URI.create(proxyR.getPropertyResourceValue(ORE.proxyFor).getURI());
-            } else {
-                return null;
-            }
         } finally {
             endTransaction(transactionStarted);
         }
@@ -1044,46 +784,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             manifestModel.removeAll(annotationR, null, null);
             manifestModel.removeAll(null, null, annotationR);
             commitTransaction(transactionStarted);
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
-    public int migrateRosr5To6(String datasource)
-            throws NamingException, SQLException {
-        return 0;
-    }
-
-
-    @Override
-    public int changeURI(URI oldUri, URI uri) {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            int cnt = 0;
-            Iterator<String> it = dataset.listNames();
-            while (it.hasNext()) {
-                Model model = dataset.getNamedModel(it.next());
-                Resource old = model.createResource(oldUri.toString());
-                Resource newu = model.createResource(uri.toString());
-                List<Statement> toDelete = new ArrayList<>();
-                List<Statement> statements = model.listStatements(old, null, (RDFNode) null).toList();
-                for (Statement s : statements) {
-                    toDelete.add(s);
-                    model.add(newu, s.getPredicate(), s.getObject());
-                    cnt++;
-                }
-                statements = model.listStatements(null, null, (RDFNode) old).toList();
-                for (Statement s : statements) {
-                    toDelete.add(s);
-                    model.add(s.getSubject(), s.getPredicate(), newu);
-                    cnt++;
-                }
-                model.remove(toDelete);
-            }
-            commitTransaction(transactionStarted);
-            return cnt;
         } finally {
             endTransaction(transactionStarted);
         }
@@ -1733,162 +1433,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public List<AggregatedResource> getAggregatedResources(ResearchObject researchObject)
-            throws IncorrectModelException {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
-            if (manifestModel == null) {
-                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
-            }
-            Individual source = manifestModel.getIndividual(researchObject.getUri().toString());
-            if (source == null) {
-                throw new IncorrectModelException("Could not find " + researchObject.getUri().toString()
-                        + " in manifest");
-            }
-            Set<RDFNode> aggregatesList = source.listPropertyValues(ORE.aggregates).toSet();
-
-            List<AggregatedResource> aggregated = new ArrayList<AggregatedResource>();
-            for (RDFNode node : aggregatesList) {
-                try {
-                    if (node.isURIResource()) {
-                        if (!isAnnotation(researchObject, new URI(node.asResource().getURI()))) {
-                            aggregated.add(new AggregatedResource(user, researchObject, new URI(node.asResource()
-                                    .getURI())));
-                        }
-                    } else if (node.isResource()) {
-                        URI nodeUri = changeBlankNodeToUriResources(researchObject, manifestModel, node);
-                        if (!isAnnotation(researchObject, nodeUri)) {
-                            aggregated.add(new AggregatedResource(user, researchObject, nodeUri));
-                        }
-                    }
-                } catch (URISyntaxException e) {
-                    continue;
-                }
-            }
-            commitTransaction(transactionStarted);
-            return aggregated;
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    private URI changeBlankNodeToUriResources(ResearchObject researchObject, OntModel model, RDFNode node) {
-        Resource r = model.createResource(researchObject.getUri().resolve(UUID.randomUUID().toString()).toString());
-        List<Statement> statements = new ArrayList<Statement>();
-        for (Statement s : model.listStatements(node.asResource(), null, (RDFNode) null).toList()) {
-            Statement s2 = model.createStatement(r, s.getPredicate(), s.getObject());
-            statements.add(s);
-            model.add(s2);
-        }
-
-        for (Statement s : model.listStatements(null, null, node).toList()) {
-            Statement s2 = model.createStatement(s.getSubject(), s.getPredicate(), r);
-            model.add(s2);
-            statements.add(s);
-        }
-        model.remove(statements);
-        return URI.create(r.getURI());
-    }
-
-
-    @Override
-    public List<Annotation> getAnnotations(ResearchObject researchObject)
-            throws IncorrectModelException {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
-            if (manifestModel == null) {
-                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
-            }
-            Individual source = manifestModel.getIndividual(researchObject.getUri().toString());
-            if (source == null) {
-                throw new IncorrectModelException("Research object not found");
-            }
-            List<RDFNode> aggregatesList = source.listPropertyValues(ORE.aggregates).toList();
-            List<Annotation> annotations = new ArrayList<Annotation>();
-            for (RDFNode node : aggregatesList) {
-                try {
-                    if (node.isURIResource()) {
-                        URI nodeURI = URI.create(node.asResource().getURI());
-                        if (isAnnotation(researchObject, nodeURI)) {
-                            annotations.add(new FillUpAnnotation(user, researchObject, nodeURI, manifestModel));
-                        }
-                    } else if (node.isResource()) {
-                        URI nodeURI = changeBlankNodeToUriResources(researchObject, manifestModel, node);
-                        if (isAnnotation(researchObject, nodeURI)) {
-                            annotations.add(new FillUpAnnotation(user, researchObject, nodeURI, manifestModel));
-                        }
-                    }
-                } catch (IncorrectModelException e) {
-                    log.error("Error assembling annotation for RO " + researchObject.toString(), e);
-                }
-            }
-            commitTransaction(transactionStarted);
-            return annotations;
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
-    public Folder addFolder(ResearchObject researchObject, Folder folder) {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
-            if (manifestModel == null) {
-                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
-            }
-            Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
-            if (ro == null) {
-                throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
-            }
-            folder.setResearchObject(researchObject);
-            Individual resource = manifestModel.createIndividual(folder.getUri().toString(), RO.Folder);
-            resource.addRDFType(RO.Resource);
-            resource.addRDFType(ORE.AggregatedResource);
-            manifestModel.add(ro, ORE.aggregates, resource);
-            Resource folderRMRes = manifestModel.createResource(folder.getResourceMap().getUri().toString());
-            manifestModel.add(resource, ORE.isDescribedBy, folderRMRes);
-            if (!ro.hasProperty(RO.rootFolder)) {
-                manifestModel.add(ro, RO.rootFolder, resource);
-            }
-            URI proxyURI = generateProxyURI(researchObject);
-            Individual proxy = manifestModel.createIndividual(proxyURI.toString(), ORE.Proxy);
-            manifestModel.add(proxy, ORE.proxyIn, ro);
-            manifestModel.add(proxy, ORE.proxyFor, resource);
-            Proxy p = new Proxy(user, proxyURI);
-            p.setProxyFor(folder);
-            p.setProxyIn(researchObject);
-            folder.setProxy(p);
-            manifestModel.add(resource, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
-            manifestModel.add(resource, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
-
-            OntModel folderModel = createOntModelForNamedGraph(folder.getResourceMap().getUri());
-            Resource manifestRes = folderModel.createResource(researchObject.getManifestUri().toString());
-            Individual roInd = folderModel.createIndividual(researchObject.getUri().toString(), RO.ResearchObject);
-            folderModel.add(roInd, ORE.isDescribedBy, manifestRes);
-
-            folderRMRes = folderModel.createResource(folder.getResourceMap().getUri().toString());
-            Individual folderInd = folderModel.createIndividual(folder.getUri().toString(), RO.Folder);
-            folderInd.addRDFType(ORE.Aggregation);
-            folderModel.add(folderInd, ORE.isAggregatedBy, roInd);
-            folderModel.add(folderInd, ORE.isDescribedBy, folderRMRes);
-
-            for (FolderEntry entry : folder.getFolderEntries().values()) {
-                addFolderEntry(folder, folderInd, entry);
-            }
-            commitTransaction(transactionStarted);
-            return folder;
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
     public Annotation generateEvoInformation(ResearchObject researchObject, ResearchObject liveRO, EvoType type) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
@@ -2070,93 +1614,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
 
 
     @Override
-    public AggregatedResource addAnnotationBody(ResearchObject researchObject, URI resourceURI,
-            InputStream inputStream, RDFFormat rdfFormat) {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            resourceURI = resourceURI.normalize();
-            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
-            if (manifestModel == null) {
-                throw new IllegalArgumentException("Manifest not found: " + researchObject.getUri());
-            }
-            Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
-            if (ro == null) {
-                throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
-            }
-            Individual resource = manifestModel.getIndividual(resourceURI.toString());
-            if (resource == null) {
-                resource = manifestModel.createIndividual(resourceURI.toString(), ORE.AggregatedResource);
-            }
-            manifestModel.add(ro, ORE.aggregates, resource);
-            manifestModel.add(resource, DCTerms.created, manifestModel.createTypedLiteral(Calendar.getInstance()));
-            manifestModel.add(resource, DCTerms.creator, manifestModel.createResource(user.getUri().toString()));
-
-            addNamedGraph(resourceURI, inputStream, rdfFormat);
-
-            commitTransaction(transactionStarted);
-            return new AggregatedResource(user, researchObject, resourceURI);
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
-    public void removeAnnotationBody(ResearchObject researchObject, URI graphURI) {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            graphURI = graphURI.normalize();
-            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
-            if (manifestModel == null) {
-                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
-            }
-            Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
-            if (ro == null) {
-                throw new IllegalArgumentException("URI not found: " + researchObject.getUri());
-            }
-            Resource resource = manifestModel.getResource(graphURI.toString());
-            if (resource == null) {
-                throw new IllegalArgumentException("URI not found: " + graphURI);
-            }
-            manifestModel.remove(ro, ORE.aggregates, resource);
-            manifestModel.removeAll(resource, null, null);
-
-            URI proxy = getProxyForResource(researchObject, graphURI);
-            if (proxy != null) {
-                deleteProxy(researchObject, proxy);
-            }
-            if (dataset.containsNamedModel(graphURI.toString())) {
-                dataset.removeNamedModel(graphURI.toString());
-            }
-            commitTransaction(transactionStarted);
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
-    public Folder getRootFolder(ResearchObject researchObject) {
-        boolean transactionStarted = beginTransaction(ReadWrite.READ);
-        try {
-            OntModel manifestModel = getOntModelForNamedGraph(researchObject.getManifestUri());
-            if (manifestModel == null) {
-                throw new IllegalArgumentException("Could not load manifest model for :" + researchObject.getUri());
-            }
-            Individual ro = manifestModel.getIndividual(researchObject.getUri().toString());
-            Resource r = ro.getPropertyResourceValue(RO.rootFolder);
-            if (r == null) {
-                return null;
-            } else {
-                return getFolder(URI.create(r.getURI()));
-            }
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
     public Individual getIndividual(ResearchObject ro) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
@@ -2164,192 +1621,6 @@ public class SemanticMetadataServiceTdb implements SemanticMetadataService {
             Model roEvolutionModel = dataset.getNamedModel(ro.getFixedEvolutionAnnotationBodyUri().toString());
             return ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, roManifestModel.union(roEvolutionModel))
                     .getIndividual(ro.getUri().toString());
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
-    public Folder getFolder(URI folderURI) {
-        boolean transactionStarted = beginTransaction(ReadWrite.READ);
-        try {
-            Folder folder = new Folder(user, null, folderURI);
-            folder.setBuilder(new Builder(user, dataset, useTransactions));
-            if (!dataset.containsNamedModel(folder.getResourceMap().getUri().toString())) {
-                return null;
-            }
-            OntModel model = getOntModelForNamedGraph(folder.getResourceMap().getUri());
-            if (model == null) {
-                throw new IllegalArgumentException("Could not load folder model for :" + folder.getUri());
-            }
-            Individual folderI = model.getIndividual(folder.getUri().toString());
-            List<RDFNode> aggregations = folderI.listPropertyValues(ORE.isAggregatedBy).toList();
-            Individual ro = null;
-            for (RDFNode node : aggregations) {
-                if (node.isURIResource() && node.as(Individual.class).hasRDFType(RO.ResearchObject)) {
-                    ro = node.as(Individual.class);
-                    break;
-                }
-            }
-            // this would work if we turned inference on
-            //        ObjectProperty aggregatedByRO = model.createObjectProperty(RO.NAMESPACE.concat("aggregatedByRO"), true);
-            //        aggregatedByRO.addSuperProperty(ORE.isAggregatedBy);
-            //        aggregatedByRO.addRange(RO.ResearchObject);
-            //        Resource ro = folderI.getPropertyResourceValue(aggregatedByRO);
-            URI roURI = URI.create(ro.getURI());
-            Builder builder = new Builder(user, dataset, useTransactions);
-            folder.setResearchObject(ResearchObject.get(builder, roURI));
-            URI proxyURI = getProxyForResource(folder.getResearchObject(), folder.getUri());
-            Proxy p = new Proxy(user, proxyURI);
-            p.setProxyFor(folder);
-            p.setProxyIn(folder.getResearchObject());
-            folder.setProxy(p);
-
-            List<Individual> entries = model.listIndividuals(RO.FolderEntry).toList();
-            for (Individual entryI : entries) {
-                String proxyIn = entryI.getPropertyResourceValue(ORE.proxyIn).getURI();
-                if (!proxyIn.equals(folder.getUri().toString())) {
-                    continue;
-                }
-                FolderEntry entry = new FolderEntry(user, URI.create(entryI.getURI()));
-                entry.setProxyIn(folder);
-                String proxyFor = entryI.getPropertyResourceValue(ORE.proxyFor).getURI();
-                entry.setProxyFor(folder.getResearchObject().getAggregatedResources().get(URI.create(proxyFor)));
-                String name = entryI.getPropertyValue(RO.entryName).asLiteral().getString();
-                entry.setEntryName(name);
-                folder.getFolderEntries().put(entry.getUri(), entry);
-            }
-            return folder;
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
-    public void updateFolder(Folder folder) {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            OntModel folderModel = getOntModelForNamedGraph(folder.getResourceMap().getUri());
-            if (folderModel == null) {
-                throw new IllegalArgumentException("Could not load folder model for :" + folder.getUri());
-            }
-            Individual folderInd = folderModel.createIndividual(folder.getUri().toString(), RO.Folder);
-            List<Individual> entries = folderModel.listIndividuals(RO.FolderEntry).toList();
-            for (Individual entry : entries) {
-                deleteFolderEntry(entry);
-            }
-
-            for (FolderEntry entry : folder.getFolderEntries().values()) {
-                addFolderEntry(folder, folderInd, entry);
-            }
-            commitTransaction(transactionStarted);
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    /**
-     * Save a folder entry in the triplestore.
-     * 
-     * @param folder
-     *            folder that contains the entry
-     * @param folderInd
-     *            folder individual
-     * @param entry
-     *            entry
-     */
-    private void addFolderEntry(Folder folder, Individual folderInd, FolderEntry entry) {
-        OntModel folderModel = folderInd.getOntModel();
-        if (entry.getUri() == null) {
-            entry.setUri(folder.getUri().resolve("entries/" + UUID.randomUUID()));
-        }
-        entry.setProxyIn(folder);
-        Individual entryInd = folderModel.createIndividual(entry.getUri().toString(), RO.FolderEntry);
-        entryInd.addRDFType(ORE.Proxy);
-        //FIXME we should check if the resource is really aggregated and what classes it has
-        Individual resInd = folderModel.createIndividual(entry.getProxyFor().toString(), RO.Resource);
-        folderModel.add(folderInd, ORE.aggregates, resInd);
-        folderModel.add(resInd, ORE.isAggregatedBy, folderInd);
-        folderModel.add(entryInd, ORE.proxyFor, resInd);
-        folderModel.add(entryInd, ORE.proxyIn, folderInd);
-        Literal name = folderModel.createLiteral(entry.getEntryName());
-        folderModel.add(entryInd, RO.entryName, name);
-
-        OntModel entryModel = createOntModelForNamedGraph(entry.getUri());
-        entryInd = entryModel.createIndividual(entry.getUri().toString(), RO.FolderEntry);
-        entryInd.addProperty(ORE.isAggregatedBy, folderInd);
-    }
-
-
-    /**
-     * Delete a folder entry.
-     * 
-     * @param entry
-     *            entry
-     */
-    private void deleteFolderEntry(Individual entry) {
-        Resource proxyFor = entry.getPropertyResourceValue(ORE.proxyFor);
-        entry.getModel().removeAll(proxyFor, null, null);
-        entry.getModel().removeAll(null, null, proxyFor);
-        entry.remove();
-        removeNamedGraph(URI.create(entry.getURI()));
-    }
-
-
-    @Override
-    public void deleteFolder(Folder folder) {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            OntModel manifestModel = getOntModelForNamedGraph(folder.getResearchObject().getManifestUri());
-            if (manifestModel == null) {
-                throw new IllegalArgumentException("Could not load manifest model for :"
-                        + folder.getResearchObject().getUri());
-            }
-            manifestModel.getIndividual(folder.getUri().toString()).remove();
-
-            OntModel folderModel = getOntModelForNamedGraph(folder.getResourceMap().getUri());
-            if (folderModel == null) {
-                throw new IllegalArgumentException("Could not load folder model for :" + folder.getUri());
-            }
-            List<Individual> entries = folderModel.listIndividuals(RO.FolderEntry).toList();
-            for (Individual entry : entries) {
-                deleteFolderEntry(entry);
-            }
-
-            removeNamedGraph(folder.getResourceMap().getUri());
-            commitTransaction(transactionStarted);
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    @Override
-    public FolderEntry getFolderEntry(URI entryUri) {
-        boolean transactionStarted = beginTransaction(ReadWrite.READ);
-        try {
-            if (!dataset.containsNamedModel(entryUri.toString())) {
-                return null;
-            }
-            OntModel entryModel = getOntModelForNamedGraph(entryUri);
-            if (entryModel == null) {
-                throw new IllegalArgumentException("Could not load folder entry model for :" + entryUri);
-            }
-            Individual entryInd = entryModel.getIndividual(entryUri.toString());
-            if (entryInd == null || !entryInd.hasRDFType(RO.FolderEntry)) {
-                return null;
-            }
-            Resource folderR = entryInd.getPropertyResourceValue(ORE.isAggregatedBy);
-            Folder folder = getFolder(URI.create(folderR.getURI()));
-            for (FolderEntry entry : folder.getFolderEntries().values()) {
-                if (entry.getUri().equals(entryUri)) {
-                    return entry;
-                }
-            }
-            return null;
         } finally {
             endTransaction(transactionStarted);
         }

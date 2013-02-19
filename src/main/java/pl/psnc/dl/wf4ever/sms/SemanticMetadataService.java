@@ -4,25 +4,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
-
-import javax.naming.NamingException;
 
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
-import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
-import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
-import pl.psnc.dl.wf4ever.model.RO.Folder;
-import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
 
@@ -34,13 +26,6 @@ import com.hp.hpl.jena.ontology.Individual;
  * 
  */
 public interface SemanticMetadataService {
-
-    public static final RDFFormat SPARQL_XML = new RDFFormat("XML", "application/sparql-results+xml",
-            Charset.forName("UTF-8"), "xml", false, false);
-
-    public static final RDFFormat SPARQL_JSON = new RDFFormat("JSON", "application/sparql-results+json",
-            Charset.forName("UTF-8"), "json", false, false);
-
 
     /**
      * Return the user profile with which the service has been created.
@@ -85,16 +70,6 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Removes a research object, its manifest, proxies, internal aggregated resources and internal named graphs. A
-     * resource/named graph is considered internal if it contains the research object URI.
-     * 
-     * @param researchObjectURI
-     *            RO URI, absolute
-     */
-    void removeResearchObject(ResearchObject researchObject);
-
-
-    /**
      * Returns the manifest of an RO.
      * 
      * @param manifestURI
@@ -121,69 +96,6 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Removes a resource from ro:ResearchObject.
-     * 
-     * @param researchObjectURI
-     *            RO URI, absolute
-     * @param resourceURI
-     *            resource URI, absolute or relative to RO URI
-     */
-    void removeResource(ResearchObject researchObject, URI resourceURI);
-
-
-    /**
-     * Returns metadata of one or more resources.
-     * 
-     * @param researchObject
-     *            RO
-     * @param resources
-     *            resources
-     * @param rdfFormat
-     *            resource metadata format
-     * @return resource description or null if no data found
-     */
-    InputStream getResource(ResearchObject researchObject, RDFFormat rdfFormat, URI... resources);
-
-
-    /**
-     * Return true if the resource exists and belongs to class ro:Folder
-     * 
-     * @param resourceURI
-     *            resource URI
-     * @return true if the resource exists and belongs to class ro:Folder, false otherwise
-     */
-    boolean isRoFolder(ResearchObject researchObject, URI resourceURI);
-
-
-    /**
-     * Add an annotation body.
-     * 
-     * @param researchObject
-     *            RO that contains the annotation
-     * @param graphURI
-     *            named graph URI
-     * @param inputStream
-     *            named graph content
-     * @param rdfFormat
-     *            graph content format
-     * @return true if a new named graph is added, false if it existed
-     */
-    AggregatedResource addAnnotationBody(ResearchObject researchObject, URI graphURI, InputStream inputStream,
-            RDFFormat rdfFormat);
-
-
-    /**
-     * Remove an annotation body.
-     * 
-     * @param researchObject
-     *            RO that contains the annotation
-     * @param graphURI
-     *            named graph URI
-     */
-    void removeAnnotationBody(ResearchObject researchObject, URI graphURI);
-
-
-    /**
      * Add a named graph to the quadstore. This is a generic method and will be made private in future releases. Use
      * specific methods to add annotations, manifest or folder resource maps.
      * 
@@ -207,19 +119,6 @@ public interface SemanticMetadataService {
      * @return true if a named graph with this URI exists, false otherwie
      */
     boolean containsNamedGraph(URI graphURI);
-
-
-    /**
-     * Checks if the resource is the manifest or there exists an annotation that has ao:body pointing to the resource.
-     * Note that in case of the annotation body, it does not necessarily exist.
-     * 
-     * @param researchObject
-     *            research object to search in
-     * @param resource
-     *            resource which should be pointed
-     * @return true if it's a manifest or annotation body, false otherwise
-     */
-    boolean isROMetadataNamedGraph(ResearchObject researchObject, URI graphURI);
 
 
     /**
@@ -266,14 +165,6 @@ public interface SemanticMetadataService {
      * @return set of RO URIs
      */
     Set<URI> findResearchObjectsByCreator(URI user);
-
-
-    /**
-     * List ro:ResearchObject resources.
-     * 
-     * @return set of RO URIs
-     */
-    Set<URI> findResearchObjects();
 
 
     /**
@@ -331,42 +222,6 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Create a new ro:Proxy for a resource. The resource does not have to be already aggregated.
-     * 
-     * @param researchObject
-     *            research object to which to add the proxy
-     * @param resource
-     *            resource for which the proxy will be
-     * @return proxy URI
-     */
-    Proxy addProxy(ResearchObject researchObject, AggregatedResource resource);
-
-
-    /**
-     * Check if the research object defines a proxy with a given URI
-     * 
-     * @param researchObject
-     *            research object to search
-     * @param resource
-     *            resource that may be a proxy
-     * @return true if the resource is a proxy, false otherwise
-     */
-    boolean isProxy(ResearchObject researchObject, URI resource);
-
-
-    /**
-     * Checks if there exists a proxy that has ore:proxyFor pointing to the resource.
-     * 
-     * @param researchObject
-     *            research object to search in
-     * @param resource
-     *            resource which should be pointed
-     * @return true if a proxy was found, false otherwise
-     */
-    boolean existsProxyForResource(ResearchObject researchObject, URI resource);
-
-
-    /**
      * Find a proxy that has ore:proxyFor pointing to the resource.
      * 
      * @param researchObject
@@ -376,18 +231,6 @@ public interface SemanticMetadataService {
      * @return proxy URI or null
      */
     URI getProxyForResource(ResearchObject researchObject, URI resource);
-
-
-    /**
-     * Return the ore:proxyFor object of a proxy.
-     * 
-     * @param researchObject
-     *            research object in which the proxy is
-     * @param proxy
-     *            the proxy URI
-     * @return the proxyFor object URI or null if not defined
-     */
-    URI getProxyFor(ResearchObject researchObject, URI proxy);
 
 
     /**
@@ -462,33 +305,6 @@ public interface SemanticMetadataService {
      *            the annotation
      */
     void deleteAnnotation(ResearchObject researchObject, Annotation annotation);
-
-
-    /**
-     * Temporary method for converting ROSR5 triplestore to RODL6 triplestore.
-     * 
-     * @param oldDatasource
-     *            ROSR5 datasource
-     * 
-     * @throws NamingException
-     *             couldn't connect to the old datasource .
-     * @throws SQLException
-     *             couldn't connect to the old datasource .
-     */
-    int migrateRosr5To6(String oldDatasource)
-            throws NamingException, SQLException;
-
-
-    /**
-     * Changes all references to the first URI into the second.
-     * 
-     * @param oldUri
-     *            old URI
-     * @param uri
-     *            new URI
-     * @return number of quads changed
-     */
-    int changeURI(URI oldUri, URI uri);
 
 
     /**
@@ -599,46 +415,6 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Get the list of aggregated resources.
-     * 
-     * @param researchObject
-     *            the research object
-     * @return the list of aggregated resources.
-     * @throws IncorrectModelException .
-     */
-    List<AggregatedResource> getAggregatedResources(ResearchObject researchObject)
-            throws IncorrectModelException;
-
-
-    /**
-     * Get the list of RO annotations.
-     * 
-     * @param researchObject
-     *            the research object
-     * @return the list of annotations.
-     * @throws IncorrectModelException .
-     */
-    List<Annotation> getAnnotations(ResearchObject researchObject)
-            throws IncorrectModelException;
-
-
-    /**
-     * Add a named graph describing the folder and aggregate it by the RO. The folder must have its URI set. The folder
-     * entries must have their proxyFor and RO name set. The folder entry URIs will be generated automatically if not
-     * set.
-     * 
-     * If there is no root folder in the RO, the new folder will be the root folder of the RO.
-     * 
-     * @param researchObject
-     *            RO
-     * @param folder
-     *            folder
-     * @return an updated folder
-     */
-    Folder addFolder(ResearchObject researchObject, Folder folder);
-
-
-    /**
      * Generate a RO evolution information .
      * 
      * @param type
@@ -665,57 +441,6 @@ public interface SemanticMetadataService {
 
 
     /**
-     * Find a folder description.
-     * 
-     * @param folderURI
-     *            folder URI
-     * @return a folder instance or null if not found
-     */
-    Folder getFolder(URI folderURI);
-
-
-    /**
-     * Update the named graph with the folder resource map. The folder must have its URI set. The folder entries must
-     * have their proxyFor and RO name set. The folder entry URIs will be generated automatically if not set.
-     * 
-     * Note that the URIs are immutable. Subject to update are: list of folder entries, names of folder entries.
-     * 
-     * @param folder
-     *            the new folder
-     */
-    void updateFolder(Folder folder);
-
-
-    /**
-     * Find the root folder of the RO.
-     * 
-     * @param researchObject
-     *            research object
-     * @return root folder or null if not defined
-     */
-    Folder getRootFolder(ResearchObject researchObject);
-
-
-    /**
-     * Delete the folder.
-     * 
-     * @param folder
-     *            folder
-     */
-    void deleteFolder(Folder folder);
-
-
-    /**
-     * Create folder entry based on the URI or return null if doesn't exist.
-     * 
-     * @param resource
-     *            entry URI
-     * @return folder entry or null
-     */
-    FolderEntry getFolderEntry(URI resource);
-
-
-    /**
      * Remove from aggregated list special files (manifest, evo_info).
      * 
      * @param aggregated
@@ -733,18 +458,5 @@ public interface SemanticMetadataService {
      * @return cleaned list of annotations
      */
     List<Annotation> removeSpecialFilesFromAnnotatios(List<Annotation> annotations);
-
-
-    /**
-     * Create a new ro:ResearchObject and ro:Manifest. The new research object will have a SnapshotRO or ArchiveRO
-     * evolution class.
-     * 
-     * @param researchObjectURI
-     *            RO URI, absolute
-     * @param liveRO
-     *            URI of a live research object, may be null
-     */
-
-    void createResearchObjectCopy(ResearchObject researchObject, ResearchObject liveResearchObject);
 
 }

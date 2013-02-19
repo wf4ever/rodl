@@ -13,7 +13,6 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.hp.hpl.jena.ontology.Individual;
@@ -184,9 +183,9 @@ public class SparqlEngineTest extends BaseTest {
         res = engine.executeSparql(constructQuery, jpeg);
         Assert.assertEquals("RDF/XML is the default format", RDFFormat.RDFXML, res.getFormat());
         res = engine.executeSparql(selectQuery, jpeg);
-        Assert.assertEquals("SPARQL XML is the default format", SemanticMetadataService.SPARQL_XML, res.getFormat());
+        Assert.assertEquals("SPARQL XML is the default format", SparqlEngine.SPARQL_XML, res.getFormat());
         res = engine.executeSparql(askTrueQuery, jpeg);
-        Assert.assertEquals("SPARQL XML is the default format", SemanticMetadataService.SPARQL_XML, res.getFormat());
+        Assert.assertEquals("SPARQL XML is the default format", SparqlEngine.SPARQL_XML, res.getFormat());
     }
 
 }

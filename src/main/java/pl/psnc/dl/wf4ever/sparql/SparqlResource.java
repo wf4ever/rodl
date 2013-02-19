@@ -16,7 +16,6 @@ import org.openrdf.rio.RDFFormat;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.sms.QueryResult;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
 
 import com.sun.jersey.core.header.ContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
@@ -45,7 +44,7 @@ public class SparqlResource {
     @GET
     @Produces({ "application/sparql-results+xml", "application/xml", "text/xml" })
     public Response executeSparqlGetXml(@QueryParam("query") String query) {
-        return executeSparql(query, SemanticMetadataService.SPARQL_XML);
+        return executeSparql(query, SparqlEngine.SPARQL_XML);
     }
 
 
@@ -59,7 +58,7 @@ public class SparqlResource {
     @GET
     @Produces({ "application/sparql-results+json", "application/json" })
     public Response executeSparqlGetJson(@QueryParam("query") String query) {
-        return executeSparql(query, SemanticMetadataService.SPARQL_JSON);
+        return executeSparql(query, SparqlEngine.SPARQL_JSON);
     }
 
 
@@ -102,7 +101,7 @@ public class SparqlResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces({ "application/sparql-results+xml", "application/xml", "text/xml" })
     public Response executeSparqlPostXml(@FormParam("query") String query) {
-        return executeSparql(query, SemanticMetadataService.SPARQL_XML);
+        return executeSparql(query, SparqlEngine.SPARQL_XML);
     }
 
 
@@ -117,7 +116,7 @@ public class SparqlResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces({ "application/sparql-results+json", "application/json" })
     public Response executeSparqlPostJson(@FormParam("query") String query) {
-        return executeSparql(query, SemanticMetadataService.SPARQL_JSON);
+        return executeSparql(query, SparqlEngine.SPARQL_JSON);
     }
 
 
@@ -162,7 +161,7 @@ public class SparqlResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces({ "application/sparql-results+xml", "application/xml", "text/xml" })
     public Response executeSparqlPostXmlMulti(@FormDataParam("query") String query) {
-        return executeSparql(query, SemanticMetadataService.SPARQL_XML);
+        return executeSparql(query, SparqlEngine.SPARQL_XML);
     }
 
 
@@ -177,7 +176,7 @@ public class SparqlResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces({ "application/sparql-results+json", "application/json" })
     public Response executeSparqlPostJsonMulti(@FormDataParam("query") String query) {
-        return executeSparql(query, SemanticMetadataService.SPARQL_JSON);
+        return executeSparql(query, SparqlEngine.SPARQL_JSON);
     }
 
 

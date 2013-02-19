@@ -399,7 +399,11 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
-     * Add a new folder and update the maps.
+     * Add a named graph describing the folder and aggregate it by the RO. The folder must have its URI set. The folder
+     * entries must have their proxyFor and RO name set. The folder entry URIs will be generated automatically if not
+     * set.
+     * 
+     * If there is no root folder in the RO, the new folder will be the root folder of the RO.
      * 
      * @param folderUri
      *            folder URI
@@ -588,7 +592,7 @@ public class ResearchObject extends Thing implements Aggregation {
      * @throws IOException
      *             error creating the temporary file
      * @throws BadRequestException
-     *             the zip contains an invalid RO
+     *             the ZIP contains an invalid RO
      */
     public static ResearchObject create(Builder builder, URI researchObjectUri, MemoryZipFile zip)
             throws IOException, BadRequestException {
@@ -603,22 +607,7 @@ public class ResearchObject extends Thing implements Aggregation {
             dataset.addNamedModel(researchObjectUri.resolve(ResearchObject.MANIFEST_PATH).toString(), model);
         }
         ResearchObject inMemoryResearchObject = inMemoryBuilder.buildResearchObject(researchObjectUri);
-
         ResearchObject researchObject = create(builder, researchObjectUri);
-        //        SemanticMetadataService tmpSms = new SemanticMetadataServiceTdb(ROSRService.SMS.get().getUserProfile(),
-        //                researchObject, zip.getManifestAsInputStream(), RDFFormat.RDFXML);
-        //
-        //        List<AggregatedResource> aggregatedList;
-        //        List<Annotation> annotationsList;
-        //
-        //        try {
-        //            aggregatedList = tmpSms.getAggregatedResources(researchObject);
-        //            annotationsList = tmpSms.getAnnotations(researchObject);
-        //            aggregatedList = tmpSms.removeSpecialFilesFromAggergated(aggregatedList);
-        //            annotationsList = tmpSms.removeSpecialFilesFromAnnotatios(annotationsList);
-        //        } catch (IncorrectModelException e) {
-        //            throw new BadRequestException(e.getMessage(), e);
-        //        }
 
         MimetypesFileTypeMap mfm = new MimetypesFileTypeMap();
         try (InputStream mimeTypesIs = ResearchObject.class.getClassLoader().getResourceAsStream("mime.types")) {
@@ -653,41 +642,6 @@ public class ResearchObject extends Thing implements Aggregation {
                 LOGGER.error("Error when aggregating annotations", e);
             }
         }
-        //        for (AggregatedResource aggregated : aggregatedList) {
-        //            String originalResourceName = researchObject.getUri().relativize(aggregated.getUri()).getPath();
-        //            URI resourceURI = UriBuilder.fromUri(researchObject.getUri()).path(originalResourceName).build();
-        //            UUID uuid = UUID.randomUUID();
-        //            File tmpFile = File.createTempFile("tmp_resource", uuid.toString());
-        //            try {
-        //                if (zip.containsEntry(originalResourceName)) {
-        //                    try (InputStream is = zip.getEntryAsStream(originalResourceName)) {
-        //                        FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
-        //                        IOUtils.copy(is, fileOutputStream);
-        //                        String mimeType = mfm.getContentType(resourceURI.getPath());
-        //                        researchObject.aggregate(originalResourceName, new FileInputStream(tmpFile), mimeType);
-        //                    }
-        //                } else {
-        //                    researchObject.aggregate(aggregated.getUri());
-        //                }
-        //            } catch (AccessDeniedException | DigitalLibraryException | NotFoundException | IncorrectModelException e) {
-        //                LOGGER.error("Error when aggregating resources", e);
-        //            } finally {
-        //                tmpFile.delete();
-        //            }
-        //        }
-        //        for (Annotation annotation : annotationsList) {
-        //            try {
-        //                //FIXME the body thing looks redundant
-        //                if (researchObject.getAggregatedResources().containsKey(annotation.getBody().getUri())) {
-        //                    researchObject.getAggregatedResources().get(annotation.getBody().getUri()).saveGraphAndSerialize();
-        //                }
-        //                researchObject.annotate(annotation.getBody().getUri(), annotation.getAnnotated());
-        //            } catch (DigitalLibraryException | NotFoundException e) {
-        //                LOGGER.error("Error when adding annotations", e);
-        //            }
-        //        }
-        //
-        //        tmpSms.close();
         dataset.close();
         return researchObject;
     }

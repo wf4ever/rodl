@@ -3,19 +3,14 @@
  */
 package pl.psnc.dl.wf4ever.model.ROEVO;
 
-import java.io.InputStream;
 import java.net.URI;
 
 import org.apache.log4j.Logger;
-import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.db.EvoType;
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
-import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.hp.hpl.jena.query.Dataset;
 
@@ -72,34 +67,6 @@ public class ArchiveResearchObject extends FrozenResearchObject {
         } else {
             return null;
         }
-    }
-
-
-    /**
-     * Create new Research Object.
-     * 
-     * @param builder
-     *            model instance builder
-     * @param uri
-     *            RO URI
-     * @param liveRO
-     *            live RO
-     * @return an instance
-     */
-    public static ArchiveResearchObject create(Builder builder, URI uri, ResearchObject liveRO) {
-        ArchiveResearchObject researchObject = builder.buildArchiveResearchObject(uri, liveRO);
-        InputStream manifest;
-        try {
-            ROSRService.SMS.get().createResearchObjectCopy(researchObject, liveRO);
-            manifest = ROSRService.SMS.get().getManifest(researchObject, RDFFormat.RDFXML);
-        } catch (IllegalArgumentException e) {
-            // RO already existed in sms, maybe created by someone else
-            throw new ConflictException("The RO with URI " + researchObject.getUri() + " already exists");
-        }
-
-        DigitalLibraryFactory.getDigitalLibrary().createResearchObject(researchObject.getUri(), manifest,
-            ArchiveResearchObject.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
-        return researchObject;
     }
 
 
