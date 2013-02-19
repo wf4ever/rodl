@@ -86,26 +86,6 @@ public class Builder {
 
 
     /**
-     * Load the triple store location from the properties file. In case of any exceptions, log them and return null.
-     * 
-     * @param filename
-     *            properties file name
-     * @return the path to the triple store directory
-     */
-    private static String getStoreDirectory(String filename) {
-        try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(filename)) {
-            Properties props = new Properties();
-            props.load(is);
-            return props.getProperty("store.directory");
-
-        } catch (Exception e) {
-            LOGGER.error("Trple store location can not be loaded from the properties file", e);
-        }
-        return null;
-    }
-
-
-    /**
      * Init .
      * 
      */
@@ -507,4 +487,25 @@ public class Builder {
         entry.setBuilder(this);
         return entry;
     }
+
+
+    /**
+     * Load the triple store location from the properties file. In case of any exceptions, log them and return null.
+     * 
+     * @param filename
+     *            properties file name
+     * @return the path to the triple store directory
+     */
+    private static String getStoreDirectory(String filename) {
+        try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(filename)) {
+            Properties props = new Properties();
+            props.load(is);
+            return props.getProperty("store.directory");
+
+        } catch (Exception e) {
+            LOGGER.error("Trple store location can not be loaded from the properties file", e);
+        }
+        return null;
+    }
+
 }
