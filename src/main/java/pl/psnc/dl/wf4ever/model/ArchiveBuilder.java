@@ -24,4 +24,10 @@ public class ArchiveBuilder implements EvoBuilder {
         resource.setArchivedBy(user);
     }
 
+
+    @Override
+    public void setIsCopyOf(Thing resource, Thing original) {
+        resource.setArchiveOf(original);
+    }
+
 }

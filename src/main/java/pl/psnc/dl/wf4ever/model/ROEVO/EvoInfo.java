@@ -4,6 +4,7 @@ import java.net.URI;
 
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -12,6 +13,7 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 
@@ -53,11 +55,10 @@ public class EvoInfo extends AggregatedResource {
     public void save()
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         super.save();
-        save(getResearchObject());
     }
 
 
-    private void save(ResearchObject researchObject) {
+    public void saveLiveRO() {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             Individual ro = model.createIndividual(getResearchObject().getUri().toString(), RO.ResearchObject);
@@ -68,4 +69,15 @@ public class EvoInfo extends AggregatedResource {
         }
     }
 
+
+    public void saveSnapshotRO() {
+        ROSRService.SMS.get().generateEvoInformation(getResearchObject(),
+            ((SnapshotResearchObject) getResearchObject()).liveRO, EvoType.SNAPSHOT);
+    }
+
+
+    public void saveArchiveRO() {
+        ROSRService.SMS.get().generateEvoInformation(getResearchObject(),
+            ((ArchiveResearchObject) getResearchObject()).liveRO, EvoType.ARCHIVE);
+    }
 }

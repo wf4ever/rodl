@@ -169,9 +169,11 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
-    private void saveEvoInfo() {
+    public void generateEvoInfo() {
         try {
             EvoInfo evoInfo = EvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this);
+            saveEvoInfo(evoInfo);
+            getAggregatedResources().put(evoInfo.getUri(), evoInfo);
             evoInfo.serialize(uri, RDFFormat.TURTLE);
 
             this.evoInfoAnnotation = annotate(evoInfo.getUri(),
@@ -179,6 +181,11 @@ public class ResearchObject extends Thing implements Aggregation {
         } catch (BadRequestException e) {
             LOGGER.error("Failed to create the evo info annotation", e);
         }
+    }
+
+
+    protected void saveEvoInfo(EvoInfo evoInfo) {
+        evoInfo.saveLiveRO();
     }
 
 
@@ -199,6 +206,7 @@ public class ResearchObject extends Thing implements Aggregation {
         ResearchObject researchObject = builder.buildResearchObject(uri, getCreator(), getCreated());
         evoBuilder.setFrozenAt(researchObject, DateTime.now());
         evoBuilder.setFrozenBy(researchObject, builder.getUser());
+        evoBuilder.setIsCopyOf(researchObject, this);
         researchObject.manifest = getManifest().copy(builder, researchObject);
         researchObject.save();
         // copy the ro:Resources
@@ -222,13 +230,6 @@ public class ResearchObject extends Thing implements Aggregation {
             researchObject.copy(folder, evoBuilder);
         }
         return researchObject;
-    }
-
-
-    /**
-     * Generate and save the evolution information.
-     */
-    public void generateEvoInfo() {
     }
 
 
@@ -288,7 +289,7 @@ public class ResearchObject extends Thing implements Aggregation {
         DigitalLibraryFactory.getDigitalLibrary().createResearchObject(uri,
             getManifest().getGraphAsInputStream(RDFFormat.RDFXML), ResearchObject.MANIFEST_PATH,
             RDFFormat.RDFXML.getDefaultMIMEType());
-        saveEvoInfo();
+        generateEvoInfo();
     }
 
 

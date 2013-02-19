@@ -132,6 +132,7 @@ public class Resource extends AggregatedResource {
         Resource resource2 = builder.buildResource(researchObject, resourceUri, getCreator(), getCreated());
         evoBuilder.setFrozenAt(resource2, DateTime.now());
         evoBuilder.setFrozenBy(resource2, builder.getUser());
+        evoBuilder.setIsCopyOf(resource2, this);
         resource2.setProxy(Proxy.create(builder, researchObject, resource2));
         if (isInternal()) {
             resource2.save(getSerialization(), getStats().getMimeType());

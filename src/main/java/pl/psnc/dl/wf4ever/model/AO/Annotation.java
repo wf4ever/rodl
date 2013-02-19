@@ -249,6 +249,7 @@ public class Annotation extends AggregatedResource {
             getCreated());
         evoBuilder.setFrozenAt(annotation2, DateTime.now());
         evoBuilder.setFrozenBy(annotation2, builder.getUser());
+        evoBuilder.setIsCopyOf(annotation2, this);
         annotation2.setProxy(Proxy.create(builder, researchObject, annotation2));
         annotation2.save();
         return annotation2;

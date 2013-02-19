@@ -24,4 +24,10 @@ public class SnapshotBuilder implements EvoBuilder {
         resource.setSnapshottedBy(user);
     }
 
+
+    @Override
+    public void setIsCopyOf(Thing resource, Thing original) {
+        resource.setSnapshotOf(original);
+    }
+
 }

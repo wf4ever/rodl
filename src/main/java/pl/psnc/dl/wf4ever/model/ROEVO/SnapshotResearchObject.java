@@ -7,10 +7,6 @@ import java.net.URI;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.common.db.EvoType;
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -73,9 +69,8 @@ public class SnapshotResearchObject extends FrozenResearchObject {
 
 
     @Override
-    public void generateEvoInfo()
-            throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        super.generateEvoInfo(EvoType.SNAPSHOT);
+    protected void saveEvoInfo(EvoInfo evoInfo) {
+        evoInfo.saveSnapshotRO();
     }
 
 }

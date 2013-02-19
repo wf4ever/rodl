@@ -35,4 +35,15 @@ public interface EvoBuilder {
      *            the user performing the snapshotting or archival
      */
     void setFrozenBy(Thing resource, UserMetadata user);
+
+
+    /**
+     * Set that one resource is a snapshot or archive of another.
+     * 
+     * @param resource
+     *            the resource that is snapshotted/archived
+     * @param original
+     *            the original resource
+     */
+    void setIsCopyOf(Thing resource, Thing original);
 }

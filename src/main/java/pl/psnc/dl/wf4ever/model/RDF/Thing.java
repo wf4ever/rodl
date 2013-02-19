@@ -108,6 +108,12 @@ public class Thing {
     /** User archiving this resource (if this resource has been archived). */
     protected UserMetadata archivedBy;
 
+    /** The original resource (if this resource has been shapshotted). */
+    protected Thing snapshotOf;
+
+    /** The original resource (if this resource has been archived). */
+    protected Thing archiveOf;
+
 
     /**
      * Constructor that allows to specify a custom dataset.
@@ -727,6 +733,26 @@ public class Thing {
 
     public void setArchivedBy(UserMetadata archivedBy) {
         this.archivedBy = archivedBy;
+    }
+
+
+    public Thing getSnapshotOf() {
+        return snapshotOf;
+    }
+
+
+    public void setSnapshotOf(Thing snapshotOf) {
+        this.snapshotOf = snapshotOf;
+    }
+
+
+    public Thing getArchiveOf() {
+        return archiveOf;
+    }
+
+
+    public void setArchiveOf(Thing archiveOf) {
+        this.archiveOf = archiveOf;
     }
 
 
