@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.model.AO;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -13,6 +14,7 @@ import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -41,6 +43,15 @@ public class AnnotationTest extends BaseTest {
     @Test
     public void testAnnotation() {
         Annotation annotation = new Annotation(userProfile, dataset, true, researchObject, researchObjectUri);
+        Assert.assertEquals(annotation.getResearchObject(), researchObject);
+    }
+
+
+    @Test
+    public void testCreateAnnotation()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/singleFiles/empty.rdf");
+        Annotation annotation = Annotation.create(builder, researchObject, annotationUri, is);
     }
 
 
