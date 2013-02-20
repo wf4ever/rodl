@@ -33,21 +33,20 @@ import com.hp.hpl.jena.tdb.TDBFactory;
  * @author pejot
  * 
  */
-public class BuilderTest {
+public class BuilderTest extends BaseTest {
 
     private Dataset dataset = TDBFactory.createDataset();
     private UserMetadata user = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED);
     private Boolean useTransaction = false;
     Builder builder = new Builder(user, dataset, useTransaction);
     URI exampleUri = URI.create("http://www.example.com/exampleUri/");
-    ResearchObject researchObject;
     DateTime now;
     UserMetadata userM;
 
 
     @Before
     public void setUp() {
-        researchObject = builder.buildResearchObject(exampleUri.resolve("research-object"));
+        super.setUp();
         DateTime.now();
         userM = new UserMetadata("janek", "Jane Kowalski", Role.AUTHENTICATED);
     }

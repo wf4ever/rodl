@@ -11,6 +11,7 @@ import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -48,6 +49,10 @@ public class BaseTest {
 
     /** Resource URI as String, mapped. */
     protected static final String RESOURCE2 = "http://workflows.org/a%20workflow.scufl";
+    /** Empty RO. */
+    protected ResearchObject researchObject;
+    /** Empty RO URI. */
+    protected URI researchObjectUri = URI.create("http://example.org/research-object-empty/");
 
 
     /**
@@ -74,9 +79,9 @@ public class BaseTest {
         dataset.addNamedModel(MANIFEST, model);
         model = FileManager.get().loadModel(ANNOTATION_BODY, ANNOTATION_BODY, "TURTLE");
         dataset.addNamedModel(ANNOTATION_BODY, model);
-
         userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED, URI.create("http://jank"));
         builder = new Builder(userProfile, dataset, false);
+        researchObject = builder.buildResearchObject(URI.create(RESEARCH_OBJECT).resolve("research-object"));
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
     }
 
