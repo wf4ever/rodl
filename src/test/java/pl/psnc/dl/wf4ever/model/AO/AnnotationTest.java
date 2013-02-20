@@ -28,7 +28,7 @@ import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 public class AnnotationTest extends BaseTest {
 
     private ResearchObject ro;
-    private URI annotationUri = URI.create("http://www.example.com/annotationUri/");
+    private URI annotationUri = URI.create("http://www.example.com/ann1");
 
 
     @Override
@@ -36,14 +36,14 @@ public class AnnotationTest extends BaseTest {
     public void setUp()
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
         super.setUp();
-        ro = builder.buildResearchObject(URI.create(("http://www.example.com/ROs/ro/")));
+        ro = builder.buildResearchObject(URI.create((RESEARCH_OBJECT)));
     }
 
 
     @Test
     public void testAnnotation() {
-        Annotation annotation = new Annotation(userProfile, dataset, true, researchObject, researchObjectUri);
-        Assert.assertEquals(annotation.getResearchObject(), researchObject);
+        Annotation annotation = new Annotation(userProfile, dataset, true, fakeResearchObject, fakeResearchObjectUri);
+        Assert.assertEquals(annotation.getResearchObject(), fakeResearchObject);
     }
 
 
@@ -51,7 +51,7 @@ public class AnnotationTest extends BaseTest {
     public void testCreateAnnotation()
             throws BadRequestException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/singleFiles/empty.rdf");
-        Annotation annotation = Annotation.create(builder, researchObject, annotationUri, is);
+        Annotation annotation = Annotation.create(builder, ro, annotationUri, is);
     }
 
 

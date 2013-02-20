@@ -50,9 +50,9 @@ public class BaseTest {
     /** Resource URI as String, mapped. */
     protected static final String RESOURCE2 = "http://workflows.org/a%20workflow.scufl";
     /** Empty RO. */
-    protected ResearchObject researchObject;
+    protected ResearchObject fakeResearchObject;
     /** Empty RO URI. */
-    protected URI researchObjectUri = URI.create("http://example.org/research-object-empty/");
+    protected URI fakeResearchObjectUri = URI.create("http://example.org/research-object-empty/");
 
 
     /**
@@ -81,7 +81,7 @@ public class BaseTest {
         dataset.addNamedModel(ANNOTATION_BODY, model);
         userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED, URI.create("http://jank"));
         builder = new Builder(userProfile, dataset, false);
-        researchObject = builder.buildResearchObject(URI.create(RESEARCH_OBJECT).resolve("research-object"));
+        fakeResearchObject = builder.buildResearchObject(URI.create(RESEARCH_OBJECT).resolve("research-object"));
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
     }
 

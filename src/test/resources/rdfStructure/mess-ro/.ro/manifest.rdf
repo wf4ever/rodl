@@ -30,7 +30,7 @@
     <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:01:10Z</dct:created>
     <ore:isDescribedBy rdf:resource="manifest.rdf"/>
     <ore:aggregates rdf:resource="../afolder/"/>
-    <ore:aggregates rdf:resource="../ann1"/>
+    <ore:aggregates rdf:resource="/ann1"/>
     <ore:aggregates rdf:resource="../a%20workflow.t2flow"/>
     <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/Aggregation"/>
     <rdf:type rdf:resource="http://purl.org/wf4ever/ro#ResearchObject"/>
@@ -56,7 +56,7 @@
     <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:02:10Z</dct:created>
     <rdf:type rdf:resource="http://purl.org/wf4ever/ro#Resource"/>
   </rdf:Description>
-  <rdf:Description rdf:about="../ann1">
+  <rdf:Description rdf:about="/ann1">
     <dct:creator rdf:nodeID="A0"/>
     <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:02:13Z</dct:created>
     <ro:annotatesAggregatedResource rdf:resource="../a%20workflow.t2flow"/>
