@@ -38,7 +38,7 @@ public interface ResearchObjectComponent {
      * 
      * @return the filename
      */
-    String getFilename();
+    String getName();
 
 
     /**

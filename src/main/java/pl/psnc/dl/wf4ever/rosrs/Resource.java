@@ -309,7 +309,7 @@ public class Resource {
         }
         InputStream data;
         String mimeType;
-        String filename = resource.getFilename();
+        String filename = resource.getName();
         if (!resource.isInternal()) {
             throw new NotFoundException("Resource has no content");
         }

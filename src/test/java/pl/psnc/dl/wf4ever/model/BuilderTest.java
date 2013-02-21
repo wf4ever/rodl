@@ -64,7 +64,7 @@ public class BuilderTest extends BaseTest {
         Thing thing = builder.buildThing(exampleUri);
         Assert.assertEquals(thing.getBuilder(), builder);
         Assert.assertEquals(thing.getUri(), exampleUri);
-        Assert.assertNotNull(thing.getFilename());
+        Assert.assertNotNull(thing.getName());
         Assert.assertNull(thing.getArchivedAt());
         Assert.assertNull(thing.getArchivedBy());
         Assert.assertNull(thing.getSnapshottedAt());
@@ -204,7 +204,7 @@ public class BuilderTest extends BaseTest {
             exampleUri.resolve("aggregated-resource"), messRO, user, now);
         Folder folder = builder.buildFolder(messRO, exampleUri.resolve("folder"), userM, now);
         FolderEntry folderEntry = builder.buildFolderEntry(exampleUri, aggregatedResource, folder, "entry");
-        Assert.assertEquals(folderEntry.getFilename(), exampleUri.getPath().replaceAll("/", ""));
+        Assert.assertEquals(folderEntry.getName(), exampleUri.getPath().replaceAll("/", ""));
         Assert.assertEquals(folderEntry.getEntryName(), "entry");
         Assert.assertEquals(folderEntry.getFolder(), folder);
         Assert.assertEquals(folderEntry.getProxyIn(), folder);

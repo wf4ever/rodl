@@ -168,6 +168,7 @@ public class Thing {
      * @return the URI
      */
     public URI getUri(RDFFormat format) {
+        //TODO what in case of the "/" at the end?
         if (uri == null) {
             return null;
         }
@@ -187,11 +188,11 @@ public class Thing {
 
 
     /**
-     * Return a shortest possible name of the Thing.
+     * Return a shortest possible name of the Thing (name of group of filename).
      * 
      * @return a filename or URI if there is no path
      */
-    public String getFilename() {
+    public String getName() {
         if (uri.getPath() == null || uri.getPath().isEmpty()) {
             return uri.toString();
         }

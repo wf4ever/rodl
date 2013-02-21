@@ -4,11 +4,14 @@ import java.net.URI;
 
 import junit.framework.Assert;
 
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.BaseTest;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.hp.hpl.jena.graph.Node;
@@ -62,6 +65,96 @@ public class ThingTest extends BaseTest {
         Assert.assertTrue(specialThing4.isSpecialResource());
         Assert.assertTrue(specialThing6.isSpecialResource());
         Assert.assertTrue(specialThing5.isSpecialResource());
+    }
+
+
+    @Test
+    public void testConstructor() {
+        URI thingUri = URI.create("http://www.example.org/thing");
+        Thing thing = new Thing(userProfile, dataset, true, thingUri);
+        Assert.assertEquals(thing.getCreator(), userProfile);
+        Assert.assertEquals(thing.getUri(), thingUri);
+
+        Thing thing2 = new Thing(userProfile);
+        Assert.assertEquals(thing2.getCreator(), userProfile);
+        Assert.assertEquals(thing2.getUri(), null);
+
+        Thing thing3 = new Thing(userProfile, thingUri);
+        Assert.assertEquals(thing.getCreator(), userProfile);
+        Assert.assertEquals(thing.getUri(), thingUri);
+
+    }
+
+
+    @Test
+    public void testGetUri() {
+        //TODO Discuss the last case
+        URI thingUri = URI.create("http://www.example.org/thing");
+        URI thingUri2 = URI.create("http://www.example.org/thing/");
+        Thing thing = builder.buildThing(thingUri);
+        Thing thing2 = builder.buildThing(thingUri2);
+        Assert.assertEquals(thing.getUri(), thingUri);
+        Assert.assertEquals(thing2.getUri(), thingUri2);
+        Assert.assertEquals(thing.getUri(RDFFormat.TURTLE),
+            URI.create("http://www.example.org/thing.ttl?original=thing"));
+
+        Assert.assertEquals(thing2.getUri(RDFFormat.RDFXML), URI.create("http://www.example.org/thing/.rdf?original="));
+
+        Assert.assertEquals(thing.getUri(),
+            thing.getUri(RDFFormat.TURTLE).resolve(thing.getUri(RDFFormat.TURTLE).getRawQuery().split("=")[1]));
+
+        /*
+         //java.lang.ArrayIndexOutOfBoundsException: 1
+            Assert.assertEquals(thing2.getUri(),
+            thing.getUri(RDFFormat.TURTLE).resolve(thing2.getUri(RDFFormat.TURTLE).getRawQuery().split("=")[1]));
+         */
+    }
+
+
+    @Test
+    public void testGetName() {
+        URI thingUri = URI.create("http://www.example.org/thing");
+        URI thingUri2 = URI.create("http://www.example.org/thing/");
+        Thing thing = builder.buildThing(thingUri);
+        Thing thing2 = builder.buildThing(thingUri2);
+        Assert.assertEquals(thing.getName(), "thing");
+        Assert.assertEquals(thing.getName(), "thing");
+    }
+
+
+    @Test
+    public void testIsNamedGraph() {
+        Assert.assertFalse(messRO2.isNamedGraph());
+        Assert.assertTrue(messRO.getManifest().isNamedGraph());
+        ResearchObject noSavedRO = new ResearchObject(userProfile, URI.create("http://www.example.com/no-saved-ro/"));
+        Assert.assertFalse(noSavedRO.isNamedGraph());
+    }
+
+
+    @Test
+    public void testExtractCreator() {
+        //TODO Why model is null... i don't get it
+        messRO.getAnnotations();
+        DateTime dt = messRO.extractCreated(messRO);
+    }
+
+
+    @Test
+    public void testExtractCreated() {
+        //TODO Why model is null... i don't get it
+        UserMetadata um = messRO.extractCreator(messRO);
+    }
+
+
+    @Test
+    public void testSerialize() {
+        //TODO LEAVE IT ?
+    }
+
+
+    public void testTransacitons() {
+        //TODO HOW ?!
+
     }
 
 

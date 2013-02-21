@@ -50,7 +50,7 @@ public class AnnotationTest extends BaseTest {
 
         Assert.assertEquals(annotation.getUri(), messRO.getUri().resolve("new-annotation"));
         Assert.assertEquals(annotation.getBody().getUri(), URI.create("http://example.org/external.txt"));
-        Assert.assertEquals(annotation.getFilename(), "new-annotation");
+        Assert.assertEquals(annotation.getName(), "new-annotation");
         Assert.assertEquals(annotation.getAnnotated(), expectedTarges);
     }
 
@@ -64,7 +64,7 @@ public class AnnotationTest extends BaseTest {
         expectedTarges.add(messRO);
         Assert.assertEquals(annotation.getUri(), messRO.getUri().resolve("new-annotation"));
         Assert.assertEquals(annotation.getBody().getUri(), messRO.getUri().resolve("ann2-body.txt"));
-        Assert.assertEquals(annotation.getFilename(), "new-annotation");
+        Assert.assertEquals(annotation.getName(), "new-annotation");
         Assert.assertEquals(annotation.getAnnotated(), expectedTarges);
     }
 
@@ -82,7 +82,7 @@ public class AnnotationTest extends BaseTest {
 
         Assert.assertEquals(annotation.getUri(), messRO.getUri().resolve("new-annotation"));
         Assert.assertEquals(annotation.getBody().getUri(), URI.create("http://example.org/external.txt"));
-        Assert.assertEquals(annotation.getFilename(), "new-annotation");
+        Assert.assertEquals(annotation.getName(), "new-annotation");
         Assert.assertEquals(annotation.getAnnotated(), expectedTargets);
 
     }
@@ -223,7 +223,7 @@ public class AnnotationTest extends BaseTest {
 
         Assert.assertEquals(annotation.getUri(), messRO.getUri().resolve("assemble-test"));
         Assert.assertEquals(annotation.getBody().getUri(), URI.create("http://example.org/external.txt"));
-        Assert.assertEquals(annotation.getFilename(), "assemble-test");
+        Assert.assertEquals(annotation.getName(), "assemble-test");
         Assert.assertEquals(annotation.getAnnotated(), expectedTarges);
     }
 
