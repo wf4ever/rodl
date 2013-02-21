@@ -1,0 +1,52 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:ro="http://purl.org/wf4ever/ro#"
+    xmlns:foaf="http://xmlns.com/foaf/0.1/"
+    xmlns:ao="http://purl.org/ao/"
+    xmlns:dct="http://purl.org/dc/terms/"
+    xmlns:ore="http://www.openarchives.org/ore/terms/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xmlns:rdfg="http://www.w3.org/2004/03/trix/rdfg-1/" > 
+  <rdf:Description rdf:nodeID="A0">
+    <foaf:name>t2flow workflow annotation extractor</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Agent"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A1">
+    <foaf:name>Stian Soiland-Reyes</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="manifest.rdf">
+    <dct:creator rdf:nodeID="A2"/>
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T16:01:10Z</dct:created>
+    <ore:describes rdf:resource="../"/>
+    <rdf:type rdf:resource="http://purl.org/wf4ever/ro#Manifest"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A3">
+    <foaf:name>Marco Roos</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+  </rdf:Description>
+ <rdf:Description rdf:about="../">
+    <dct:creator rdf:nodeID="A4"/>
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:01:10Z</dct:created>
+    <ore:isDescribedBy rdf:resource="manifest.rdf"/>
+    <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/Aggregation"/>
+    <rdf:type rdf:resource="http://purl.org/wf4ever/ro#ResearchObject"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="annotationBody.ttl">
+    <dct:creator rdf:nodeID="A3"/>
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2010-05-14T12:02:12Z</dct:created>
+    <rdf:type rdf:resource="http://www.w3.org/2004/03/trix/rdfg-1/Graph"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A4">
+    <foaf:name>Stian Soiland-Reyes</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A5">
+    <foaf:name>Stian Soiland-Reyes</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="A2">
+    <foaf:name>RO manager</foaf:name>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Agent"/>
+  </rdf:Description>
+</rdf:RDF>

@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.model;
 
+import java.io.IOException;
 import java.net.URI;
 
 import org.junit.After;
@@ -38,8 +39,14 @@ public class BaseTest {
     /** RO URI as String, mapped using location-mapping.n3 to a local file. */
     protected static final String RESEARCH_OBJECT = "http://example.org/mess-ro/";
 
+    /** RO URI as String, mapped using location-mapping.n3 to a local file. */
+    protected static final String RESEARCH_OBJECT_2 = "http://example.org/mess-ro-2/";
+
     /** Manifest URI as String, mapped. */
     protected static final String MANIFEST = "http://example.org/mess-ro/.ro/manifest.rdf";
+
+    /** Manifest URI as String, mapped. */
+    protected static final String MANIFEST_2 = "http://example.org/mess-ro-2/.ro/manifest.rdf";
 
     /** Annotation body URI as String, mapped. */
     protected static final String ANNOTATION_BODY = "http://example.org/mess-ro/.ro/annotationBody.ttl";
@@ -50,9 +57,9 @@ public class BaseTest {
     /** Resource URI as String, mapped. */
     protected static final String RESOURCE2 = "http://workflows.org/a%20workflow.scufl";
     /** Empty RO. */
-    protected ResearchObject fakeResearchObject;
-    /** Empty RO URI. */
-    protected URI fakeResearchObjectUri = URI.create("http://example.org/research-object-empty/");
+    protected ResearchObject messRO;
+    /** Empty RO. */
+    protected ResearchObject messRO2;
 
 
     /**
@@ -70,6 +77,8 @@ public class BaseTest {
 
     /**
      * Create the dataset, load the RDF files.
+     * 
+     * @throws IOException
      */
     @Before
     public void setUp() {
@@ -81,7 +90,12 @@ public class BaseTest {
         dataset.addNamedModel(ANNOTATION_BODY, model);
         userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED, URI.create("http://jank"));
         builder = new Builder(userProfile, dataset, false);
-        fakeResearchObject = builder.buildResearchObject(URI.create(RESEARCH_OBJECT).resolve("research-object"));
+        messRO = builder.buildResearchObject(URI.create(RESEARCH_OBJECT));
+        model = FileManager.get().loadModel(MANIFEST_2, MANIFEST_2, "RDF/XML");
+        dataset.addNamedModel(MANIFEST_2, model);
+        builder = new Builder(userProfile, dataset, false);
+        messRO2 = builder.buildResearchObject(URI.create(RESEARCH_OBJECT_2));
+
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
     }
 

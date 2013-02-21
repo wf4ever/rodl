@@ -200,7 +200,7 @@ public class Annotation extends AggregatedResource {
      * @param evoBuilder
      *            builder of evolution properties
      * @param researchObject
-     *            research object aggregating the RO
+     *            research object aggregating the annotation
      * @return the new annotation
      */
     public Annotation copy(Builder builder, EvoBuilder evoBuilder, ResearchObject researchObject) {

@@ -86,7 +86,7 @@ public class BuilderTest extends BaseTest {
     @Test
     public void testBuildSnapshotResearchObject() {
         SnapshotResearchObject snapshotResearchObject = builder.buildSnapshotResearchObject(
-            exampleUri.resolve("snapshot"), fakeResearchObject);
+            exampleUri.resolve("snapshot"), messRO);
         Assert.assertNull(snapshotResearchObject.getSnapshottedAt());
         Assert.assertNull(snapshotResearchObject.getSnapshottedBy());
     }
@@ -95,7 +95,7 @@ public class BuilderTest extends BaseTest {
     @Test
     public void testBuildArchiveResearchObject() {
         SnapshotResearchObject snapshotResearchObject = builder.buildSnapshotResearchObject(
-            exampleUri.resolve("archive"), fakeResearchObject);
+            exampleUri.resolve("archive"), messRO);
         Assert.assertNull(snapshotResearchObject.getArchivedAt());
         Assert.assertNull(snapshotResearchObject.getArchivedBy());
     }
@@ -103,15 +103,15 @@ public class BuilderTest extends BaseTest {
 
     @Test
     public void testBuildManifest() {
-        Manifest manifest = builder.buildManifest(exampleUri, fakeResearchObject);
-        Assert.assertEquals(manifest.getResearchObject(), fakeResearchObject);
+        Manifest manifest = builder.buildManifest(exampleUri, messRO);
+        Assert.assertEquals(manifest.getResearchObject(), messRO);
     }
 
 
     @Test
     public void testBuildManifest2() {
-        Manifest manifest = builder.buildManifest(exampleUri, fakeResearchObject, user, now);
-        Assert.assertEquals(manifest.getResearchObject(), fakeResearchObject);
+        Manifest manifest = builder.buildManifest(exampleUri, messRO, user, now);
+        Assert.assertEquals(manifest.getResearchObject(), messRO);
         Assert.assertEquals(manifest.getCreator(), user);
         Assert.assertEquals(manifest.getCreated(), now);
     }
@@ -120,20 +120,20 @@ public class BuilderTest extends BaseTest {
     @Test
     public void testBuildAggregatedResource() {
         AggregatedResource aggregatedResource = builder.buildAggregatedResource(
-            exampleUri.resolve("aggregated-resource"), fakeResearchObject, user, now);
+            exampleUri.resolve("aggregated-resource"), messRO, user, now);
         Assert.assertEquals(aggregatedResource.getCreated(), now);
         Assert.assertEquals(aggregatedResource.getCreator(), user);
-        Assert.assertEquals(aggregatedResource.getResearchObject(), fakeResearchObject);
+        Assert.assertEquals(aggregatedResource.getResearchObject(), messRO);
     }
 
 
     @Test
     public void testBuildProxy() {
         AggregatedResource aggregatedResource = builder.buildAggregatedResource(
-            exampleUri.resolve("aggregated-resource"), fakeResearchObject, user, DateTime.now());
-        Proxy proxy = builder.buildProxy(exampleUri, aggregatedResource, fakeResearchObject);
+            exampleUri.resolve("aggregated-resource"), messRO, user, DateTime.now());
+        Proxy proxy = builder.buildProxy(exampleUri, aggregatedResource, messRO);
         Assert.assertEquals(proxy.getProxyFor(), aggregatedResource);
-        Assert.assertEquals(proxy.getProxyIn(), fakeResearchObject);
+        Assert.assertEquals(proxy.getProxyIn(), messRO);
     }
 
 
@@ -141,9 +141,9 @@ public class BuilderTest extends BaseTest {
     public void testBuildAnnotation() {
         Thing body = builder.buildThing(exampleUri.resolve("body"));
         Set<Thing> targets = new HashSet<Thing>();
-        targets.add(fakeResearchObject);
-        Annotation annotation = builder.buildAnnotation(fakeResearchObject, exampleUri, body, targets);
-        Assert.assertEquals(annotation.getResearchObject(), fakeResearchObject);
+        targets.add(messRO);
+        Annotation annotation = builder.buildAnnotation(messRO, exampleUri, body, targets);
+        Assert.assertEquals(annotation.getResearchObject(), messRO);
         Assert.assertEquals(annotation.getBody(), body);
     }
 
@@ -152,9 +152,9 @@ public class BuilderTest extends BaseTest {
     public void testBuildAnnotation2() {
         Thing body = builder.buildThing(exampleUri.resolve("body"));
         Set<Thing> targets = new HashSet<Thing>();
-        targets.add(fakeResearchObject);
-        Annotation annotation = builder.buildAnnotation(fakeResearchObject, exampleUri, body, targets, userM, now);
-        Assert.assertEquals(annotation.getResearchObject(), fakeResearchObject);
+        targets.add(messRO);
+        Annotation annotation = builder.buildAnnotation(messRO, exampleUri, body, targets, userM, now);
+        Assert.assertEquals(annotation.getResearchObject(), messRO);
         Assert.assertEquals(annotation.getBody(), body);
         Assert.assertEquals(annotation.getCreator(), userM);
         Assert.assertEquals(annotation.getCreated(), now);
@@ -164,8 +164,8 @@ public class BuilderTest extends BaseTest {
     @Test
     public void testBuildAnnotation3() {
         Thing body = builder.buildThing(exampleUri.resolve("body"));
-        Annotation annotation = builder.buildAnnotation(fakeResearchObject, exampleUri, body, fakeResearchObject, userM, now);
-        Assert.assertEquals(annotation.getResearchObject(), fakeResearchObject);
+        Annotation annotation = builder.buildAnnotation(messRO, exampleUri, body, messRO, userM, now);
+        Assert.assertEquals(annotation.getResearchObject(), messRO);
         Assert.assertEquals(annotation.getBody(), body);
         Assert.assertEquals(annotation.getCreator(), userM);
         Assert.assertEquals(annotation.getCreated(), now);
@@ -174,8 +174,8 @@ public class BuilderTest extends BaseTest {
 
     @Test
     public void testBuildResource() {
-        Resource resource = builder.buildResource(fakeResearchObject, exampleUri, userM, now);
-        Assert.assertEquals(resource.getResearchObject(), fakeResearchObject);
+        Resource resource = builder.buildResource(messRO, exampleUri, userM, now);
+        Assert.assertEquals(resource.getResearchObject(), messRO);
         Assert.assertEquals(resource.getCreator(), userM);
         Assert.assertEquals(resource.getCreated(), now);
     }
@@ -183,8 +183,8 @@ public class BuilderTest extends BaseTest {
 
     @Test
     public void testBuildFolder() {
-        Folder folder = builder.buildFolder(fakeResearchObject, exampleUri, userM, now);
-        Assert.assertEquals(folder.getResearchObject(), fakeResearchObject);
+        Folder folder = builder.buildFolder(messRO, exampleUri, userM, now);
+        Assert.assertEquals(folder.getResearchObject(), messRO);
         Assert.assertEquals(folder.getCreator(), userM);
         Assert.assertEquals(folder.getCreated(), now);
     }
@@ -192,7 +192,7 @@ public class BuilderTest extends BaseTest {
 
     @Test
     public void testBuildFolderResourceMap() {
-        Folder folder = builder.buildFolder(fakeResearchObject, exampleUri.resolve("folder"), userM, now);
+        Folder folder = builder.buildFolder(messRO, exampleUri.resolve("folder"), userM, now);
         FolderResourceMap folderResourceMap = builder.buildFolderResourceMap(exampleUri, folder);
         Assert.assertEquals(folderResourceMap.getFolder(), folder);
     }
@@ -201,8 +201,8 @@ public class BuilderTest extends BaseTest {
     @Test
     public void testBuildFolderEntry() {
         AggregatedResource aggregatedResource = builder.buildAggregatedResource(
-            exampleUri.resolve("aggregated-resource"), fakeResearchObject, user, now);
-        Folder folder = builder.buildFolder(fakeResearchObject, exampleUri.resolve("folder"), userM, now);
+            exampleUri.resolve("aggregated-resource"), messRO, user, now);
+        Folder folder = builder.buildFolder(messRO, exampleUri.resolve("folder"), userM, now);
         FolderEntry folderEntry = builder.buildFolderEntry(exampleUri, aggregatedResource, folder, "entry");
         Assert.assertEquals(folderEntry.getFilename(), exampleUri.getPath().replaceAll("/", ""));
         Assert.assertEquals(folderEntry.getEntryName(), "entry");

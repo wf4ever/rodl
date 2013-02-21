@@ -18,5 +18,6 @@
 
 
    , [ lm:name "http://example.org/mess-ro/.ro/manifest.rdf" ; lm:altName "file:src/test/resources/rdfStructure/mess-ro/.ro/manifest.rdf" ] 
+   , [ lm:name "http://example.org/mess-ro-2/.ro/manifest.rdf" ; lm:altName "file:src/test/resources/rdfStructure/mess-ro-2/.ro/manifest.rdf" ] 
    , [ lm:name "http://example.org/mess-ro/.ro/annotationBody.ttl" ; lm:altName "file:src/test/resources/rdfStructure/mess-ro/.ro/annotationBody.ttl" ] 
    .
