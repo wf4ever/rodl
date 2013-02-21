@@ -86,19 +86,21 @@ public class ImmutableEvoInfo extends EvoInfo {
             }
             if (previousRO != null) {
                 builder.saveHasPrevious(model, getResearchObject(), previousRO);
-
-                //FIXME only this remains to refactor
-                try {
-                    ROSRService.SMS.get().storeAggregatedDifferences(getResearchObject(), previousRO);
-                } catch (URISyntaxException | IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+                //TODO move the store differences code here
             }
-
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);
+        }
+        if (previousRO != null) {
+
+            //FIXME only this remains to refactor
+            try {
+                ROSRService.SMS.get().storeAggregatedDifferences(getResearchObject(), previousRO);
+            } catch (URISyntaxException | IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
         serialize(uri, RDFFormat.TURTLE);
     }
