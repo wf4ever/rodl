@@ -21,9 +21,9 @@ import pl.psnc.dl.wf4ever.model.RO.FolderResourceMap;
 import pl.psnc.dl.wf4ever.model.RO.Manifest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
-import pl.psnc.dl.wf4ever.model.ROEVO.ArchiveResearchObject;
-import pl.psnc.dl.wf4ever.model.ROEVO.EvoInfo;
-import pl.psnc.dl.wf4ever.model.ROEVO.SnapshotResearchObject;
+import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableEvoInfo;
+import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
+import pl.psnc.dl.wf4ever.model.ROEVO.LiveEvoInfo;
 import pl.psnc.dl.wf4ever.vocabulary.W4E;
 
 import com.hp.hpl.jena.query.Dataset;
@@ -237,38 +237,6 @@ public class Builder {
         ResearchObject researchObject = new ResearchObject(user, dataset, useTransactions, uri);
         researchObject.setBuilder(this);
         return researchObject;
-    }
-
-
-    /**
-     * Build a new snapshot research object.
-     * 
-     * @param uri
-     *            the URI
-     * @param liveRO
-     *            the research object that is snapshotted
-     * @return a new snapshot Research Object instance
-     */
-    public SnapshotResearchObject buildSnapshotResearchObject(URI uri, ResearchObject liveRO) {
-        SnapshotResearchObject snapshot = new SnapshotResearchObject(user, dataset, useTransactions, uri, liveRO);
-        snapshot.setBuilder(this);
-        return snapshot;
-    }
-
-
-    /**
-     * Build a new archive research object.
-     * 
-     * @param uri
-     *            the URI
-     * @param liveRO
-     *            the research object that is archived
-     * @return a new archive Research Object instance
-     */
-    public ArchiveResearchObject buildArchiveResearchObject(URI uri, ResearchObject liveRO) {
-        ArchiveResearchObject archive = new ArchiveResearchObject(user, dataset, useTransactions, uri, liveRO);
-        archive.setBuilder(this);
-        return archive;
     }
 
 
@@ -511,6 +479,40 @@ public class Builder {
 
 
     /**
+     * Build a new immutable research object.
+     * 
+     * @param uri
+     *            the URI
+     * @return a new immutable Research Object instance
+     */
+    public ImmutableResearchObject buildImmutableResearchObject(URI uri) {
+        ImmutableResearchObject researchObject = new ImmutableResearchObject(user, dataset, useTransactions, uri);
+        researchObject.setBuilder(this);
+        return researchObject;
+    }
+
+
+    /**
+     * Build a new immutable research object.
+     * 
+     * @param uri
+     *            the URI
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @return a new immutable Research Object instance
+     */
+    public ImmutableResearchObject buildImmutableResearchObject(URI uri, UserMetadata creator, DateTime created) {
+        ImmutableResearchObject researchObject = new ImmutableResearchObject(user, dataset, useTransactions, uri);
+        researchObject.setCreator(creator);
+        researchObject.setCreated(created);
+        researchObject.setBuilder(this);
+        return researchObject;
+    }
+
+
+    /**
      * Build a new evolution information resource.
      * 
      * @param uri
@@ -523,11 +525,35 @@ public class Builder {
      *            creation date
      * @return a new evo info instance
      */
-    public EvoInfo buildEvoInfo(URI uri, ResearchObject researchObject, UserMetadata creator, DateTime created) {
-        EvoInfo evoInfo = new EvoInfo(user, dataset, useTransactions, researchObject, uri);
+    public LiveEvoInfo buildLiveEvoInfo(URI uri, ResearchObject researchObject, UserMetadata creator, DateTime created) {
+        LiveEvoInfo evoInfo = new LiveEvoInfo(user, dataset, useTransactions, researchObject, uri);
         evoInfo.setCreator(creator);
         evoInfo.setCreated(created);
         evoInfo.setBuilder(this);
         return evoInfo;
     }
+
+
+    /**
+     * Build a new evolution information resource.
+     * 
+     * @param uri
+     *            the URI
+     * @param researchObject
+     *            the research object that is described
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @return a new evo info instance
+     */
+    public ImmutableEvoInfo buildImmutableEvoInfo(URI uri, ResearchObject researchObject, UserMetadata creator,
+            DateTime created) {
+        ImmutableEvoInfo evoInfo = new ImmutableEvoInfo(user, dataset, useTransactions, researchObject, uri);
+        evoInfo.setCreator(creator);
+        evoInfo.setCreated(created);
+        evoInfo.setBuilder(this);
+        return evoInfo;
+    }
+
 }

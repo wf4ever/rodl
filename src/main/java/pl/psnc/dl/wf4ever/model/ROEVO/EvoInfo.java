@@ -2,26 +2,17 @@ package pl.psnc.dl.wf4ever.model.ROEVO;
 
 import java.net.URI;
 
-import org.joda.time.DateTime;
-
 import pl.psnc.dl.wf4ever.common.db.EvoType;
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
-import pl.psnc.dl.wf4ever.dl.ConflictException;
-import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
-import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
-import pl.psnc.dl.wf4ever.vocabulary.RO;
-import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 
-import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.query.Dataset;
-import com.hp.hpl.jena.query.ReadWrite;
 
-public class EvoInfo extends AggregatedResource {
+public abstract class EvoInfo extends AggregatedResource {
+
+    protected EvoType evoType;
+
 
     public EvoInfo(UserMetadata user, Dataset dataset, boolean useTransactions, ResearchObject researchObject, URI uri) {
         super(user, dataset, useTransactions, researchObject, uri);
@@ -33,51 +24,11 @@ public class EvoInfo extends AggregatedResource {
     }
 
 
-    /**
-     * Create and save a new manifest.
-     * 
-     * @param builder
-     *            model instance builder
-     * @param uri
-     *            manifest URI
-     * @param researchObject
-     *            research object that is described
-     * @return a new manifest
-     */
-    public static EvoInfo create(Builder builder, URI uri, ResearchObject researchObject) {
-        EvoInfo evoInfo = builder.buildEvoInfo(uri, researchObject, builder.getUser(), DateTime.now());
-        evoInfo.save();
-        return evoInfo;
+    EvoType getEvoType() {
+        return this.evoType;
     }
 
 
-    @Override
-    public void save()
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
-        super.save();
-    }
+    public abstract void load();
 
-
-    public void saveLiveRO() {
-        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
-        try {
-            Individual ro = model.createIndividual(getResearchObject().getUri().toString(), RO.ResearchObject);
-            ro.addRDFType(ROEVO.LiveRO);
-            commitTransaction(transactionStarted);
-        } finally {
-            endTransaction(transactionStarted);
-        }
-    }
-
-
-    public void saveSnapshotRO() {
-        ROSRService.SMS.get().generateEvoInformation(getResearchObject(),
-            ((SnapshotResearchObject) getResearchObject()).liveRO, EvoType.SNAPSHOT);
-    }
-
-
-    public void saveArchiveRO() {
-        ROSRService.SMS.get().generateEvoInformation(getResearchObject(),
-            ((ArchiveResearchObject) getResearchObject()).liveRO, EvoType.ARCHIVE);
-    }
 }

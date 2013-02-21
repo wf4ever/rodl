@@ -9,6 +9,7 @@ import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.SnapshotBuilder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 
 /**
  * Copy one research object to another.
@@ -47,6 +48,7 @@ public class CopyOperation implements Operation {
                 throw new OperationFailedException("source Research Object does not exist");
             }
             EvoBuilder evoBuilder;
+            //TODO can we make it a static EvoBuilder method?
             switch (status.getType()) {
                 case SNAPSHOT:
                     evoBuilder = new SnapshotBuilder();
@@ -55,10 +57,10 @@ public class CopyOperation implements Operation {
                     evoBuilder = new ArchiveBuilder();
                     break;
                 default:
-                    evoBuilder = null;
+                    throw new OperationFailedException("Unsupported evolution type: " + status.getType());
             }
             try {
-                sourceRO.copy(status.getTarget(), evoBuilder);
+                ImmutableResearchObject.create(status.getTarget(), sourceRO, builder, evoBuilder);
             } catch (RodlException e) {
                 throw new OperationFailedException("Failed to copy RO", e);
             }

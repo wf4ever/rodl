@@ -4,6 +4,9 @@ import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
+
+import com.hp.hpl.jena.ontology.OntModel;
 
 /**
  * Builder saving snapshot or archival metadata in resources.
@@ -46,4 +49,19 @@ public interface EvoBuilder {
      *            the original resource
      */
     void setIsCopyOf(Thing resource, Thing original);
+
+
+    void saveRDFType(OntModel model, ImmutableResearchObject researchObject);
+
+
+    void saveHasLive(OntModel model, ImmutableResearchObject researchObject);
+
+
+    void saveFrozenAt(OntModel model, ImmutableResearchObject researchObject);
+
+
+    void saveFrozenBy(OntModel model, ImmutableResearchObject researchObject);
+
+
+    void saveHasFrozen(OntModel model, ImmutableResearchObject researchObject);
 }
