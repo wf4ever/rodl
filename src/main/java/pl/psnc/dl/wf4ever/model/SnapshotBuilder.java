@@ -62,7 +62,8 @@ public class SnapshotBuilder extends EvoBuilder {
     public void saveHasCopy(OntModel model, ImmutableResearchObject researchObject) {
         Individual ro = model.createIndividual(researchObject.getUri().toString(), ROEVO.SnapshotRO);
         Individual live = model.createIndividual(researchObject.getLiveRO().getUri().toString(), ROEVO.LiveRO);
-        ro.addProperty(ROEVO.hasSnapshot, live);
+        ro.addProperty(ROEVO.isSnapshotOf, live);
+        live.addProperty(ROEVO.hasSnapshot, ro);
     }
 
 
@@ -70,7 +71,7 @@ public class SnapshotBuilder extends EvoBuilder {
     public DateTime extractCopyDateTime(OntModel model, ImmutableResearchObject researchObject) {
         Individual ro = model.getIndividual(researchObject.getUri().toString());
         Literal date = ro.getPropertyValue(ROEVO.snapshotedAtTime).asLiteral();
-        return ISODateTimeFormat.dateParser().parseDateTime(date.getString());
+        return ISODateTimeFormat.dateTimeParser().parseDateTime(date.getString());
     }
 
 
@@ -86,8 +87,12 @@ public class SnapshotBuilder extends EvoBuilder {
     @Override
     public ResearchObject extractCopyOf(OntModel model, ImmutableResearchObject researchObject) {
         Individual ro = model.getIndividual(researchObject.getUri().toString());
-        Individual live = ro.getPropertyResourceValue(ROEVO.hasSnapshot).as(Individual.class);
-        return ResearchObject.get(researchObject.getBuilder(), URI.create(live.getURI()));
+        if (ro.hasProperty(ROEVO.isSnapshotOf)) {
+            Individual live = ro.getPropertyResourceValue(ROEVO.isSnapshotOf).as(Individual.class);
+            return ResearchObject.get(researchObject.getBuilder(), URI.create(live.getURI()));
+        } else {
+            return null;
+        }
     }
 
 }

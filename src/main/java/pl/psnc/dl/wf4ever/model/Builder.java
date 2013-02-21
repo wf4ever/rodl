@@ -9,6 +9,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -545,13 +546,15 @@ public class Builder {
      *            author
      * @param created
      *            creation date
+     * @param evoType
      * @return a new evo info instance
      */
     public ImmutableEvoInfo buildImmutableEvoInfo(URI uri, ResearchObject researchObject, UserMetadata creator,
-            DateTime created) {
+            DateTime created, EvoType evoType) {
         ImmutableEvoInfo evoInfo = new ImmutableEvoInfo(user, dataset, useTransactions, researchObject, uri);
         evoInfo.setCreator(creator);
         evoInfo.setCreated(created);
+        evoInfo.setEvoType(evoType);
         evoInfo.setBuilder(this);
         return evoInfo;
     }

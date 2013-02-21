@@ -8,10 +8,12 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
@@ -27,7 +29,7 @@ public class LiveEvoInfo extends EvoInfo {
     private static final Logger LOGGER = Logger.getLogger(LiveEvoInfo.class);
 
     /** Snapshots or archives of a Live RO, sorted from earliest to most recent. */
-    private SortedSet<ImmutableResearchObject> snapshotsOrArchives;
+    private SortedSet<ImmutableResearchObject> snapshotsOrArchives = new TreeSet<>();
 
 
     public LiveEvoInfo(UserMetadata user, Dataset dataset, boolean useTransactions, ResearchObject researchObject,
@@ -61,19 +63,22 @@ public class LiveEvoInfo extends EvoInfo {
 
     @Override
     public void save() {
+        super.save();
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             Individual ro = model.createIndividual(getResearchObject().getUri().toString(), RO.ResearchObject);
             ro.addRDFType(ROEVO.LiveRO);
             for (ImmutableResearchObject immutableRO : snapshotsOrArchives) {
-                immutableRO.getEvoBuilder().saveHasCopy(model, immutableRO);
-                immutableRO.getEvoBuilder().saveCopyDateTime(model, immutableRO);
-                immutableRO.getEvoBuilder().saveCopyAuthor(model, immutableRO);
+                EvoBuilder builder = EvoBuilder.get(immutableRO.getEvoType());
+                builder.saveHasCopy(model, immutableRO);
+                builder.saveCopyDateTime(model, immutableRO);
+                builder.saveCopyAuthor(model, immutableRO);
             }
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);
         }
+        serialize(uri, RDFFormat.TURTLE);
     }
 
 
@@ -98,7 +103,6 @@ public class LiveEvoInfo extends EvoInfo {
             Set<RDFNode> immutables = new HashSet<>();
             immutables.addAll(snapshots);
             immutables.addAll(archives);
-            snapshotsOrArchives = new TreeSet<>();
             for (RDFNode node : immutables) {
                 ImmutableResearchObject immutable = ImmutableResearchObject.get(builder,
                     URI.create(node.asResource().getURI()));

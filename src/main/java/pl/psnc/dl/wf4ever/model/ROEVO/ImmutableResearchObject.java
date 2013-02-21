@@ -32,9 +32,6 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(ImmutableResearchObject.class);
 
-    /** a writer of snapshot/archive properties. */
-    private EvoBuilder evoBuilder;
-
     private ImmutableEvoInfo evoInfo;
 
 
@@ -71,18 +68,19 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
      * @return the new research object
      */
     public static ImmutableResearchObject create(URI uri, ResearchObject researchObject, Builder builder,
-            EvoBuilder evoBuilder) {
+            EvoType evoType) {
         if (ResearchObject.get(builder, uri) != null) {
             throw new ConflictException("Research Object already exists: " + uri);
         }
         ImmutableResearchObject immutableResearchObject = builder.buildImmutableResearchObject(uri,
             researchObject.getCreator(), researchObject.getCreated());
-        immutableResearchObject.evoBuilder = evoBuilder;
         immutableResearchObject.setCopyDateTime(DateTime.now());
         immutableResearchObject.setCopyAuthor(builder.getUser());
         immutableResearchObject.setCopyOf(researchObject);
+        EvoBuilder evoBuilder = EvoBuilder.get(evoType);
         immutableResearchObject.copy(researchObject.getManifest(), evoBuilder);
         immutableResearchObject.save();
+        immutableResearchObject.createEvoInfo(evoType);
         // copy the ro:Resources
         for (pl.psnc.dl.wf4ever.model.RO.Resource resource : researchObject.getResources().values()) {
             try {
@@ -121,7 +119,6 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
         if (!researchObject.getManifest().isNamedGraph()) {
             return null;
         }
-        researchObject.evoBuilder = EvoBuilder.get(researchObject.getEvoType());
         return researchObject;
     }
 
@@ -143,7 +140,7 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
 
     public ImmutableEvoInfo getImmutableEvoInfo() {
         if (evoInfo == null) {
-            evoInfo = ImmutableEvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this);
+            evoInfo = builder.buildImmutableEvoInfo(getFixedEvolutionAnnotationBodyUri(), this, null, null, null);
             getAggregatedResources().put(evoInfo.getUri(), evoInfo);
             evoInfo.load();
         }
@@ -160,25 +157,21 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
     /**
      * Generate new evolution information, including the evolution annotation. This method will change the live RO evo
      * info only if this property is set (it isn't for not-finalized snapshots/archives).
+     * 
+     * @param evoType
+     *            snapshot or archive
      */
-    @Override
-    public void createEvoInfo() {
+    public void createEvoInfo(EvoType evoType) {
         try {
-            evoInfo = ImmutableEvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this);
+            evoInfo = ImmutableEvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this, evoType);
             getAggregatedResources().put(evoInfo.getUri(), evoInfo);
             evoInfo.save();
-            evoInfo.serialize();
 
             this.evoInfoAnnotation = annotate(evoInfo.getUri(), this);
             this.getManifest().serialize();
         } catch (BadRequestException e) {
             LOGGER.error("Failed to create the evo info annotation", e);
         }
-    }
-
-
-    public EvoBuilder getEvoBuilder() {
-        return evoBuilder;
     }
 
 

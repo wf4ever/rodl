@@ -62,7 +62,8 @@ public class ArchiveBuilder extends EvoBuilder {
     public void saveHasCopy(OntModel model, ImmutableResearchObject researchObject) {
         Individual ro = model.createIndividual(researchObject.getUri().toString(), ROEVO.ArchivedRO);
         Individual live = model.createIndividual(researchObject.getLiveRO().getUri().toString(), ROEVO.LiveRO);
-        ro.addProperty(ROEVO.hasArchive, live);
+        ro.addProperty(ROEVO.isArchiveOf, live);
+        live.addProperty(ROEVO.hasArchive, ro);
     }
 
 
@@ -86,8 +87,12 @@ public class ArchiveBuilder extends EvoBuilder {
     @Override
     public ResearchObject extractCopyOf(OntModel model, ImmutableResearchObject researchObject) {
         Individual ro = model.getIndividual(researchObject.getUri().toString());
-        Individual live = ro.getPropertyResourceValue(ROEVO.hasArchive).as(Individual.class);
-        return ResearchObject.get(researchObject.getBuilder(), URI.create(live.getURI()));
+        if (ro.hasProperty(ROEVO.isArchiveOf)) {
+            Individual live = ro.getPropertyResourceValue(ROEVO.isArchiveOf).as(Individual.class);
+            return ResearchObject.get(researchObject.getBuilder(), URI.create(live.getURI()));
+        } else {
+            return null;
+        }
     }
 
 }

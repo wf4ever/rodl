@@ -5,7 +5,6 @@ import org.apache.log4j.Logger;
 import pl.psnc.dl.wf4ever.dl.RodlException;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.model.Builder;
-import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 
@@ -45,9 +44,8 @@ public class CopyOperation implements Operation {
             if (sourceRO == null) {
                 throw new OperationFailedException("source Research Object does not exist");
             }
-            EvoBuilder evoBuilder = EvoBuilder.get(status.getType());
             try {
-                ImmutableResearchObject.create(status.getTarget(), sourceRO, builder, evoBuilder);
+                ImmutableResearchObject.create(status.getTarget(), sourceRO, builder, status.getType());
             } catch (RodlException e) {
                 throw new OperationFailedException("Failed to copy RO", e);
             }

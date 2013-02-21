@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.joda.time.DateTime;
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -12,6 +13,7 @@ import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 
 import com.hp.hpl.jena.ontology.Individual;
@@ -47,11 +49,13 @@ public class ImmutableEvoInfo extends EvoInfo {
      *            manifest URI
      * @param researchObject
      *            research object that is described
+     * @param evoType
      * @return a new manifest
      */
-    public static ImmutableEvoInfo create(Builder builder, URI uri, ImmutableResearchObject researchObject) {
-        ImmutableEvoInfo evoInfo = builder
-                .buildImmutableEvoInfo(uri, researchObject, builder.getUser(), DateTime.now());
+    public static ImmutableEvoInfo create(Builder builder, URI uri, ImmutableResearchObject researchObject,
+            EvoType evoType) {
+        ImmutableEvoInfo evoInfo = builder.buildImmutableEvoInfo(uri, researchObject, builder.getUser(),
+            DateTime.now(), evoType);
         evoInfo.save();
         return evoInfo;
     }
@@ -65,22 +69,20 @@ public class ImmutableEvoInfo extends EvoInfo {
 
     @Override
     public void save() {
-        EvoBuilder builder = getResearchObject().getEvoBuilder();
-        if (builder == null) {
-            throw new IllegalStateException("The immutable research object has no evo builder set");
-        }
         super.save();
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
+            EvoBuilder builder = EvoBuilder.get(evoType);
+            model.createIndividual(getResearchObject().getUri().toString(), RO.ResearchObject);
             builder.saveRDFType(model, getResearchObject());
             builder.saveCopyDateTime(model, getResearchObject());
             builder.saveCopyAuthor(model, getResearchObject());
             if (liveRO != null) {
                 builder.saveHasLive(model, getResearchObject());
-                previousRO = liveRO.getImmutableResearchObjects().last();
+                previousRO = liveRO.getImmutableResearchObjects().isEmpty() ? null : liveRO
+                        .getImmutableResearchObjects().last();
                 liveRO.getImmutableResearchObjects().add(getResearchObject());
                 liveRO.getLiveEvoInfo().save();
-                liveRO.getLiveEvoInfo().serialize();
             }
             if (previousRO != null) {
                 builder.saveHasPrevious(model, getResearchObject(), previousRO);
@@ -98,6 +100,7 @@ public class ImmutableEvoInfo extends EvoInfo {
         } finally {
             endTransaction(transactionStarted);
         }
+        serialize(uri, RDFFormat.TURTLE);
     }
 
 
@@ -118,10 +121,6 @@ public class ImmutableEvoInfo extends EvoInfo {
 
     @Override
     public void load() {
-        EvoBuilder builder = getResearchObject().getEvoBuilder();
-        if (builder == null) {
-            throw new IllegalStateException("The immutable research object has no evo builder set");
-        }
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             Individual ro = model.getIndividual(getResearchObject().getUri().toString());
@@ -133,6 +132,7 @@ public class ImmutableEvoInfo extends EvoInfo {
                 throw new IllegalStateException("Evo info has no information about the evolution class of this RO: "
                         + getResearchObject());
             }
+            EvoBuilder builder = EvoBuilder.get(evoType);
             getResearchObject().setCopyDateTime(builder.extractCopyDateTime(model, getResearchObject()));
             getResearchObject().setCopyAuthor(builder.extractCopyAuthor(model, getResearchObject()));
             getResearchObject().setCopyOf(builder.extractCopyOf(model, getResearchObject()));
@@ -142,4 +142,5 @@ public class ImmutableEvoInfo extends EvoInfo {
             endTransaction(transactionStarted);
         }
     }
+
 }

@@ -24,8 +24,13 @@ public abstract class EvoInfo extends AggregatedResource {
     }
 
 
-    EvoType getEvoType() {
+    public EvoType getEvoType() {
         return this.evoType;
+    }
+
+
+    public void setEvoType(EvoType evoType) {
+        this.evoType = evoType;
     }
 
 

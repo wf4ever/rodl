@@ -169,6 +169,7 @@ public class ResearchObject extends Thing implements Aggregation {
         researchObject.manifest = Manifest.create(builder, researchObject.getUri().resolve(MANIFEST_PATH),
             researchObject);
         researchObject.save();
+        researchObject.createEvoInfo();
         return researchObject;
     }
 
@@ -181,7 +182,6 @@ public class ResearchObject extends Thing implements Aggregation {
             evoInfo = LiveEvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this);
             getAggregatedResources().put(evoInfo.getUri(), evoInfo);
             evoInfo.save();
-            evoInfo.serialize(uri, RDFFormat.TURTLE);
 
             this.evoInfoAnnotation = annotate(evoInfo.getUri(), this);
             this.getManifest().serialize();
@@ -198,7 +198,7 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     public LiveEvoInfo getLiveEvoInfo() {
         if (evoInfo == null) {
-            evoInfo = LiveEvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this);
+            evoInfo = builder.buildLiveEvoInfo(getFixedEvolutionAnnotationBodyUri(), this, null, null);
             getAggregatedResources().put(evoInfo.getUri(), evoInfo);
             evoInfo.load();
         }
@@ -248,7 +248,6 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
-    @Override
     public void save() {
         super.save();
         getManifest().save();
@@ -257,7 +256,6 @@ public class ResearchObject extends Thing implements Aggregation {
         DigitalLibraryFactory.getDigitalLibrary().createResearchObject(uri,
             getManifest().getGraphAsInputStream(RDFFormat.RDFXML), ResearchObject.MANIFEST_PATH,
             RDFFormat.RDFXML.getDefaultMIMEType());
-        createEvoInfo();
     }
 
 

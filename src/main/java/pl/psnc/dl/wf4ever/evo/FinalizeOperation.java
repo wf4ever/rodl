@@ -59,7 +59,6 @@ public class FinalizeOperation implements Operation {
             //            immutableResearchObject.generateEvoInfo();
             immutableResearchObject.setLiveRO(liveRO);
             immutableResearchObject.getEvoInfo().save();
-            immutableResearchObject.getEvoInfo().serialize();
         } catch (RodlException e) {
             throw new OperationFailedException("Could not generate evo info", e);
         } finally {

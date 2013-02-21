@@ -9,7 +9,6 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.PROV;
-import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
@@ -73,9 +72,13 @@ public abstract class EvoBuilder {
 
 
     public ImmutableResearchObject extractPreviousRO(OntModel model, ImmutableResearchObject researchObject) {
-        Individual ro = model.createIndividual(researchObject.getUri().toString(), ROEVO.SnapshotRO);
-        Individual prev = ro.getPropertyResourceValue(PROV.wasRevisionOf).as(Individual.class);
-        return ImmutableResearchObject.get(researchObject.getBuilder(), URI.create(prev.getURI()));
+        Individual ro = model.getIndividual(researchObject.getUri().toString());
+        if (ro.hasProperty(PROV.wasRevisionOf)) {
+            Individual prev = ro.getPropertyResourceValue(PROV.wasRevisionOf).as(Individual.class);
+            return ImmutableResearchObject.get(researchObject.getBuilder(), URI.create(prev.getURI()));
+        } else {
+            return null;
+        }
     }
 
 }
