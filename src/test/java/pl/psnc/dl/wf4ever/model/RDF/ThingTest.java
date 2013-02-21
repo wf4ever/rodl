@@ -4,6 +4,7 @@ import java.net.URI;
 
 import junit.framework.Assert;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
@@ -29,6 +30,7 @@ import de.fuberlin.wiwiss.ng4j.impl.NamedGraphSetImpl;
 public class ThingTest extends BaseTest {
 
     @Override
+    @Before
     public void setUp() {
         super.setUp();
     }
@@ -60,6 +62,14 @@ public class ThingTest extends BaseTest {
         Assert.assertTrue(specialThing4.isSpecialResource());
         Assert.assertTrue(specialThing6.isSpecialResource());
         Assert.assertTrue(specialThing5.isSpecialResource());
+    }
+
+
+    @Test
+    public void testEquals() {
+        Thing first = builder.buildThing(URI.create("http://example.org/example-thing"));
+        Thing second = builder.buildThing(URI.create("http://example.org/example-thing"));
+        Assert.assertTrue(first.equals(second));
     }
 
 

@@ -76,8 +76,9 @@ public class AnnotationTest extends BaseTest {
         Annotation annotation = Annotation.create(builder, messRO, messRO.getUri().resolve("new-annotation"), is);
         Set<Thing> expectedTargets = new HashSet<Thing>();
 
-        expectedTargets.add(builder.buildThing(messRO.getUri().resolve("a%20workflow.t2flow")));
-        expectedTargets.add((Thing) messRO);
+        expectedTargets.add(builder.buildResource(messRO, messRO.getUri().resolve("a%20workflow.t2flow"), userProfile,
+            null));
+        expectedTargets.add(messRO);
 
         Assert.assertEquals(annotation.getUri(), messRO.getUri().resolve("new-annotation"));
         Assert.assertEquals(annotation.getBody().getUri(), URI.create("http://example.org/external.txt"));

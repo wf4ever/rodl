@@ -71,7 +71,6 @@ public class BaseTest {
     @BeforeClass
     public static void setUpBeforeClass()
             throws Exception {
-        DigitalLibraryFactory.loadDigitalLibraryConfiguration("connection.properties");
     }
 
 
@@ -82,6 +81,7 @@ public class BaseTest {
      */
     @Before
     public void setUp() {
+        DigitalLibraryFactory.loadDigitalLibraryConfiguration("connection.properties");
         dataset = TDBFactory.createDataset();
         Model model;
         model = FileManager.get().loadModel(MANIFEST, MANIFEST, "RDF/XML");
