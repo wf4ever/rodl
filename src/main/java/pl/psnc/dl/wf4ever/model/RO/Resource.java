@@ -130,9 +130,9 @@ public class Resource extends AggregatedResource {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
         Resource resource2 = builder.buildResource(researchObject, resourceUri, getCreator(), getCreated());
-        evoBuilder.setFrozenAt(resource2, DateTime.now());
-        evoBuilder.setFrozenBy(resource2, builder.getUser());
-        evoBuilder.setIsCopyOf(resource2, this);
+        resource2.setCopyDateTime(DateTime.now());
+        resource2.setCopyAuthor(builder.getUser());
+        resource2.setCopyOf(this);
         resource2.setProxy(Proxy.create(builder, researchObject, resource2));
         if (isInternal()) {
             resource2.save(getSerialization(), getStats().getMimeType());

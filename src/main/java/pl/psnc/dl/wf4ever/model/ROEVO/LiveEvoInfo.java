@@ -1,10 +1,15 @@
 package pl.psnc.dl.wf4ever.model.ROEVO;
 
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -14,10 +19,14 @@ import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
+import com.hp.hpl.jena.rdf.model.RDFNode;
 
 public class LiveEvoInfo extends EvoInfo {
 
-    /** Snapshots or archives of a Live RO, sorted from earliest to latest. */
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(LiveEvoInfo.class);
+
+    /** Snapshots or archives of a Live RO, sorted from earliest to most recent. */
     private SortedSet<ImmutableResearchObject> snapshotsOrArchives;
 
 
@@ -57,7 +66,9 @@ public class LiveEvoInfo extends EvoInfo {
             Individual ro = model.createIndividual(getResearchObject().getUri().toString(), RO.ResearchObject);
             ro.addRDFType(ROEVO.LiveRO);
             for (ImmutableResearchObject immutableRO : snapshotsOrArchives) {
-                immutableRO.getEvoBuilder().saveHasFrozen(model, immutableRO);
+                immutableRO.getEvoBuilder().saveHasCopy(model, immutableRO);
+                immutableRO.getEvoBuilder().saveCopyDateTime(model, immutableRO);
+                immutableRO.getEvoBuilder().saveCopyAuthor(model, immutableRO);
             }
             commitTransaction(transactionStarted);
         } finally {
@@ -73,8 +84,32 @@ public class LiveEvoInfo extends EvoInfo {
 
     @Override
     public void load() {
-        // TODO Auto-generated method stub
-
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            Individual ro = model.getIndividual(getResearchObject().getUri().toString());
+            if (ro.hasRDFType(ROEVO.LiveRO)) {
+                evoType = EvoType.LIVE;
+            } else {
+                LOGGER.warn("Evo info has no information about the Live class of this RO: " + getResearchObject());
+                evoType = EvoType.LIVE;
+            }
+            Set<RDFNode> snapshots = ro.listPropertyValues(ROEVO.hasSnapshot).toSet();
+            Set<RDFNode> archives = ro.listPropertyValues(ROEVO.hasArchive).toSet();
+            Set<RDFNode> immutables = new HashSet<>();
+            immutables.addAll(snapshots);
+            immutables.addAll(archives);
+            snapshotsOrArchives = new TreeSet<>();
+            for (RDFNode node : immutables) {
+                ImmutableResearchObject immutable = ImmutableResearchObject.get(builder,
+                    URI.create(node.asResource().getURI()));
+                if (immutable == null) {
+                    LOGGER.warn("Immutable research object does not exist: " + node.asResource().getURI());
+                } else {
+                    snapshotsOrArchives.add(immutable);
+                }
+            }
+        } finally {
+            endTransaction(transactionStarted);
+        }
     }
-
 }

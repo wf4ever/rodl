@@ -9,10 +9,8 @@ import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
-import pl.psnc.dl.wf4ever.model.ArchiveBuilder;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
-import pl.psnc.dl.wf4ever.model.SnapshotBuilder;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.Manifest;
@@ -23,10 +21,13 @@ import com.hp.hpl.jena.query.Dataset;
 /**
  * An immutable a research object, i.e. a snapshot or an archive.
  * 
+ * The immutable research object can be compared to other immutable research objects, which is implemented by comparing
+ * the snapshot/archive dates.
+ * 
  * @author piotrekhol
  * 
  */
-public class ImmutableResearchObject extends ResearchObject {
+public class ImmutableResearchObject extends ResearchObject implements Comparable<ImmutableResearchObject> {
 
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(ImmutableResearchObject.class);
@@ -77,9 +78,9 @@ public class ImmutableResearchObject extends ResearchObject {
         ImmutableResearchObject immutableResearchObject = builder.buildImmutableResearchObject(uri,
             researchObject.getCreator(), researchObject.getCreated());
         immutableResearchObject.evoBuilder = evoBuilder;
-        evoBuilder.setFrozenAt(immutableResearchObject, DateTime.now());
-        evoBuilder.setFrozenBy(immutableResearchObject, builder.getUser());
-        evoBuilder.setIsCopyOf(immutableResearchObject, researchObject);
+        immutableResearchObject.setCopyDateTime(DateTime.now());
+        immutableResearchObject.setCopyAuthor(builder.getUser());
+        immutableResearchObject.setCopyOf(researchObject);
         immutableResearchObject.copy(researchObject.getManifest(), evoBuilder);
         immutableResearchObject.save();
         // copy the ro:Resources
@@ -120,16 +121,7 @@ public class ImmutableResearchObject extends ResearchObject {
         if (!researchObject.getManifest().isNamedGraph()) {
             return null;
         }
-        switch (researchObject.getEvoType()) {
-            case SNAPSHOT:
-                researchObject.evoBuilder = new SnapshotBuilder();
-                break;
-            case ARCHIVE:
-                researchObject.evoBuilder = new ArchiveBuilder();
-                break;
-            default:
-                throw new IllegalStateException("New type must be a snaphot or archive");
-        }
+        researchObject.evoBuilder = EvoBuilder.get(researchObject.getEvoType());
         return researchObject;
     }
 
@@ -194,4 +186,24 @@ public class ImmutableResearchObject extends ResearchObject {
         manifest = manifest.copy(builder, this);
     }
 
+
+    @Override
+    public int compareTo(ImmutableResearchObject o) {
+        if (o == null || o.getCopyDateTime() == null) {
+            return 1;
+        }
+        if (getCopyDateTime() == null) {
+            return -1;
+        }
+        return getCopyDateTime().compareTo(o.getCopyDateTime());
+    }
+
+
+    @Override
+    public DateTime getCopyDateTime() {
+        if (super.getCopyDateTime() == null) {
+            getImmutableEvoInfo();
+        }
+        return super.getCopyDateTime();
+    }
 }

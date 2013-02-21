@@ -332,9 +332,9 @@ public class Folder extends Resource implements Aggregation {
             throw new ConflictException("Resource already exists: " + folderUri);
         }
         Folder folder2 = builder.buildFolder(researchObject, folderUri, getCreator(), getCreated());
-        evoBuilder.setFrozenAt(folder2, DateTime.now());
-        evoBuilder.setFrozenBy(folder2, builder.getUser());
-        evoBuilder.setIsCopyOf(folder2, this);
+        folder2.setCopyDateTime(DateTime.now());
+        folder2.setCopyAuthor(builder.getUser());
+        folder2.setCopyOf(this);
         folder2.setProxy(Proxy.create(builder, researchObject, folder2));
         folder2.save();
         for (FolderEntry entry : getFolderEntries().values()) {

@@ -96,23 +96,14 @@ public class Thing {
     /** builder creating the instance, which may be reused for loading other resources. */
     protected Builder builder;
 
-    /** Snapshotting date (if this resource has been shapshotted). */
-    protected DateTime snapshottedAt;
+    /** Snapshotting/archival date (if this resource has been shapshotted/archived). */
+    protected DateTime copyDateTime;
 
-    /** Archival date (if this resource has been archived). */
-    protected DateTime archivedAt;
+    /** User snapshotting/archiving this resource (if this resource has been shapshotted/archived). */
+    protected UserMetadata copyAuthor;
 
-    /** User snapshotting this resource (if this resource has been shapshotted). */
-    protected UserMetadata snapshottedBy;
-
-    /** User archiving this resource (if this resource has been archived). */
-    protected UserMetadata archivedBy;
-
-    /** The original resource (if this resource has been shapshotted). */
-    protected Thing snapshotOf;
-
-    /** The original resource (if this resource has been archived). */
-    protected Thing archiveOf;
+    /** The original resource (if this resource has been shapshotted/archived). */
+    protected Thing copyOf;
 
 
     /**
@@ -696,63 +687,33 @@ public class Thing {
     }
 
 
-    public DateTime getSnapshottedAt() {
-        return snapshottedAt;
+    public DateTime getCopyDateTime() {
+        return copyDateTime;
     }
 
 
-    public void setSnapshottedAt(DateTime snapshottedAt) {
-        this.snapshottedAt = snapshottedAt;
+    public void setCopyDateTime(DateTime copyDateTime) {
+        this.copyDateTime = copyDateTime;
     }
 
 
-    public DateTime getArchivedAt() {
-        return archivedAt;
+    public UserMetadata getCopyAuthor() {
+        return copyAuthor;
     }
 
 
-    public void setArchivedAt(DateTime archivedAt) {
-        this.archivedAt = archivedAt;
+    public void setCopyAuthor(UserMetadata copyAuthor) {
+        this.copyAuthor = copyAuthor;
     }
 
 
-    public UserMetadata getSnapshottedBy() {
-        return snapshottedBy;
+    public Thing getCopyOf() {
+        return copyOf;
     }
 
 
-    public void setSnapshottedBy(UserMetadata snapshottedBy) {
-        this.snapshottedBy = snapshottedBy;
-    }
-
-
-    public UserMetadata getArchivedBy() {
-        return archivedBy;
-    }
-
-
-    public void setArchivedBy(UserMetadata archivedBy) {
-        this.archivedBy = archivedBy;
-    }
-
-
-    public Thing getSnapshotOf() {
-        return snapshotOf;
-    }
-
-
-    public void setSnapshotOf(Thing snapshotOf) {
-        this.snapshotOf = snapshotOf;
-    }
-
-
-    public Thing getArchiveOf() {
-        return archiveOf;
-    }
-
-
-    public void setArchiveOf(Thing archiveOf) {
-        this.archiveOf = archiveOf;
+    public void setCopyOf(Thing copyOf) {
+        this.copyOf = copyOf;
     }
 
 

@@ -1,12 +1,19 @@
 package pl.psnc.dl.wf4ever.model;
 
+import java.net.URI;
+
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
-import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
+import pl.psnc.dl.wf4ever.vocabulary.PROV;
+import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 
+import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.rdf.model.Resource;
 
 /**
  * Builder saving snapshot or archival metadata in resources.
@@ -16,52 +23,59 @@ import com.hp.hpl.jena.ontology.OntModel;
  * @author piotrekhol
  * 
  */
-public interface EvoBuilder {
+public abstract class EvoBuilder {
 
-    /**
-     * Set the snapshot or archival time.
-     * 
-     * @param resource
-     *            the resource that is snapshotted/archived
-     * @param time
-     *            the time of snapshot or archival
-     */
-    void setFrozenAt(Thing resource, DateTime time);
-
-
-    /**
-     * Set the user making the snapshot or archive.
-     * 
-     * @param resource
-     *            the resource that is snapshotted/archived
-     * @param user
-     *            the user performing the snapshotting or archival
-     */
-    void setFrozenBy(Thing resource, UserMetadata user);
+    public static EvoBuilder get(EvoType evoType) {
+        if (evoType == null) {
+            throw new NullPointerException("Null evolution type");
+        }
+        switch (evoType) {
+            case SNAPSHOT:
+                return new SnapshotBuilder();
+            case ARCHIVE:
+                return new ArchiveBuilder();
+            default:
+                throw new IllegalArgumentException("Unsupported evolution type: " + evoType);
+        }
+    }
 
 
-    /**
-     * Set that one resource is a snapshot or archive of another.
-     * 
-     * @param resource
-     *            the resource that is snapshotted/archived
-     * @param original
-     *            the original resource
-     */
-    void setIsCopyOf(Thing resource, Thing original);
+    public abstract void saveRDFType(OntModel model, ImmutableResearchObject researchObject);
 
 
-    void saveRDFType(OntModel model, ImmutableResearchObject researchObject);
+    public abstract void saveHasLive(OntModel model, ImmutableResearchObject researchObject);
 
 
-    void saveHasLive(OntModel model, ImmutableResearchObject researchObject);
+    public abstract void saveCopyDateTime(OntModel model, ImmutableResearchObject researchObject);
 
 
-    void saveFrozenAt(OntModel model, ImmutableResearchObject researchObject);
+    public abstract void saveCopyAuthor(OntModel model, ImmutableResearchObject researchObject);
 
 
-    void saveFrozenBy(OntModel model, ImmutableResearchObject researchObject);
+    public abstract void saveHasCopy(OntModel model, ImmutableResearchObject researchObject);
 
 
-    void saveHasFrozen(OntModel model, ImmutableResearchObject researchObject);
+    public void saveHasPrevious(OntModel model, ImmutableResearchObject researchObject,
+            ImmutableResearchObject previousRO) {
+        Individual ro = model.getIndividual(researchObject.getUri().toString());
+        Resource prev = model.getResource(previousRO.getUri().toString());
+        ro.addProperty(PROV.wasRevisionOf, prev);
+    }
+
+
+    public abstract DateTime extractCopyDateTime(OntModel model, ImmutableResearchObject researchObject);
+
+
+    public abstract UserMetadata extractCopyAuthor(OntModel model, ImmutableResearchObject researchObject);
+
+
+    public abstract ResearchObject extractCopyOf(OntModel model, ImmutableResearchObject researchObject);
+
+
+    public ImmutableResearchObject extractPreviousRO(OntModel model, ImmutableResearchObject researchObject) {
+        Individual ro = model.createIndividual(researchObject.getUri().toString(), ROEVO.SnapshotRO);
+        Individual prev = ro.getPropertyResourceValue(PROV.wasRevisionOf).as(Individual.class);
+        return ImmutableResearchObject.get(researchObject.getBuilder(), URI.create(prev.getURI()));
+    }
+
 }

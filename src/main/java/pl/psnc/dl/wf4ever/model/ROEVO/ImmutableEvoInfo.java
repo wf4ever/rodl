@@ -6,17 +6,17 @@ import java.net.URISyntaxException;
 
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
-import pl.psnc.dl.wf4ever.vocabulary.PROV;
+import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
-import com.hp.hpl.jena.rdf.model.Resource;
 
 public class ImmutableEvoInfo extends EvoInfo {
 
@@ -73,8 +73,8 @@ public class ImmutableEvoInfo extends EvoInfo {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             builder.saveRDFType(model, getResearchObject());
-            builder.saveFrozenAt(model, getResearchObject());
-            builder.saveFrozenBy(model, getResearchObject());
+            builder.saveCopyDateTime(model, getResearchObject());
+            builder.saveCopyAuthor(model, getResearchObject());
             if (liveRO != null) {
                 builder.saveHasLive(model, getResearchObject());
                 previousRO = liveRO.getImmutableResearchObjects().last();
@@ -83,9 +83,7 @@ public class ImmutableEvoInfo extends EvoInfo {
                 liveRO.getLiveEvoInfo().serialize();
             }
             if (previousRO != null) {
-                Individual ro = model.getIndividual(getResearchObject().getUri().toString());
-                Resource prev = model.getResource(previousRO.getUri().toString());
-                ro.addProperty(PROV.wasRevisionOf, prev);
+                builder.saveHasPrevious(model, getResearchObject(), previousRO);
 
                 //FIXME only this remains to refactor
                 try {
@@ -120,7 +118,28 @@ public class ImmutableEvoInfo extends EvoInfo {
 
     @Override
     public void load() {
-        // TODO Auto-generated method stub
-
+        EvoBuilder builder = getResearchObject().getEvoBuilder();
+        if (builder == null) {
+            throw new IllegalStateException("The immutable research object has no evo builder set");
+        }
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            Individual ro = model.getIndividual(getResearchObject().getUri().toString());
+            if (ro.hasRDFType(ROEVO.SnapshotRO)) {
+                evoType = EvoType.SNAPSHOT;
+            } else if (ro.hasRDFType(ROEVO.ArchivedRO)) {
+                evoType = EvoType.ARCHIVE;
+            } else {
+                throw new IllegalStateException("Evo info has no information about the evolution class of this RO: "
+                        + getResearchObject());
+            }
+            getResearchObject().setCopyDateTime(builder.extractCopyDateTime(model, getResearchObject()));
+            getResearchObject().setCopyAuthor(builder.extractCopyAuthor(model, getResearchObject()));
+            getResearchObject().setCopyOf(builder.extractCopyOf(model, getResearchObject()));
+            liveRO = (ResearchObject) getResearchObject().getCopyOf();
+            previousRO = builder.extractPreviousRO(model, getResearchObject());
+        } finally {
+            endTransaction(transactionStarted);
+        }
     }
 }
