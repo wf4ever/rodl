@@ -108,6 +108,7 @@ public class ThingTest extends BaseTest {
             Assert.assertEquals(thing2.getUri(),
             thing.getUri(RDFFormat.TURTLE).resolve(thing2.getUri(RDFFormat.TURTLE).getRawQuery().split("=")[1]));
          */
+        assert false;
     }
 
 
@@ -136,6 +137,8 @@ public class ThingTest extends BaseTest {
         //TODO Why model is null... i don't get it
         researchObject.getAnnotations();
         DateTime dt = researchObject.extractCreated(researchObject);
+        //model is empty. why ?
+        assert false;
     }
 
 

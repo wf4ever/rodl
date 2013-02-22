@@ -90,9 +90,9 @@ public class AggregatedResourceTest extends BaseTest {
         AggregatedResource aggregatedResource = builder.buildAggregatedResource(aggregatedResourceUri, researchObject,
             userProfile, DateTime.now());
         aggregatedResource.save();
-        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ore/ann1.rdf");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/ann1.rdf");
         aggregatedResource.update(is, "RDF/XML");
-        is = getClass().getClassLoader().getResourceAsStream("model/ore/ann1.rdf");
+        is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/ann1.rdf");
         Model model = ModelFactory.createDefaultModel();
         model.read(aggregatedResource.getGraphAsInputStream(RDFFormat.RDFXML), null);
         Model model2 = ModelFactory.createDefaultModel();
@@ -109,10 +109,10 @@ public class AggregatedResourceTest extends BaseTest {
         AggregatedResource aggregatedResource = builder.buildAggregatedResource(aggregatedResourceUri, researchObject,
             userProfile, DateTime.now());
         aggregatedResource.save();
-        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ore/ann1.rdf");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/ann1.rdf");
         aggregatedResource.update(is, "RDF/XML");
         aggregatedResource.updateReferences(researchObject2);
-        is = getClass().getClassLoader().getResourceAsStream("model/ore/ann1.rdf");
+        is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/ann1.rdf");
         Model model = ModelFactory.createDefaultModel();
         model.read(aggregatedResource.getGraphAsInputStream(RDFFormat.RDFXML), null);
         Model model2 = ModelFactory.createDefaultModel();
