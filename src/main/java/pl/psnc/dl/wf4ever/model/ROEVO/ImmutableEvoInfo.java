@@ -28,6 +28,12 @@ import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 
+/**
+ * Evolution information resource associated with an immutable RO such as a snapshot or an archive.
+ * 
+ * @author piotrekhol
+ * 
+ */
 public class ImmutableEvoInfo extends EvoInfo {
 
     /** previous snapshot or archive, if exists. */
@@ -43,14 +49,24 @@ public class ImmutableEvoInfo extends EvoInfo {
     private static final String IS_FINALIZED = ROEVO.NAMESPACE + "isFinalized";
 
 
+    /**
+     * Constructor.
+     * 
+     * @param user
+     *            user creating this resource
+     * @param dataset
+     *            custom dataset
+     * @param useTransactions
+     *            should transactions be used. Note that not using transactions on a dataset which already uses
+     *            transactions may make it unreadable.
+     * @param researchObject
+     *            research object described by this resource
+     * @param uri
+     *            resource URI
+     */
     public ImmutableEvoInfo(UserMetadata user, Dataset dataset, boolean useTransactions, ResearchObject researchObject,
             URI uri) {
         super(user, dataset, useTransactions, researchObject, uri);
-    }
-
-
-    public ImmutableEvoInfo(UserMetadata user, ResearchObject researchObject, URI uri) {
-        super(user, researchObject, uri);
     }
 
 
@@ -64,6 +80,7 @@ public class ImmutableEvoInfo extends EvoInfo {
      * @param researchObject
      *            research object that is described
      * @param evoType
+     *            is the research object a snapshot or an archive
      * @return a new manifest
      */
     public static ImmutableEvoInfo create(Builder builder, URI uri, ImmutableResearchObject researchObject,
@@ -124,6 +141,12 @@ public class ImmutableEvoInfo extends EvoInfo {
     }
 
 
+    /**
+     * Save a change specification in this resource's model in the triplestore.
+     * 
+     * @param changeSpecification
+     *            the change specification
+     */
     public void saveChangeSpecification(ChangeSpecification changeSpecification) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
@@ -137,6 +160,12 @@ public class ImmutableEvoInfo extends EvoInfo {
     }
 
 
+    /**
+     * Save a change in this resource's model in the triplestore.
+     * 
+     * @param change
+     *            the change, i.e. a resource addition, modification or removal
+     */
     public void saveChange(Change change) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
@@ -201,6 +230,11 @@ public class ImmutableEvoInfo extends EvoInfo {
     }
 
 
+    /**
+     * Create a change specification based on the data saved in this resource's model.
+     * 
+     * @return a change specification with changes, or null if not found
+     */
     private ChangeSpecification extractChangeSpecification() {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
@@ -220,6 +254,16 @@ public class ImmutableEvoInfo extends EvoInfo {
     }
 
 
+    /**
+     * Create changes of a given type based on this resource's model.
+     * 
+     * @param changeSpecification
+     *            change specification to which the changes must belong
+     * @param type
+     *            type of change to create
+     * @param typeClass
+     *            class of change to look for
+     */
     private void extractChanges(ChangeSpecification changeSpecification, ChangeType type, OntClass typeClass) {
         String queryString = String
                 .format(
