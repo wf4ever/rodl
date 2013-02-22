@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.model.RDF;
 
+import java.io.InputStream;
 import java.net.URI;
 
 import junit.framework.Assert;
@@ -143,6 +144,24 @@ public class ThingTest extends BaseTest {
 
 
     @Test
+    public void testSave() {
+        URI thingUri = URI.create("http://www.example.org/thing");
+        Thing thing = builder.buildThing(thingUri);
+        thing.save();
+        thing.save();
+    }
+
+
+    @Test
+    public void testDelete() {
+        researchObject.getManifest().serialize();
+        Assert.assertTrue(dataset.containsNamedModel(researchObject.getManifest().getUri().toString()));
+        ((Thing) (researchObject.getManifest())).delete();
+        Assert.assertFalse(dataset.containsNamedModel(researchObject.getManifest().getUri().toString()));
+    }
+
+
+    @Test
     public void testExtractCreated() {
         //TODO Why model is null... i don't get it
         UserMetadata um = researchObject.extractCreator(researchObject);
@@ -166,6 +185,29 @@ public class ThingTest extends BaseTest {
         Thing first = builder.buildThing(URI.create("http://example.org/example-thing"));
         Thing second = builder.buildThing(URI.create("http://example.org/example-thing"));
         Assert.assertTrue(first.equals(second));
+    }
+
+
+    @Test
+    public void testGetGraphAsInputStream() {
+        InputStream is = ((Thing) (researchObject.getManifest())).getGraphAsInputStream(RDFFormat.RDFXML);
+        Assert.assertNotNull(is);
+    }
+
+
+    @Test
+    public void testGetGraphAsInputStreamFromEmptyObject() {
+        InputStream is = ((Thing) (researchObject.getManifest())).getGraphAsInputStream(RDFFormat.RDFXML);
+        Assert.assertNull(is);
+    }
+
+
+    @Test
+    public void testGetGraphAsInputStreamFromEmptyObject2() {
+        researchObject.getManifest().serialize();
+        ((Thing) (researchObject.getManifest())).delete();
+        InputStream is = ((Thing) (researchObject.getManifest())).getGraphAsInputStream(RDFFormat.RDFXML);
+        Assert.assertNull(is);
     }
 
 

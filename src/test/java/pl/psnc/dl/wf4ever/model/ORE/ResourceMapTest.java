@@ -4,6 +4,7 @@ import java.net.URI;
 
 import junit.framework.Assert;
 
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
@@ -73,5 +74,43 @@ public class ResourceMapTest extends BaseTest {
                 .toString());
         Assert.assertEquals(ORE.ResourceMap.getURI(), r.getPropertyResourceValue(RDF.type).getURI().toString());
 
+    }
+
+
+    @Test
+    public void testDelete() {
+        resourceMap.save();
+        resourceMap.delete();
+        //TODO DL ERROR, WHY?
+        assert false;
+    }
+
+
+    @Test
+    public void saveAggregatedResourceTest() {
+        URI aggregatedResourceUri = researchObject.getUri().resolve("aggregated-resource");
+        AggregatedResource aggregatedResource = builder.buildAggregatedResource(aggregatedResourceUri, researchObject,
+            userProfile, DateTime.now());
+        resourceMap.save();
+        resourceMap.saveAggregatedResource(aggregatedResource);
+        Model model = ModelFactory.createDefaultModel();
+        model.read(resourceMap.getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Resource aggregated = model.getResource(aggregatedResource.getUri().toString());
+        Assert.assertEquals(ORE.AggregatedResource.getURI(), aggregated.getPropertyResourceValue(RDF.type).getURI()
+                .toString());
+        Resource r = model.getResource(researchObject.getUri().toString());
+        Assert.assertTrue(r.hasProperty(ORE.aggregates, aggregated));
+    }
+
+
+    @Test
+    public void saveProxyTest() {
+        URI aggregatedResourceUri = researchObject.getUri().resolve("aggregated-resource");
+        AggregatedResource aggregatedResource = builder.buildAggregatedResource(aggregatedResourceUri, researchObject,
+            userProfile, DateTime.now());
+        aggregatedResource.save();
+        URI proxyUri = researchObject.getUri().resolve("proxy");
+        Proxy proxy = builder.buildProxy(proxyUri, aggregatedResource, researchObject);
+        resourceMap.saveProxy(proxy);
     }
 }
