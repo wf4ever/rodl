@@ -9,6 +9,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -21,8 +22,9 @@ import pl.psnc.dl.wf4ever.model.RO.FolderResourceMap;
 import pl.psnc.dl.wf4ever.model.RO.Manifest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
-import pl.psnc.dl.wf4ever.model.ROEVO.ArchiveResearchObject;
-import pl.psnc.dl.wf4ever.model.ROEVO.SnapshotResearchObject;
+import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableEvoInfo;
+import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
+import pl.psnc.dl.wf4ever.model.ROEVO.LiveEvoInfo;
 import pl.psnc.dl.wf4ever.vocabulary.W4E;
 
 import com.hp.hpl.jena.query.Dataset;
@@ -82,6 +84,26 @@ public class Builder {
      */
     public Builder(UserMetadata user) {
         this(user, TDBFactory.createDataset(TRIPLE_STORE_DIR), true);
+    }
+
+
+    /**
+     * Load the triple store location from the properties file. In case of any exceptions, log them and return null.
+     * 
+     * @param filename
+     *            properties file name
+     * @return the path to the triple store directory
+     */
+    private static String getStoreDirectory(String filename) {
+        try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(filename)) {
+            Properties props = new Properties();
+            props.load(is);
+            return props.getProperty("store.directory");
+
+        } catch (Exception e) {
+            LOGGER.error("Trple store location can not be loaded from the properties file", e);
+        }
+        return null;
     }
 
 
@@ -216,38 +238,6 @@ public class Builder {
         ResearchObject researchObject = new ResearchObject(user, dataset, useTransactions, uri);
         researchObject.setBuilder(this);
         return researchObject;
-    }
-
-
-    /**
-     * Build a new snapshot research object.
-     * 
-     * @param uri
-     *            the URI
-     * @param liveRO
-     *            the research object that is snapshotted
-     * @return a new snapshot Research Object instance
-     */
-    public SnapshotResearchObject buildSnapshotResearchObject(URI uri, ResearchObject liveRO) {
-        SnapshotResearchObject snapshot = new SnapshotResearchObject(user, dataset, useTransactions, uri, liveRO);
-        snapshot.setBuilder(this);
-        return snapshot;
-    }
-
-
-    /**
-     * Build a new archive research object.
-     * 
-     * @param uri
-     *            the URI
-     * @param liveRO
-     *            the research object that is archived
-     * @return a new archive Research Object instance
-     */
-    public ArchiveResearchObject buildArchiveResearchObject(URI uri, ResearchObject liveRO) {
-        ArchiveResearchObject archive = new ArchiveResearchObject(user, dataset, useTransactions, uri, liveRO);
-        archive.setBuilder(this);
-        return archive;
     }
 
 
@@ -490,22 +480,99 @@ public class Builder {
 
 
     /**
-     * Load the triple store location from the properties file. In case of any exceptions, log them and return null.
+     * Build a new immutable research object.
      * 
-     * @param filename
-     *            properties file name
-     * @return the path to the triple store directory
+     * @param uri
+     *            the URI
+     * @return a new immutable Research Object instance
      */
-    private static String getStoreDirectory(String filename) {
-        try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(filename)) {
-            Properties props = new Properties();
-            props.load(is);
-            return props.getProperty("store.directory");
+    public ImmutableResearchObject buildImmutableResearchObject(URI uri) {
+        ImmutableResearchObject researchObject = new ImmutableResearchObject(user, dataset, useTransactions, uri);
+        researchObject.setBuilder(this);
+        return researchObject;
+    }
 
-        } catch (Exception e) {
-            LOGGER.error("Trple store location can not be loaded from the properties file", e);
-        }
-        return null;
+
+    /**
+     * Build a new immutable research object.
+     * 
+     * @param uri
+     *            the URI
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @return a new immutable Research Object instance
+     */
+    public ImmutableResearchObject buildImmutableResearchObject(URI uri, UserMetadata creator, DateTime created) {
+        ImmutableResearchObject researchObject = new ImmutableResearchObject(user, dataset, useTransactions, uri);
+        researchObject.setCreator(creator);
+        researchObject.setCreated(created);
+        researchObject.setBuilder(this);
+        return researchObject;
+    }
+
+
+    /**
+     * Build a new evolution information resource.
+     * 
+     * @param uri
+     *            the URI
+     * @param researchObject
+     *            the research object that is described
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @return a new evo info instance
+     */
+    public LiveEvoInfo buildLiveEvoInfo(URI uri, ResearchObject researchObject, UserMetadata creator, DateTime created) {
+        LiveEvoInfo evoInfo = new LiveEvoInfo(user, dataset, useTransactions, researchObject, uri);
+        evoInfo.setCreator(creator);
+        evoInfo.setCreated(created);
+        evoInfo.setBuilder(this);
+        return evoInfo;
+    }
+
+
+    /**
+     * Build a new evolution information resource.
+     * 
+     * @param uri
+     *            the URI
+     * @param immutableResearchObject
+     *            the research object that is described
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @param evoType
+     * @return a new evo info instance
+     */
+    public ImmutableEvoInfo buildImmutableEvoInfo(URI uri, ImmutableResearchObject immutableResearchObject,
+            UserMetadata creator, DateTime created, EvoType evoType) {
+        ImmutableEvoInfo evoInfo = new ImmutableEvoInfo(user, dataset, useTransactions, immutableResearchObject, uri);
+        evoInfo.setCreator(creator);
+        evoInfo.setCreated(created);
+        evoInfo.setEvoType(evoType);
+        evoInfo.setBuilder(this);
+        return evoInfo;
+    }
+
+
+    /**
+     * Build a new evolution information resource.
+     * 
+     * @param uri
+     *            the URI
+     * @param immutableResearchObject
+     *            the research object that is described
+     * @return a new evo info instance
+     */
+    public ImmutableEvoInfo buildImmutableEvoInfo(URI uri, ImmutableResearchObject immutableResearchObject) {
+        ImmutableEvoInfo evoInfo = new ImmutableEvoInfo(user, dataset, useTransactions, immutableResearchObject, uri);
+        evoInfo.setBuilder(this);
+        return evoInfo;
     }
 
 }

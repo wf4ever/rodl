@@ -22,7 +22,7 @@ import pl.psnc.dl.wf4ever.model.RO.FolderResourceMap;
 import pl.psnc.dl.wf4ever.model.RO.Manifest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
-import pl.psnc.dl.wf4ever.model.ROEVO.SnapshotResearchObject;
+import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.tdb.TDBFactory;
@@ -65,10 +65,9 @@ public class BuilderTest extends BaseTest {
         Assert.assertEquals(thing.getBuilder(), builder);
         Assert.assertEquals(thing.getUri(), exampleUri);
         Assert.assertNotNull(thing.getName());
-        Assert.assertNull(thing.getArchivedAt());
-        Assert.assertNull(thing.getArchivedBy());
-        Assert.assertNull(thing.getSnapshottedAt());
-        Assert.assertNull(thing.getSnapshottedBy());
+        Assert.assertNull(thing.getCopyAuthor());
+        Assert.assertNull(thing.getCopyOf());
+        Assert.assertNull(thing.getCopyDateTime());
         Assert.assertNull(thing.getCreated());
         Assert.assertNull(thing.getCreator());
         Assert.assertNull(thing.getModified());
@@ -84,20 +83,12 @@ public class BuilderTest extends BaseTest {
 
 
     @Test
-    public void testBuildSnapshotResearchObject() {
-        SnapshotResearchObject snapshotResearchObject = builder.buildSnapshotResearchObject(
-            exampleUri.resolve("snapshot"), researchObject);
-        Assert.assertNull(snapshotResearchObject.getSnapshottedAt());
-        Assert.assertNull(snapshotResearchObject.getSnapshottedBy());
-    }
-
-
-    @Test
-    public void testBuildArchiveResearchObject() {
-        SnapshotResearchObject snapshotResearchObject = builder.buildSnapshotResearchObject(
-            exampleUri.resolve("archive"), researchObject);
-        Assert.assertNull(snapshotResearchObject.getArchivedAt());
-        Assert.assertNull(snapshotResearchObject.getArchivedBy());
+    public void testBuildImmutableResearchObject() {
+        ImmutableResearchObject immutableResearchObject = builder.buildImmutableResearchObject(researchObject.getUri()
+                .resolve("immutable"));
+        Assert.assertNotNull(immutableResearchObject.getCopyOf());
+        Assert.assertNotNull(immutableResearchObject.getCopyAuthor());
+        Assert.assertNotNull(immutableResearchObject.getCopyDateTime());
     }
 
 

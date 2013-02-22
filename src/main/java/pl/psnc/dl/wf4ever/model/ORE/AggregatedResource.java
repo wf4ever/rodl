@@ -115,8 +115,9 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         }
         AggregatedResource resource2 = builder.buildAggregatedResource(resourceUri, researchObject, getCreator(),
             getCreated());
-        evoBuilder.setFrozenAt(resource2, DateTime.now());
-        evoBuilder.setFrozenBy(resource2, builder.getUser());
+        resource2.setCopyDateTime(DateTime.now());
+        resource2.setCopyAuthor(builder.getUser());
+        resource2.setCopyOf(this);
         resource2.setProxy(Proxy.create(builder, researchObject, resource2));
         if (isInternal()) {
             resource2.save(getSerialization(), getStats().getMimeType());

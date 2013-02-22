@@ -37,22 +37,22 @@ public class BaseTest {
     protected Builder builder;
 
     /** RO URI as String, mapped using location-mapping.n3 to a local file. */
-    protected static final String RESEARCH_OBJECT = "http://example.org/mess-ro/";
+    protected static final String RESEARCH_OBJECT = "http://example.org/ro-1/";
 
     /** RO URI as String, mapped using location-mapping.n3 to a local file. */
-    protected static final String RESEARCH_OBJECT_2 = "http://example.org/mess-ro-2/";
+    protected static final String RESEARCH_OBJECT_2 = "http://example.org/ro-2/";
 
     /** Manifest URI as String, mapped. */
-    protected static final String MANIFEST = "http://example.org/mess-ro/.ro/manifest.rdf";
+    protected static final String MANIFEST = "http://example.org/ro-1/.ro/manifest.rdf";
 
     /** Manifest URI as String, mapped. */
-    protected static final String MANIFEST_2 = "http://example.org/mess-ro-2/.ro/manifest.rdf";
+    protected static final String MANIFEST_2 = "http://example.org/ro-2/.ro/manifest.rdf";
 
     /** Annotation body URI as String, mapped. */
-    protected static final String ANNOTATION_BODY = "http://example.org/mess-ro/.ro/annotationBody.ttl";
+    protected static final String ANNOTATION_BODY = "http://example.org/ro-1/.ro/annotationBody.ttl";
 
     /** Resource URI as String, mapped. */
-    protected static final String RESOURCE1 = "http://example.org/mess-ro/a%20workflow.t2flow";
+    protected static final String RESOURCE1 = "http://example.org/ro-1/a%20workflow.t2flow";
 
     /** Resource URI as String, mapped. */
     protected static final String RESOURCE2 = "http://workflows.org/a%20workflow.scufl";

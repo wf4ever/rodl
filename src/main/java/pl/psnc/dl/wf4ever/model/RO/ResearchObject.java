@@ -10,10 +10,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.UUID;
 
 import javax.activation.MimetypesFileTypeMap;
@@ -24,12 +27,10 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.common.util.MemoryZipFile;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
-import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
@@ -41,6 +42,9 @@ import pl.psnc.dl.wf4ever.model.ORE.Aggregation;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.ORE.ResourceMap;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.model.ROEVO.EvoInfo;
+import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
+import pl.psnc.dl.wf4ever.model.ROEVO.LiveEvoInfo;
 import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
@@ -110,8 +114,12 @@ public class ResearchObject extends Thing implements Aggregation {
     /** Manifest. */
     private Manifest manifest;
 
+    /** Evolution information annotation body. */
+    private LiveEvoInfo evoInfo;
 
-    //TODO add properties stored in evo_info.ttl
+    /** The annotation for the evolution information. */
+    protected Annotation evoInfoAnnotation;
+
 
     /**
      * Constructor.
@@ -161,62 +169,25 @@ public class ResearchObject extends Thing implements Aggregation {
         researchObject.manifest = Manifest.create(builder, researchObject.getUri().resolve(MANIFEST_PATH),
             researchObject);
         researchObject.save();
+        researchObject.createEvoInfo();
         return researchObject;
     }
 
 
     /**
-     * Create a new research object as a copy of this one. Copies all aggregated resources, changes URIs in annotation
-     * bodies.
-     * 
-     * @param uri
-     *            URI of the copy
-     * @param evoBuilder
-     *            builder of evolution properties
-     * @return the new research object
+     * Generate new evolution information, including the evolution annotation.
      */
-    public ResearchObject copy(URI uri, EvoBuilder evoBuilder) {
-        if (get(builder, uri) != null) {
-            throw new ConflictException("Research Object already exists: " + uri);
-        }
-        ResearchObject researchObject = builder.buildResearchObject(uri, getCreator(), getCreated());
-        evoBuilder.setFrozenAt(researchObject, DateTime.now());
-        evoBuilder.setFrozenBy(researchObject, builder.getUser());
-        researchObject.manifest = getManifest().copy(builder, researchObject);
-        researchObject.save();
-        // copy the ro:Resources
-        for (pl.psnc.dl.wf4ever.model.RO.Resource resource : getResources().values()) {
-            try {
-                researchObject.copy(resource, evoBuilder);
-            } catch (BadRequestException e) {
-                LOGGER.warn("Failed to copy the resource", e);
-            }
-        }
-        //copy the annotations
-        for (Annotation annotation : getAnnotations().values()) {
-            try {
-                researchObject.copy(annotation, evoBuilder);
-            } catch (BadRequestException e) {
-                LOGGER.warn("Failed to copy the annotation", e);
-            }
-        }
-        //copy the folders
-        for (Folder folder : getFolders().values()) {
-            researchObject.copy(folder, evoBuilder);
-        }
-        return researchObject;
-    }
+    public void createEvoInfo() {
+        try {
+            evoInfo = LiveEvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this);
+            getAggregatedResources().put(evoInfo.getUri(), evoInfo);
+            evoInfo.save();
 
-
-    /**
-     * Generate and save the evolution information.
-     */
-    public void generateEvoInfo() {
-        Annotation ann = ROSRService.SMS.get().generateEvoInformation(this, null, EvoType.LIVE);
-        this.getAnnotations().put(ann.getUri(), ann);
-        this.getAnnotationsByTarget().put(ann.getAnnotated().iterator().next().getUri(), ann);
-        this.getEvoInfoBody().serialize();
-        this.getManifest().serialize();
+            this.evoInfoAnnotation = annotate(evoInfo.getUri(), this);
+            this.getManifest().serialize();
+        } catch (BadRequestException e) {
+            LOGGER.error("Failed to create the evo info annotation", e);
+        }
     }
 
 
@@ -225,14 +196,23 @@ public class ResearchObject extends Thing implements Aggregation {
      * 
      * @return an evolution resource
      */
-    public AggregatedResource getEvoInfoBody() {
-        //HACK this should be added automatically
-        AggregatedResource resource = builder.buildAggregatedResource(getFixedEvolutionAnnotationBodyUri(), this, null,
-            null);
-        resource.setStats(new ResourceMetadata(null, null, null, 0, null, null, RDFFormat.TURTLE.getDefaultMIMEType()));
-        this.getAggregatedResources().put(getFixedEvolutionAnnotationBodyUri(), resource);
+    public LiveEvoInfo getLiveEvoInfo() {
+        if (evoInfo == null) {
+            evoInfo = builder.buildLiveEvoInfo(getFixedEvolutionAnnotationBodyUri(), this, null, null);
+            getAggregatedResources().put(evoInfo.getUri(), evoInfo);
+            evoInfo.load();
+        }
+        return evoInfo;
+    }
 
-        return aggregatedResources.get(getFixedEvolutionAnnotationBodyUri());
+
+    public Annotation getEvoInfoAnnotation() {
+        return evoInfoAnnotation;
+    }
+
+
+    public SortedSet<ImmutableResearchObject> getImmutableResearchObjects() {
+        return getLiveEvoInfo().getImmutableResearchObjects();
     }
 
 
@@ -268,7 +248,6 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
-    @Override
     public void save() {
         super.save();
         getManifest().save();
@@ -277,7 +256,6 @@ public class ResearchObject extends Thing implements Aggregation {
         DigitalLibraryFactory.getDigitalLibrary().createResearchObject(uri,
             getManifest().getGraphAsInputStream(RDFFormat.RDFXML), ResearchObject.MANIFEST_PATH,
             RDFFormat.RDFXML.getDefaultMIMEType());
-        generateEvoInfo();
     }
 
 
@@ -441,6 +419,23 @@ public class ResearchObject extends Thing implements Aggregation {
         this.getAggregatedResources().put(folder2.getUri(), folder2);
         this.getProxies().put(folder2.getProxy().getUri(), folder2.getProxy());
         return folder2;
+    }
+
+
+    /**
+     * Add and aggregate a new annotation to the research object.
+     * 
+     * @param body
+     *            annotation body URI
+     * @param target
+     *            annotated resource's URI
+     * @return new annotation
+     * @throws BadRequestException
+     *             if there is no data in storage or the file format is not RDF
+     */
+    public Annotation annotate(URI body, Thing target)
+            throws BadRequestException {
+        return annotate(body, new HashSet<>(new ArrayList<Thing>(Arrays.asList(target))), null);
     }
 
 
@@ -940,6 +935,11 @@ public class ResearchObject extends Thing implements Aggregation {
         } finally {
             builder.endTransaction(wasStarted);
         }
+    }
+
+
+    public EvoInfo getEvoInfo() {
+        return getLiveEvoInfo();
     }
 
 }

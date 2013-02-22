@@ -41,7 +41,7 @@ public class EvoInfoResource {
         if (researchObject == null) {
             new NotFoundException("Research Object not found");
         }
-        return Response.ok(researchObject.getEvoInfoBody().getSerialization()).header("Content-Type", "text/turtle")
+        return Response.ok(researchObject.getEvoInfo().getSerialization()).header("Content-Type", "text/turtle")
                 .build();
     }
 }
