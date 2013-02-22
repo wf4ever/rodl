@@ -71,7 +71,7 @@ public class ArchiveBuilder extends EvoBuilder {
     public DateTime extractCopyDateTime(OntModel model, ImmutableResearchObject researchObject) {
         Individual ro = model.getIndividual(researchObject.getUri().toString());
         Literal date = ro.getPropertyValue(ROEVO.archivedAtTime).asLiteral();
-        return ISODateTimeFormat.dateParser().parseDateTime(date.getString());
+        return ISODateTimeFormat.dateTimeParser().parseDateTime(date.getString());
     }
 
 

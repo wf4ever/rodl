@@ -45,7 +45,6 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.ROEVO.EvoInfo;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.LiveEvoInfo;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.google.common.collect.HashMultimap;
@@ -564,13 +563,13 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     public void updateIndexAttributes() {
         //FIXME this makes no sense without dLibra
-        Multimap<URI, Object> roAttributes = ROSRService.SMS.get().getAllAttributes(uri);
-        roAttributes.put(URI.create("Identifier"), this);
-        try {
-            DigitalLibraryFactory.getDigitalLibrary().storeAttributes(uri, roAttributes);
-        } catch (Exception e) {
-            LOGGER.error("Caught an exception when updating RO attributes, will continue", e);
-        }
+        //        Multimap<URI, Object> roAttributes = ROSRService.SMS.get().getAllAttributes(uri);
+        //        roAttributes.put(URI.create("Identifier"), this);
+        //        try {
+        //            DigitalLibraryFactory.getDigitalLibrary().storeAttributes(uri, roAttributes);
+        //        } catch (Exception e) {
+        //            LOGGER.error("Caught an exception when updating RO attributes, will continue", e);
+        //        }
     }
 
 

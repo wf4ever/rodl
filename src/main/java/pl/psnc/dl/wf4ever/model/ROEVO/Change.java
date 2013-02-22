@@ -52,6 +52,13 @@ public class Change extends Thing {
     }
 
 
+    @Override
+    public void delete() {
+        this.changeSpecification.getResearchObject().getImmutableEvoInfo().deleteResource(this);
+        super.delete();
+    }
+
+
     public ChangeSpecification getChangeSpecification() {
         return changeSpecification;
     }

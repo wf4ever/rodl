@@ -35,7 +35,7 @@ public class ChangeSpecification extends Thing {
 
     public static ChangeSpecification create(Builder builder, ImmutableResearchObject immutableResearchObject) {
         URI uri = immutableResearchObject.getUri().resolve(".ro/change_specifications/" + UUID.randomUUID().toString());
-        ChangeSpecification changeSpecification = builder.createChangeSpecification(uri, immutableResearchObject);
+        ChangeSpecification changeSpecification = builder.buildChangeSpecification(uri, immutableResearchObject);
         changeSpecification.save();
         return changeSpecification;
     }
@@ -61,7 +61,18 @@ public class ChangeSpecification extends Thing {
     }
 
 
-    public Set<Change> findChanges(ImmutableResearchObject previousRO) {
+    @Override
+    public void delete() {
+        for (Change change : changes) {
+            change.delete();
+        }
+        researchObject.getImmutableEvoInfo().deleteResource(this);
+        super.delete();
+    }
+
+
+    public Set<Change> createChanges(ImmutableResearchObject previousRO) {
+        //FIXME this could use the "copyOf" property instead of URI lookup
         for (AggregatedResource resource : researchObject.getAggregatedResources().values()) {
             URI previousUri = previousRO.getUri().resolve(resource.getRawPath());
             if (!resource.isSpecialResource() && !previousRO.isUriUsed(previousUri)) {

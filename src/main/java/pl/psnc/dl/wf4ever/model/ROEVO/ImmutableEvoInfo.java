@@ -9,19 +9,32 @@ import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
+import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.model.ROEVO.Change.ChangeType;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 
 import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ReadWrite;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 
 public class ImmutableEvoInfo extends EvoInfo {
 
     /** previous snapshot or archive, if exists. */
     private ImmutableResearchObject previousRO;
+
+    /** Change specification if there is a previous RO. */
+    private ChangeSpecification changeSpecification;
 
     /** Has the RO been finalized, i.e. is it really immutable. */
     private boolean finalized = false;
@@ -80,6 +93,8 @@ public class ImmutableEvoInfo extends EvoInfo {
             builder.saveCopyAuthor(model, getResearchObject());
             if (!finalized) {
                 ro.addProperty(model.createProperty(IS_FINALIZED), "false");
+            } else {
+                ro.removeAll(model.createProperty(IS_FINALIZED));
             }
 
             ResearchObject liveRO = getResearchObject().getLiveRO();
@@ -94,24 +109,17 @@ public class ImmutableEvoInfo extends EvoInfo {
             }
             if (previousRO != null) {
                 builder.saveHasPrevious(model, getResearchObject(), previousRO);
-                //TODO move the store differences code here
-                ChangeSpecification cs = ChangeSpecification.create(getBuilder(), getResearchObject());
-                cs.findChanges(previousRO);
+                //the change specification is rebuilt on every save
+                if (changeSpecification != null) {
+                    changeSpecification.delete();
+                }
+                changeSpecification = ChangeSpecification.create(getBuilder(), getResearchObject());
+                changeSpecification.createChanges(previousRO);
             }
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);
         }
-        //        if (previousRO != null) {
-        //
-        //            //FIXME only this remains to refactor
-        //            try {
-        //                ROSRService.SMS.get().storeAggregatedDifferences(getResearchObject(), previousRO);
-        //            } catch (URISyntaxException | IOException e) {
-        //                // TODO Auto-generated catch block
-        //                e.printStackTrace();
-        //            }
-        //        }
         serialize(uri, RDFFormat.TURTLE);
     }
 
@@ -186,8 +194,61 @@ public class ImmutableEvoInfo extends EvoInfo {
             getResearchObject().setCopyAuthor(builder.extractCopyAuthor(model, getResearchObject()));
             getResearchObject().setCopyOf(builder.extractCopyOf(model, getResearchObject()));
             previousRO = builder.extractPreviousRO(model, getResearchObject());
+            changeSpecification = extractChangeSpecification();
         } finally {
             endTransaction(transactionStarted);
+        }
+    }
+
+
+    private ChangeSpecification extractChangeSpecification() {
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            Individual ro = model.getIndividual(getResearchObject().getUri().toString());
+            Resource cs = ro.getPropertyResourceValue(ROEVO.wasChangedBy);
+            if (cs == null) {
+                return null;
+            }
+            changeSpecification = getBuilder().buildChangeSpecification(URI.create(cs.getURI()), getResearchObject());
+            extractChanges(changeSpecification, ChangeType.ADDITION, ROEVO.Addition);
+            extractChanges(changeSpecification, ChangeType.MODIFICATION, ROEVO.Modification);
+            extractChanges(changeSpecification, ChangeType.REMOVAL, ROEVO.Removal);
+            return changeSpecification;
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    private void extractChanges(ChangeSpecification changeSpecification, ChangeType type, OntClass typeClass) {
+        String queryString = String
+                .format(
+                    "PREFIX roevo: <%s> SELECT ?change ?resource WHERE { <%s> roevo:hasChange ?change . ?change a roevo:%s ; roevo:relatedResource ?resource . }",
+                    ROEVO.NAMESPACE, changeSpecification.getUri().toString(), typeClass.getLocalName());
+
+        Query query = QueryFactory.create(queryString);
+        QueryExecution qe = QueryExecutionFactory.create(query, model);
+        try {
+            ResultSet results = qe.execSelect();
+            while (results.hasNext()) {
+                QuerySolution solution = results.next();
+                RDFNode c = solution.get("change");
+                URI cUri = URI.create(c.asResource().getURI());
+                RDFNode r = solution.get("resource");
+                URI rUri = URI.create(r.asResource().getURI());
+                AggregatedResource resource;
+                if (getResearchObject().getAggregatedResources().containsKey(rUri)) {
+                    resource = getResearchObject().getAggregatedResources().get(rUri);
+                } else if (getPreviousRO().getAggregatedResources().containsKey(rUri)) {
+                    resource = getPreviousRO().getAggregatedResources().get(rUri);
+                } else {
+                    resource = null;
+                }
+                Change change = getBuilder().buildChange(cUri, changeSpecification, resource, type);
+                changeSpecification.getChanges().add(change);
+            }
+        } finally {
+            qe.close();
         }
     }
 

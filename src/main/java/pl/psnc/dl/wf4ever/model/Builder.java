@@ -550,6 +550,7 @@ public class Builder {
      * @param created
      *            creation date
      * @param evoType
+     *            is the new evo info associated with a snapshot or an archive
      * @return a new evo info instance
      */
     public ImmutableEvoInfo buildImmutableEvoInfo(URI uri, ImmutableResearchObject immutableResearchObject,
@@ -579,7 +580,16 @@ public class Builder {
     }
 
 
-    public ChangeSpecification createChangeSpecification(URI uri, ImmutableResearchObject immutableResearchObject) {
+    /**
+     * Build a new change specification.
+     * 
+     * @param uri
+     *            change specification URI
+     * @param immutableResearchObject
+     *            RO being compared to a previous one
+     * @return a new change specification
+     */
+    public ChangeSpecification buildChangeSpecification(URI uri, ImmutableResearchObject immutableResearchObject) {
         ChangeSpecification changeSpecification = new ChangeSpecification(user, dataset, useTransactions, uri,
                 immutableResearchObject);
         changeSpecification.setBuilder(this);
@@ -587,6 +597,19 @@ public class Builder {
     }
 
 
+    /**
+     * Build a new change.
+     * 
+     * @param uri
+     *            change URI
+     * @param changeSpecification
+     *            change specification aggregating the change
+     * @param resource
+     *            resource being changed
+     * @param type
+     *            type of change, i.e. addition, modification or removal
+     * @return a new change
+     */
     public Change buildChange(URI uri, ChangeSpecification changeSpecification, AggregatedResource resource,
             ChangeType type) {
         Change change = new Change(user, dataset, useTransactions, uri, changeSpecification);
