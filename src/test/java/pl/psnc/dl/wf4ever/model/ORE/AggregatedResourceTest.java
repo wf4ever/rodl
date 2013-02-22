@@ -6,15 +6,19 @@ import java.net.URI;
 
 import junit.framework.Assert;
 
-import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.SnapshotBuilder;
+
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Statement;
 
 public class AggregatedResourceTest extends BaseTest {
 
@@ -59,6 +63,16 @@ public class AggregatedResourceTest extends BaseTest {
     }
 
 
+    @Test(expected = NullPointerException.class)
+    public void testCopyToNull()
+            throws BadRequestException {
+        AggregatedResource aggregatedResource = builder.buildAggregatedResource(aggregatedResourceUri, researchObject,
+            userProfile, DateTime.now());
+        EvoBuilder evoBuilder = new SnapshotBuilder();
+        AggregatedResource copyAggregatedResource = aggregatedResource.copy(builder, evoBuilder, null);
+    }
+
+
     @Test
     public void testSave() {
         AggregatedResource aggregatedResource = builder.buildAggregatedResource(aggregatedResourceUri, researchObject,
@@ -77,11 +91,15 @@ public class AggregatedResourceTest extends BaseTest {
             userProfile, DateTime.now());
         aggregatedResource.save();
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ore/ann1.rdf");
-        aggregatedResource.update(is, "RDFXML");
+        aggregatedResource.update(is, "RDF/XML");
         is = getClass().getClassLoader().getResourceAsStream("model/ore/ann1.rdf");
-        String content = IOUtils.toString(aggregatedResource.getSerialization());
-        String content2 = IOUtils.toString(is);
-        Assert.assertEquals(content2, content);
+        Model model = ModelFactory.createDefaultModel();
+        model.read(aggregatedResource.getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Model model2 = ModelFactory.createDefaultModel();
+        model2.read(is, null);
+        Assert.assertTrue(model.isIsomorphicWith(model2));
+        //model is empty. why ?
+        assert false;
     }
 
 
@@ -92,12 +110,29 @@ public class AggregatedResourceTest extends BaseTest {
             userProfile, DateTime.now());
         aggregatedResource.save();
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ore/ann1.rdf");
-        aggregatedResource.update(is, "RDFXML");
+        aggregatedResource.update(is, "RDF/XML");
         aggregatedResource.updateReferences(researchObject2);
         is = getClass().getClassLoader().getResourceAsStream("model/ore/ann1.rdf");
-        String content = IOUtils.toString(aggregatedResource.getSerialization());
-        String content2 = IOUtils.toString(is);
-        //Whyu not ?
-        Assert.assertFalse(content2.equals(content));
+        Model model = ModelFactory.createDefaultModel();
+        model.read(aggregatedResource.getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Model model2 = ModelFactory.createDefaultModel();
+        model2.read(is, null);
+        System.out.println("ro1:");
+        System.out.println(researchObject.getUri());
+        System.out.println("ro2:");
+        System.out.println(researchObject2.getUri());
+        System.out.println("ro1-model:");
+        for (Statement s : model.listStatements().toList()) {
+            String a = s.toString();
+            System.out.println(a);
+        }
+        System.out.println("ro2-model:");
+        for (Statement s : model2.listStatements().toList()) {
+            String a = s.toString();
+            System.out.println(a);
+        }
+        Assert.assertFalse(model.isIsomorphicWith(model2));
+        //model is empty. why ?
+        assert false;
     }
 }
