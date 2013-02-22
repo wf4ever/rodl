@@ -129,18 +129,23 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
 
 
     public ResearchObject getLiveRO() {
-        return getImmutableEvoInfo().getLiveRO();
+        return (ResearchObject) getCopyOf();
     }
 
 
-    public void setLiveRO(ResearchObject liveRO) {
-        getImmutableEvoInfo().setLiveRO(liveRO);
+    public boolean isFinalized() {
+        return getImmutableEvoInfo().isFinalized();
+    }
+
+
+    public void setFinalized(boolean finalized) {
+        getImmutableEvoInfo().setFinalized(finalized);
     }
 
 
     public ImmutableEvoInfo getImmutableEvoInfo() {
         if (evoInfo == null) {
-            evoInfo = builder.buildImmutableEvoInfo(getFixedEvolutionAnnotationBodyUri(), this, null, null, null);
+            evoInfo = builder.buildImmutableEvoInfo(getFixedEvolutionAnnotationBodyUri(), this);
             getAggregatedResources().put(evoInfo.getUri(), evoInfo);
             evoInfo.load();
         }
@@ -199,4 +204,5 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
         }
         return super.getCopyDateTime();
     }
+
 }

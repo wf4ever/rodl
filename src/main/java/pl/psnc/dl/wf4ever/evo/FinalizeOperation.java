@@ -5,7 +5,6 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.RodlException;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.model.Builder;
-import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 
 /**
@@ -42,22 +41,11 @@ public class FinalizeOperation implements Operation {
             if (status.getType() == null || status.getType() == EvoType.LIVE) {
                 throw new OperationFailedException("New type must be a snaphot or archive");
             }
-            ResearchObject liveRO = ResearchObject.get(builder, status.getCopyfrom());
-            if (liveRO == null) {
-                throw new NotFoundException("Research Object not found " + status.getCopyfrom().toString());
-            }
             ImmutableResearchObject immutableResearchObject = ImmutableResearchObject.get(builder, status.getTarget());
             if (immutableResearchObject == null) {
                 throw new NotFoundException("Research Object not found " + status.getTarget());
             }
-            //            Set<Annotation> evoAnnotations = new HashSet<>(immutableResearchObject.getAnnotationsByBodyUri().get(
-            //                immutableResearchObject.getEvoInfo().getUri()));
-            //            for (Annotation a : evoAnnotations) {
-            //                a.delete();
-            //            }
-            //            immutableResearchObject.getEvoInfo().delete();
-            //            immutableResearchObject.generateEvoInfo();
-            immutableResearchObject.setLiveRO(liveRO);
+            immutableResearchObject.setFinalized(true);
             immutableResearchObject.getEvoInfo().save();
         } catch (RodlException e) {
             throw new OperationFailedException("Could not generate evo info", e);

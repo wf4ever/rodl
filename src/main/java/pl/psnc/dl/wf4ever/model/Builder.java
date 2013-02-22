@@ -540,7 +540,7 @@ public class Builder {
      * 
      * @param uri
      *            the URI
-     * @param researchObject
+     * @param immutableResearchObject
      *            the research object that is described
      * @param creator
      *            author
@@ -549,12 +549,28 @@ public class Builder {
      * @param evoType
      * @return a new evo info instance
      */
-    public ImmutableEvoInfo buildImmutableEvoInfo(URI uri, ResearchObject researchObject, UserMetadata creator,
-            DateTime created, EvoType evoType) {
-        ImmutableEvoInfo evoInfo = new ImmutableEvoInfo(user, dataset, useTransactions, researchObject, uri);
+    public ImmutableEvoInfo buildImmutableEvoInfo(URI uri, ImmutableResearchObject immutableResearchObject,
+            UserMetadata creator, DateTime created, EvoType evoType) {
+        ImmutableEvoInfo evoInfo = new ImmutableEvoInfo(user, dataset, useTransactions, immutableResearchObject, uri);
         evoInfo.setCreator(creator);
         evoInfo.setCreated(created);
         evoInfo.setEvoType(evoType);
+        evoInfo.setBuilder(this);
+        return evoInfo;
+    }
+
+
+    /**
+     * Build a new evolution information resource.
+     * 
+     * @param uri
+     *            the URI
+     * @param immutableResearchObject
+     *            the research object that is described
+     * @return a new evo info instance
+     */
+    public ImmutableEvoInfo buildImmutableEvoInfo(URI uri, ImmutableResearchObject immutableResearchObject) {
+        ImmutableEvoInfo evoInfo = new ImmutableEvoInfo(user, dataset, useTransactions, immutableResearchObject, uri);
         evoInfo.setBuilder(this);
         return evoInfo;
     }

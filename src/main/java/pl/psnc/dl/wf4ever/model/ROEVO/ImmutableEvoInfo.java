@@ -22,11 +22,14 @@ import com.hp.hpl.jena.query.ReadWrite;
 
 public class ImmutableEvoInfo extends EvoInfo {
 
-    /** the research object that is snapshotted/archived. */
-    private ResearchObject liveRO;
-
     /** previous snapshot or archive, if exists. */
     private ImmutableResearchObject previousRO;
+
+    /** Has the RO been finalized, i.e. is it really immutable. */
+    private boolean finalized = false;
+
+    /** Temporary property URI for marking if the RO has been finalized. It should go to rodl-common. */
+    private static final String IS_FINALIZED = ROEVO.NAMESPACE + "isFinalized";
 
 
     public ImmutableEvoInfo(UserMetadata user, Dataset dataset, boolean useTransactions, ResearchObject researchObject,
@@ -73,16 +76,23 @@ public class ImmutableEvoInfo extends EvoInfo {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
             EvoBuilder builder = EvoBuilder.get(evoType);
-            model.createIndividual(getResearchObject().getUri().toString(), RO.ResearchObject);
+            Individual ro = model.createIndividual(getResearchObject().getUri().toString(), RO.ResearchObject);
             builder.saveRDFType(model, getResearchObject());
             builder.saveCopyDateTime(model, getResearchObject());
             builder.saveCopyAuthor(model, getResearchObject());
+            if (!finalized) {
+                ro.addProperty(model.createProperty(IS_FINALIZED), "false");
+            }
+
+            ResearchObject liveRO = getResearchObject().getLiveRO();
             if (liveRO != null) {
                 builder.saveHasLive(model, getResearchObject());
                 previousRO = liveRO.getImmutableResearchObjects().isEmpty() ? null : liveRO
                         .getImmutableResearchObjects().last();
-                liveRO.getImmutableResearchObjects().add(getResearchObject());
-                liveRO.getLiveEvoInfo().save();
+                if (finalized) {
+                    liveRO.getImmutableResearchObjects().add(getResearchObject());
+                    liveRO.getLiveEvoInfo().save();
+                }
             }
             if (previousRO != null) {
                 builder.saveHasPrevious(model, getResearchObject(), previousRO);
@@ -106,16 +116,6 @@ public class ImmutableEvoInfo extends EvoInfo {
     }
 
 
-    public ResearchObject getLiveRO() {
-        return liveRO;
-    }
-
-
-    public void setLiveRO(ResearchObject liveRO) {
-        this.liveRO = liveRO;
-    }
-
-
     public ImmutableResearchObject getPreviousRO() {
         return previousRO;
     }
@@ -134,15 +134,30 @@ public class ImmutableEvoInfo extends EvoInfo {
                 throw new IllegalStateException("Evo info has no information about the evolution class of this RO: "
                         + getResearchObject());
             }
+            if (ro.hasProperty(model.createProperty(IS_FINALIZED))) {
+                finalized = ro.getPropertyValue(model.createProperty(IS_FINALIZED)).asLiteral().getBoolean();
+            } else {
+                // if no value found, it must have been finalized
+                finalized = true;
+            }
             EvoBuilder builder = EvoBuilder.get(evoType);
             getResearchObject().setCopyDateTime(builder.extractCopyDateTime(model, getResearchObject()));
             getResearchObject().setCopyAuthor(builder.extractCopyAuthor(model, getResearchObject()));
             getResearchObject().setCopyOf(builder.extractCopyOf(model, getResearchObject()));
-            liveRO = (ResearchObject) getResearchObject().getCopyOf();
             previousRO = builder.extractPreviousRO(model, getResearchObject());
         } finally {
             endTransaction(transactionStarted);
         }
+    }
+
+
+    public boolean isFinalized() {
+        return finalized;
+    }
+
+
+    public void setFinalized(boolean finalized) {
+        this.finalized = finalized;
     }
 
 }
