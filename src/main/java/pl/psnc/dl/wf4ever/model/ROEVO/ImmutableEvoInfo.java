@@ -1,8 +1,6 @@
 package pl.psnc.dl.wf4ever.model.ROEVO;
 
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
@@ -12,13 +10,13 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
+import com.hp.hpl.jena.rdf.model.Resource;
 
 public class ImmutableEvoInfo extends EvoInfo {
 
@@ -97,22 +95,65 @@ public class ImmutableEvoInfo extends EvoInfo {
             if (previousRO != null) {
                 builder.saveHasPrevious(model, getResearchObject(), previousRO);
                 //TODO move the store differences code here
+                ChangeSpecification cs = ChangeSpecification.create(getBuilder(), getResearchObject());
+                cs.findChanges(previousRO);
             }
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);
         }
-        if (previousRO != null) {
-
-            //FIXME only this remains to refactor
-            try {
-                ROSRService.SMS.get().storeAggregatedDifferences(getResearchObject(), previousRO);
-            } catch (URISyntaxException | IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
+        //        if (previousRO != null) {
+        //
+        //            //FIXME only this remains to refactor
+        //            try {
+        //                ROSRService.SMS.get().storeAggregatedDifferences(getResearchObject(), previousRO);
+        //            } catch (URISyntaxException | IOException e) {
+        //                // TODO Auto-generated catch block
+        //                e.printStackTrace();
+        //            }
+        //        }
         serialize(uri, RDFFormat.TURTLE);
+    }
+
+
+    public void saveChangeSpecification(ChangeSpecification changeSpecification) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            Individual cs = model.createIndividual(changeSpecification.getUri().toString(), ROEVO.ChangeSpecification);
+            Individual ro = model.getIndividual(getResearchObject().getUri().toString());
+            ro.addProperty(ROEVO.wasChangedBy, cs);
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    public void saveChange(Change change) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            Individual cs = model.createIndividual(change.getChangeSpecification().getUri().toString(),
+                ROEVO.ChangeSpecification);
+            Individual ch = model.createIndividual(change.getUri().toString(), ROEVO.Change);
+            cs.addProperty(ROEVO.hasChange, ch);
+            switch (change.getChangeType()) {
+                case ADDITION:
+                    ch.addRDFType(ROEVO.Addition);
+                    break;
+                case REMOVAL:
+                    ch.addRDFType(ROEVO.Removal);
+                    break;
+                case MODIFICATION:
+                    ch.addRDFType(ROEVO.Modification);
+                    break;
+                default:
+            }
+            Resource resource = model.createResource(change.getResource().getUri().toString());
+            ch.addProperty(ROEVO.relatedResource, resource);
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
     }
 
 

@@ -204,14 +204,14 @@ public class Annotation extends AggregatedResource {
      * @return the new annotation
      */
     public Annotation copy(Builder builder, EvoBuilder evoBuilder, ResearchObject researchObject) {
-        URI annotationUri = researchObject.getUri().resolve(getPath());
+        URI annotationUri = researchObject.getUri().resolve(getRawPath());
         if (researchObject.isUriUsed(annotationUri)) {
             throw new ConflictException("Resource already exists: " + annotationUri);
         }
         URI bodyUri;
         AggregatedResource aggregatedBody = getResearchObject().getAggregatedResources().get(getBody().getUri());
         if (aggregatedBody != null) {
-            bodyUri = researchObject.getUri().resolve(aggregatedBody.getPath());
+            bodyUri = researchObject.getUri().resolve(aggregatedBody.getRawPath());
         } else {
             bodyUri = getBody().getUri();
         }
@@ -234,7 +234,7 @@ public class Annotation extends AggregatedResource {
             URI targetUri;
             if (getResearchObject().getAggregatedResources().containsKey(target.getUri())) {
                 targetUri = researchObject.getUri().resolve(
-                    getResearchObject().getAggregatedResources().get(target.getUri()).getPath());
+                    getResearchObject().getAggregatedResources().get(target.getUri()).getRawPath());
             } else {
                 // FIXME is this possible?
                 targetUri = target.getUri();

@@ -22,6 +22,9 @@ import pl.psnc.dl.wf4ever.model.RO.FolderResourceMap;
 import pl.psnc.dl.wf4ever.model.RO.Manifest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
+import pl.psnc.dl.wf4ever.model.ROEVO.Change;
+import pl.psnc.dl.wf4ever.model.ROEVO.Change.ChangeType;
+import pl.psnc.dl.wf4ever.model.ROEVO.ChangeSpecification;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableEvoInfo;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.LiveEvoInfo;
@@ -573,6 +576,24 @@ public class Builder {
         ImmutableEvoInfo evoInfo = new ImmutableEvoInfo(user, dataset, useTransactions, immutableResearchObject, uri);
         evoInfo.setBuilder(this);
         return evoInfo;
+    }
+
+
+    public ChangeSpecification createChangeSpecification(URI uri, ImmutableResearchObject immutableResearchObject) {
+        ChangeSpecification changeSpecification = new ChangeSpecification(user, dataset, useTransactions, uri,
+                immutableResearchObject);
+        changeSpecification.setBuilder(this);
+        return changeSpecification;
+    }
+
+
+    public Change buildChange(URI uri, ChangeSpecification changeSpecification, AggregatedResource resource,
+            ChangeType type) {
+        Change change = new Change(user, dataset, useTransactions, uri, changeSpecification);
+        change.setResource(resource);
+        change.setChangeType(type);
+        change.setBuilder(this);
+        return change;
     }
 
 }

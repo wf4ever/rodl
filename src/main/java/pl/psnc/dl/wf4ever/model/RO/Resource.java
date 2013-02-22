@@ -125,7 +125,7 @@ public class Resource extends AggregatedResource {
      */
     public Resource copy(Builder builder, EvoBuilder evoBuilder, ResearchObject researchObject)
             throws BadRequestException {
-        URI resourceUri = researchObject.getUri().resolve(getPath());
+        URI resourceUri = researchObject.getUri().resolve(getRawPath());
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }

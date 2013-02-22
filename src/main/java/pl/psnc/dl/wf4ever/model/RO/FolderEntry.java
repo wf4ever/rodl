@@ -217,7 +217,7 @@ public class FolderEntry extends Proxy {
      */
     public FolderEntry copy(Builder builder, Folder folder) {
         URI entryUri = folder.getUri().resolve("entries/" + UUID.randomUUID());
-        URI resourceUri = folder.getResearchObject().getUri().resolve(getProxyFor().getPath());
+        URI resourceUri = folder.getResearchObject().getUri().resolve(getProxyFor().getRawPath());
         FolderEntry entry = builder.buildFolderEntry(entryUri,
             folder.getResearchObject().getAggregatedResources().get(resourceUri), folder, getEntryName());
         return entry;

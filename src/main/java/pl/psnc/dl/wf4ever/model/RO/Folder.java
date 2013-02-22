@@ -327,7 +327,7 @@ public class Folder extends Resource implements Aggregation {
      * @return the new folder
      */
     public Folder copy(Builder builder, EvoBuilder evoBuilder, ResearchObject researchObject) {
-        URI folderUri = researchObject.getUri().resolve(getPath());
+        URI folderUri = researchObject.getUri().resolve(getRawPath());
         if (researchObject.isUriUsed(folderUri)) {
             throw new ConflictException("Resource already exists: " + folderUri);
         }

@@ -109,7 +109,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
      */
     public AggregatedResource copy(Builder builder, EvoBuilder evoBuilder, ResearchObject researchObject)
             throws BadRequestException {
-        URI resourceUri = researchObject.getUri().resolve(getPath());
+        URI resourceUri = researchObject.getUri().resolve(getRawPath());
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
@@ -225,6 +225,11 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
 
     public String getPath() {
         return getResearchObject().getUri().relativize(uri).getPath();
+    }
+
+
+    public String getRawPath() {
+        return getResearchObject().getUri().relativize(uri).getRawPath();
     }
 
 
@@ -379,7 +384,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
             uris.put(researchObject2.getUri(), getResearchObject().getUri());
             uris.put(researchObject2.getManifest().getUri(), getResearchObject().getManifest().getUri());
             for (AggregatedResource r1 : researchObject2.getAggregatedResources().values()) {
-                URI r2Uri = getResearchObject().getUri().resolve(r1.getPath());
+                URI r2Uri = getResearchObject().getUri().resolve(r1.getRawPath());
                 if (getResearchObject().getAggregatedResources().containsKey(r2Uri)) {
                     uris.put(r1.getUri(), r2Uri);
                 }
