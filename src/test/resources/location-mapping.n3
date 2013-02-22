@@ -17,7 +17,7 @@
    [ lm:name "http://purl.org/pav/provenance/2.0/" ; lm:altName "file:vocabularies/pav-provenance.owl" ] 
 
 
-   , [ lm:name "http://example.org/mess-ro/.ro/manifest.rdf" ; lm:altName "file:src/test/resources/rdfStructure/mess-ro/.ro/manifest.rdf" ] 
-   , [ lm:name "http://example.org/mess-ro-2/.ro/manifest.rdf" ; lm:altName "file:src/test/resources/rdfStructure/mess-ro-2/.ro/manifest.rdf" ] 
-   , [ lm:name "http://example.org/mess-ro/.ro/annotationBody.ttl" ; lm:altName "file:src/test/resources/rdfStructure/mess-ro/.ro/annotationBody.ttl" ] 
+   , [ lm:name "http://example.org/mess-ro/.ro/manifest.rdf" ; lm:altName "file:src/test/resources/model/ro/research_object/.ro/manifest.rdf" ] 
+   , [ lm:name "http://example.org/mess-ro-2/.ro/manifest.rdf" ; lm:altName "file:src/test/resources/model/ro/research_object/.ro/manifest.rdf" ] 
+   , [ lm:name "http://example.org/mess-ro/.ro/annotationBody.ttl" ; lm:altName "file:src/test/resources/model/ro/research_object/.ro/annotationBody.ttl" ] 
    .

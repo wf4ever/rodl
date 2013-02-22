@@ -57,9 +57,9 @@ public class BaseTest {
     /** Resource URI as String, mapped. */
     protected static final String RESOURCE2 = "http://workflows.org/a%20workflow.scufl";
     /** Empty RO. */
-    protected ResearchObject messRO;
+    protected ResearchObject researchObject;
     /** Empty RO. */
-    protected ResearchObject messRO2;
+    protected ResearchObject researchObject2;
 
 
     /**
@@ -90,11 +90,11 @@ public class BaseTest {
         dataset.addNamedModel(ANNOTATION_BODY, model);
         userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED, URI.create("http://jank"));
         builder = new Builder(userProfile, dataset, false);
-        messRO = builder.buildResearchObject(URI.create(RESEARCH_OBJECT));
+        researchObject = builder.buildResearchObject(URI.create(RESEARCH_OBJECT));
         model = FileManager.get().loadModel(MANIFEST_2, MANIFEST_2, "RDF/XML");
         dataset.addNamedModel(MANIFEST_2, model);
         builder = new Builder(userProfile, dataset, false);
-        messRO2 = builder.buildResearchObject(URI.create(RESEARCH_OBJECT_2));
+        researchObject2 = builder.buildResearchObject(URI.create(RESEARCH_OBJECT_2));
 
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
     }

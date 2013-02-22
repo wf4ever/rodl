@@ -124,8 +124,8 @@ public class ThingTest extends BaseTest {
 
     @Test
     public void testIsNamedGraph() {
-        Assert.assertFalse(messRO2.isNamedGraph());
-        Assert.assertTrue(messRO.getManifest().isNamedGraph());
+        Assert.assertFalse(researchObject2.isNamedGraph());
+        Assert.assertTrue(researchObject.getManifest().isNamedGraph());
         ResearchObject noSavedRO = new ResearchObject(userProfile, URI.create("http://www.example.com/no-saved-ro/"));
         Assert.assertFalse(noSavedRO.isNamedGraph());
     }
@@ -134,15 +134,15 @@ public class ThingTest extends BaseTest {
     @Test
     public void testExtractCreator() {
         //TODO Why model is null... i don't get it
-        messRO.getAnnotations();
-        DateTime dt = messRO.extractCreated(messRO);
+        researchObject.getAnnotations();
+        DateTime dt = researchObject.extractCreated(researchObject);
     }
 
 
     @Test
     public void testExtractCreated() {
         //TODO Why model is null... i don't get it
-        UserMetadata um = messRO.extractCreator(messRO);
+        UserMetadata um = researchObject.extractCreator(researchObject);
     }
 
 
