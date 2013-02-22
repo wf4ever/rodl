@@ -421,6 +421,13 @@ public class Thing {
             if (ro == null) {
                 throw new IncorrectModelException("RO not found in the manifest" + thing.getUri());
             }
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            model.write(outputStream, "TTL");
+            System.out.println("*********");
+            System.out.println("*********");
+            System.out.println(outputStream.toString());
+            System.out.println("*********");
+            System.out.println("*********");
             com.hp.hpl.jena.rdf.model.Resource c = ro.getPropertyResourceValue(DCTerms.creator);
             URI curi = c != null ? URI.create(c.getURI()) : null;
             RDFNode n = c.getProperty(FOAF.name).getObject();

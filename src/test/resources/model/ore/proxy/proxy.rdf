@@ -1,0 +1,8 @@
+<rdf:RDF
+   xmlns:ro="http://purl.org/wf4ever/ro#"
+   xmlns:ore="http://www.openarchives.org/ore/terms/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+  <ore:Proxy>
+    <ore:proxyFor rdf:resource="" />
+  </ore:Proxy>
+</rdf:RDF>
