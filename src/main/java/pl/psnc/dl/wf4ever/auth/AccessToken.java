@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -20,6 +21,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import pl.psnc.dl.wf4ever.common.db.ActiveRecord;
+import pl.psnc.dl.wf4ever.common.db.UserProfile;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 
 /**
@@ -43,7 +45,7 @@ public class AccessToken extends ActiveRecord {
     private OAuthClient client;
 
     /** token owner. */
-    private UserCredentials user;
+    private UserProfile user;
 
     /** token creation date. */
     private Date created = new Date();
@@ -70,7 +72,7 @@ public class AccessToken extends ActiveRecord {
      * @param user
      *            token owner
      */
-    public AccessToken(String token, OAuthClient client, UserCredentials user) {
+    public AccessToken(String token, OAuthClient client, UserProfile user) {
         super();
         this.token = token;
         this.client = client;
@@ -86,7 +88,7 @@ public class AccessToken extends ActiveRecord {
      * @param user
      *            token owner
      */
-    public AccessToken(OAuthClient client, UserCredentials user) {
+    public AccessToken(OAuthClient client, UserProfile user) {
         super();
         this.token = UUID.randomUUID().toString();
         this.client = client;
@@ -95,6 +97,7 @@ public class AccessToken extends ActiveRecord {
 
 
     @Id
+    @Column(length = 64)
     @XmlElement
     public String getToken() {
         return token;
@@ -120,14 +123,14 @@ public class AccessToken extends ActiveRecord {
 
 
     @ManyToOne
-    @JoinColumn(name = "userId", nullable = false)
+    @JoinColumn(name = "userId", referencedColumnName = "login", nullable = false)
     @XmlElement
-    public UserCredentials getUser() {
+    public UserProfile getUser() {
         return user;
     }
 
 
-    public void setUser(UserCredentials user) {
+    public void setUser(UserProfile user) {
         this.user = user;
     }
 
@@ -178,13 +181,13 @@ public class AccessToken extends ActiveRecord {
      * @return access token active record
      */
     @SuppressWarnings("unchecked")
-    public static List<AccessToken> findByClientOrUser(OAuthClient client, UserCredentials creds) {
+    public static List<AccessToken> findByClientOrUser(OAuthClient client, UserProfile creds) {
         Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(AccessToken.class);
         if (client != null) {
             criteria.add(Restrictions.eq("client.clientId", client.getClientId()));
         }
         if (creds != null) {
-            criteria.add(Restrictions.eq("user.userId", creds.getUserId()));
+            criteria.add(Restrictions.eq("user.userId", creds.getLogin()));
         }
         return criteria.list();
     }

@@ -3,16 +3,34 @@
  */
 package pl.psnc.dl.wf4ever.common.db;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlTransient;
 
+import org.openrdf.rio.RDFFormat;
+
+import pl.psnc.dl.wf4ever.auth.AccessToken;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.vocabulary.FOAF;
+
+import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 /**
  * RODL user model.
@@ -26,6 +44,9 @@ public final class UserProfile extends UserMetadata implements Serializable {
 
     /** id. */
     private static final long serialVersionUID = -4468344863067565271L;
+
+    /** access tokens owned by the user. */
+    private List<AccessToken> tokens = new ArrayList<AccessToken>();
 
 
     /**
@@ -75,6 +96,7 @@ public final class UserProfile extends UserMetadata implements Serializable {
 
 
     @Id
+    @Column(length = 128)
     public String getLogin() {
         return super.getLogin();
     }
@@ -112,6 +134,28 @@ public final class UserProfile extends UserMetadata implements Serializable {
     @Basic
     public String getUriString() {
         return super.getUri() != null ? super.getUri().toString() : null;
+    }
+
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user", orphanRemoval = true)
+    @XmlTransient
+    public List<AccessToken> getTokens() {
+        return tokens;
+    }
+
+
+    public void setTokens(List<AccessToken> tokens) {
+        this.tokens = tokens;
+    }
+
+
+    public InputStream getAsInputStream(RDFFormat format) {
+        OntModel userModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
+        Individual agent = userModel.createIndividual(getUri().toString(), FOAF.Agent);
+        userModel.add(agent, FOAF.name, getName());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        userModel.write(out, format.getName().toUpperCase());
+        return new ByteArrayInputStream(out.toByteArray());
     }
 
 }

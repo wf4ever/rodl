@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -80,6 +81,7 @@ public class OAuthClient extends ActiveRecord {
 
 
     @Id
+    @Column(length = 128)
     @XmlElement
     public String getClientId() {
         return clientId;

@@ -11,6 +11,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.common.db.UserProfile;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -49,8 +50,7 @@ public class SecurityFilter implements ContainerRequestFilter {
     @Override
     public ContainerRequest filter(ContainerRequest request) {
         try {
-            UserCredentials creds = authenticate(request);
-            UserMetadata user = DigitalLibraryFactory.getUserProfile(creds.getUserId());
+            UserMetadata user = authenticate(request);
             if (user == null) {
                 throw new NotFoundException("User profile not found");
             }
@@ -78,7 +78,7 @@ public class SecurityFilter implements ContainerRequestFilter {
      *            HTTP request
      * @return user credentials, UserCredentials.PUBLIC_USER if the request is not authenticated
      */
-    private UserCredentials authenticate(ContainerRequest request) {
+    private UserMetadata authenticate(ContainerRequest request) {
         //TODO allow only secure https connections
         //		logger.info("Connection secure? " + isSecure());
         LOGGER.info("Request to: " + uriInfo.getAbsolutePath() + " | method:  " + request.getMethod());
@@ -86,7 +86,7 @@ public class SecurityFilter implements ContainerRequestFilter {
         // Extract authentication credentials
         String authentication = request.getHeaderValue(ContainerRequest.AUTHORIZATION);
         if (authentication == null) {
-            return UserCredentials.getPublicUserCredentials();
+            return UserProfile.PUBLIC;
         }
         try {
             if (authentication.startsWith("Bearer ")) {
@@ -109,9 +109,9 @@ public class SecurityFilter implements ContainerRequestFilter {
      *            access token
      * @return user credentials
      */
-    public UserCredentials getBearerCredentials(String tokenValue) {
+    public UserMetadata getBearerCredentials(String tokenValue) {
         if (tokenValue.equals(DigitalLibraryFactory.getAdminToken())) {
-            return UserCredentials.getAdminUserCredentials();
+            return UserProfile.ADMIN;
         }
         AccessToken accessToken = AccessToken.findByValue(tokenValue);
         if (accessToken != null) {

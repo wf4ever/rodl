@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.common.db;
 import java.io.Serializable;
 
 import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -112,6 +113,7 @@ public final class ResourceInfo extends ResourceMetadata implements Serializable
 
 
     @Id
+    @Column(length = 128)
     public String getPath() {
         return super.getPath();
     }

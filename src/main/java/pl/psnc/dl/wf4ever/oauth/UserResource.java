@@ -25,10 +25,10 @@ import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
-import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.common.db.UserProfile;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
+import pl.psnc.dl.wf4ever.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -176,8 +176,6 @@ public class UserResource {
         String password = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 20);
         boolean created = DigitalLibraryFactory.getDigitalLibrary().createUser(userId, password,
             username != null && !username.isEmpty() ? username : userId);
-        UserCredentials creds = new UserCredentials(userId, password);
-        creds.save();
         UserMetadata user = DigitalLibraryFactory.getDigitalLibrary().getUserProfile(userId);
         SemanticMetadataServiceFactory.getService(user).close();
 
@@ -223,10 +221,11 @@ public class UserResource {
 
         ROSRService.SMS.get().removeUser(URI.create(userId));
         DigitalLibraryFactory.getDigitalLibrary().deleteUser(userId);
-        UserCredentials creds = UserCredentials.findByUserId(userId);
+        UserProfileDAO dao = new UserProfileDAO();
+        UserProfile creds = dao.findByLogin(userId);
         if (creds == null) {
             throw new NotFoundException();
         }
-        creds.delete();
+        dao.delete(creds);
     }
 }
