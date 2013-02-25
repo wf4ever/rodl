@@ -17,12 +17,8 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.common.db.UserProfile;
-import pl.psnc.dl.wf4ever.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.NotFoundException;
-import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dlibra.helpers.DLibraDataSource;
 import pl.psnc.dl.wf4ever.fs.FilesystemDL;
 
@@ -101,37 +97,6 @@ public final class DigitalLibraryFactory {
             return DLIBRA.get();
         } else {
             return new FilesystemDL(filesystemBase);
-        }
-    }
-
-
-    /**
-     * Get profile of a user, which may be stored in the digital library.
-     * 
-     * This is bad design and should be fixed be removing the user credentials class (the password is never used!) and
-     * using the user profile instead.
-     * 
-     * @param userId
-     *            user login in digital library
-     * @return user profile
-     * @throws DigitalLibraryException
-     *             dl error
-     * @throws NotFoundException
-     *             user not found
-     */
-    public static UserMetadata getUserProfile(String userId)
-            throws DigitalLibraryException, NotFoundException {
-        if (dlibra) {
-            return ((DLibraDataSource) getDigitalLibrary()).getUserProfile(userId);
-        } else {
-            if (userId.equals(DigitalLibraryFactory.getAdminUser())) {
-                return UserProfile.ADMIN;
-            } else if (userId.equals(DigitalLibraryFactory.getPublicUser())) {
-                return UserProfile.PUBLIC;
-            } else {
-                UserProfileDAO dao = new UserProfileDAO();
-                return dao.findByLogin(userId);
-            }
         }
     }
 

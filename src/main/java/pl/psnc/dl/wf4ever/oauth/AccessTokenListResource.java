@@ -26,8 +26,8 @@ import pl.psnc.dl.wf4ever.auth.AccessTokenList;
 import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.OAuthClient;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
-import pl.psnc.dl.wf4ever.auth.UserCredentials;
 import pl.psnc.dl.wf4ever.common.db.UserProfile;
+import pl.psnc.dl.wf4ever.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -78,7 +78,8 @@ public class AccessTokenListResource {
             userId = new String(Base64.decodeBase64(userId));
         }
         OAuthClient client = clientId != null ? OAuthClient.findById(clientId) : null;
-        UserCredentials creds = userId != null ? UserCredentials.findByUserId(userId) : null;
+        UserProfileDAO dao = new UserProfileDAO();
+        UserProfile creds = userId != null ? dao.findByLogin(userId) : null;
         List<AccessToken> list = AccessToken.findByClientOrUser(client, creds);
         return new AccessTokenList(list);
     }
@@ -112,7 +113,8 @@ public class AccessTokenListResource {
             if (client == null) {
                 throw new BadRequestException("Client not found");
             }
-            UserCredentials creds = UserCredentials.findByUserId(lines[1]);
+            UserProfileDAO dao = new UserProfileDAO();
+            UserProfile creds = dao.findByLogin(lines[1]);
             if (creds == null) {
                 throw new BadRequestException("User not found");
             }
