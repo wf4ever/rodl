@@ -23,13 +23,14 @@ public class ResourceMapTest extends BaseTest {
 
     private URI resourceMapUri;
     private ResourceMap resourceMap;
+    private String resourceMapName = "resource-map";
 
 
     @Override
     @Before
     public void setUp() {
         super.setUp();
-        resourceMapUri = researchObject.getUri().resolve("resource-map");
+        resourceMapUri = researchObject.getUri().resolve(resourceMapName);
         resourceMap = new ResourceMap(userProfile, dataset, true, researchObject, resourceMapUri) {
 
             @Override
@@ -112,5 +113,18 @@ public class ResourceMapTest extends BaseTest {
         URI proxyUri = researchObject.getUri().resolve("proxy");
         Proxy proxy = builder.buildProxy(proxyUri, aggregatedResource, researchObject);
         resourceMap.saveProxy(proxy);
+        Model model = ModelFactory.createDefaultModel();
+        model.read(resourceMap.getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Resource r = model.getResource(proxy.getUri().toString());
+        Assert.assertNotNull(r);
+        Assert.assertNotNull(r.getProperty(ORE.proxyFor));
+        Assert.assertNotNull(r.getProperty(ORE.proxyIn));
+
+    }
+
+
+    @Test
+    public void testGetPath() {
+        Assert.assertEquals(resourceMapName, resourceMap.getPath().toString());
     }
 }
