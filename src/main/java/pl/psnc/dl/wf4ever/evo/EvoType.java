@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.common.db;
+package pl.psnc.dl.wf4ever.evo;
 
 /**
  * RO evolution class.

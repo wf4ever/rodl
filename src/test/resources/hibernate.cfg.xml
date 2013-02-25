@@ -36,10 +36,10 @@
 		<!-- Drop and re-create the database schema on startup -->
 		<property name="hbm2ddl.auto">update</property>
 
-		<mapping class="pl.psnc.dl.wf4ever.auth.AccessToken" />
-		<mapping class="pl.psnc.dl.wf4ever.auth.OAuthClient" />
-		<mapping class="pl.psnc.dl.wf4ever.common.db.UserProfile" />
-		<mapping class="pl.psnc.dl.wf4ever.common.db.ResourceInfo" />
+		<mapping class="pl.psnc.dl.wf4ever.db.AccessToken" />
+		<mapping class="pl.psnc.dl.wf4ever.db.OAuthClient" />
+		<mapping class="pl.psnc.dl.wf4ever.db.UserProfile" />
+		<mapping class="pl.psnc.dl.wf4ever.db.ResourceInfo" />
 
 	</session-factory>
 </hibernate-configuration>

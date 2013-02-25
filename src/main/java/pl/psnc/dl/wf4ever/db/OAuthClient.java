@@ -1,7 +1,7 @@
 /**
  * 
  */
-package pl.psnc.dl.wf4ever.auth;
+package pl.psnc.dl.wf4ever.db;
 
 import java.util.List;
 import java.util.UUID;
@@ -14,7 +14,6 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import pl.psnc.dl.wf4ever.common.db.ActiveRecord;
 
 /**
  * OAuth client application DAO.

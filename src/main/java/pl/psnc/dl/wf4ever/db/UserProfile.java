@@ -1,7 +1,7 @@
 /**
  * 
  */
-package pl.psnc.dl.wf4ever.common.db;
+package pl.psnc.dl.wf4ever.db;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -23,7 +23,6 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.auth.AccessToken;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.vocabulary.FOAF;
 

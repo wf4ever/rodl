@@ -1,7 +1,7 @@
 /**
  * 
  */
-package pl.psnc.dl.wf4ever.auth;
+package pl.psnc.dl.wf4ever.db;
 
 import java.util.Date;
 import java.util.List;
@@ -20,8 +20,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import pl.psnc.dl.wf4ever.common.db.ActiveRecord;
-import pl.psnc.dl.wf4ever.common.db.UserProfile;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 
 /**

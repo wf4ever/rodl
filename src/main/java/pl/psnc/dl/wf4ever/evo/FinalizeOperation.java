@@ -1,6 +1,5 @@
 package pl.psnc.dl.wf4ever.evo;
 
-import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.RodlException;
 import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;

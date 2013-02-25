@@ -1,7 +1,7 @@
 /**
  * 
  */
-package pl.psnc.dl.wf4ever;
+package pl.psnc.dl.wf4ever.exceptions.mappers;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;

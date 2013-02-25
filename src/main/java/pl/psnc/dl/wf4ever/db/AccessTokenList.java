@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.auth;
+package pl.psnc.dl.wf4ever.db;
 
 import java.util.ArrayList;
 import java.util.List;

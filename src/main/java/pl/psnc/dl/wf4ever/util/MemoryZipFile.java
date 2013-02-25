@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.common.util;
+package pl.psnc.dl.wf4ever.util;
 
 import java.io.File;
 import java.io.IOException;
