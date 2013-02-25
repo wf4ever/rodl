@@ -3,8 +3,8 @@
  */
 package pl.psnc.dl.wf4ever.db;
 
+import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 import javax.persistence.Basic;
@@ -17,11 +17,6 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
-
-import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
-
 /**
  * OAuth access token DAO.
  * 
@@ -31,7 +26,7 @@ import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 @Entity
 @Table(name = "tokens")
 @XmlRootElement(name = "access-token")
-public class AccessToken extends ActiveRecord {
+public class AccessToken implements Serializable {
 
     /** id. */
     private static final long serialVersionUID = 8724845005623981779L;
@@ -154,40 +149,6 @@ public class AccessToken extends ActiveRecord {
 
     public void setLastUsed(Date lastUsed) {
         this.lastUsed = lastUsed;
-    }
-
-
-    /**
-     * Find the access token by its value.
-     * 
-     * @param value
-     *            access token value
-     * @return access token active record
-     */
-    public static AccessToken findByValue(String value) {
-        return findByPrimaryKey(AccessToken.class, value);
-    }
-
-
-    /**
-     * Find an access token by its client id, user id or both.
-     * 
-     * @param client
-     *            client
-     * @param creds
-     *            owner
-     * @return access token active record
-     */
-    @SuppressWarnings("unchecked")
-    public static List<AccessToken> findByClientOrUser(OAuthClient client, UserProfile creds) {
-        Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(AccessToken.class);
-        if (client != null) {
-            criteria.add(Restrictions.eq("client.clientId", client.getClientId()));
-        }
-        if (creds != null) {
-            criteria.add(Restrictions.eq("user.userId", creds.getLogin()));
-        }
-        return criteria.list();
     }
 
 }

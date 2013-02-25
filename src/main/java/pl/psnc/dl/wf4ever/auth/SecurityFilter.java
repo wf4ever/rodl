@@ -15,6 +15,7 @@ import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.db.AccessToken;
 import pl.psnc.dl.wf4ever.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.dao.AccessTokenDAO;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -115,10 +116,11 @@ public class SecurityFilter implements ContainerRequestFilter {
         if (tokenValue.equals(DigitalLibraryFactory.getAdminToken())) {
             return UserProfile.ADMIN;
         }
-        AccessToken accessToken = AccessToken.findByValue(tokenValue);
+        AccessTokenDAO accessTokenDAO = new AccessTokenDAO();
+        AccessToken accessToken = accessTokenDAO.findByValue(tokenValue);
         if (accessToken != null) {
             accessToken.setLastUsed(new Date());
-            accessToken.save();
+            accessTokenDAO.save(accessToken);
             return accessToken.getUser();
         } else {
             throw new MappableContainerException(new AuthenticationException("Incorrect access token\r\n", REALM));

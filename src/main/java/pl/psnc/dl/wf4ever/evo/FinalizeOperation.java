@@ -1,8 +1,8 @@
 package pl.psnc.dl.wf4ever.evo;
 
+import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.RodlException;
-import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 

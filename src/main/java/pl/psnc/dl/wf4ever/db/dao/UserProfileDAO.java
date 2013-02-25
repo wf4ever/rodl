@@ -1,7 +1,7 @@
 /**
  * 
  */
-package pl.psnc.dl.wf4ever.dao;
+package pl.psnc.dl.wf4ever.db.dao;
 
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;

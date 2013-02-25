@@ -9,6 +9,7 @@ import javax.ws.rs.core.Context;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.db.AccessToken;
 import pl.psnc.dl.wf4ever.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.dao.AccessTokenDAO;
 import pl.psnc.dl.wf4ever.exceptions.ForbiddenException;
 import pl.psnc.dl.wf4ever.model.Builder;
 
@@ -44,10 +45,11 @@ public class AccessTokenResource {
             throw new ForbiddenException("Only admin users can manage access tokens.");
         }
 
-        AccessToken accessToken = AccessToken.findByValue(token);
+        AccessTokenDAO accessTokenDAO = new AccessTokenDAO();
+        AccessToken accessToken = accessTokenDAO.findByValue(token);
         if (accessToken == null) {
             throw new NotFoundException();
         }
-        accessToken.delete();
+        accessTokenDAO.delete(accessToken);
     }
 }

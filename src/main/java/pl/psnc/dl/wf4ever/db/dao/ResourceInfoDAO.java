@@ -1,7 +1,7 @@
 /**
  * 
  */
-package pl.psnc.dl.wf4ever.dao;
+package pl.psnc.dl.wf4ever.db.dao;
 
 import org.joda.time.DateTime;
 

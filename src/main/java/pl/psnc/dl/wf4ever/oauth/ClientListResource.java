@@ -21,6 +21,7 @@ import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.db.OAuthClient;
 import pl.psnc.dl.wf4ever.db.OAuthClientList;
 import pl.psnc.dl.wf4ever.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.dao.OAuthClientDAO;
 import pl.psnc.dl.wf4ever.exceptions.ForbiddenException;
 import pl.psnc.dl.wf4ever.model.Builder;
 
@@ -57,7 +58,8 @@ public class ClientListResource {
         if (builder.getUser().getRole() != UserProfile.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
         }
-        List<OAuthClient> list = OAuthClient.findAll();
+        OAuthClientDAO oAuthClientDAO = new OAuthClientDAO();
+        List<OAuthClient> list = oAuthClientDAO.findAll();
         return new OAuthClientList(list);
     }
 
@@ -82,8 +84,9 @@ public class ClientListResource {
                     .header("Content-type", "text/plain").build();
         }
 
+        OAuthClientDAO oAuthClientDAO = new OAuthClientDAO();
         OAuthClient client = new OAuthClient(lines[0], lines[1]);
-        client.save();
+        oAuthClientDAO.save(client);
 
         URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build().resolve(client.getClientId());
 

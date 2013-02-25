@@ -22,11 +22,13 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
-import pl.psnc.dl.wf4ever.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.db.AccessToken;
 import pl.psnc.dl.wf4ever.db.AccessTokenList;
 import pl.psnc.dl.wf4ever.db.OAuthClient;
 import pl.psnc.dl.wf4ever.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.dao.AccessTokenDAO;
+import pl.psnc.dl.wf4ever.db.dao.OAuthClientDAO;
+import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.exceptions.ForbiddenException;
@@ -77,10 +79,12 @@ public class AccessTokenListResource {
         if (userId != null) {
             userId = new String(Base64.decodeBase64(userId));
         }
-        OAuthClient client = clientId != null ? OAuthClient.findById(clientId) : null;
-        UserProfileDAO dao = new UserProfileDAO();
-        UserProfile creds = userId != null ? dao.findByLogin(userId) : null;
-        List<AccessToken> list = AccessToken.findByClientOrUser(client, creds);
+        OAuthClientDAO oAuthClientDAO = new OAuthClientDAO();
+        OAuthClient client = clientId != null ? oAuthClientDAO.findById(clientId) : null;
+        UserProfileDAO userProfileDAO = new UserProfileDAO();
+        UserProfile userProfile = userId != null ? userProfileDAO.findByLogin(userId) : null;
+        AccessTokenDAO accessTokenDAO = new AccessTokenDAO();
+        List<AccessToken> list = accessTokenDAO.findByClientOrUser(client, userProfile);
         return new AccessTokenList(list);
     }
 
@@ -109,7 +113,8 @@ public class AccessTokenListResource {
         }
 
         try {
-            OAuthClient client = OAuthClient.findById(lines[0]);
+            OAuthClientDAO oAuthClientDAO = new OAuthClientDAO();
+            OAuthClient client = oAuthClientDAO.findById(lines[0]);
             if (client == null) {
                 throw new BadRequestException("Client not found");
             }
@@ -118,8 +123,9 @@ public class AccessTokenListResource {
             if (creds == null) {
                 throw new BadRequestException("User not found");
             }
+            AccessTokenDAO accessTokenDAO = new AccessTokenDAO();
             AccessToken accessToken = new AccessToken(client, creds);
-            accessToken.save();
+            accessTokenDAO.save(accessToken);
             URI resourceUri = uriInfo.getAbsolutePathBuilder().path("/").build().resolve(accessToken.getToken());
 
             return Response.created(resourceUri).build();

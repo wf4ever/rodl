@@ -11,6 +11,7 @@ import javax.ws.rs.core.UriInfo;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.db.OAuthClient;
 import pl.psnc.dl.wf4ever.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.dao.OAuthClientDAO;
 import pl.psnc.dl.wf4ever.exceptions.ForbiddenException;
 import pl.psnc.dl.wf4ever.model.Builder;
 
@@ -51,7 +52,8 @@ public class ClientResource {
             throw new ForbiddenException("Only admin users can manage clients.");
         }
 
-        return OAuthClient.findById(clientId);
+        OAuthClientDAO oAuthClientDAO = new OAuthClientDAO();
+        return oAuthClientDAO.findById(clientId);
     }
 
 
@@ -67,10 +69,11 @@ public class ClientResource {
             throw new ForbiddenException("Only admin users can manage clients.");
         }
 
-        OAuthClient client = OAuthClient.findById(clientId);
+        OAuthClientDAO oAuthClientDAO = new OAuthClientDAO();
+        OAuthClient client = oAuthClientDAO.findById(clientId);
         if (client == null) {
             throw new NotFoundException();
         }
-        client.delete();
+        oAuthClientDAO.delete(client);
     }
 }

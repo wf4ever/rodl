@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.dao;
+package pl.psnc.dl.wf4ever.db.dao;
 
 import java.io.Serializable;
 import java.util.List;
@@ -7,7 +7,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 
-import pl.psnc.dl.wf4ever.hibernate.HibernateUtil;
+import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 
 /**
  * DAO base, with generic methods for loading, saving and deleting objects.

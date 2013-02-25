@@ -3,7 +3,7 @@
  */
 package pl.psnc.dl.wf4ever.db;
 
-import java.util.List;
+import java.io.Serializable;
 import java.util.UUID;
 
 import javax.persistence.Basic;
@@ -14,7 +14,6 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-
 /**
  * OAuth client application DAO.
  * 
@@ -24,7 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "clients")
 @XmlRootElement(name = "client")
-public class OAuthClient extends ActiveRecord {
+public class OAuthClient implements Serializable {
 
     /** id. */
     private static final long serialVersionUID = -2685385714424480380L;
@@ -115,25 +114,4 @@ public class OAuthClient extends ActiveRecord {
         this.redirectionURI = redirectionURI;
     }
 
-
-    /**
-     * Find in database by client id.
-     * 
-     * @param clientId
-     *            client id
-     * @return client or null
-     */
-    public static OAuthClient findById(String clientId) {
-        return findByPrimaryKey(OAuthClient.class, clientId);
-    }
-
-
-    /**
-     * Find all clients.
-     * 
-     * @return a list of clients
-     */
-    public static List<OAuthClient> findAll() {
-        return findAll(OAuthClient.class);
-    }
 }

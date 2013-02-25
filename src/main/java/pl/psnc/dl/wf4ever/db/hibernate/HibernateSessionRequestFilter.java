@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.hibernate;
+package pl.psnc.dl.wf4ever.db.hibernate;
 
 import java.io.IOException;
 
