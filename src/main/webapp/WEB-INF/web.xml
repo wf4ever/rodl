@@ -19,7 +19,7 @@
 
 	<filter>
 		<filter-name>HibernateFilter</filter-name>
-		<filter-class>pl.psnc.dl.wf4ever.hibernate.HibernateSessionRequestFilter</filter-class>
+		<filter-class>pl.psnc.dl.wf4ever.db.hibernate.HibernateSessionRequestFilter</filter-class>
 	</filter>
 
 	<filter-mapping>
@@ -45,10 +45,6 @@
 		<init-param>
 			<param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
 			<param-value>pl.psnc.dl.wf4ever.auth.SecurityFilter</param-value>
-		</init-param>
-		<init-param>
-			<param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
-			<param-value>pl.psnc.dl.wf4ever.auth.ResourceCloseFilter</param-value>
 		</init-param>
 	</filter>
 

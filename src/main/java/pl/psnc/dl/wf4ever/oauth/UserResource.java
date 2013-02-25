@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.oauth;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
@@ -34,8 +35,6 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
-import pl.psnc.dl.wf4ever.sms.QueryResult;
 
 import com.sun.jersey.api.NotFoundException;
 
@@ -124,11 +123,15 @@ public class UserResource {
     private Response getUser(@PathParam("U_ID") String urlSafeUserId, RDFFormat rdfFormat)
             throws DigitalLibraryException {
         String userId = new String(Base64.decodeBase64(urlSafeUserId));
-
-        QueryResult qs = ROSRService.SMS.get().getUser(UserProfile.generateAbsoluteURI(null, userId), rdfFormat);
+        UserProfileDAO userProfileDAO = new UserProfileDAO();
+        UserProfile user = userProfileDAO.findByLogin(userId);
+        if (user == null) {
+            throw new NotFoundException("User not found");
+        }
+        InputStream userDesc = user.getAsInputStream(rdfFormat);
 
         if (DigitalLibraryFactory.getDigitalLibrary().userExists(userId)) {
-            return Response.ok(qs.getInputStream()).type(qs.getFormat().getDefaultMIMEType()).build();
+            return Response.ok(userDesc).type(rdfFormat.getDefaultMIMEType()).build();
         } else {
             return Response.status(Status.NOT_FOUND).type("text/plain").entity("User " + userId + " does not exist")
                     .build();
@@ -212,20 +215,16 @@ public class UserResource {
             throws DigitalLibraryException, NotFoundException, ClassNotFoundException, IOException, NamingException,
             SQLException, pl.psnc.dl.wf4ever.dl.NotFoundException {
         String userId = new String(Base64.decodeBase64(urlSafeUserId));
-        Set<URI> list = ROSRService.SMS.get().findResearchObjectsByCreator(
-            UserProfile.generateAbsoluteURI(null, userId));
-        for (URI uri : list) {
-            ResearchObject ro = ResearchObject.get(builder, uri);
+        UserProfileDAO userProfileDAO = new UserProfileDAO();
+        UserProfile user = userProfileDAO.findByLogin(userId);
+        if (user == null) {
+            throw new NotFoundException("User not found");
+        }
+        Set<ResearchObject> ros = ResearchObject.getAll(builder, user);
+        for (ResearchObject ro : ros) {
             ro.delete();
         }
-
-        ROSRService.SMS.get().removeUser(URI.create(userId));
         DigitalLibraryFactory.getDigitalLibrary().deleteUser(userId);
-        UserProfileDAO dao = new UserProfileDAO();
-        UserProfile creds = dao.findByLogin(userId);
-        if (creds == null) {
-            throw new NotFoundException();
-        }
-        dao.delete(creds);
+        userProfileDAO.delete(user);
     }
 }

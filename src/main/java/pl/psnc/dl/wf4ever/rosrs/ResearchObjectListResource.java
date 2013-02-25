@@ -66,7 +66,7 @@ public class ResearchObjectListResource {
     @GET
     @Produces("text/plain")
     public Response getResearchObjectList() {
-        Set<ResearchObject> list = ResearchObject.getAll(builder);
+        Set<ResearchObject> list = ResearchObject.getAll(builder, builder.getUser());
         StringBuilder sb = new StringBuilder();
         for (ResearchObject id : list) {
             sb.append(id.getUri().toString());

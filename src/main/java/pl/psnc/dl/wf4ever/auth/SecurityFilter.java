@@ -1,10 +1,7 @@
 package pl.psnc.dl.wf4ever.auth;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Date;
 
-import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
@@ -12,7 +9,6 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
-import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.db.AccessToken;
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.AccessTokenDAO;
@@ -21,7 +17,6 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.AuthenticationException;
 import pl.psnc.dl.wf4ever.model.Builder;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
 
 import com.sun.jersey.api.container.MappableContainerException;
 import com.sun.jersey.spi.container.ContainerRequest;
@@ -57,7 +52,6 @@ public class SecurityFilter implements ContainerRequestFilter {
             if (user == null) {
                 throw new NotFoundException("User profile not found");
             }
-            ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(user));
             httpRequest.setAttribute("Builder", new Builder(user));
 
             //TODO in here should go access rights control, based on dLibra for example
@@ -66,8 +60,6 @@ public class SecurityFilter implements ContainerRequestFilter {
             //            }
         } catch (DigitalLibraryException e) {
             throw new MappableContainerException(new AuthenticationException("Incorrect login/password\r\n", REALM));
-        } catch (NotFoundException | SQLException | NamingException | IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
         }
 
         return request;

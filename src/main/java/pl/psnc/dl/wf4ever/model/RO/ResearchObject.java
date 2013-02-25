@@ -895,26 +895,28 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
-     * Get all research objects. If the builder has a user set whose role is not public, only the user's research
-     * objects are looked for.
+     * Get all research objects. If the user is set whose role is not public, only the user's research objects are
+     * looked for.
      * 
      * @param builder
      *            builder that defines the dataset and the user
+     * @param userMetadata
+     *            the user to filter the results
      * @return a set of research objects
      */
-    public static Set<ResearchObject> getAll(Builder builder) {
+    public static Set<ResearchObject> getAll(Builder builder, UserMetadata userMetadata) {
         boolean wasStarted = builder.beginTransaction(ReadWrite.READ);
         try {
             Set<ResearchObject> ros = new HashSet<>();
             String queryString;
-            if (builder.getUser() == null || builder.getUser().getRole() == Role.PUBLIC) {
+            if (userMetadata == null || userMetadata.getRole() == Role.PUBLIC) {
                 queryString = String.format("PREFIX ro: <%s> SELECT ?ro WHERE { ?ro a ro:ResearchObject . }",
                     RO.NAMESPACE);
             } else {
                 queryString = String
                         .format(
                             "PREFIX ro: <%s> PREFIX dcterms: <%s> SELECT ?ro WHERE { ?ro a ro:ResearchObject ; dcterms:creator <%s> . }",
-                            RO.NAMESPACE, DCTerms.NS, builder.getUser().getUri());
+                            RO.NAMESPACE, DCTerms.NS, userMetadata.getUri());
             }
             Query query = QueryFactory.create(queryString);
             QueryExecution qe = QueryExecutionFactory.create(query,
