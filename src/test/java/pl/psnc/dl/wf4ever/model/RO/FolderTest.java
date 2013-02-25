@@ -22,6 +22,7 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 public class FolderTest extends BaseTest {
 
     private String folderName = "folder";
+    private FolderBuilder folderBuilder;
     private URI folderUri;
 
 
@@ -30,6 +31,7 @@ public class FolderTest extends BaseTest {
     public void setUp() {
         super.setUp();
         folderUri = researchObject.getUri().resolve(folderName);
+        folderBuilder = new FolderBuilder();
     }
 
 
@@ -47,7 +49,7 @@ public class FolderTest extends BaseTest {
     @Test
     public void testGetFolderEntries()
             throws BadRequestException {
-        Folder folder = init("model/ro/folder/folder.rdf");
+        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
         //WHY??
         Assert.assertEquals(4, folder.getFolderEntries().size());
     }
@@ -56,7 +58,7 @@ public class FolderTest extends BaseTest {
     @Test
     public void testGetAggregatedResources()
             throws BadRequestException {
-        Folder folder = init("model/ro/folder/folder.rdf");
+        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
         Assert.assertEquals(4, folder.getFolderEntries().size());
     }
 
@@ -64,7 +66,7 @@ public class FolderTest extends BaseTest {
     @Test
     public void testGetResourceMap()
             throws BadRequestException {
-        Folder folder = init("model/ro/folder/folder.rdf");
+        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
         Assert.assertNotNull(folder.getResourceMap());
         //TODO something else?
     }
@@ -73,7 +75,7 @@ public class FolderTest extends BaseTest {
     @Test
     public void testGet()
             throws BadRequestException {
-        Folder folder = init("model/ro/folder/folder.rdf");
+        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
         Folder.get(builder, folder.getUri());
         folder.equals(Folder.get(builder, folder.getUri()));
     }
@@ -108,7 +110,7 @@ public class FolderTest extends BaseTest {
     @Test
     public void testCreate()
             throws BadRequestException {
-        Folder folder = init("model/ro/folder/folder.rdf");
+        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
         Assert.assertNotNull(folder);
     }
 
@@ -116,7 +118,7 @@ public class FolderTest extends BaseTest {
     @Test
     public void testCreateEmptyFolder()
             throws BadRequestException {
-        Folder folder = init("model/ro/folder/empty_folder.rdf");
+        Folder folder = folderBuilder.init("model/ro/folder/empty_folder.rdf", builder, researchObject, folderUri);
         Assert.assertNotNull(folder);
     }
 
@@ -124,13 +126,13 @@ public class FolderTest extends BaseTest {
     @Test
     public void testCreateFolderNoRDFContent()
             throws BadRequestException {
-        Folder folder = init("model/ro/folder/empty.rdf");
+        Folder folder = folderBuilder.init("model/ro/folder/empty.rdf", builder, researchObject, folderUri);
     }
 
 
     public void testCreateFolderRDFNoFolder()
             throws BadRequestException {
-        Folder folder = init("model/ro/folder/no_folder.rdf");
+        Folder folder = folderBuilder.init("model/ro/folder/no_folder.rdf", builder, researchObject, folderUri);
         Assert.assertNull(folder);
     }
 
@@ -138,7 +140,7 @@ public class FolderTest extends BaseTest {
     @Test(expected = BadRequestException.class)
     public void testCreateTwoFolders()
             throws BadRequestException {
-        Folder folder = init("model/ro/folder/two_folders.rdf");
+        Folder folder = folderBuilder.init("model/ro/folder/two_folders.rdf", builder, researchObject, folderUri);
         Assert.assertNull(folder);
     }
 
@@ -146,8 +148,8 @@ public class FolderTest extends BaseTest {
     @Test(expected = ConflictException.class)
     public void testCreateDuplication()
             throws BadRequestException {
-        Folder folder = init("model/ro/folder/folder.rdf");
-        folder = init("model/ro/folder/folder.rdf");
+        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
+        folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
         Assert.assertNull(folder);
     }
 
@@ -155,7 +157,7 @@ public class FolderTest extends BaseTest {
     @Test
     public void testCreateFolderNullInputStream()
             throws BadRequestException {
-        createROAggregated();
+        folderBuilder.createROAggregated(builder, researchObject, folderUri);
         Folder folder = Folder.create(builder, researchObject, folderUri, null);
 
     }
@@ -164,7 +166,7 @@ public class FolderTest extends BaseTest {
     @Test
     public void testCopy()
             throws BadRequestException {
-        Folder folder = init("model/ro/folder/folder.rdf");
+        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
         Folder folderCopy = folder.copy(builder, new SnapshotBuilder(), researchObject2);
         Assert.assertNotNull(folder.getCopyAuthor());
         Assert.assertNotNull(folder.getCopyDateTime());
@@ -183,10 +185,22 @@ public class FolderTest extends BaseTest {
     @Test
     public void testCreateFolderEntry()
             throws BadRequestException {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/folder/folder.rdf");
+        InputStream is = getClass().getClassLoader().getResourceAsStream(FolderBuilder.DEFAULT_FOLDER_PATH);
         researchObject.aggregate("new-resource", is, "text/plain");
-        Folder folder = init("model/ro/folder/folder.rdf");
+        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
         is = getClass().getClassLoader().getResourceAsStream("model/ro/folder/folder_entry.rdf");
+        FolderEntry fe = folder.createFolderEntry(is);
+        Assert.assertEquals(folder.getFolderEntries().get(fe.getUri()), fe);
+    }
+
+
+    @Test(expected = ConflictException.class)
+    public void testCreateDuplicatedFolderEntry()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream(FolderBuilder.DEFAULT_FOLDER_PATH);
+        researchObject.aggregate("new-resource", is, "text/plain");
+        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
+        is = getClass().getClassLoader().getResourceAsStream("model/ro/folder/duplicated_folder_entry.rdf");
         FolderEntry fe = folder.createFolderEntry(is);
         Assert.assertEquals(folder.getFolderEntries().get(fe.getUri()), fe);
     }
@@ -195,19 +209,18 @@ public class FolderTest extends BaseTest {
     @Test
     public void testAddFolderEntry()
             throws BadRequestException {
-        Folder f = init("model/ro/folder/folder.rdf");
+        Folder f = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
         FolderEntry fe = builder.buildFolderEntry(folderUri.resolve("fe"),
             f.getAggregatedResources().get(f.getAggregatedResources().values().iterator().next()), f, "fe");
         f.addFolderEntry(fe);
         Assert.assertEquals(fe, f.getFolderEntries().get(fe.getUri()));
-
     }
 
 
     @Test
     public void testAddFolderEntryAsNull()
             throws BadRequestException {
-        Folder f = init("model/ro/folder/folder.rdf");
+        Folder f = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
         f.addFolderEntry(null);
     }
 
@@ -215,30 +228,11 @@ public class FolderTest extends BaseTest {
     @Test
     public void testUpdate()
             throws BadRequestException {
-        Folder f = init("model/ro/folder/empty_folder.rdf");
+        Folder f = folderBuilder.init("model/ro/folder/empty_folder.rdf", builder, researchObject, folderUri);
         Assert.assertEquals(0, f.getFolderEntries().size());
-        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/folder/folder.rdf");
+        InputStream is = getClass().getClassLoader().getResourceAsStream(FolderBuilder.DEFAULT_FOLDER_PATH);
         f.update(is, "RDF/XML");
         Assert.assertEquals(4, f.getFolderEntries().size());
     }
 
-
-    private void createROAggregated()
-            throws BadRequestException {
-        researchObject.aggregate(URI.create("http://example.org"));
-        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/folder/folder.rdf");
-        researchObject.aggregate("ar1", is, "text/plain");
-        is = getClass().getClassLoader().getResourceAsStream("model/ro/folder/folder.rdf");
-        researchObject.aggregate("ar2", is, "text/plain");
-        is = getClass().getClassLoader().getResourceAsStream("model/ro/folder/folder.rdf");
-        researchObject.aggregate("ar3", is, "text/plain");
-    }
-
-
-    private Folder init(String path)
-            throws BadRequestException {
-        createROAggregated();
-        InputStream is = getClass().getClassLoader().getResourceAsStream(path);
-        return Folder.create(builder, researchObject, folderUri, is);
-    }
 }

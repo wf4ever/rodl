@@ -4,6 +4,5 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
   <ro:FolderEntry>
     <ro:entryName>the main file.txt</ro:entryName>
-    <ore:proxyFor rdf:resource="http://example.org/ro-1/new-resource" />
   </ro:FolderEntry>
 </rdf:RDF>
