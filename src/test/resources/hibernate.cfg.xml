@@ -40,7 +40,6 @@
 		<mapping class="pl.psnc.dl.wf4ever.auth.OAuthClient" />
 		<mapping class="pl.psnc.dl.wf4ever.common.db.UserProfile" />
 		<mapping class="pl.psnc.dl.wf4ever.common.db.ResourceInfo" />
-		<mapping class="pl.psnc.dl.wf4ever.dlibra.hibernate.ResearchObject" />
 
 	</session-factory>
 </hibernate-configuration>
