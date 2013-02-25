@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
@@ -34,10 +33,6 @@ public class ServiceResource {
     /** logger. */
     @SuppressWarnings("unused")
     private static final Logger LOGGER = Logger.getLogger(ServiceResource.class);
-
-    /** Context. */
-    @Context
-    private HttpServletRequest request;
 
     /** URI info. */
     @Context

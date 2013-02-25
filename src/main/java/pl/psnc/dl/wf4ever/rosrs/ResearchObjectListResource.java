@@ -9,7 +9,6 @@ import java.net.URI;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -44,10 +43,6 @@ public class ResearchObjectListResource {
     /** logger. */
     @SuppressWarnings("unused")
     private static final Logger LOGGER = Logger.getLogger(ResearchObjectListResource.class);
-
-    /** HTTP request. */
-    @Context
-    HttpServletRequest request;
 
     /** URI info. */
     @Context

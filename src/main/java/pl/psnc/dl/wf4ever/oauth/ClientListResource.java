@@ -6,7 +6,6 @@ package pl.psnc.dl.wf4ever.oauth;
 import java.net.URI;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -33,10 +32,6 @@ import pl.psnc.dl.wf4ever.model.Builder;
  */
 @Path("clients")
 public class ClientListResource {
-
-    /** HTTP request. */
-    @Context
-    HttpServletRequest request;
 
     /** URI info. */
     @Context

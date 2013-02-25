@@ -1,10 +1,8 @@
 package pl.psnc.dl.wf4ever.oauth;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.db.AccessToken;
@@ -23,10 +21,6 @@ import com.sun.jersey.api.NotFoundException;
  */
 @Path(("accesstokens" + "/{T_ID}"))
 public class AccessTokenResource {
-
-    /** HTTP request. */
-    @Context
-    HttpServletRequest request;
 
     /** Resource builder. */
     @RequestAttribute("Builder")

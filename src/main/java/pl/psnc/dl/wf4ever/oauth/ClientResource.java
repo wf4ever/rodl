@@ -1,6 +1,5 @@
 package pl.psnc.dl.wf4ever.oauth;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -25,10 +24,6 @@ import com.sun.jersey.api.NotFoundException;
  */
 @Path(("clients" + "/{C_ID}"))
 public class ClientResource {
-
-    /** HTTP request. */
-    @Context
-    HttpServletRequest request;
 
     /** URI info. */
     @Context

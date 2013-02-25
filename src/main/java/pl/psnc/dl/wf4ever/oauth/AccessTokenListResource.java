@@ -6,7 +6,6 @@ package pl.psnc.dl.wf4ever.oauth;
 import java.net.URI;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -46,10 +45,6 @@ public class AccessTokenListResource {
     /** logger. */
     @SuppressWarnings("unused")
     private static final Logger LOGGER = Logger.getLogger(AccessTokenListResource.class);
-
-    /** HTTP request. */
-    @Context
-    HttpServletRequest request;
 
     /** URI info. */
     @Context

@@ -2,7 +2,6 @@ package pl.psnc.dl.wf4ever.oauth;
 
 import java.io.InputStream;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -28,10 +27,6 @@ import pl.psnc.dl.wf4ever.model.Builder;
  */
 @Path(("whoami/"))
 public class WhoAmIResource {
-
-    /** HTTP request. */
-    @Context
-    HttpServletRequest request;
 
     /** URI info. */
     @Context

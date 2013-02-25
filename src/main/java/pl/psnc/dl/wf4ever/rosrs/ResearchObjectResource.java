@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -63,10 +62,6 @@ public class ResearchObjectResource {
 
     /** An application that displays the HTML version of a workflow. */
     private static final URI RO_HTML_PORTAL = URI.create("http://sandbox.wf4ever-project.org/portal/ro");
-
-    /** HTTP request. */
-    @Context
-    HttpServletRequest request;
 
     /** URI info. */
     @Context
@@ -156,6 +151,8 @@ public class ResearchObjectResource {
      *            Accept header
      * @param links
      *            Link headers
+     * @param contentType
+     *            content type header
      * @param content
      *            resource content
      * @return 201 Created with proxy URI
@@ -164,7 +161,8 @@ public class ResearchObjectResource {
      */
     @POST
     public Response addResource(@PathParam("ro_id") String researchObjectId, @HeaderParam("Slug") String path,
-            @HeaderParam("Accept") String accept, @HeaderParam("Link") Set<String> links, InputStream content)
+            @HeaderParam("Accept") String accept, @HeaderParam("Link") Set<String> links,
+            @HeaderParam("Content-Type") String contentType, InputStream content)
             throws BadRequestException {
         URI uri = uriInfo.getAbsolutePath();
         RDFFormat responseSyntax = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
@@ -199,8 +197,7 @@ public class ResearchObjectResource {
             annotationTargets.add(target);
         }
         if (!annotationTargets.isEmpty()) {
-            pl.psnc.dl.wf4ever.model.RO.Resource roResource = researchObject.aggregate(path, content,
-                request.getContentType());
+            pl.psnc.dl.wf4ever.model.RO.Resource roResource = researchObject.aggregate(path, content, contentType);
             Annotation annotation = researchObject.annotate(resourceUri, annotationTargets);
             String annotationBodyHeader = String.format(Constants.LINK_HEADER_TEMPLATE, annotation.getBody().getUri()
                     .toString(), AO.body);
@@ -215,8 +212,7 @@ public class ResearchObjectResource {
             }
             return response.build();
         } else {
-            pl.psnc.dl.wf4ever.model.RO.Resource resource = researchObject.aggregate(path, content,
-                request.getContentType());
+            pl.psnc.dl.wf4ever.model.RO.Resource resource = researchObject.aggregate(path, content, contentType);
             String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, resource.getUri().toString(),
                 ORE.proxyFor.getURI());
             InputStream proxyAndResourceDesc = researchObject.getManifest().getGraphAsInputStream(responseSyntax,
