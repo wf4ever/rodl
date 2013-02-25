@@ -203,7 +203,7 @@ public class Folder extends Resource implements Aggregation {
      * @throws BadRequestException
      *             the folder description is incorrect
      */
-    public static Folder assemble(Builder builder, ResearchObject researchObject, URI folderUri, InputStream content)
+    private static Folder assemble(Builder builder, ResearchObject researchObject, URI folderUri, InputStream content)
             throws BadRequestException {
         Folder folder = builder.buildFolder(researchObject, folderUri, builder.getUser(), DateTime.now());
         folder.resourceMap = FolderResourceMap
