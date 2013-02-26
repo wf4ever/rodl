@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.model.AO;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -10,11 +11,11 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
-import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.BaseTest;
+import pl.psnc.dl.wf4ever.model.EvoBuilder;
+import pl.psnc.dl.wf4ever.model.SnapshotBuilder;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
@@ -26,85 +27,311 @@ import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
  */
 public class AnnotationTest extends BaseTest {
 
-    private ResearchObject ro;
-    private URI annotationUri = URI.create("http://www.example.com/annotationUri/");
-
-
     @Override
     @Before
-    public void setUp()
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+    public void setUp() {
         super.setUp();
-        ro = builder.buildResearchObject(URI.create(("http://www.example.com/ROs/ro/")));
     }
 
 
     @Test
     public void testAnnotation() {
-        Thing body = new Thing(userProfile, URI.create("http://www.example.com/body/"));
-        Set<Thing> annotated = new HashSet<Thing>();
-        annotated.add(ro.getManifest());
-
-        Annotation annotation = new Annotation(userProfile, ro, annotationUri, body, annotated);
-        Assert.assertEquals(annotation.getUri(), annotationUri);
-        Assert.assertEquals(annotation.getBody(), body);
-        Assert.assertEquals(annotation.getAnnotated(), annotated);
-        Assert.assertEquals(annotation.getResearchObject(), ro);
-
-        annotation = new Annotation(userProfile, ro, annotationUri, body, ro.getManifest());
-        Assert.assertEquals(annotation.getUri(), annotationUri);
-        Assert.assertEquals(annotation.getBody(), body);
-        Assert.assertEquals(annotation.getAnnotated().size(), 1);
-        Assert.assertEquals(annotation.getAnnotated().iterator().next(), ro.getManifest());
-        Assert.assertEquals(annotation.getResearchObject(), ro);
+        Annotation annotation = new Annotation(userProfile, dataset, true, researchObject, researchObject.getUri()
+                .resolve("some-uri"));
+        Assert.assertEquals(annotation.getResearchObject(), researchObject);
     }
 
 
-    /*
     @Test
-    public void testCreate()
-            throws BadRequestException, IOException {
-        InputStream annotationDescriptionInputStream = getClass().getClassLoader().getResourceAsStream(
-            "singleFiles/annotationDescription.rdf");
-        InputStream resourceInputStream = getClass().getClassLoader().getResourceAsStream("singleFiles/file1.txt");
-        InputStream annotationBodyInputStream = getClass().getClassLoader()
-                .getResourceAsStream("singleFiles/file2.txt");
-        ro.aggregate("http://example.com/ROs/ro_id/foo/bar.txt", resourceInputStream, null);
-        ro.aggregate("http://example.com/external.txt", annotationBodyInputStream, null);
-        Annotation annotation = Annotation.create(builder, ro, annotationUri, annotationDescriptionInputStream);
+    public void testCreateAnnotationWithExternalBody()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/ann1.rdf");
+        Annotation annotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), is);
+        Set<Thing> expectedTarges = new HashSet<Thing>();
+        expectedTarges.add(researchObject);
+
+        Assert.assertEquals(annotation.getUri(), researchObject.getUri().resolve("new-annotation"));
+        Assert.assertEquals(annotation.getBody().getUri(), URI.create("http://example.org/external.txt"));
+        Assert.assertEquals(annotation.getName(), "new-annotation");
+        Assert.assertEquals(annotation.getAnnotated(), expectedTarges);
     }
-    */
+
+
+    @Test
+    public void testCreateAnnotationWithInteralBody()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/ann2.rdf");
+        Annotation annotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), is);
+        Set<Thing> expectedTarges = new HashSet<Thing>();
+        expectedTarges.add(researchObject);
+        Assert.assertEquals(annotation.getUri(), researchObject.getUri().resolve("new-annotation"));
+        Assert.assertEquals(annotation.getBody().getUri(), researchObject.getUri().resolve("ann2-body.txt"));
+        Assert.assertEquals(annotation.getName(), "new-annotation");
+        Assert.assertEquals(annotation.getAnnotated(), expectedTarges);
+    }
+
+
+    @Test
+    public void testCreateAnnotationWithManyTargets()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/multi-targets.rdf");
+        Annotation annotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), is);
+        Set<Thing> expectedTargets = new HashSet<Thing>();
+
+        expectedTargets.add(builder.buildResource(researchObject, researchObject.getUri()
+                .resolve("a%20workflow.t2flow"), userProfile, null));
+        expectedTargets.add(researchObject);
+
+        Assert.assertEquals(annotation.getUri(), researchObject.getUri().resolve("new-annotation"));
+        Assert.assertEquals(annotation.getBody().getUri(), URI.create("http://example.org/external.txt"));
+        Assert.assertEquals(annotation.getName(), "new-annotation");
+        Assert.assertEquals(annotation.getAnnotated(), expectedTargets);
+
+    }
+
+
+    @Test(expected = ConflictException.class)
+    public void testCreateAnnotationWithThisSameUri()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/ann1.rdf");
+        Annotation annotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), is);
+        researchObject.aggregate(annotation.getUri());
+        is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/ann1.rdf");
+        Annotation conflictedAnnotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), is);
+        researchObject.aggregate(conflictedAnnotation.getUri());
+    }
+
+
+    @Test
+    public void testCreateAnnotationWithNoContent()
+            throws BadRequestException {
+        //should exception be more precise?
+        Annotation annotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), null);
+    }
+
+
+    @Test
+    public void testCreateAnnotationWithNotExistentInternalBody()
+            throws BadRequestException {
+        //internal body witch doesn't exists
+        //should be an error?
+        InputStream is = getClass().getClassLoader().getResourceAsStream(
+            "model/ao/annotation/annotation-wrong-body.rdf");
+        Annotation annotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), is);
+    }
+
+
+    @Test(expected = BadRequestException.class)
+    public void testCreateAnnotationWithNoBody()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/no-body.rdf");
+        Annotation annotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), is);
+    }
+
+
+    @Test
+    public void testCreateAnnotationWithNoTargets()
+            throws BadRequestException {
+        //should be forbidden? 
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/no-targets.rdf");
+        Annotation annotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), is);
+    }
+
+
+    @Test(expected = BadRequestException.class)
+    public void testCreateAnnotationWithNoBodyNoTargets()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/no-body-no-targets.rdf");
+        Annotation annotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), is);
+    }
+
+
+    @Test
+    public void testCreateAnnotationWithNoRDF()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/no-rdf.rdf");
+        Annotation annotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), is);
+    }
+
+
+    @Test(expected = BadRequestException.class)
+    public void testCreateEmptyAnnotation()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/empty.rdf");
+        Annotation annotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), is);
+    }
+
+
+    @Test
+    public void testCopyWithExternalBody()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/ann1.rdf");
+        Annotation annotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), is);
+        EvoBuilder evoBuilder = new SnapshotBuilder();
+        Annotation annotationCopy = annotation.copy(builder, evoBuilder, researchObject2);
+        Assert.assertEquals(annotationCopy.getUri().relativize(researchObject2.getUri()), (researchObject2.getUri()));
+        Assert.assertEquals(annotationCopy.getBody().getUri(), (annotation.getBody().getUri()));
+    }
+
+
+    @Test
+    public void testCopyWithInternalBody()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/ann2.rdf");
+        Annotation annotation = Annotation.create(builder, researchObject,
+            researchObject.getUri().resolve("new-annotation"), is);
+        EvoBuilder evoBuilder = new SnapshotBuilder();
+        Annotation annotationCopy = annotation.copy(builder, evoBuilder, researchObject2);
+        Assert.assertEquals(annotationCopy.getUri().relativize(researchObject2.getUri()), (researchObject2.getUri()));
+        Assert.assertEquals(annotationCopy.getBody().getUri().relativize(researchObject2.getUri()),
+            (researchObject2.getUri()));
+    }
+
+
+    @Test
+    public void testSave() {
+        Annotation annotation = new Annotation(userProfile, dataset, false, researchObject,
+                URI.create("new-annotation-save-test"));
+        annotation.setBody(builder.buildThing(URI.create("body")));
+        Set<Thing> annotated = new HashSet<Thing>();
+        annotated.add(researchObject);
+        annotation.setAnnotated(annotated);
+        annotation.save();
+        Assert.assertTrue(researchObject.getAnnotations().containsKey(annotation.getUri()));
+    }
+
+
+    @Test
+    public void testDoubleSave() {
+        int startPoint = researchObject.getAnnotations().size();
+        Annotation annotation = new Annotation(userProfile, dataset, false, researchObject,
+                URI.create("new-annotation-save-test"));
+        annotation.setBody(builder.buildThing(URI.create("body")));
+        Set<Thing> annotated = new HashSet<Thing>();
+        annotated.add(researchObject);
+        annotation.setAnnotated(annotated);
+        annotation.save();
+        annotation.save();
+        annotation.save();
+        Assert.assertTrue(ResearchObject.get(builder, researchObject.getUri()).getAnnotations()
+                .containsKey(annotation.getUri()));
+        Assert.assertEquals(startPoint + 1, ResearchObject.get(builder, researchObject.getUri()).getAnnotations()
+                .size());
+    }
+
+
+    @Test
+    public void testDoubleSave2() {
+        int startPoint = researchObject.getAnnotations().size();
+        Annotation annotation = new Annotation(userProfile, dataset, false, researchObject,
+                URI.create("new-annotation-save-test"));
+        annotation.setBody(builder.buildThing(URI.create("body")));
+        Set<Thing> annotated = new HashSet<Thing>();
+        annotated.add(researchObject);
+        annotation.setAnnotated(annotated);
+        annotation.save();
+        annotation.save();
+        annotation.save();
+        Assert.assertTrue(researchObject.getAnnotations().containsKey(annotation.getUri()));
+        Assert.assertEquals(startPoint + 1, researchObject.getAnnotations().size());
+    }
+
+
+    @Test
+    public void testDelete() {
+        Annotation annotation = new Annotation(userProfile, dataset, false, researchObject,
+                URI.create("new-annotation-save-test"));
+        annotation.setBody(builder.buildThing(URI.create("body")));
+        Set<Thing> annotated = new HashSet<Thing>();
+        annotated.add(researchObject);
+        annotation.setAnnotated(annotated);
+        annotation.save();
+        Assert.assertTrue(researchObject.getAnnotations().containsKey(annotation.getUri()));
+        annotation.delete();
+        Assert.assertFalse(researchObject.getAnnotations().containsKey(annotation.getUri()));
+    }
+
+
+    @Test
+    public void testAssemble()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/ann1.rdf");
+        Annotation annotation = Annotation.assemble(builder, researchObject,
+            researchObject.getUri().resolve("assemble-test"), is);
+        Set<Thing> expectedTarges = new HashSet<Thing>();
+        expectedTarges.add(researchObject);
+
+        Assert.assertEquals(annotation.getUri(), researchObject.getUri().resolve("assemble-test"));
+        Assert.assertEquals(annotation.getBody().getUri(), URI.create("http://example.org/external.txt"));
+        Assert.assertEquals(annotation.getName(), "assemble-test");
+        Assert.assertEquals(annotation.getAnnotated(), expectedTarges);
+    }
+
+
+    @Test
+    public void testUpdate()
+            throws BadRequestException {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/ann1.rdf");
+        Annotation annotation = Annotation.assemble(builder, researchObject,
+            researchObject.getUri().resolve("assemble-test"), is);
+        Annotation newAnnotation = new Annotation(userProfile, dataset, false, researchObject,
+                URI.create("new-annotation"));
+        Set<Thing> annotated = new HashSet<Thing>();
+        annotated.add(new Thing(userProfile, researchObject.getUri().resolve("a%20workflow.t2flow")));
+        newAnnotation.setAnnotated(annotated);
+        Thing newBody = new Thing(userProfile, URI.create("http://example.org/external"));
+        newAnnotation.setBody(newBody);
+        annotation.update(newAnnotation);
+        Assert.assertEquals(annotation.getBody(), newBody);
+        Assert.assertEquals(annotation.getAnnotated(), annotated);
+
+    }
+
 
     @Test
     public void testIsSpecialResource() {
-        Annotation ordinaryAnnotation1 = builder.buildAnnotation(ro,
+        Annotation ordinaryAnnotation1 = builder.buildAnnotation(researchObject,
             URI.create("http://www.example.com/ROs/ro/annotations/ordinaryAnnotation1"),
             builder.buildThing(URI.create("http://www.example.com/ROs/ro/.ro/manifest.rdf/ordinary")),
-            new HashSet<Thing>(Arrays.asList(ro)));
+            new HashSet<Thing>(Arrays.asList(researchObject)));
 
-        Annotation ordinaryAnnotation2 = builder.buildAnnotation(ro,
+        Annotation ordinaryAnnotation2 = builder.buildAnnotation(researchObject,
             URI.create("http://www.example.com/ROs/ro/annotations/ordinaryAnnotation1"),
             builder.buildThing(URI.create("http://www.example.com/ROs/ro/.ro/evo_info.ttlordinary")),
-            new HashSet<Thing>(Arrays.asList(ro)));
+            new HashSet<Thing>(Arrays.asList(researchObject)));
 
-        Annotation ordinaryAnnotation3 = builder.buildAnnotation(ro,
+        Annotation ordinaryAnnotation3 = builder.buildAnnotation(researchObject,
             URI.create("http://www.example.com/ROs/ro/annotations/evo_info.ttl/annotation"),
             builder.buildThing(URI.create("http://www.example.com/ROs/ro/annotations/evo_info.ttl/annotation")),
-            new HashSet<Thing>(Arrays.asList(ro)));
+            new HashSet<Thing>(Arrays.asList(researchObject)));
 
-        Annotation specialAnnotation1 = builder.buildAnnotation(ro,
+        Annotation specialAnnotation1 = builder.buildAnnotation(researchObject,
             URI.create("http://www.example.com/ROs/ro/annotations/annotation"),
             builder.buildThing(URI.create("http://www.example.com/ROs/ro/.ro/manifest.rdf")),
-            new HashSet<Thing>(Arrays.asList(ro)));
+            new HashSet<Thing>(Arrays.asList(researchObject)));
 
-        Annotation specialAnnotation2 = builder.buildAnnotation(ro,
+        Annotation specialAnnotation2 = builder.buildAnnotation(researchObject,
             URI.create("http://www.example.com/ROs/ro/annotations/annotation"),
             builder.buildThing(URI.create("http://www.example.com/ROs/ro/.ro/evo_info.ttl")),
-            new HashSet<Thing>(Arrays.asList(ro)));
+            new HashSet<Thing>(Arrays.asList(researchObject)));
 
-        Annotation specialAnnotation3 = builder.buildAnnotation(ro, URI
+        Annotation specialAnnotation3 = builder.buildAnnotation(researchObject, URI
                 .create("http://www.example.com/ROs/ro/annotations/annotation"), builder.buildThing(URI
-                .create("http://www.example.com/ROs/ro/.ro/evo_info.ttl/")), new HashSet<Thing>(Arrays.asList(ro)));
+                .create("http://www.example.com/ROs/ro/.ro/evo_info.ttl/")),
+            new HashSet<Thing>(Arrays.asList(researchObject)));
 
         Assert.assertFalse(ordinaryAnnotation1.isSpecialResource());
         Assert.assertFalse(ordinaryAnnotation2.isSpecialResource());

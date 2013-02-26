@@ -13,6 +13,7 @@ import java.util.Set;
 
 import javax.ws.rs.core.UriBuilder;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
@@ -164,6 +165,7 @@ public class Thing {
      * @return the URI
      */
     public URI getUri(RDFFormat format) {
+        //TODO what in case of the "/" at the end?
         if (uri == null) {
             return null;
         }
@@ -183,11 +185,11 @@ public class Thing {
 
 
     /**
-     * Return a shortest possible name of the Thing.
+     * Return a shortest possible name of the Thing (name of group of filename).
      * 
      * @return a filename or URI if there is no path
      */
-    public String getFilename() {
+    public String getName() {
         if (uri.getPath() == null || uri.getPath().isEmpty()) {
             return uri.toString();
         }
@@ -230,8 +232,14 @@ public class Thing {
     }
 
 
+    /**
+     * Not implemented yet.
+     * 
+     * @return throw an exception.
+     */
     public Set<URI> getContributors() {
-        return contributors;
+        throw new NotImplementedException();
+        //return contributors;
     }
 
 
@@ -406,6 +414,9 @@ public class Thing {
     public UserMetadata extractCreator(Thing thing) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
+            if (model == null) {
+                return null;
+            }
             Individual ro = model.getIndividual(thing.getUri().toString());
             if (ro == null) {
                 throw new IncorrectModelException("RO not found in the manifest" + thing.getUri());
@@ -431,6 +442,9 @@ public class Thing {
     public DateTime extractCreated(Thing thing) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
+            if (model == null) {
+                return null;
+            }
             Individual ro = model.getIndividual(thing.getUri().toString());
             if (ro == null) {
                 throw new IncorrectModelException("RO not found in the manifest" + thing.getUri());

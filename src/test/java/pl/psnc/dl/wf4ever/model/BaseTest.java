@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.model;
 
+import java.io.IOException;
 import java.net.URI;
 
 import org.junit.After;
@@ -11,6 +12,7 @@ import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -35,19 +37,29 @@ public class BaseTest {
     protected Builder builder;
 
     /** RO URI as String, mapped using location-mapping.n3 to a local file. */
-    protected static final String RESEARCH_OBJECT = "http://example.org/mess-ro/";
+    protected static final String RESEARCH_OBJECT = "http://example.org/ro-1/";
+
+    /** RO URI as String, mapped using location-mapping.n3 to a local file. */
+    protected static final String RESEARCH_OBJECT_2 = "http://example.org/ro-2/";
 
     /** Manifest URI as String, mapped. */
-    protected static final String MANIFEST = "http://example.org/mess-ro/.ro/manifest.rdf";
+    protected static final String MANIFEST = "http://example.org/ro-1/.ro/manifest.rdf";
+
+    /** Manifest URI as String, mapped. */
+    protected static final String MANIFEST_2 = "http://example.org/ro-2/.ro/manifest.rdf";
 
     /** Annotation body URI as String, mapped. */
-    protected static final String ANNOTATION_BODY = "http://example.org/mess-ro/.ro/annotationBody.ttl";
+    protected static final String ANNOTATION_BODY = "http://example.org/ro-1/.ro/annotationBody.ttl";
 
     /** Resource URI as String, mapped. */
-    protected static final String RESOURCE1 = "http://example.org/mess-ro/a%20workflow.t2flow";
+    protected static final String RESOURCE1 = "http://example.org/ro-1/a%20workflow.t2flow";
 
     /** Resource URI as String, mapped. */
     protected static final String RESOURCE2 = "http://workflows.org/a%20workflow.scufl";
+    /** Empty RO. */
+    protected ResearchObject researchObject;
+    /** Empty RO. */
+    protected ResearchObject researchObject2;
 
 
     /**
@@ -59,24 +71,31 @@ public class BaseTest {
     @BeforeClass
     public static void setUpBeforeClass()
             throws Exception {
-        DigitalLibraryFactory.loadDigitalLibraryConfiguration("connection.properties");
     }
 
 
     /**
      * Create the dataset, load the RDF files.
+     * 
+     * @throws IOException
      */
     @Before
     public void setUp() {
+        DigitalLibraryFactory.loadDigitalLibraryConfiguration("connection.properties");
         dataset = TDBFactory.createDataset();
         Model model;
         model = FileManager.get().loadModel(MANIFEST, MANIFEST, "RDF/XML");
         dataset.addNamedModel(MANIFEST, model);
         model = FileManager.get().loadModel(ANNOTATION_BODY, ANNOTATION_BODY, "TURTLE");
         dataset.addNamedModel(ANNOTATION_BODY, model);
-
         userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED, URI.create("http://jank"));
         builder = new Builder(userProfile, dataset, false);
+        researchObject = builder.buildResearchObject(URI.create(RESEARCH_OBJECT));
+        model = FileManager.get().loadModel(MANIFEST_2, MANIFEST_2, "RDF/XML");
+        dataset.addNamedModel(MANIFEST_2, model);
+        builder = new Builder(userProfile, dataset, false);
+        researchObject2 = builder.buildResearchObject(URI.create(RESEARCH_OBJECT_2));
+
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
     }
 

@@ -1,13 +1,18 @@
 package pl.psnc.dl.wf4ever.model.RDF;
 
+import java.io.InputStream;
 import java.net.URI;
 
 import junit.framework.Assert;
 
+import org.joda.time.DateTime;
+import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.BaseTest;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.hp.hpl.jena.graph.Node;
@@ -29,6 +34,7 @@ import de.fuberlin.wiwiss.ng4j.impl.NamedGraphSetImpl;
 public class ThingTest extends BaseTest {
 
     @Override
+    @Before
     public void setUp() {
         super.setUp();
     }
@@ -60,6 +66,148 @@ public class ThingTest extends BaseTest {
         Assert.assertTrue(specialThing4.isSpecialResource());
         Assert.assertTrue(specialThing6.isSpecialResource());
         Assert.assertTrue(specialThing5.isSpecialResource());
+    }
+
+
+    @Test
+    public void testConstructor() {
+        URI thingUri = URI.create("http://www.example.org/thing");
+        Thing thing = new Thing(userProfile, dataset, true, thingUri);
+        Assert.assertEquals(thing.getCreator(), userProfile);
+        Assert.assertEquals(thing.getUri(), thingUri);
+
+        Thing thing2 = new Thing(userProfile);
+        Assert.assertEquals(thing2.getCreator(), userProfile);
+        Assert.assertEquals(thing2.getUri(), null);
+
+        Thing thing3 = new Thing(userProfile, thingUri);
+        Assert.assertEquals(thing.getCreator(), userProfile);
+        Assert.assertEquals(thing.getUri(), thingUri);
+
+    }
+
+
+    @Test
+    public void testGetUri() {
+        //TODO Discuss the last case
+        URI thingUri = URI.create("http://www.example.org/thing");
+        URI thingUri2 = URI.create("http://www.example.org/thing/");
+        Thing thing = builder.buildThing(thingUri);
+        Thing thing2 = builder.buildThing(thingUri2);
+        Assert.assertEquals(thing.getUri(), thingUri);
+        Assert.assertEquals(thing2.getUri(), thingUri2);
+        Assert.assertEquals(thing.getUri(RDFFormat.TURTLE),
+            URI.create("http://www.example.org/thing.ttl?original=thing"));
+
+        Assert.assertEquals(thing2.getUri(RDFFormat.RDFXML), URI.create("http://www.example.org/thing/.rdf?original="));
+
+        Assert.assertEquals(thing.getUri(),
+            thing.getUri(RDFFormat.TURTLE).resolve(thing.getUri(RDFFormat.TURTLE).getRawQuery().split("=")[1]));
+
+        /*
+         //java.lang.ArrayIndexOutOfBoundsException: 1
+            Assert.assertEquals(thing2.getUri(),
+            thing.getUri(RDFFormat.TURTLE).resolve(thing2.getUri(RDFFormat.TURTLE).getRawQuery().split("=")[1]));
+         */
+        assert false;
+    }
+
+
+    @Test
+    public void testGetName() {
+        URI thingUri = URI.create("http://www.example.org/thing");
+        URI thingUri2 = URI.create("http://www.example.org/thing/");
+        Thing thing = builder.buildThing(thingUri);
+        Thing thing2 = builder.buildThing(thingUri2);
+        Assert.assertEquals(thing.getName(), "thing");
+        Assert.assertEquals(thing.getName(), "thing");
+    }
+
+
+    @Test
+    public void testIsNamedGraph() {
+        Assert.assertFalse(researchObject2.isNamedGraph());
+        Assert.assertTrue(researchObject.getManifest().isNamedGraph());
+        ResearchObject noSavedRO = new ResearchObject(userProfile, URI.create("http://www.example.com/no-saved-ro/"));
+        Assert.assertFalse(noSavedRO.isNamedGraph());
+    }
+
+
+    @Test
+    public void testExtractCreator() {
+        //TODO Why model is null... i don't get it
+        researchObject.getAnnotations();
+        DateTime dt = researchObject.extractCreated(researchObject);
+        //model is empty. why ?
+        assert false;
+    }
+
+
+    @Test
+    public void testSave() {
+        URI thingUri = URI.create("http://www.example.org/thing");
+        Thing thing = builder.buildThing(thingUri);
+        thing.save();
+        thing.save();
+    }
+
+
+    @Test
+    public void testDelete() {
+        researchObject.getManifest().serialize();
+        Assert.assertTrue(dataset.containsNamedModel(researchObject.getManifest().getUri().toString()));
+        ((Thing) (researchObject.getManifest())).delete();
+        Assert.assertFalse(dataset.containsNamedModel(researchObject.getManifest().getUri().toString()));
+    }
+
+
+    @Test
+    public void testExtractCreated() {
+        //TODO Why model is null... i don't get it
+        UserMetadata um = researchObject.extractCreator(researchObject);
+    }
+
+
+    @Test
+    public void testSerialize() {
+        //TODO LEAVE IT ?
+    }
+
+
+    public void testTransacitons() {
+        //TODO HOW ?!
+
+    }
+
+
+    @Test
+    public void testEquals() {
+        Thing first = builder.buildThing(URI.create("http://example.org/example-thing"));
+        Thing second = builder.buildThing(URI.create("http://example.org/example-thing"));
+        Assert.assertTrue(first.equals(second));
+    }
+
+
+    @Test
+    public void testGetGraphAsInputStream() {
+        InputStream is = ((Thing) (researchObject.getManifest())).getGraphAsInputStream(RDFFormat.RDFXML);
+        Assert.assertNotNull(is);
+    }
+
+
+    @Test
+    public void testGetGraphAsInputStreamFromEmptyObject() {
+        InputStream is = ((Thing) (researchObject.getManifest())).getGraphAsInputStream(RDFFormat.RDFXML);
+        Assert.assertNull(is);
+    }
+
+
+    @Test
+    public void testGetGraphAsInputStreamFromEmptyObject2() {
+        researchObject.getManifest().serialize();
+        ((Thing) (researchObject.getManifest())).delete();
+        InputStream is = ((Thing) (researchObject.getManifest())).getGraphAsInputStream(RDFFormat.RDFXML);
+        Assert.assertNull(is);
     }
 
 

@@ -1,0 +1,9 @@
+<rdf:RDF
+   xmlns:ro="http://purl.org/wf4ever/ro#"
+   xmlns:ao="http://purl.org/ao/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+  <ro:AggregatedAnnotation>
+    <ao:annotatesResource rdf:resource="file1.txt" />
+    <ao:body rdf:resource="http://example.com/external.txt" />
+  </ro:AggregatedAnnotation>
+</rdf:RDF>

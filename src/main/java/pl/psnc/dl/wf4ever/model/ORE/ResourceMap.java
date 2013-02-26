@@ -178,6 +178,7 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
     }
 
 
+    //@TODO javadoc
     public String getPath() {
         return getResearchObject().getUri().relativize(uri).getPath();
     }
