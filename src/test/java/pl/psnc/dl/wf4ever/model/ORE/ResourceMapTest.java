@@ -74,7 +74,6 @@ public class ResourceMapTest extends BaseTest {
         Assert.assertEquals(researchObject.getUri().toString(), r.getPropertyResourceValue(ORE.describes).getURI()
                 .toString());
         Assert.assertEquals(ORE.ResourceMap.getURI(), r.getPropertyResourceValue(RDF.type).getURI().toString());
-
     }
 
 

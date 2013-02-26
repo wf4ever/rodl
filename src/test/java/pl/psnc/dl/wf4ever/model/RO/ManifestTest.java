@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
@@ -128,4 +129,43 @@ public class ManifestTest extends BaseTest {
         Assert.assertTrue(r.hasProperty(RO.filesize));
     }
 
+
+    @Test
+    public void testExtractAggreagtedResource() {
+        //TODO totally confused
+        assert false;
+    }
+
+
+    @Test
+    public void testExtractResources() {
+        Manifest m = researchObject.getManifest();
+        int start = m.extractResources().size();
+        researchObject.aggregate(URI.create("http://example.com/external/"));
+        Assert.assertEquals(start, m.extractResources().size());
+    }
+
+
+    @Test
+    public void extractFolders()
+            throws BadRequestException {
+        Manifest m = researchObject.getManifest();
+        int start = m.extractFolders().size();
+        URI folderUri = researchObject.getUri().resolve("new-folder-uri");
+        FolderBuilder folderBuilder = new FolderBuilder();
+        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
+        Assert.assertEquals(start + 1, m.extractFolders().size());
+    }
+
+
+    @Test
+    public void testExtractAnnotations() {
+
+    }
+
+
+    @Test
+    public void testSaveAnnotationData() {
+
+    }
 }

@@ -16,7 +16,6 @@ import pl.psnc.dl.wf4ever.vocabulary.RO;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.vocabulary.RDF;
 
 public class FolderResourceMapTest extends BaseTest {
@@ -62,10 +61,6 @@ public class FolderResourceMapTest extends BaseTest {
         Resource r = model.getResource(fe.getUri().toString());
         Assert.assertTrue(r.hasProperty(RDF.type, RO.FolderEntry));
         r = model.getResource(fe.getProxyFor().getUri().toString());
-        for (Statement s : r.listProperties().toList()) {
-            System.out.println(s);
-            System.out.println(fe.getProxyIn().getUri().toString());
-        }
         Assert.assertTrue(r.hasProperty(ORE.isAggregatedBy, model.getResource(fe.getProxyIn().getUri().toString())));
         r = model.getResource(fe.getProxyIn().getUri().toString());
         Assert.assertTrue(r.hasProperty(ORE.aggregates, model.getResource(fe.getProxyFor().getUri().toString())));
