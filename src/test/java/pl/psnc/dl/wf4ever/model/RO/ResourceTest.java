@@ -68,7 +68,7 @@ public class ResourceTest extends BaseTest {
     public void testSaveGraphAndSerialize()
             throws BadRequestException {
         //TODO test serialization
-        Resource resource = builder.buildResource(researchObject, resourceUri, userProfile, DateTime.now());
+        Resource resource = builder.buildResource(resourceUri, researchObject, userProfile, DateTime.now());
         resource.save();
         resource.saveGraphAndSerialize();
         Model model = ModelFactory.createDefaultModel();

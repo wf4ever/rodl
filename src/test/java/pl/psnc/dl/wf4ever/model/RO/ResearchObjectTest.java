@@ -2,6 +2,8 @@ package pl.psnc.dl.wf4ever.model.RO;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 
 import junit.framework.Assert;
 
@@ -12,7 +14,12 @@ import org.openrdf.rio.RDFFormat;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.BaseTest;
+import pl.psnc.dl.wf4ever.model.SnapshotBuilder;
+import pl.psnc.dl.wf4ever.model.AO.Annotation;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 
 import com.hp.hpl.jena.rdf.model.Model;
@@ -165,6 +172,186 @@ public class ResearchObjectTest extends BaseTest {
         ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         ro.aggregate(researchObject.getUri());
         Assert.assertNotNull(ro.getAggregatedResources().get(researchObject.getUri()));
+        Assert.assertNotNull(ResearchObject.get(builder, ro.getUri()).getAggregatedResources()
+                .get(researchObject.getUri()));
     }
 
+
+    @Test
+    public void testResourceCopy()
+            throws BadRequestException {
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/resource.txt");
+        pl.psnc.dl.wf4ever.model.RO.Resource r = ro.aggregate("resource.txt", is, "text/plain");
+        pl.psnc.dl.wf4ever.model.RO.Resource result = researchObject.copy(r, new SnapshotBuilder());
+        Assert.assertNotNull(researchObject.getAggregatedResources().get(result.getUri()));
+        Assert.assertTrue(result.getUri().relativize(researchObject.getUri()).equals(researchObject.getUri()));
+        Assert.assertTrue(r.getUri().relativize(ro.getUri()).equals(ro.getUri()));
+
+    }
+
+
+    @Test
+    public void testAggregateFolder()
+            throws BadRequestException {
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        pl.psnc.dl.wf4ever.model.RO.Resource resource = ro.aggregate(URI.create("http://example.org"));
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/folder.rdf");
+        Folder f = ro.aggregateFolder(ro.getUri().resolve("folder"), is);
+        Assert.assertNotNull(f);
+        Assert.assertTrue(ro.getFolders().get(f.getUri()).equals(f));
+        Assert.assertTrue(ResearchObject.get(builder, ro.getUri()).getFolders().get(f.getUri()).equals(f));
+    }
+
+
+    @Test
+    public void testCopyFolder()
+            throws BadRequestException {
+        FolderBuilder folderBuilder = new FolderBuilder();
+        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
+            researchObjectUri.resolve("folderUri"));
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        Folder result = ro.copy(folder, new SnapshotBuilder());
+        Assert.assertNotNull(ro.getFolders().get(result.getUri()));
+        Assert.assertTrue(result.getUri().relativize(ro.getUri()).equals(ro.getUri()));
+        Assert.assertTrue(folder.getUri().relativize(researchObject.getUri()).equals(researchObject.getUri()));
+    }
+
+
+    @Test
+    public void testAnnotate()
+            throws BadRequestException {
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        Set<Thing> targets = new HashSet<>();
+        targets.add(ro);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
+        pl.psnc.dl.wf4ever.model.RO.Resource body = ro.aggregate("body.rdf", is, "application/rdf+xml");
+        Annotation annotation = ro.annotate(body.getUri(), targets);
+        Assert.assertEquals(annotation, ro.getAnnotations().get(annotation.getUri()));
+        Model model = ModelFactory.createDefaultModel();
+        model.read(ro.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Resource r = model.getResource(annotation.getUri().toString());
+        Assert.assertTrue(r.hasProperty(RDF.type, AO.Annotation));
+        Assert.assertTrue(r.hasProperty(RDF.type, RO.AggregatedAnnotation));
+        Assert.assertTrue(r.hasProperty(RO.annotatesAggregatedResource, model.getResource(ro.getUri().toString())));
+        Assert.assertTrue(r.hasProperty(AO.body, model.getResource(body.getUri().toString())));
+    }
+
+
+    @Test
+    public void testAnnotate2()
+            throws BadRequestException {
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
+        pl.psnc.dl.wf4ever.model.RO.Resource body = ro.aggregate("body.rdf", is, "application/rdf+xml");
+        is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/annotation.rdf");
+        Annotation annotation = ro.annotate(is);
+        Assert.assertEquals(annotation, ro.getAnnotations().get(annotation.getUri()));
+        Model model = ModelFactory.createDefaultModel();
+        model.read(ro.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Resource r = model.getResource(annotation.getUri().toString());
+        Assert.assertTrue(r.hasProperty(RDF.type, AO.Annotation));
+        Assert.assertTrue(r.hasProperty(RDF.type, RO.AggregatedAnnotation));
+        Assert.assertTrue(r.hasProperty(RO.annotatesAggregatedResource, model.getResource(ro.getUri().toString())));
+        Assert.assertTrue(r.hasProperty(AO.body, model.getResource(body.getUri().toString())));
+    }
+
+
+    @Test
+    public void testAnnotate3()
+            throws BadRequestException {
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
+        pl.psnc.dl.wf4ever.model.RO.Resource body = ro.aggregate("body.rdf", is, "application/rdf+xml");
+        Annotation annotation = ro.annotate(body.getUri(), ro);
+        Assert.assertEquals(annotation, ro.getAnnotations().get(annotation.getUri()));
+        Model model = ModelFactory.createDefaultModel();
+        model.read(ro.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Resource r = model.getResource(annotation.getUri().toString());
+        Assert.assertTrue(r.hasProperty(RDF.type, AO.Annotation));
+        Assert.assertTrue(r.hasProperty(RDF.type, RO.AggregatedAnnotation));
+        Assert.assertTrue(r.hasProperty(RO.annotatesAggregatedResource, model.getResource(ro.getUri().toString())));
+        Assert.assertTrue(r.hasProperty(AO.body, model.getResource(body.getUri().toString())));
+    }
+
+
+    @Test
+    public void testAnnotate4()
+            throws BadRequestException {
+        String annotationId = "annotation-id";
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        Set<Thing> targets = new HashSet<>();
+        targets.add(ro);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
+        pl.psnc.dl.wf4ever.model.RO.Resource body = ro.aggregate("body.rdf", is, "application/rdf+xml");
+        Annotation annotation = ro.annotate(body.getUri(), targets, annotationId);
+        Assert.assertEquals(annotation, ro.getAnnotations().get(annotation.getUri()));
+        Model model = ModelFactory.createDefaultModel();
+        model.read(ro.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Resource r = model.getResource(annotation.getUri().toString());
+        Assert.assertEquals(ro.getUri().resolve(".ro/annotation/").resolve(annotationId), annotation.getUri());
+        Assert.assertTrue(r.hasProperty(RDF.type, AO.Annotation));
+        Assert.assertTrue(r.hasProperty(RDF.type, RO.AggregatedAnnotation));
+        Assert.assertTrue(r.hasProperty(RO.annotatesAggregatedResource, model.getResource(ro.getUri().toString())));
+        Assert.assertTrue(r.hasProperty(AO.body, model.getResource(body.getUri().toString())));
+    }
+
+
+    @Test
+    public void testAnnotateWithNullBody()
+            throws BadRequestException {
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        Set<Thing> targets = new HashSet<>();
+        targets.add(ro);
+        Annotation annotation = ro.annotate(null, targets);
+    }
+
+
+    @Test
+    public void testAnnotateWithNullTarget()
+            throws BadRequestException {
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
+        pl.psnc.dl.wf4ever.model.RO.Resource body = ro.aggregate("body.rdf", is, "application/rdf+xml");
+        Annotation annotation = ro.annotate(body.getUri(), (Thing) null);
+    }
+
+
+    @Test
+    public void testAnnotateWithEmptyTarget()
+            throws BadRequestException {
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        Set<Thing> targets = new HashSet<>();
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
+        pl.psnc.dl.wf4ever.model.RO.Resource body = ro.aggregate("body.rdf", is, "application/rdf+xml");
+        Annotation annotation = ro.annotate(body.getUri(), targets);
+        Assert.assertEquals(annotation, ro.getAnnotations().get(annotation.getUri()));
+        Model model = ModelFactory.createDefaultModel();
+        model.read(ro.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Resource r = model.getResource(annotation.getUri().toString());
+        Assert.assertTrue(r.hasProperty(RDF.type, AO.Annotation));
+        Assert.assertTrue(r.hasProperty(RDF.type, RO.AggregatedAnnotation));
+    }
+
+
+    @Test
+    public void testCopyAnnotation()
+            throws BadRequestException {
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
+        pl.psnc.dl.wf4ever.model.RO.Resource body = ro.aggregate("body.rdf", is, "application/rdf+xml");
+        Annotation annotation = ro.annotate(body.getUri(), ro);
+
+        Annotation copyAnnotation = researchObject.copy(annotation, new SnapshotBuilder());
+        Assert.assertEquals(researchObject.getUri().relativize(copyAnnotation.getUri()),
+            ro.getUri().relativize(annotation.getUri()));
+
+        Model model = ModelFactory.createDefaultModel();
+        model.read(researchObject.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Resource r = model.getResource(copyAnnotation.getUri().toString());
+        Assert.assertTrue(r.hasProperty(RDF.type, AO.Annotation));
+        Assert.assertTrue(r.hasProperty(RDF.type, RO.AggregatedAnnotation));
+        Assert.assertTrue(r.hasProperty(RO.annotatesAggregatedResource));
+        Assert.assertTrue(r.hasProperty(AO.body));
+    }
 }
