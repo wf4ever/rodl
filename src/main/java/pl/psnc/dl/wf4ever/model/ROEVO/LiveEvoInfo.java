@@ -44,7 +44,7 @@ public class LiveEvoInfo extends EvoInfo {
 
 
     /**
-     * Create and save a new manifest.
+     * Create and save a new evolution information resource. Add it to the RO properties.
      * 
      * @param builder
      *            model instance builder
@@ -57,6 +57,15 @@ public class LiveEvoInfo extends EvoInfo {
     public static LiveEvoInfo create(Builder builder, URI uri, ResearchObject researchObject) {
         LiveEvoInfo evoInfo = builder.buildLiveEvoInfo(uri, researchObject, builder.getUser(), DateTime.now());
         evoInfo.save();
+        evoInfo.serialize(uri, RDFFormat.TURTLE);
+        researchObject.getAggregatedResources().put(evoInfo.getUri(), evoInfo);
+        return evoInfo;
+    }
+
+
+    public static LiveEvoInfo get(Builder builder, URI uri, ResearchObject researchObject) {
+        LiveEvoInfo evoInfo = builder.buildLiveEvoInfo(uri, researchObject, null, null);
+        researchObject.getAggregatedResources().put(evoInfo.getUri(), evoInfo);
         return evoInfo;
     }
 
@@ -78,7 +87,6 @@ public class LiveEvoInfo extends EvoInfo {
         } finally {
             endTransaction(transactionStarted);
         }
-        serialize(uri, RDFFormat.TURTLE);
     }
 
 

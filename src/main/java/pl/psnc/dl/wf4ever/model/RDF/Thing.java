@@ -583,7 +583,7 @@ public class Thing {
     /**
      * Save the resource to the triplestore and data storage backend.
      */
-    public void save() {
+    protected void save() {
     }
 
 

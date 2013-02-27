@@ -71,7 +71,7 @@ public class ImmutableEvoInfo extends EvoInfo {
 
 
     /**
-     * Create and save a new manifest.
+     * Create and save a new evolution information. Add it to the RO properties.
      * 
      * @param builder
      *            model instance builder
@@ -88,6 +88,15 @@ public class ImmutableEvoInfo extends EvoInfo {
         ImmutableEvoInfo evoInfo = builder.buildImmutableEvoInfo(uri, researchObject, builder.getUser(),
             DateTime.now(), evoType);
         evoInfo.save();
+        evoInfo.serialize(uri, RDFFormat.TURTLE);
+        researchObject.getAggregatedResources().put(evoInfo.getUri(), evoInfo);
+        return evoInfo;
+    }
+
+
+    public static ImmutableEvoInfo get(Builder builder, URI uri, ImmutableResearchObject researchObject) {
+        ImmutableEvoInfo evoInfo = builder.buildImmutableEvoInfo(uri, researchObject);
+        researchObject.getAggregatedResources().put(evoInfo.getUri(), evoInfo);
         return evoInfo;
     }
 
@@ -137,7 +146,6 @@ public class ImmutableEvoInfo extends EvoInfo {
         } finally {
             endTransaction(transactionStarted);
         }
-        serialize(uri, RDFFormat.TURTLE);
     }
 
 

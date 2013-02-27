@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.model.RO;
 import java.io.InputStream;
 import java.net.URI;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.dl.ConflictException;
@@ -22,6 +23,10 @@ import com.hp.hpl.jena.query.Dataset;
  * @author pejot
  */
 public class Resource extends AggregatedResource {
+
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(Resource.class);
+
 
     /**
      * Constructor.
@@ -76,6 +81,7 @@ public class Resource extends AggregatedResource {
         Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser(), DateTime.now());
         resource.setProxy(Proxy.create(builder, researchObject, resource));
         resource.save();
+        resource.onCreated();
         return resource;
     }
 
@@ -106,7 +112,22 @@ public class Resource extends AggregatedResource {
         Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser(), DateTime.now());
         resource.setProxy(Proxy.create(builder, researchObject, resource));
         resource.save(content, contentType);
+        if (researchObject.getAnnotationsByBodyUri().containsKey(resource.getUri())) {
+            resource.saveGraphAndSerialize();
+        }
+        resource.onCreated();
         return resource;
+    }
+
+
+    @Override
+    protected void onCreated() {
+        try {
+            super.onCreated();
+        } catch (BadRequestException e) {
+            LOGGER.error("Unexpected error when post processing the resource", e);
+        }
+        researchObject.getResources().put(getUri(), this);
     }
 
 
@@ -136,15 +157,19 @@ public class Resource extends AggregatedResource {
         resource2.setProxy(Proxy.create(builder, researchObject, resource2));
         if (isInternal()) {
             resource2.save(getSerialization(), getStats().getMimeType());
+            if (researchObject.getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
+                resource2.saveGraphAndSerialize();
+            }
         } else {
             resource2.save();
         }
+        resource2.onCreated();
         return resource2;
     }
 
 
     @Override
-    public void save() {
+    protected void save() {
         super.save();
         researchObject.getManifest().saveRoResourceClass(this);
         researchObject.getManifest().saveRoStats(this);
