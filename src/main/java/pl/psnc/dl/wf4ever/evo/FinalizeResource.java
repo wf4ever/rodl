@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -44,10 +43,6 @@ public class FinalizeResource implements JobsContainer {
 
     /** Maximum number of finished jobs kept in memory. */
     public static final int MAX_JOBS_DONE = 100000;
-
-    /** Context. */
-    @Context
-    private HttpServletRequest request;
 
     /** URI info. */
     @Context

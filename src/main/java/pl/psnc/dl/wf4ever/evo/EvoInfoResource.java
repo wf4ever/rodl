@@ -8,6 +8,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
+import org.openrdf.rio.RDFFormat;
+
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -36,12 +38,13 @@ public class EvoInfoResource {
      */
     @GET
     @Produces("text/turtle")
+    //TODO add content negotiation - why does it have to be Turtle?
     public Response evoInfoContent(@QueryParam("ro") URI researchObjectURI) {
         ResearchObject researchObject = ResearchObject.get(builder, researchObjectURI);
         if (researchObject == null) {
             new NotFoundException("Research Object not found");
         }
-        return Response.ok(researchObject.getEvoInfo().getSerialization()).header("Content-Type", "text/turtle")
-                .build();
+        return Response.ok(researchObject.getEvoInfo().getGraphAsInputStream(RDFFormat.TURTLE))
+                .header("Content-Type", "text/turtle").build();
     }
 }

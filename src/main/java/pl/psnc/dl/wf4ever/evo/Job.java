@@ -4,11 +4,6 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
-import pl.psnc.dl.wf4ever.dl.UserMetadata;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataService;
-
 /**
  * Represents a copying job. It runs in a separate thread.
  * 
@@ -57,9 +52,6 @@ public class Job extends Thread {
     /** Current job status. */
     private JobStatus status;
 
-    /** Reference to the SMS used when creating the job. */
-    private SemanticMetadataService originalSMS;
-
 
     /**
      * Constructor.
@@ -74,7 +66,6 @@ public class Job extends Thread {
      *            list of operations to perform
      */
     public Job(UUID jobUUID, JobStatus status, JobsContainer container, Operation... operations) {
-        this.originalSMS = ROSRService.SMS.get();
         this.uuid = jobUUID;
         this.status = status;
         this.status.setState(State.RUNNING);
@@ -88,8 +79,6 @@ public class Job extends Thread {
     @Override
     public void run() {
         try {
-            UserMetadata smsUser = originalSMS.getUserProfile();
-            ROSRService.SMS.set(SemanticMetadataServiceFactory.getService(smsUser));
             for (Operation operation : operations) {
                 operation.execute(status);
             }

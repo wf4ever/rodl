@@ -1,6 +1,5 @@
 package pl.psnc.dl.wf4ever.oauth;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -8,10 +7,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
-import pl.psnc.dl.wf4ever.auth.ForbiddenException;
-import pl.psnc.dl.wf4ever.auth.OAuthClient;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
-import pl.psnc.dl.wf4ever.common.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.OAuthClient;
+import pl.psnc.dl.wf4ever.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.dao.OAuthClientDAO;
+import pl.psnc.dl.wf4ever.exceptions.ForbiddenException;
 import pl.psnc.dl.wf4ever.model.Builder;
 
 import com.sun.jersey.api.NotFoundException;
@@ -24,10 +24,6 @@ import com.sun.jersey.api.NotFoundException;
  */
 @Path(("clients" + "/{C_ID}"))
 public class ClientResource {
-
-    /** HTTP request. */
-    @Context
-    HttpServletRequest request;
 
     /** URI info. */
     @Context
@@ -51,7 +47,8 @@ public class ClientResource {
             throw new ForbiddenException("Only admin users can manage clients.");
         }
 
-        return OAuthClient.findById(clientId);
+        OAuthClientDAO oAuthClientDAO = new OAuthClientDAO();
+        return oAuthClientDAO.findById(clientId);
     }
 
 
@@ -67,10 +64,11 @@ public class ClientResource {
             throw new ForbiddenException("Only admin users can manage clients.");
         }
 
-        OAuthClient client = OAuthClient.findById(clientId);
+        OAuthClientDAO oAuthClientDAO = new OAuthClientDAO();
+        OAuthClient client = oAuthClientDAO.findById(clientId);
         if (client == null) {
             throw new NotFoundException();
         }
-        client.delete();
+        oAuthClientDAO.delete(client);
     }
 }

@@ -2,8 +2,8 @@ package pl.psnc.dl.wf4ever.model.ROEVO;
 
 import java.net.URI;
 
-import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 

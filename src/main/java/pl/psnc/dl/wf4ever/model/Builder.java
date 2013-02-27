@@ -9,8 +9,8 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
-import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Aggregation;
@@ -22,6 +22,9 @@ import pl.psnc.dl.wf4ever.model.RO.FolderResourceMap;
 import pl.psnc.dl.wf4ever.model.RO.Manifest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
+import pl.psnc.dl.wf4ever.model.ROEVO.Change;
+import pl.psnc.dl.wf4ever.model.ROEVO.Change.ChangeType;
+import pl.psnc.dl.wf4ever.model.ROEVO.ChangeSpecification;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableEvoInfo;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.LiveEvoInfo;
@@ -547,6 +550,7 @@ public class Builder {
      * @param created
      *            creation date
      * @param evoType
+     *            is the new evo info associated with a snapshot or an archive
      * @return a new evo info instance
      */
     public ImmutableEvoInfo buildImmutableEvoInfo(URI uri, ImmutableResearchObject immutableResearchObject,
@@ -573,6 +577,46 @@ public class Builder {
         ImmutableEvoInfo evoInfo = new ImmutableEvoInfo(user, dataset, useTransactions, immutableResearchObject, uri);
         evoInfo.setBuilder(this);
         return evoInfo;
+    }
+
+
+    /**
+     * Build a new change specification.
+     * 
+     * @param uri
+     *            change specification URI
+     * @param immutableResearchObject
+     *            RO being compared to a previous one
+     * @return a new change specification
+     */
+    public ChangeSpecification buildChangeSpecification(URI uri, ImmutableResearchObject immutableResearchObject) {
+        ChangeSpecification changeSpecification = new ChangeSpecification(user, dataset, useTransactions, uri,
+                immutableResearchObject);
+        changeSpecification.setBuilder(this);
+        return changeSpecification;
+    }
+
+
+    /**
+     * Build a new change.
+     * 
+     * @param uri
+     *            change URI
+     * @param changeSpecification
+     *            change specification aggregating the change
+     * @param resource
+     *            resource being changed
+     * @param type
+     *            type of change, i.e. addition, modification or removal
+     * @return a new change
+     */
+    public Change buildChange(URI uri, ChangeSpecification changeSpecification, AggregatedResource resource,
+            ChangeType type) {
+        Change change = new Change(user, dataset, useTransactions, uri, changeSpecification);
+        change.setResource(resource);
+        change.setChangeType(type);
+        change.setBuilder(this);
+        return change;
     }
 
 }

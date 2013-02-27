@@ -1,15 +1,14 @@
 package pl.psnc.dl.wf4ever.oauth;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
 
-import pl.psnc.dl.wf4ever.auth.AccessToken;
-import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
-import pl.psnc.dl.wf4ever.common.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.AccessToken;
+import pl.psnc.dl.wf4ever.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.dao.AccessTokenDAO;
+import pl.psnc.dl.wf4ever.exceptions.ForbiddenException;
 import pl.psnc.dl.wf4ever.model.Builder;
 
 import com.sun.jersey.api.NotFoundException;
@@ -22,10 +21,6 @@ import com.sun.jersey.api.NotFoundException;
  */
 @Path(("accesstokens" + "/{T_ID}"))
 public class AccessTokenResource {
-
-    /** HTTP request. */
-    @Context
-    HttpServletRequest request;
 
     /** Resource builder. */
     @RequestAttribute("Builder")
@@ -44,10 +39,11 @@ public class AccessTokenResource {
             throw new ForbiddenException("Only admin users can manage access tokens.");
         }
 
-        AccessToken accessToken = AccessToken.findByValue(token);
+        AccessTokenDAO accessTokenDAO = new AccessTokenDAO();
+        AccessToken accessToken = accessTokenDAO.findByValue(token);
         if (accessToken == null) {
             throw new NotFoundException();
         }
-        accessToken.delete();
+        accessTokenDAO.delete(accessToken);
     }
 }

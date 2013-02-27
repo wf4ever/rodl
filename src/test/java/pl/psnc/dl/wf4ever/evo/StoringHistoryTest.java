@@ -9,7 +9,6 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import pl.psnc.dl.wf4ever.common.db.EvoType;
 import pl.psnc.dl.wf4ever.evo.Job.State;
 
 public class StoringHistoryTest extends EvoTest {

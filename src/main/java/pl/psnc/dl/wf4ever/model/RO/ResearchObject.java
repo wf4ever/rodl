@@ -27,7 +27,6 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.common.util.MemoryZipFile;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
@@ -45,7 +44,7 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.ROEVO.EvoInfo;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.LiveEvoInfo;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
+import pl.psnc.dl.wf4ever.util.MemoryZipFile;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.google.common.collect.HashMultimap;
@@ -564,13 +563,13 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     public void updateIndexAttributes() {
         //FIXME this makes no sense without dLibra
-        Multimap<URI, Object> roAttributes = ROSRService.SMS.get().getAllAttributes(uri);
-        roAttributes.put(URI.create("Identifier"), this);
-        try {
-            DigitalLibraryFactory.getDigitalLibrary().storeAttributes(uri, roAttributes);
-        } catch (Exception e) {
-            LOGGER.error("Caught an exception when updating RO attributes, will continue", e);
-        }
+        //        Multimap<URI, Object> roAttributes = ROSRService.SMS.get().getAllAttributes(uri);
+        //        roAttributes.put(URI.create("Identifier"), this);
+        //        try {
+        //            DigitalLibraryFactory.getDigitalLibrary().storeAttributes(uri, roAttributes);
+        //        } catch (Exception e) {
+        //            LOGGER.error("Caught an exception when updating RO attributes, will continue", e);
+        //        }
     }
 
 
@@ -896,26 +895,28 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
-     * Get all research objects. If the builder has a user set whose role is not public, only the user's research
-     * objects are looked for.
+     * Get all research objects. If the user is set whose role is not public, only the user's research objects are
+     * looked for.
      * 
      * @param builder
      *            builder that defines the dataset and the user
+     * @param userMetadata
+     *            the user to filter the results
      * @return a set of research objects
      */
-    public static Set<ResearchObject> getAll(Builder builder) {
+    public static Set<ResearchObject> getAll(Builder builder, UserMetadata userMetadata) {
         boolean wasStarted = builder.beginTransaction(ReadWrite.READ);
         try {
             Set<ResearchObject> ros = new HashSet<>();
             String queryString;
-            if (builder.getUser() == null || builder.getUser().getRole() == Role.PUBLIC) {
+            if (userMetadata == null || userMetadata.getRole() == Role.PUBLIC) {
                 queryString = String.format("PREFIX ro: <%s> SELECT ?ro WHERE { ?ro a ro:ResearchObject . }",
                     RO.NAMESPACE);
             } else {
                 queryString = String
                         .format(
                             "PREFIX ro: <%s> PREFIX dcterms: <%s> SELECT ?ro WHERE { ?ro a ro:ResearchObject ; dcterms:creator <%s> . }",
-                            RO.NAMESPACE, DCTerms.NS, builder.getUser().getUri());
+                            RO.NAMESPACE, DCTerms.NS, userMetadata.getUri());
             }
             Query query = QueryFactory.create(queryString);
             QueryExecution qe = QueryExecutionFactory.create(query,

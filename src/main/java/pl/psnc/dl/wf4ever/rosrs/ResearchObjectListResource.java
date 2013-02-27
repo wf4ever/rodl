@@ -9,7 +9,6 @@ import java.net.URI;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -25,10 +24,10 @@ import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
-import pl.psnc.dl.wf4ever.common.util.MemoryZipFile;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.util.MemoryZipFile;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -44,10 +43,6 @@ public class ResearchObjectListResource {
     /** logger. */
     @SuppressWarnings("unused")
     private static final Logger LOGGER = Logger.getLogger(ResearchObjectListResource.class);
-
-    /** HTTP request. */
-    @Context
-    HttpServletRequest request;
 
     /** URI info. */
     @Context
@@ -66,7 +61,7 @@ public class ResearchObjectListResource {
     @GET
     @Produces("text/plain")
     public Response getResearchObjectList() {
-        Set<ResearchObject> list = ResearchObject.getAll(builder);
+        Set<ResearchObject> list = ResearchObject.getAll(builder, builder.getUser());
         StringBuilder sb = new StringBuilder();
         for (ResearchObject id : list) {
             sb.append(id.getUri().toString());

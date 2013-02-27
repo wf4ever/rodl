@@ -3,7 +3,6 @@ package pl.psnc.dl.wf4ever.rosrs;
 import java.io.InputStream;
 import java.net.URI;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -27,10 +26,10 @@ import org.apache.http.HttpStatus;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.auth.ForbiddenException;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+import pl.psnc.dl.wf4ever.exceptions.ForbiddenException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -54,10 +53,6 @@ import com.sun.jersey.core.header.ContentDisposition;
 @Path("ROs/{ro_id}/{filePath: .+}")
 public class Resource {
 
-    /** HTTP request. */
-    @Context
-    private HttpServletRequest servletRequest;
-
     /** URI info. */
     @Context
     private UriInfo uriInfo;
@@ -78,6 +73,8 @@ public class Resource {
      *            original format in case of annotation bodies
      * @param accept
      *            Accept header
+     * @param contentType
+     *            content type header
      * @param entity
      *            resource content
      * @return 201 Created or 307 Temporary Redirect
@@ -86,7 +83,8 @@ public class Resource {
      */
     @PUT
     public Response putResource(@PathParam("ro_id") String researchObjectId, @PathParam("filePath") String filePath,
-            @QueryParam("original") String original, @HeaderParam("Accept") String accept, InputStream entity)
+            @QueryParam("original") String original, @HeaderParam("Accept") String accept,
+            @HeaderParam("Content-Type") String contentType, InputStream entity)
             throws BadRequestException {
         URI uri = uriInfo.getBaseUriBuilder().path("ROs").path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.get(builder, uri);
@@ -116,14 +114,14 @@ public class Resource {
         } else if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
             AggregatedResource resource = researchObject.getAggregatedResources().get(resourceUri);
             boolean exists = resource.isInternal();
-            resource.update(entity, servletRequest.getContentType());
+            resource.update(entity, contentType);
             CacheControl cache = new CacheControl();
             cache.setMustRevalidate(true);
             ResponseBuilder rb = exists ? Response.ok() : Response.created(resource.getUri());
             return rb.cacheControl(cache).tag(resource.getStats().getChecksum())
                     .lastModified(resource.getStats().getLastModified().toDate()).build();
         } else if (researchObject.getAnnotationsByBodyUri().containsKey(resourceUri)) {
-            AggregatedResource resource = researchObject.aggregate(filePath, entity, servletRequest.getContentType());
+            AggregatedResource resource = researchObject.aggregate(filePath, entity, contentType);
             String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, resource.getUri().toString(),
                 ORE.proxyFor.getURI());
             InputStream proxyAndResourceDesc = researchObject.getManifest().getGraphAsInputStream(responseSyntax,

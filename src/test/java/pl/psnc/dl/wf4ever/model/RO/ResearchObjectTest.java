@@ -16,6 +16,7 @@ public class ResearchObjectTest extends BaseTest {
     @Before
     public void setUp() {
         super.setUp();
+        clearDLFileSystem();
     }
 
 
@@ -27,6 +28,7 @@ public class ResearchObjectTest extends BaseTest {
 
     @Test
     public void testCreate() {
-        ResearchObject ro = ResearchObject.create(builder, URI.create("http://example.org/"));
+        ResearchObject ro = ResearchObject.create(builder, URI.create("http://example.org/unit-test-ro/"));
     }
+
 }

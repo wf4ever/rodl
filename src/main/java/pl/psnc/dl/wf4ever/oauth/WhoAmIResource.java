@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.oauth;
 
-import javax.servlet.http.HttpServletRequest;
+import java.io.InputStream;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -10,15 +11,13 @@ import javax.ws.rs.core.UriInfo;
 
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.auth.AuthenticationException;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.auth.SecurityFilter;
-import pl.psnc.dl.wf4ever.common.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
+import pl.psnc.dl.wf4ever.exceptions.AuthenticationException;
 import pl.psnc.dl.wf4ever.model.Builder;
-import pl.psnc.dl.wf4ever.rosrs.ROSRService;
-import pl.psnc.dl.wf4ever.sms.QueryResult;
 
 /**
  * A REST API resource for identifying the access token owner.
@@ -28,10 +27,6 @@ import pl.psnc.dl.wf4ever.sms.QueryResult;
  */
 @Path(("whoami/"))
 public class WhoAmIResource {
-
-    /** HTTP request. */
-    @Context
-    HttpServletRequest request;
 
     /** URI info. */
     @Context
@@ -86,13 +81,11 @@ public class WhoAmIResource {
      */
     private Response getUser(RDFFormat rdfFormat) {
         UserMetadata user = builder.getUser();
-        if (user.getRole() == Role.PUBLIC) {
+        if (user.getRole() != Role.AUTHENTICATED) {
             throw new AuthenticationException("Only authenticated users can use this resource", SecurityFilter.REALM);
         }
+        InputStream userDesc = ((UserProfile) user).getAsInputStream(rdfFormat);
 
-        QueryResult qs = ROSRService.SMS.get().getUser(UserProfile.generateAbsoluteURI(null, user.getLogin()),
-            rdfFormat);
-
-        return Response.ok(qs.getInputStream()).type(qs.getFormat().getDefaultMIMEType()).build();
+        return Response.ok(userDesc).type(rdfFormat.getDefaultMIMEType()).build();
     }
 }
