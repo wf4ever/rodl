@@ -87,8 +87,7 @@ public class FolderTest extends BaseTest {
         folder.save();
         Model model = ModelFactory.createDefaultModel();
         model.read(researchObject.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
-        Assert.assertNotNull(model.getResource(folder.getUri().toString()));
-        Assert.assertNotNull(researchObject.getFolders().get(folder.getUri()));
+        Assert.assertTrue(model.containsResource(model.getResource(folder.getUri().toString())));
     }
 
 
@@ -103,7 +102,7 @@ public class FolderTest extends BaseTest {
         folder.delete();
         model = ModelFactory.createDefaultModel();
         model.read(researchObject.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
-        Assert.assertNull(model.getResource(folder.getUri().toString()));
+        Assert.assertFalse(model.containsResource(model.getResource(folder.getUri().toString())));
     }
 
 
@@ -123,10 +122,10 @@ public class FolderTest extends BaseTest {
     }
 
 
-    @Test
+    @Test(expected = BadRequestException.class)
     public void testCreateFolderNoRDFContent()
             throws BadRequestException {
-        Folder folder = folderBuilder.init("model/ro/folder/empty.rdf", builder, researchObject, folderUri);
+        folderBuilder.init("model/ro/folder/empty.rdf", builder, researchObject, folderUri);
     }
 
 
@@ -154,12 +153,11 @@ public class FolderTest extends BaseTest {
     }
 
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void testCreateFolderNullInputStream()
             throws BadRequestException {
         folderBuilder.createROAggregated(builder, researchObject, folderUri);
-        Folder folder = Folder.create(builder, researchObject, folderUri, null);
-
+        Folder.create(builder, researchObject, folderUri, null);
     }
 
 
@@ -168,16 +166,21 @@ public class FolderTest extends BaseTest {
             throws BadRequestException {
         Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
         Folder folderCopy = folder.copy(builder, new SnapshotBuilder(), researchObject2);
-        Assert.assertNotNull(folder.getCopyAuthor());
-        Assert.assertNotNull(folder.getCopyDateTime());
-        Boolean foldersNamesEqual = folderCopy.getUri().relativize(researchObject2.getUri())
-                .equals(folder.getUri().relativize(researchObject.getUri()));
-        Assert.assertTrue(foldersNamesEqual);
+        Assert.assertNotNull(folderCopy.getCopyAuthor());
+        Assert.assertNotNull(folderCopy.getCopyDateTime());
+        URI expected = researchObject.getUri().relativize(folder.getUri());
+        URI result = researchObject2.getUri().relativize(folderCopy.getUri());
+        Assert.assertEquals(expected, result);
         for (FolderEntry entry : folderCopy.getFolderEntries().values()) {
-            Assert.assertEquals(entry.getUri().relativize(researchObject2.getUri()), entry.getEntryName());
+            URI oldResourceUri = researchObject.getUri().resolve(entry.getProxyFor().getRawPath());
+            String expected2 = researchObject.getFolderEntriesByResourceUri().get(oldResourceUri).iterator().next()
+                    .getEntryName();
+            String result2 = entry.getEntryName();
+            Assert.assertEquals(expected2, result2);
         }
         for (AggregatedResource resource : folderCopy.getAggregatedResources().values()) {
-            Assert.assertEquals(resource.getName(), resource.getUri().relativize(researchObject2.getUri()));
+            Assert.assertEquals(resource.getRawPath(), researchObject2.getUri().relativize(resource.getUri())
+                    .getRawPath());
         }
     }
 
@@ -210,14 +213,14 @@ public class FolderTest extends BaseTest {
     public void testAddFolderEntry()
             throws BadRequestException {
         Folder f = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
-        FolderEntry fe = builder.buildFolderEntry(folderUri.resolve("fe"),
-            f.getAggregatedResources().get(f.getAggregatedResources().values().iterator().next()), f, "fe");
+        FolderEntry fe = builder.buildFolderEntry(folderUri.resolve("fe"), f.getAggregatedResources().values()
+                .iterator().next(), f, "fe");
         f.addFolderEntry(fe);
         Assert.assertEquals(fe, f.getFolderEntries().get(fe.getUri()));
     }
 
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void testAddFolderEntryAsNull()
             throws BadRequestException {
         Folder f = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);

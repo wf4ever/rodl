@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -209,11 +210,17 @@ public class Folder extends Resource implements Aggregation {
      */
     private static Folder assemble(Builder builder, ResearchObject researchObject, URI folderUri, InputStream content)
             throws BadRequestException {
+        Objects.requireNonNull(researchObject, "Research object cannot be null");
+        Objects.requireNonNull(content, "Input stream object cannot be null");
         Folder folder = builder.buildFolder(researchObject, folderUri, builder.getUser(), DateTime.now());
         folder.resourceMap = FolderResourceMap
                 .create(builder, folder, FolderResourceMap.generateResourceMapUri(folder));
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        model.read(content, researchObject.getUri().toString());
+        try {
+            model.read(content, researchObject.getUri().toString());
+        } catch (Exception e) {
+            throw new BadRequestException("The folder description could not be parsed", e);
+        }
         List<Individual> folders = model.listIndividuals(RO.Folder).toList();
         Map<URI, FolderEntry> entries = new HashMap<>();
         if (folders.size() == 1) {
@@ -311,6 +318,8 @@ public class Folder extends Resource implements Aggregation {
         folder.setProxy(researchObject.addProxy(folder));
         folder.save();
         for (FolderEntry entry : folder.getFolderEntries().values()) {
+            folder.getResearchObject().getFolderEntries().put(entry.getUri(), entry);
+            folder.getResearchObject().getFolderEntriesByResourceUri().put(entry.getProxyFor().getUri(), entry);
             entry.save();
         }
         folder.getResourceMap().serialize();
@@ -351,7 +360,7 @@ public class Folder extends Resource implements Aggregation {
         folder2.setProxy(researchObject.addProxy(folder2));
         folder2.save();
         for (FolderEntry entry : getFolderEntries().values()) {
-            folder2.addFolderEntry(entry.copy(builder, this));
+            folder2.addFolderEntry(entry.copy(builder, folder2));
         }
         folder2.getResourceMap().serialize();
         folder2.onCreated();
@@ -388,6 +397,7 @@ public class Folder extends Resource implements Aggregation {
      * @return a folder entry instance
      */
     public FolderEntry addFolderEntry(FolderEntry entry) {
+        Objects.requireNonNull(entry, "Folder entry cannot be null");
         getFolderEntries().put(entry.getUri(), entry);
         getResearchObject().getFolderEntries().put(entry.getUri(), entry);
         getResearchObject().getFolderEntriesByResourceUri().put(entry.getProxyFor().getUri(), entry);
