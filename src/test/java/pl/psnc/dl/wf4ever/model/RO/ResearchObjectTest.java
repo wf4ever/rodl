@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.model.RO;
 
+import java.io.InputStream;
 import java.net.URI;
 
 import junit.framework.Assert;
@@ -8,6 +9,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
@@ -53,6 +56,13 @@ public class ResearchObjectTest extends BaseTest {
         model.read(ro.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
         r = model.getResource(ro.getUri().toString());
         Assert.assertTrue(r.hasProperty(ORE.isDescribedBy, model.getResource(ro.getManifest().getUri().toString())));
+    }
+
+
+    @Test(expected = ConflictException.class)
+    public void testCreateDuplication() {
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        ro = ResearchObject.create(builder, researchObjectUri);
     }
 
 
@@ -132,6 +142,29 @@ public class ResearchObjectTest extends BaseTest {
     @Test
     public void testGetImmutableResearchObjects() {
         //TODO implement test!
+    }
+
+
+    @Test
+    public void testAggregate()
+            throws BadRequestException {
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/resource.txt");
+        pl.psnc.dl.wf4ever.model.RO.Resource r = ro.aggregate("resource.txt", is, "text/plain");
+        Assert.assertNotNull(ro.getAggregatedResources().get(r.getUri()));
+        Assert.assertEquals(ro, r.getResearchObject());
+        Model model = ModelFactory.createDefaultModel();
+        model.read(ro.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Resource jenaResource = model.getResource(ro.getUri().toString());
+        Assert.assertTrue(jenaResource.hasProperty(ORE.aggregates, model.getResource(r.getUri().toString())));
+    }
+
+
+    @Test
+    public void testAggregateExternal() {
+        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        ro.aggregate(researchObject.getUri());
+        Assert.assertNotNull(ro.getAggregatedResources().get(researchObject.getUri()));
     }
 
 }
