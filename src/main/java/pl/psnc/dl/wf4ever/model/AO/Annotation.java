@@ -155,13 +155,17 @@ public class Annotation extends AggregatedResource {
      * @param targets
      *            annotated resources (RO, ro:Resources or proxies)
      * @return the annotation
+     * @throws BadRequestException
+     *             if there is no data in storage or the file format is not RDF
      */
     public static Annotation create(Builder builder, ResearchObject researchObject, URI uri, URI bodyUri,
-            Set<Thing> targets) {
+            Set<Thing> targets)
+            throws BadRequestException {
         Annotation annotation = builder.buildAnnotation(researchObject, uri, builder.buildThing(bodyUri), targets,
             builder.getUser(), DateTime.now());
         annotation.setProxy(Proxy.create(builder, researchObject, annotation));
         annotation.save();
+        annotation.onCreated();
         return annotation;
     }
 
@@ -188,6 +192,7 @@ public class Annotation extends AggregatedResource {
         annotation.setCreator(builder.getUser());
         annotation.setProxy(Proxy.create(builder, researchObject, annotation));
         annotation.save();
+        annotation.onCreated();
         return annotation;
     }
 
@@ -202,8 +207,11 @@ public class Annotation extends AggregatedResource {
      * @param researchObject
      *            research object aggregating the annotation
      * @return the new annotation
+     * @throws BadRequestException
+     *             if there is no data in storage or the file format is not RDF
      */
-    public Annotation copy(Builder builder, EvoBuilder evoBuilder, ResearchObject researchObject) {
+    public Annotation copy(Builder builder, EvoBuilder evoBuilder, ResearchObject researchObject)
+            throws BadRequestException {
         URI annotationUri = researchObject.getUri().resolve(getRawPath());
         if (researchObject.isUriUsed(annotationUri)) {
             throw new ConflictException("Resource already exists: " + annotationUri);
@@ -252,6 +260,7 @@ public class Annotation extends AggregatedResource {
         annotation2.setCopyOf(this);
         annotation2.setProxy(Proxy.create(builder, researchObject, annotation2));
         annotation2.save();
+        annotation2.onCreated();
         return annotation2;
     }
 
@@ -374,6 +383,31 @@ public class Annotation extends AggregatedResource {
         setAnnotated(newAnnotation.getAnnotated());
         save();
         return this;
+    }
+
+
+    /**
+     * Make all changes necessary after creating the annotation.
+     * 
+     * @throws BadRequestException
+     *             if there is no data in storage or the file format is not RDF
+     */
+    protected void onCreated()
+            throws BadRequestException {
+        AggregatedResource resource = getResearchObject().getAggregatedResources().get(getBody().getUri());
+        if (resource != null && resource.isInternal()) {
+            resource.saveGraphAndSerialize();
+            int c = resource.updateReferences(resource.getResearchObject());
+            LOGGER.debug(String.format("Updated %d triples in %s", c, resource.getUri()));
+            getResearchObject().getManifest().removeRoResourceClass(resource);
+        }
+        getResearchObject().getManifest().serialize();
+        getResearchObject().getAnnotations().put(getUri(), this);
+        for (Thing target : this.getAnnotated()) {
+            getResearchObject().getAnnotationsByTarget().put(target.getUri(), this);
+        }
+        getResearchObject().getAnnotationsByBodyUri().put(this.getBody().getUri(), this);
+        getResearchObject().getAggregatedResources().put(this.getUri(), this);
     }
 
 

@@ -121,16 +121,33 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         resource2.setProxy(Proxy.create(builder, researchObject, resource2));
         if (isInternal()) {
             resource2.save(getSerialization(), getStats().getMimeType());
+            if (researchObject.getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
+                resource2.saveGraphAndSerialize();
+            }
         } else {
             resource2.save();
         }
+        resource2.onCreated();
         return resource2;
     }
 
 
+    /**
+     * Set RO propertied after this resource is created.
+     * 
+     * @throws BadRequestException
+     *             depends on the subclasses
+     */
+    protected void onCreated()
+            throws BadRequestException {
+        researchObject.getManifest().serialize();
+        researchObject.getAggregatedResources().put(this.getUri(), this);
+        researchObject.getProxies().put(this.getProxy().getUri(), this.getProxy());
+    }
+
+
     @Override
-    public void save()
-            throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
+    protected void save() {
         super.save();
         researchObject.getManifest().saveAggregatedResource(this);
         researchObject.getManifest().saveAuthor(this);
