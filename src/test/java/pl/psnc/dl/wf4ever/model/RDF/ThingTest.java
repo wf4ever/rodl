@@ -188,7 +188,8 @@ public class ThingTest extends BaseTest {
 
     @Test
     public void testGetGraphAsInputStreamFromEmptyObject() {
-        InputStream is = ((Thing) (researchObject.getManifest())).getGraphAsInputStream(RDFFormat.RDFXML);
+        InputStream is = builder.buildThing(researchObject.getUri().resolve("a-fake-uri")).getGraphAsInputStream(
+            RDFFormat.RDFXML);
         Assert.assertNull(is);
     }
 
