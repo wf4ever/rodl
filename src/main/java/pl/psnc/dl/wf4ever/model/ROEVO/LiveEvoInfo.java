@@ -44,7 +44,7 @@ public class LiveEvoInfo extends EvoInfo {
 
 
     /**
-     * Create and save a new manifest.
+     * Create and save a new evolution information resource. Add it to the RO properties.
      * 
      * @param builder
      *            model instance builder
@@ -57,6 +57,29 @@ public class LiveEvoInfo extends EvoInfo {
     public static LiveEvoInfo create(Builder builder, URI uri, ResearchObject researchObject) {
         LiveEvoInfo evoInfo = builder.buildLiveEvoInfo(uri, researchObject, builder.getUser(), DateTime.now());
         evoInfo.save();
+        evoInfo.serialize(uri, RDFFormat.TURTLE);
+        researchObject.getAggregatedResources().put(evoInfo.getUri(), evoInfo);
+        return evoInfo;
+    }
+
+
+    /**
+     * Return an evolution information resource or null if not found in the triplestore.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param uri
+     *            evolution information resource URI
+     * @param researchObject
+     *            research object which this evo info should describe
+     * @return an existing evo info or null
+     */
+    public static LiveEvoInfo get(Builder builder, URI uri, ResearchObject researchObject) {
+        LiveEvoInfo evoInfo = builder.buildLiveEvoInfo(uri, researchObject, null, null);
+        if (!evoInfo.isNamedGraph()) {
+            return null;
+        }
+        researchObject.getAggregatedResources().put(evoInfo.getUri(), evoInfo);
         return evoInfo;
     }
 
@@ -78,7 +101,6 @@ public class LiveEvoInfo extends EvoInfo {
         } finally {
             endTransaction(transactionStarted);
         }
-        serialize(uri, RDFFormat.TURTLE);
     }
 
 

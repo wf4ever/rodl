@@ -145,9 +145,10 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
 
     public ImmutableEvoInfo getImmutableEvoInfo() {
         if (evoInfo == null) {
-            evoInfo = builder.buildImmutableEvoInfo(getFixedEvolutionAnnotationBodyUri(), this);
-            getAggregatedResources().put(evoInfo.getUri(), evoInfo);
-            evoInfo.load();
+            evoInfo = ImmutableEvoInfo.get(builder, getFixedEvolutionAnnotationBodyUri(), this);
+            if (evoInfo != null) {
+                evoInfo.load();
+            }
         }
         return evoInfo;
     }
@@ -169,8 +170,6 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
     public void createEvoInfo(EvoType evoType) {
         try {
             evoInfo = ImmutableEvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this, evoType);
-            getAggregatedResources().put(evoInfo.getUri(), evoInfo);
-            evoInfo.save();
 
             this.evoInfoAnnotation = annotate(evoInfo.getUri(), this);
             this.getManifest().serialize();

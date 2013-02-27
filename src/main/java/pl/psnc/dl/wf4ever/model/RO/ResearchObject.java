@@ -179,8 +179,6 @@ public class ResearchObject extends Thing implements Aggregation {
     public void createEvoInfo() {
         try {
             evoInfo = LiveEvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this);
-            getAggregatedResources().put(evoInfo.getUri(), evoInfo);
-            evoInfo.save();
 
             this.evoInfoAnnotation = annotate(evoInfo.getUri(), this);
             this.getManifest().serialize();
@@ -197,9 +195,10 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     public LiveEvoInfo getLiveEvoInfo() {
         if (evoInfo == null) {
-            evoInfo = builder.buildLiveEvoInfo(getFixedEvolutionAnnotationBodyUri(), this, null, null);
-            getAggregatedResources().put(evoInfo.getUri(), evoInfo);
-            evoInfo.load();
+            evoInfo = LiveEvoInfo.get(builder, getFixedEvolutionAnnotationBodyUri(), this);
+            if (evoInfo != null) {
+                evoInfo.load();
+            }
         }
         return evoInfo;
     }
@@ -296,13 +295,6 @@ public class ResearchObject extends Thing implements Aggregation {
             throws BadRequestException {
         URI resourceUri = UriBuilder.fromUri(uri).path(path).build();
         Resource resource = Resource.create(builder, this, resourceUri, content, contentType);
-        if (getAnnotationsByBodyUri().containsKey(resource.getUri())) {
-            resource.saveGraphAndSerialize();
-        }
-        getManifest().serialize();
-        this.getResources().put(resource.getUri(), resource);
-        this.getAggregatedResources().put(resource.getUri(), resource);
-        this.getProxies().put(resource.getProxy().getUri(), resource.getProxy());
         return resource;
     }
 
@@ -316,10 +308,6 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     public Resource aggregate(URI uri) {
         Resource resource = Resource.create(builder, this, uri);
-        this.getManifest().serialize();
-        this.getResources().put(resource.getUri(), resource);
-        this.getAggregatedResources().put(resource.getUri(), resource);
-        this.getProxies().put(resource.getProxy().getUri(), resource.getProxy());
         return resource;
     }
 
@@ -339,13 +327,6 @@ public class ResearchObject extends Thing implements Aggregation {
     public Resource copy(Resource resource, EvoBuilder evoBuilder)
             throws BadRequestException {
         Resource resource2 = resource.copy(builder, evoBuilder, this);
-        if (getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
-            resource2.saveGraphAndSerialize();
-        }
-        getManifest().serialize();
-        this.getResources().put(resource2.getUri(), resource2);
-        this.getAggregatedResources().put(resource2.getUri(), resource2);
-        this.getProxies().put(resource2.getProxy().getUri(), resource2.getProxy());
         return resource2;
     }
 
@@ -365,12 +346,6 @@ public class ResearchObject extends Thing implements Aggregation {
     public AggregatedResource copy(AggregatedResource resource, EvoBuilder evoBuilder)
             throws BadRequestException {
         AggregatedResource resource2 = resource.copy(builder, evoBuilder, this);
-        if (getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
-            resource2.saveGraphAndSerialize();
-        }
-        getManifest().serialize();
-        this.getAggregatedResources().put(resource2.getUri(), resource2);
-        this.getProxies().put(resource2.getProxy().getUri(), resource2.getProxy());
         return resource2;
     }
 
@@ -393,10 +368,6 @@ public class ResearchObject extends Thing implements Aggregation {
     public Folder aggregateFolder(URI folderUri, InputStream content)
             throws BadRequestException {
         Folder folder = Folder.create(builder, this, folderUri, content);
-        getManifest().serialize();
-        this.getFolders().put(folder.getUri(), folder);
-        this.getAggregatedResources().put(folder.getUri(), folder);
-        this.getProxies().put(folder.getProxy().getUri(), folder.getProxy());
         return folder;
     }
 
@@ -413,10 +384,6 @@ public class ResearchObject extends Thing implements Aggregation {
      */
     public Folder copy(Folder folder, EvoBuilder evoBuilder) {
         Folder folder2 = folder.copy(builder, evoBuilder, this);
-        getManifest().serialize();
-        this.getFolders().put(folder2.getUri(), folder2);
-        this.getAggregatedResources().put(folder2.getUri(), folder2);
-        this.getProxies().put(folder2.getProxy().getUri(), folder2.getProxy());
         return folder2;
     }
 
@@ -472,7 +439,7 @@ public class ResearchObject extends Thing implements Aggregation {
             throws BadRequestException {
         URI annotationUri = getAnnotationUri(annotationId);
         Annotation annotation = Annotation.create(builder, this, annotationUri, body, targets);
-        return postAnnotate(annotation);
+        return annotation;
     }
 
 
@@ -489,7 +456,7 @@ public class ResearchObject extends Thing implements Aggregation {
             throws BadRequestException {
         URI annotationUri = getAnnotationUri(null);
         Annotation annotation = Annotation.create(builder, this, annotationUri, data);
-        return postAnnotate(annotation);
+        return annotation;
     }
 
 
@@ -509,36 +476,7 @@ public class ResearchObject extends Thing implements Aggregation {
     public Annotation copy(Annotation annotation, EvoBuilder evoBuilder)
             throws BadRequestException {
         Annotation annotation2 = annotation.copy(builder, evoBuilder, this);
-        return postAnnotate(annotation2);
-    }
-
-
-    /**
-     * Make all changes necessary after creating the annotation.
-     * 
-     * @param annotation
-     *            new annotation
-     * @return the annotation
-     * @throws BadRequestException
-     *             if there is no data in storage or the file format is not RDF
-     */
-    private Annotation postAnnotate(Annotation annotation)
-            throws BadRequestException {
-        AggregatedResource resource = getAggregatedResources().get(annotation.getBody().getUri());
-        if (resource != null && resource.isInternal()) {
-            resource.saveGraphAndSerialize();
-            int c = resource.updateReferences(resource.getResearchObject());
-            LOGGER.debug(String.format("Updated %d triples in %s", c, resource.getUri()));
-            getManifest().removeRoResourceClass(resource);
-        }
-        getManifest().serialize();
-        this.getAnnotations().put(annotation.getUri(), annotation);
-        for (Thing target : annotation.getAnnotated()) {
-            this.getAnnotationsByTarget().put(target.getUri(), annotation);
-        }
-        this.getAnnotationsByBodyUri().put(annotation.getBody().getUri(), annotation);
-        this.getAggregatedResources().put(annotation.getUri(), annotation);
-        return annotation;
+        return annotation2;
     }
 
 

@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever.model.ROEVO;
 
 import java.net.URI;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
@@ -36,6 +37,8 @@ import com.hp.hpl.jena.rdf.model.Resource;
  */
 public class ImmutableEvoInfo extends EvoInfo {
 
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(ImmutableEvoInfo.class);
     /** previous snapshot or archive, if exists. */
     private ImmutableResearchObject previousRO;
 
@@ -71,7 +74,7 @@ public class ImmutableEvoInfo extends EvoInfo {
 
 
     /**
-     * Create and save a new manifest.
+     * Create and save a new evolution information. Add it to the RO properties.
      * 
      * @param builder
      *            model instance builder
@@ -88,6 +91,29 @@ public class ImmutableEvoInfo extends EvoInfo {
         ImmutableEvoInfo evoInfo = builder.buildImmutableEvoInfo(uri, researchObject, builder.getUser(),
             DateTime.now(), evoType);
         evoInfo.save();
+        evoInfo.serialize(uri, RDFFormat.TURTLE);
+        researchObject.getAggregatedResources().put(evoInfo.getUri(), evoInfo);
+        return evoInfo;
+    }
+
+
+    /**
+     * Return an evolution information resource or null if not found in the triplestore.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param uri
+     *            evolution information resource URI
+     * @param researchObject
+     *            research object which this evo info should describe
+     * @return an existing evo info or null
+     */
+    public static ImmutableEvoInfo get(Builder builder, URI uri, ImmutableResearchObject researchObject) {
+        ImmutableEvoInfo evoInfo = builder.buildImmutableEvoInfo(uri, researchObject);
+        if (!evoInfo.isNamedGraph()) {
+            return null;
+        }
+        researchObject.getAggregatedResources().put(evoInfo.getUri(), evoInfo);
         return evoInfo;
     }
 
@@ -137,7 +163,6 @@ public class ImmutableEvoInfo extends EvoInfo {
         } finally {
             endTransaction(transactionStarted);
         }
-        serialize(uri, RDFFormat.TURTLE);
     }
 
 

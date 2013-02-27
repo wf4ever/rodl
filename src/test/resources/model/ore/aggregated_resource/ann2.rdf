@@ -3,8 +3,8 @@
    xmlns:ao="http://purl.org/ao/"
     xmlns:dcterms="http://purl.org/dc/terms/"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
-  <rdf:Description rdf:about="http://example.org/ro-1/">
+  <rdf:Description rdf:about="http://example.org/ro-2/">
     <dcterms:title>title</dcterms:title>
-    <ao:body rdf:resource="http://example.org/ro-1/a%20workflow.t2flow" />
+    <ao:body rdf:resource="http://example.org/ro-2/a%20workflow.t2flow" />
   </rdf:Description>
 </rdf:RDF>

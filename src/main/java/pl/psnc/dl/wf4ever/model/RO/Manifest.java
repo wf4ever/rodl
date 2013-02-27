@@ -272,6 +272,10 @@ public class Manifest extends ResourceMap {
             } finally {
                 qe.close();
             }
+            // This is normally not necessary but helps if some old ROs don't explicitly use the ore:AggregatedResource class
+            aggregated.putAll(resources2);
+            aggregated.putAll(folders2);
+            aggregated.putAll(annotations2);
             return aggregated;
         } finally {
             endTransaction(transactionStarted);
@@ -318,7 +322,7 @@ public class Manifest extends ResourceMap {
                     RDFNode createdNode = solution.get("created");
                     DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                             .asLiteral().getString()) : null;
-                    Resource resource = builder.buildResource(getResearchObject(), rUri, profile, resCreated);
+                    Resource resource = builder.buildResource(rUri, getResearchObject(), profile, resCreated);
                     if (pUri != null) {
                         resource.setProxy(builder.buildProxy(pUri, resource, getResearchObject()));
                     }

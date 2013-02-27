@@ -22,6 +22,7 @@
     <dct:creator rdf:resource="A2"/>
     <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T16:01:10Z</dct:created>
     <ore:describes rdf:resource="../"/>
+    <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/ResourceMap"/>
     <rdf:type rdf:resource="http://purl.org/wf4ever/ro#Manifest"/>
   </rdf:Description>
   
@@ -63,6 +64,7 @@
   <rdf:Description rdf:about="../a%20workflow.t2flow">
     <dct:creator rdf:resource="A5"/>
     <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:02:10Z</dct:created>
+    <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/AggregatedResource"/>
     <rdf:type rdf:resource="http://purl.org/wf4ever/ro#Resource"/>
   </rdf:Description>
   
@@ -71,6 +73,7 @@
     <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-12-02T15:02:13Z</dct:created>
     <ro:annotatesAggregatedResource rdf:resource="../a%20workflow.t2flow"/>
     <ao:body rdf:resource="annotationBody.ttl"/>
+    <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/AggregatedResource"/>
     <rdf:type rdf:resource="http://purl.org/wf4ever/ro#AggregatedAnnotation"/>
   </rdf:Description>
   
