@@ -73,7 +73,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         }
         AggregatedResource resource = builder.buildAggregatedResource(resourceUri, researchObject, builder.getUser(),
             DateTime.now());
-        resource.setProxy(Proxy.create(builder, researchObject, resource));
+        resource.setProxy(researchObject.addProxy(resource));
         resource.save();
         try {
             resource.onCreated();
@@ -109,7 +109,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         }
         AggregatedResource resource = builder.buildAggregatedResource(resourceUri, researchObject, builder.getUser(),
             DateTime.now());
-        resource.setProxy(Proxy.create(builder, researchObject, resource));
+        resource.setProxy(researchObject.addProxy(resource));
         resource.save(content, contentType);
         if (researchObject.getAnnotationsByBodyUri().containsKey(resource.getUri())) {
             resource.saveGraphAndSerialize();
@@ -181,7 +181,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         resource2.setCopyDateTime(DateTime.now());
         resource2.setCopyAuthor(builder.getUser());
         resource2.setCopyOf(this);
-        resource2.setProxy(Proxy.create(builder, researchObject, resource2));
+        resource2.setProxy(researchObject.addProxy(resource2));
         if (isInternal()) {
             resource2.save(getSerialization(), getStats().getMimeType());
             if (researchObject.getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
@@ -205,7 +205,6 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
             throws BadRequestException {
         researchObject.getManifest().serialize();
         researchObject.getAggregatedResources().put(this.getUri(), this);
-        researchObject.getProxies().put(this.getProxy().getUri(), this.getProxy());
     }
 
 

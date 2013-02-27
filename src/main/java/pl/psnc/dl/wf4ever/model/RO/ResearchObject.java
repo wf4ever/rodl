@@ -279,6 +279,22 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
+     * Create and save a new proxy.
+     * 
+     * @param resource
+     *            resource for which the proxy is
+     * @return a proxy instance
+     */
+    public Proxy addProxy(AggregatedResource resource) {
+        URI proxyUri = uri.resolve(".ro/proxies/" + UUID.randomUUID());
+        Proxy proxy = builder.buildProxy(proxyUri, resource, this);
+        proxy.save();
+        getProxies().put(proxy.getUri(), proxy);
+        return proxy;
+    }
+
+
+    /**
      * Create an internal resource and add it to the research object.
      * 
      * @param path

@@ -12,7 +12,6 @@ import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
-import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 
 import com.hp.hpl.jena.query.Dataset;
 
@@ -79,7 +78,7 @@ public class Resource extends AggregatedResource {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
         Resource resource = builder.buildResource(resourceUri, researchObject, builder.getUser(), DateTime.now());
-        resource.setProxy(Proxy.create(builder, researchObject, resource));
+        resource.setProxy(researchObject.addProxy(resource));
         resource.save();
         resource.onCreated();
         return resource;
@@ -110,7 +109,7 @@ public class Resource extends AggregatedResource {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
         Resource resource = builder.buildResource(resourceUri, researchObject, builder.getUser(), DateTime.now());
-        resource.setProxy(Proxy.create(builder, researchObject, resource));
+        resource.setProxy(researchObject.addProxy(resource));
         resource.save(content, contentType);
         if (researchObject.getAnnotationsByBodyUri().containsKey(resource.getUri())) {
             resource.saveGraphAndSerialize();
@@ -154,7 +153,7 @@ public class Resource extends AggregatedResource {
         resource2.setCopyDateTime(DateTime.now());
         resource2.setCopyAuthor(builder.getUser());
         resource2.setCopyOf(this);
-        resource2.setProxy(Proxy.create(builder, researchObject, resource2));
+        resource2.setProxy(researchObject.addProxy(resource2));
         if (isInternal()) {
             resource2.save(getSerialization(), getStats().getMimeType());
             if (researchObject.getAnnotationsByBodyUri().containsKey(resource2.getUri())) {

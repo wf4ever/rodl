@@ -45,19 +45,6 @@ public class FolderEntry extends Proxy {
      * 
      * @param user
      *            user creating the instance
-     * @param uri
-     *            folder entry URI
-     */
-    public FolderEntry(UserMetadata user, URI uri) {
-        super(user, uri);
-    }
-
-
-    /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
      * @param dataset
      *            custom dataset
      * @param useTransactions
