@@ -162,6 +162,7 @@ public class FolderResourceMap extends ResourceMap {
     public static FolderResourceMap create(Builder builder, Folder folder, URI resourceMapUri) {
         FolderResourceMap map = builder.buildFolderResourceMap(resourceMapUri, folder);
         map.save();
+        map.serialize();
         return map;
     }
 

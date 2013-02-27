@@ -92,6 +92,7 @@ public class Manifest extends ResourceMap {
     public static Manifest create(Builder builder, URI uri, ResearchObject researchObject) {
         Manifest manifest = builder.buildManifest(uri, researchObject, builder.getUser(), DateTime.now());
         manifest.save();
+        manifest.serialize();
         return manifest;
     }
 
@@ -106,7 +107,7 @@ public class Manifest extends ResourceMap {
      * @return the new manifest
      */
     public Manifest copy(Builder builder, ResearchObject researchObject) {
-        URI manifestUri = researchObject.getUri().resolve(ResearchObject.MANIFEST_PATH);
+        URI manifestUri = researchObject.getUri().resolve(this.getRawPath());
         Manifest manifest = builder.buildManifest(manifestUri, researchObject, getCreator(), getCreated());
         manifest.save();
         return manifest;
@@ -178,7 +179,7 @@ public class Manifest extends ResourceMap {
         if (resource.getStats() != null) {
             boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
             try {
-                Individual resourceR = model.getIndividual(resource.getUri().toString());
+                com.hp.hpl.jena.rdf.model.Resource resourceR = model.getResource(resource.getUri().toString());
                 if (resource.getStats().getName() != null) {
                     model.add(resourceR, RO.name, model.createTypedLiteral(resource.getStats().getName()));
                 }
