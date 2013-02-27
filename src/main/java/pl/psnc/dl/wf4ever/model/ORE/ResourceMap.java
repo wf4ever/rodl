@@ -41,35 +41,6 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
      * 
      * @param user
      *            user creating the instance
-     * @param uri
-     *            resource map URI
-     */
-    public ResourceMap(UserMetadata user, URI uri) {
-        super(user, uri);
-    }
-
-
-    /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param aggregation
-     *            aggregation described by the resource map
-     * @param uri
-     *            resource URI
-     */
-    public ResourceMap(UserMetadata user, Aggregation aggregation, URI uri) {
-        super(user, uri);
-        this.aggregation = aggregation;
-    }
-
-
-    /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
      * @param dataset
      *            custom dataset
      * @param useTransactions
@@ -178,9 +149,13 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
     }
 
 
-    //@TODO javadoc
     public String getPath() {
         return getResearchObject().getUri().relativize(uri).getPath();
+    }
+
+
+    public String getRawPath() {
+        return getResearchObject().getUri().relativize(uri).getRawPath();
     }
 
 

@@ -54,21 +54,6 @@ public class FolderResourceMap extends ResourceMap {
 
 
     /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param folder
-     *            folder to be described
-     * @param uri
-     *            resource map URI
-     */
-    public FolderResourceMap(UserMetadata user, Folder folder, URI uri) {
-        super(user, folder, uri);
-    }
-
-
-    /**
      * Add metadata specific to a folder entry (not to a proxy).
      * 
      * @param entry
@@ -177,6 +162,7 @@ public class FolderResourceMap extends ResourceMap {
     public static FolderResourceMap create(Builder builder, Folder folder, URI resourceMapUri) {
         FolderResourceMap map = builder.buildFolderResourceMap(resourceMapUri, folder);
         map.save();
+        map.serialize();
         return map;
     }
 

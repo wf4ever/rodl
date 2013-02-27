@@ -77,21 +77,6 @@ public class Folder extends Resource implements Aggregation {
 
 
     /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param researchObject
-     *            The RO it is aggregated by
-     * @param uri
-     *            resource URI
-     */
-    public Folder(UserMetadata user, ResearchObject researchObject, URI uri) {
-        super(user, researchObject, uri);
-    }
-
-
-    /**
      * Get the folder entries. May be loaded lazily.
      * 
      * @return a set of folder entries in this folder

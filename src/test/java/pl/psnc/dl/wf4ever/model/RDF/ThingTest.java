@@ -46,16 +46,16 @@ public class ThingTest extends BaseTest {
     //FIXME this method is buggy, it shouldn't use URIs
     @Test
     public void testIsSpecial() {
-        Thing ordinaryThing1 = new Thing(null, URI.create("http:///www.example.com/ROS/manifest/thing/"));
-        Thing ordinaryThing2 = new Thing(null, URI.create("http:///www.example.com/ROs/manifest/"));
-        Thing ordinaryThing3 = new Thing(null, URI.create("http:///www.example.com/ROs/manifest.rdf/thing/"));
-        Thing ordinaryThing4 = new Thing(null, URI.create("http:///www.example.com/ROs/oridnary_resource"));
-        Thing specialThing1 = new Thing(null, URI.create("http:///www.example.com/ROs/manifest.rdf/"));
-        Thing specialThing2 = new Thing(null, URI.create("http:///www.example.com/ROs/evo_info.ttl/"));
-        Thing specialThing3 = new Thing(null, URI.create("http:///www.example.com/ROs/manifest.rdf"));
-        Thing specialThing4 = new Thing(null, URI.create("http:///www.example.com/ROs/evo_info.ttl"));
-        Thing specialThing5 = new Thing(null, URI.create("manifest.rdf"));
-        Thing specialThing6 = new Thing(null, URI.create("evo_info.ttl"));
+        Thing ordinaryThing1 = builder.buildThing(URI.create("http:///www.example.com/ROS/manifest/thing/"));
+        Thing ordinaryThing2 = builder.buildThing(URI.create("http:///www.example.com/ROs/manifest/"));
+        Thing ordinaryThing3 = builder.buildThing(URI.create("http:///www.example.com/ROs/manifest.rdf/thing/"));
+        Thing ordinaryThing4 = builder.buildThing(URI.create("http:///www.example.com/ROs/oridnary_resource"));
+        Thing specialThing1 = builder.buildThing(URI.create("http:///www.example.com/ROs/manifest.rdf/"));
+        Thing specialThing2 = builder.buildThing(URI.create("http:///www.example.com/ROs/evo_info.ttl/"));
+        Thing specialThing3 = builder.buildThing(URI.create("http:///www.example.com/ROs/manifest.rdf"));
+        Thing specialThing4 = builder.buildThing(URI.create("http:///www.example.com/ROs/evo_info.ttl"));
+        Thing specialThing5 = builder.buildThing(URI.create("manifest.rdf"));
+        Thing specialThing6 = builder.buildThing(URI.create("evo_info.ttl"));
         Assert.assertFalse(ordinaryThing1.isSpecialResource());
         Assert.assertFalse(ordinaryThing2.isSpecialResource());
         Assert.assertFalse(ordinaryThing3.isSpecialResource());
@@ -73,17 +73,8 @@ public class ThingTest extends BaseTest {
     public void testConstructor() {
         URI thingUri = URI.create("http://www.example.org/thing");
         Thing thing = new Thing(userProfile, dataset, true, thingUri);
-        Assert.assertEquals(thing.getCreator(), userProfile);
-        Assert.assertEquals(thing.getUri(), thingUri);
-
-        Thing thing2 = new Thing(userProfile);
-        Assert.assertEquals(thing2.getCreator(), userProfile);
-        Assert.assertEquals(thing2.getUri(), null);
-
-        Thing thing3 = new Thing(userProfile, thingUri);
-        Assert.assertEquals(thing.getCreator(), userProfile);
-        Assert.assertEquals(thing.getUri(), thingUri);
-
+        Assert.assertEquals(userProfile, thing.getUser());
+        Assert.assertEquals(thingUri, thing.getUri());
     }
 
 
@@ -109,7 +100,6 @@ public class ThingTest extends BaseTest {
             Assert.assertEquals(thing2.getUri(),
             thing.getUri(RDFFormat.TURTLE).resolve(thing2.getUri(RDFFormat.TURTLE).getRawQuery().split("=")[1]));
          */
-        assert false;
     }
 
 
@@ -120,7 +110,7 @@ public class ThingTest extends BaseTest {
         Thing thing = builder.buildThing(thingUri);
         Thing thing2 = builder.buildThing(thingUri2);
         Assert.assertEquals(thing.getName(), "thing");
-        Assert.assertEquals(thing.getName(), "thing");
+        Assert.assertEquals(thing2.getName(), "thing");
     }
 
 
@@ -128,18 +118,15 @@ public class ThingTest extends BaseTest {
     public void testIsNamedGraph() {
         Assert.assertFalse(researchObject2.isNamedGraph());
         Assert.assertTrue(researchObject.getManifest().isNamedGraph());
-        ResearchObject noSavedRO = new ResearchObject(userProfile, URI.create("http://www.example.com/no-saved-ro/"));
+        ResearchObject noSavedRO = builder.buildResearchObject(URI.create("http://www.example.com/no-saved-ro/"));
         Assert.assertFalse(noSavedRO.isNamedGraph());
     }
 
 
     @Test
     public void testExtractCreator() {
-        //TODO Why model is null... i don't get it
-        researchObject.getAnnotations();
-        DateTime dt = researchObject.extractCreated(researchObject);
-        //model is empty. why ?
-        assert false;
+        DateTime dt = researchObject.getManifest().extractCreated(researchObject);
+        Assert.assertNotNull(dt);
     }
 
 
@@ -163,8 +150,8 @@ public class ThingTest extends BaseTest {
 
     @Test
     public void testExtractCreated() {
-        //TODO Why model is null... i don't get it
-        UserMetadata um = researchObject.extractCreator(researchObject);
+        UserMetadata um = researchObject.getManifest().extractCreator(researchObject);
+        Assert.assertNotNull(um);
     }
 
 
@@ -174,7 +161,7 @@ public class ThingTest extends BaseTest {
     }
 
 
-    public void testTransacitons() {
+    public void testTransactions() {
         //TODO HOW ?!
 
     }
@@ -197,7 +184,8 @@ public class ThingTest extends BaseTest {
 
     @Test
     public void testGetGraphAsInputStreamFromEmptyObject() {
-        InputStream is = ((Thing) (researchObject.getManifest())).getGraphAsInputStream(RDFFormat.RDFXML);
+        InputStream is = builder.buildThing(researchObject.getUri().resolve("a-fake-uri")).getGraphAsInputStream(
+            RDFFormat.RDFXML);
         Assert.assertNull(is);
     }
 

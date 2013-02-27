@@ -45,7 +45,7 @@ public class ResourceMapTest extends BaseTest {
 
     @Test
     public void testConstructor() {
-        ResourceMap createdResourceMap = new ResourceMap(userProfile, researchObject, resourceMapUri) {
+        ResourceMap createdResourceMap = new ResourceMap(userProfile, dataset, false, researchObject, resourceMapUri) {
 
             @Override
             public ResearchObject getResearchObject() {

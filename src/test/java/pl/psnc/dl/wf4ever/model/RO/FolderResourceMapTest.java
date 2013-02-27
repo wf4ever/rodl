@@ -38,7 +38,7 @@ public class FolderResourceMapTest extends BaseTest {
             throws BadRequestException {
         Folder folder = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
             folderResourceMapUri.resolve("folder"));
-        FolderResourceMap folderResourceMap = new FolderResourceMap(userProfile, folder, folderResourceMapUri);
+        FolderResourceMap folderResourceMap = builder.buildFolderResourceMap(folderResourceMapUri, folder);
         Assert.assertEquals(folderResourceMap.getFolder(), folder);
         folderResourceMap = new FolderResourceMap(userProfile, dataset, true, folder, folderResourceMapUri);
         Assert.assertEquals(folderResourceMap.getFolder(), folder);
@@ -48,7 +48,7 @@ public class FolderResourceMapTest extends BaseTest {
     @Test
     public void testSaveFolderEntryData()
             throws BadRequestException {
-        Folder folder = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
+        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
             folderResourceMapUri.resolve("folder"));
         InputStream is = getClass().getClassLoader().getResourceAsStream(FolderBuilder.DEFAULT_FOLDER_PATH);
         researchObject.aggregate("new-resource", is, "text/plain");
@@ -69,25 +69,32 @@ public class FolderResourceMapTest extends BaseTest {
 
     @Test
     public void testGenerateResourceUri() {
-        Assert.assertNull(FolderResourceMap.generateResourceMapUri(new Folder(userProfile, researchObject, null)));
+        Assert.assertNull(FolderResourceMap.generateResourceMapUri(builder
+                .buildFolder(researchObject, null, null, null)));
         Assert.assertEquals(URI.create("/folder.rdf"),
-            FolderResourceMap.generateResourceMapUri(new Folder(userProfile, researchObject, URI.create(""))));
-        Assert.assertEquals(URI.create("/folder.rdf"),
-            FolderResourceMap.generateResourceMapUri(new Folder(userProfile, researchObject, URI.create("/folder"))));
-        Assert.assertEquals(URI.create("folder.rdf"),
-            FolderResourceMap.generateResourceMapUri(new Folder(userProfile, researchObject, URI.create("folder"))));
-        Assert.assertEquals(URI.create("folder/folder.rdf"),
-            FolderResourceMap.generateResourceMapUri(new Folder(userProfile, researchObject, URI.create("folder/"))));
-        Assert.assertEquals(URI.create("http://www.example.org/folder.rdf"), FolderResourceMap
-                .generateResourceMapUri(new Folder(userProfile, researchObject, URI.create("http://www.example.org"))));
-        Assert.assertEquals(URI.create("http://www.example.org/folder.rdf"), FolderResourceMap
-                .generateResourceMapUri(new Folder(userProfile, researchObject, URI.create("http://www.example.org/"))));
-        Assert.assertEquals(URI.create("http://www.example.org/resurce.rdf"), FolderResourceMap
-                .generateResourceMapUri(new Folder(userProfile, researchObject, URI
-                        .create("http://www.example.org/resurce"))));
-        Assert.assertEquals(URI.create("http://www.example.org/rosource/rosource.rdf"), FolderResourceMap
-                .generateResourceMapUri(new Folder(userProfile, researchObject, URI
-                        .create("http://www.example.org/rosource/"))));
+            FolderResourceMap.generateResourceMapUri(builder.buildFolder(researchObject, URI.create(""), null, null)));
+        Assert.assertEquals(URI.create("/folder.rdf"), FolderResourceMap.generateResourceMapUri(builder.buildFolder(
+            researchObject, URI.create("/folder"), null, null)));
+        Assert.assertEquals(URI.create("folder.rdf"), FolderResourceMap.generateResourceMapUri(builder.buildFolder(
+            researchObject, URI.create("folder"), null, null)));
+        Assert.assertEquals(URI.create("folder/folder.rdf"), FolderResourceMap.generateResourceMapUri(builder
+                .buildFolder(researchObject, URI.create("folder/"), null, null)));
+        Assert.assertEquals(
+            URI.create("http://www.example.org/folder.rdf"),
+            FolderResourceMap.generateResourceMapUri(builder.buildFolder(researchObject,
+                URI.create("http://www.example.org"), null, null)));
+        Assert.assertEquals(
+            URI.create("http://www.example.org/folder.rdf"),
+            FolderResourceMap.generateResourceMapUri(builder.buildFolder(researchObject,
+                URI.create("http://www.example.org/"), null, null)));
+        Assert.assertEquals(
+            URI.create("http://www.example.org/resurce.rdf"),
+            FolderResourceMap.generateResourceMapUri(builder.buildFolder(researchObject,
+                URI.create("http://www.example.org/resurce"), null, null)));
+        Assert.assertEquals(
+            URI.create("http://www.example.org/rosource/rosource.rdf"),
+            FolderResourceMap.generateResourceMapUri(builder.buildFolder(researchObject,
+                URI.create("http://www.example.org/rosource/"), null, null)));
     }
 
 

@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.sms;
+package pl.psnc.dl.wf4ever.sparql;
 
 import java.net.URI;
 import java.net.URISyntaxException;

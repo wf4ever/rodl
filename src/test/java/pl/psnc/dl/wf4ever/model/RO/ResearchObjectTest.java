@@ -8,6 +8,7 @@ import java.util.Set;
 import junit.framework.Assert;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
@@ -43,8 +44,7 @@ public class ResearchObjectTest extends BaseTest {
 
     @Test
     public void testConstructor() {
-        ResearchObject ro = new ResearchObject(userProfile, researchObjectUri);
-        ro = new ResearchObject(userProfile, dataset, true, researchObjectUri);
+        ResearchObject ro = new ResearchObject(userProfile, dataset, true, researchObjectUri);
     }
 
 
@@ -354,4 +354,47 @@ public class ResearchObjectTest extends BaseTest {
         Assert.assertTrue(r.hasProperty(RO.annotatesAggregatedResource));
         Assert.assertTrue(r.hasProperty(AO.body));
     }
+
+
+    @Ignore
+    @Test
+    public void testUnpackAndAggregate() {
+        //TODO implemnt
+    }
+
+
+    @Ignore
+    @Test
+    public void testGetCreated() {
+        //TODO implemnt
+    }
+
+
+    @Ignore
+    @Test
+    public void testGetCreator() {
+        //TODO implemnt
+    }
+
+
+    @Ignore
+    @Test
+    public void testIsUriUsed() {
+        //TODO implemnt
+    }
+
+
+    @Ignore
+    @Test
+    public void testGetAsZipArchive() {
+        //TODO implemnt
+    }
+
+
+    @Ignore
+    @Test
+    public void testGetAll() {
+    }
+    //TODO implemnt
+
 }

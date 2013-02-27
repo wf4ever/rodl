@@ -37,10 +37,7 @@ public class FolderTest extends BaseTest {
 
     @Test
     public void testConstructor() {
-        Folder folder = new Folder(userProfile, researchObject, folderUri);
-        Assert.assertEquals(researchObject, folder.getResearchObject());
-        Assert.assertEquals(folderUri, folder.getUri());
-        folder = new Folder(userProfile, dataset, true, researchObject, folderUri);
+        Folder folder = new Folder(userProfile, dataset, true, researchObject, folderUri);
         Assert.assertEquals(researchObject, folder.getResearchObject());
         Assert.assertEquals(folderUri, folder.getUri());
     }
@@ -50,8 +47,7 @@ public class FolderTest extends BaseTest {
     public void testGetFolderEntries()
             throws BadRequestException {
         Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
-        //WHY??
-        Assert.assertEquals(4, folder.getFolderEntries().size());
+        Assert.assertEquals(2, folder.getFolderEntries().size());
     }
 
 
@@ -59,7 +55,7 @@ public class FolderTest extends BaseTest {
     public void testGetAggregatedResources()
             throws BadRequestException {
         Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
-        Assert.assertEquals(4, folder.getFolderEntries().size());
+        Assert.assertEquals(2, folder.getFolderEntries().size());
     }
 
 
@@ -234,8 +230,8 @@ public class FolderTest extends BaseTest {
         Folder f = folderBuilder.init("model/ro/folder/empty_folder.rdf", builder, researchObject, folderUri);
         Assert.assertEquals(0, f.getFolderEntries().size());
         InputStream is = getClass().getClassLoader().getResourceAsStream(FolderBuilder.DEFAULT_FOLDER_PATH);
-        f.update(is, "RDF/XML");
-        Assert.assertEquals(4, f.getFolderEntries().size());
+        f.update(is, "application/rdf+xml");
+        Assert.assertEquals(2, f.getFolderEntries().size());
     }
 
 }

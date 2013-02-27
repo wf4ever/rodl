@@ -3,7 +3,6 @@ package pl.psnc.dl.wf4ever.model.AO;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -45,47 +44,6 @@ public class Annotation extends AggregatedResource {
 
     /** The annotation body URI. The body may or may not be aggregated. */
     private Thing body;
-
-
-    /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param researchObject
-     *            RO aggregating the annotation
-     * @param uri
-     *            Resource uri
-     * @param annotated
-     *            List of annotated
-     * @param body
-     *            Annotation body
-     */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Thing body, Set<Thing> annotated) {
-        super(user, researchObject, uri);
-        //        Objects.requireNonNull(body, "Body cannot be null");
-        this.annotated = annotated;
-        this.body = body;
-    }
-
-
-    /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param researchObject
-     *            RO aggregating the annotation
-     * @param uri
-     *            annotation URI
-     * @param body
-     *            annotation body, may be aggregated or not, may be a ro:Resource (rarely) or not
-     * @param annotated
-     *            annotated resource, must be the RO/aggregated resource/proxy
-     */
-    public Annotation(UserMetadata user, ResearchObject researchObject, URI uri, Thing body, Thing annotated) {
-        this(user, researchObject, uri, body, new HashSet<Thing>(Arrays.asList(new Thing[] { annotated })));
-    }
 
 
     /**

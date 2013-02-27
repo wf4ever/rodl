@@ -27,10 +27,9 @@ import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.Builder;
-import pl.psnc.dl.wf4ever.sms.RO_RDFXMLWriter;
-import pl.psnc.dl.wf4ever.sms.RO_TurtleWriter;
-import pl.psnc.dl.wf4ever.sms.ResearchObjectRelativeWriter;
-import pl.psnc.dl.wf4ever.sms.SemanticMetadataServiceTdb;
+import pl.psnc.dl.wf4ever.sparql.RO_RDFXMLWriter;
+import pl.psnc.dl.wf4ever.sparql.RO_TurtleWriter;
+import pl.psnc.dl.wf4ever.sparql.ResearchObjectRelativeWriter;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.FOAF;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -86,7 +85,7 @@ public class Thing {
     protected Dataset dataset;
 
     /** Logger. */
-    private static final Logger LOGGER = Logger.getLogger(SemanticMetadataServiceTdb.class);
+    private static final Logger LOGGER = Logger.getLogger(Thing.class);
 
     /** Jena model of the named graph. */
     protected OntModel model;
@@ -125,30 +124,6 @@ public class Thing {
         this.dataset = dataset;
         this.useTransactions = useTransactions;
         this.uri = uri;
-    }
-
-
-    /**
-     * Constructor that uses a default dataset on a local drive using transactions.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param uri
-     *            resource URI
-     */
-    public Thing(UserMetadata user, URI uri) {
-        this(user, null, true, uri);
-    }
-
-
-    /**
-     * Constructor that uses a default dataset on a local drive using transactions.
-     * 
-     * @param user
-     *            user creating the instance
-     */
-    public Thing(UserMetadata user) {
-        this(user, null, true, null);
     }
 
 
@@ -199,6 +174,11 @@ public class Thing {
 
     public void setUri(URI uri) {
         this.uri = uri;
+    }
+
+
+    public UserMetadata getUser() {
+        return user;
     }
 
 

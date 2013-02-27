@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -40,8 +41,7 @@ public class ManifestTest extends BaseTest {
 
     @Test
     public void testConstructor() {
-        Manifest manifest = new Manifest(userProfile, manifestUri, researchObject);
-        Manifest manifest2 = new Manifest(userProfile, null, false, manifestUri, researchObject);
+        new Manifest(userProfile, null, false, manifestUri, researchObject);
     }
 
 
@@ -59,17 +59,18 @@ public class ManifestTest extends BaseTest {
 
     @Test
     public void testDelete() {
-        manifest.save();
-        manifest.delete();
-        Assert.assertNull(manifest.getGraphAsInputStream(RDFFormat.RDFXML));
+        Manifest manifest2 = Manifest.create(builder, manifestUri, researchObject);
+        manifest2.delete();
+        Assert.assertNull(manifest2.getGraphAsInputStream(RDFFormat.RDFXML));
     }
 
 
     @Test
     public void testCreate() {
+        Manifest manifest2 = Manifest.create(builder, manifestUri, researchObject);
         Model model = ModelFactory.createDefaultModel();
-        model.read(manifest.getGraphAsInputStream(RDFFormat.RDFXML), null);
-        Resource r = model.getResource(manifest.getUri().toString());
+        model.read(manifest2.getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Resource r = model.getResource(manifest2.getUri().toString());
         Assert.assertTrue(r.hasProperty(RDF.type, RO.Manifest));
         r = model.getResource(researchObject.getUri().toString());
         Assert.assertTrue(r.hasProperty(RDF.type, RO.ResearchObject));
@@ -79,8 +80,8 @@ public class ManifestTest extends BaseTest {
     @Test
     public void testCopy() {
         Manifest m2 = manifest.copy(builder, researchObject2);
-        Assert.assertEquals(manifest.getUri().relativize(researchObject.getUri()),
-            m2.getUri().relativize(researchObject2.getUri()));
+        Assert.assertEquals(researchObject.getUri().relativize(manifest.getUri()),
+            researchObject2.getUri().relativize(m2.getUri()));
     }
 
 
@@ -125,8 +126,10 @@ public class ManifestTest extends BaseTest {
     @Test
     public void testSaveRoStats() {
         URI aggregatedResourceUri = researchObject.getUri().resolve("new-agg-res");
-        manifest.saveRoResourceClass(builder.buildAggregatedResource(aggregatedResourceUri, researchObject,
-            userProfile, DateTime.now()));
+        AggregatedResource resource = builder.buildAggregatedResource(aggregatedResourceUri, researchObject,
+            userProfile, DateTime.now());
+        resource.setStats(new ResourceMetadata("foo", "foo", "xxx", 123, "MD5", null, "text/plain"));
+        manifest.saveRoStats(resource);
         Model model = ModelFactory.createDefaultModel();
         model.read(manifest.getGraphAsInputStream(RDFFormat.RDFXML), null);
         Resource r = model.getResource(aggregatedResourceUri.toString());

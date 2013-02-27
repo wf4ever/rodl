@@ -142,22 +142,6 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
 
 
     /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param uri
-     *            resource URI
-     * @param researchObject
-     *            The RO it is aggregated by
-     */
-    public AggregatedResource(UserMetadata user, ResearchObject researchObject, URI uri) {
-        super(user, uri);
-        this.researchObject = researchObject;
-    }
-
-
-    /**
      * Create a new resource with all data except for the URI equal to another resource.
      * 
      * @param builder

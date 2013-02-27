@@ -1,7 +1,7 @@
 /**
  * 
  */
-package pl.psnc.dl.wf4ever.sms;
+package pl.psnc.dl.wf4ever.sparql;
 
 import java.net.URI;
 
@@ -12,6 +12,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import pl.psnc.dl.wf4ever.sparql.RO_RDFXMLWriter;
 
 /**
  * @author piotrhol
@@ -62,7 +64,7 @@ public class RO_RDFXMLWriterTest
 
 	/**
 	 * Test method for
-	 * {@link pl.psnc.dl.wf4ever.sms.RO_RDFXMLWriter#relativize(java.lang.String)}.
+	 * {@link pl.psnc.dl.wf4ever.sparql.RO_RDFXMLWriter#relativize(java.lang.String)}.
 	 */
 	@Test
 	public final void testRelativizeString()

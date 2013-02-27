@@ -33,8 +33,8 @@ public class ResourceTest extends BaseTest {
 
     @Test
     public void testConstructor() {
-        Resource resource = new Resource(userProfile, researchObject, resourceUri);
-        resource = new Resource(userProfile, dataset, true, researchObject, resourceUri);
+
+        Resource resource = new Resource(userProfile, dataset, true, researchObject, resourceUri);
     }
 
 

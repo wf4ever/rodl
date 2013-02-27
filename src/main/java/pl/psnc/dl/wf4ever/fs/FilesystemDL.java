@@ -234,9 +234,6 @@ public class FilesystemDL implements DigitalLibrary {
     @Override
     public void createResearchObject(URI ro, InputStream mainFileContent, String mainFilePath, String mainFileMimeType)
             throws DigitalLibraryException, ConflictException {
-        if (fileExists(ro, mainFilePath)) {
-            throw new ConflictException("RO exists");
-        }
         createOrUpdateFile(ro, mainFilePath, mainFileContent, mainFileMimeType);
     }
 

@@ -27,7 +27,6 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
-import pl.psnc.dl.wf4ever.connection.SemanticMetadataServiceFactory;
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
@@ -180,7 +179,6 @@ public class UserResource {
         boolean created = DigitalLibraryFactory.getDigitalLibrary().createUser(userId, password,
             username != null && !username.isEmpty() ? username : userId);
         UserMetadata user = DigitalLibraryFactory.getDigitalLibrary().getUserProfile(userId);
-        SemanticMetadataServiceFactory.getService(user).close();
 
         if (created) {
             return Response.created(uriInfo.getAbsolutePath()).build();
