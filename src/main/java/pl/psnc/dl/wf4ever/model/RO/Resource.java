@@ -78,7 +78,7 @@ public class Resource extends AggregatedResource {
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
-        Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser(), DateTime.now());
+        Resource resource = builder.buildResource(resourceUri, researchObject, builder.getUser(), DateTime.now());
         resource.setProxy(Proxy.create(builder, researchObject, resource));
         resource.save();
         resource.onCreated();
@@ -109,7 +109,7 @@ public class Resource extends AggregatedResource {
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
-        Resource resource = builder.buildResource(researchObject, resourceUri, builder.getUser(), DateTime.now());
+        Resource resource = builder.buildResource(resourceUri, researchObject, builder.getUser(), DateTime.now());
         resource.setProxy(Proxy.create(builder, researchObject, resource));
         resource.save(content, contentType);
         if (researchObject.getAnnotationsByBodyUri().containsKey(resource.getUri())) {
@@ -150,7 +150,7 @@ public class Resource extends AggregatedResource {
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
-        Resource resource2 = builder.buildResource(researchObject, resourceUri, getCreator(), getCreated());
+        Resource resource2 = builder.buildResource(resourceUri, researchObject, getCreator(), getCreated());
         resource2.setCopyDateTime(DateTime.now());
         resource2.setCopyAuthor(builder.getUser());
         resource2.setCopyOf(this);

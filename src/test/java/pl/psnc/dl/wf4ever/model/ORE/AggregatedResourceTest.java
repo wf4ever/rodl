@@ -6,6 +6,7 @@ import java.net.URI;
 
 import junit.framework.Assert;
 
+import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +19,6 @@ import pl.psnc.dl.wf4ever.model.SnapshotBuilder;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Statement;
 
 public class AggregatedResourceTest extends BaseTest {
 
@@ -84,55 +84,70 @@ public class AggregatedResourceTest extends BaseTest {
     }
 
 
+    /**
+     * Test updating a text file. Check that the new content got serialized.
+     * 
+     * @throws BadRequestException
+     *             shouldn't happen
+     * @throws IOException
+     *             when there's problem with test data
+     */
     @Test
     public void testUpdate()
             throws BadRequestException, IOException {
-        AggregatedResource aggregatedResource = builder.buildAggregatedResource(aggregatedResourceUri, researchObject,
-            userProfile, DateTime.now());
-        aggregatedResource.save();
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/hello.txt");
+        AggregatedResource aggregatedResource = AggregatedResource.create(builder, researchObject,
+            aggregatedResourceUri, is, "text/plain");
+        is.close();
+        is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/bye.txt");
+        aggregatedResource.update(is, "text/plain");
+        is.close();
+        is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/bye.txt");
+        String expected = IOUtils.toString(is);
+        is.close();
+        String result = IOUtils.toString(aggregatedResource.getSerialization());
+        Assert.assertEquals(expected, result);
+    }
+
+
+    @Test
+    public void testUpdateRDF()
+            throws BadRequestException, IOException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/ann1.rdf");
-        aggregatedResource.update(is, "RDF/XML");
-        is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/ann1.rdf");
-        Model model = ModelFactory.createDefaultModel();
-        model.read(aggregatedResource.getGraphAsInputStream(RDFFormat.RDFXML), null);
-        Model model2 = ModelFactory.createDefaultModel();
-        model2.read(is, null);
-        Assert.assertTrue(model.isIsomorphicWith(model2));
-        //model is empty. why ?
-        assert false;
+        AggregatedResource aggregatedResource = AggregatedResource.create(builder, researchObject,
+            aggregatedResourceUri, is, "application/rdf+xml");
+        is.close();
+        aggregatedResource.saveGraphAndSerialize();
+        is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/ann2.rdf");
+        aggregatedResource.update(is, "application/rdf+xml");
+        is.close();
+        is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/ann2.rdf");
+        Model expected = ModelFactory.createDefaultModel();
+        expected.read(is, "");
+        is.close();
+        Model result = ModelFactory.createDefaultModel();
+        result.read(aggregatedResource.getGraphAsInputStream(RDFFormat.RDFXML), "");
+        Assert.assertTrue(expected.isIsomorphicWith(result));
     }
 
 
     @Test
     public void testUpdateReferences()
             throws BadRequestException, IOException {
-        AggregatedResource aggregatedResource = builder.buildAggregatedResource(aggregatedResourceUri, researchObject,
-            userProfile, DateTime.now());
-        aggregatedResource.save();
-        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/ann1.rdf");
-        aggregatedResource.update(is, "RDF/XML");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/ann2.rdf");
+        AggregatedResource aggregatedResource = AggregatedResource.create(builder, researchObject,
+            aggregatedResourceUri, is, "application/rdf+xml");
+        is.close();
+        aggregatedResource.saveGraphAndSerialize();
         aggregatedResource.updateReferences(researchObject2);
         is = getClass().getClassLoader().getResourceAsStream("model/ore/aggregated_resource/ann1.rdf");
-        Model model = ModelFactory.createDefaultModel();
-        model.read(aggregatedResource.getGraphAsInputStream(RDFFormat.RDFXML), null);
-        Model model2 = ModelFactory.createDefaultModel();
-        model2.read(is, null);
-        System.out.println("ro1:");
-        System.out.println(researchObject.getUri());
-        System.out.println("ro2:");
-        System.out.println(researchObject2.getUri());
-        System.out.println("ro1-model:");
-        for (Statement s : model.listStatements().toList()) {
-            String a = s.toString();
-            System.out.println(a);
-        }
-        System.out.println("ro2-model:");
-        for (Statement s : model2.listStatements().toList()) {
-            String a = s.toString();
-            System.out.println(a);
-        }
-        Assert.assertFalse(model.isIsomorphicWith(model2));
-        //model is empty. why ?
-        assert false;
+        Model expected = ModelFactory.createDefaultModel();
+        expected.read(is, "");
+        is.close();
+        Model result = ModelFactory.createDefaultModel();
+        result.read(aggregatedResource.getGraphAsInputStream(RDFFormat.RDFXML), "");
+        expected.write(System.out, "TURTLE");
+        result.write(System.out, "TURTLE");
+        Assert.assertTrue(expected.isIsomorphicWith(result));
     }
 }

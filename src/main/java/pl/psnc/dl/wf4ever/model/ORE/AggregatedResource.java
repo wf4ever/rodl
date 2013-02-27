@@ -57,6 +57,69 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
 
 
     /**
+     * Create and save a new ore:AggregatedResource.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param researchObject
+     *            research object that aggregates the resource
+     * @param resourceUri
+     *            the URI
+     * @return the new resource
+     */
+    public static AggregatedResource create(Builder builder, ResearchObject researchObject, URI resourceUri) {
+        if (researchObject.isUriUsed(resourceUri)) {
+            throw new ConflictException("Resource already exists: " + resourceUri);
+        }
+        AggregatedResource resource = builder.buildAggregatedResource(resourceUri, researchObject, builder.getUser(),
+            DateTime.now());
+        resource.setProxy(Proxy.create(builder, researchObject, resource));
+        resource.save();
+        try {
+            resource.onCreated();
+        } catch (BadRequestException e) {
+            LOGGER.error("Unexpected error when creating the aggregated resource", e);
+        }
+        return resource;
+    }
+
+
+    /**
+     * Create and save a new ore:AggregatedResource.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param researchObject
+     *            research object that aggregates the resource
+     * @param resourceUri
+     *            the URI
+     * @param content
+     *            the resource content
+     * @param contentType
+     *            the content MIME type
+     * @return the new resource
+     * @throws BadRequestException
+     *             if it is expected to be an RDF file and isn't
+     */
+    public static AggregatedResource create(Builder builder, ResearchObject researchObject, URI resourceUri,
+            InputStream content, String contentType)
+            throws BadRequestException {
+        if (researchObject.isUriUsed(resourceUri)) {
+            throw new ConflictException("Resource already exists: " + resourceUri);
+        }
+        AggregatedResource resource = builder.buildAggregatedResource(resourceUri, researchObject, builder.getUser(),
+            DateTime.now());
+        resource.setProxy(Proxy.create(builder, researchObject, resource));
+        resource.save(content, contentType);
+        if (researchObject.getAnnotationsByBodyUri().containsKey(resource.getUri())) {
+            resource.saveGraphAndSerialize();
+        }
+        resource.onCreated();
+        return resource;
+    }
+
+
+    /**
      * Constructor.
      * 
      * @param user
@@ -133,7 +196,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
 
 
     /**
-     * Set RO propertied after this resource is created.
+     * Set RO properties after this resource is created.
      * 
      * @throws BadRequestException
      *             depends on the subclasses
@@ -282,7 +345,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
             format = RDFFormat.forFileName(getPath());
         }
         if (format == null) {
-            throw new BadRequestException("Unrecognized RDF format: " + filePath);
+            throw new BadRequestException("Unrecognized RDF format for file: " + filePath);
         }
         try (InputStream data = DigitalLibraryFactory.getDigitalLibrary().getFileContents(researchObject.getUri(),
             filePath)) {

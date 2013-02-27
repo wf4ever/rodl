@@ -402,17 +402,17 @@ public class Builder {
     /**
      * Build a new ro:Resource.
      * 
-     * @param researchObject
-     *            research object aggregating the resource
      * @param uri
      *            resource URI
+     * @param researchObject
+     *            research object aggregating the resource
      * @param creator
      *            author
      * @param created
      *            creation date
      * @return a new resource
      */
-    public Resource buildResource(ResearchObject researchObject, URI uri, UserMetadata creator, DateTime created) {
+    public Resource buildResource(URI uri, ResearchObject researchObject, UserMetadata creator, DateTime created) {
         Resource resource = new Resource(user, dataset, useTransactions, researchObject, uri);
         resource.setCreator(creator);
         resource.setCreated(created);

@@ -80,8 +80,8 @@ public class AnnotationTest extends BaseTest {
             researchObject.getUri().resolve("new-annotation"), is);
         Set<Thing> expectedTargets = new HashSet<Thing>();
 
-        expectedTargets.add(builder.buildResource(researchObject, researchObject.getUri()
-                .resolve("a%20workflow.t2flow"), userProfile, null));
+        expectedTargets.add(builder.buildResource(researchObject.getUri().resolve("a%20workflow.t2flow"),
+            researchObject, userProfile, null));
         expectedTargets.add(researchObject);
 
         Assert.assertEquals(annotation.getUri(), researchObject.getUri().resolve("new-annotation"));

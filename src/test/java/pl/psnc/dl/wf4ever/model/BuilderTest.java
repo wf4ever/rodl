@@ -160,7 +160,7 @@ public class BuilderTest extends BaseTest {
 
     @Test
     public void testBuildResource() {
-        Resource resource = builder.buildResource(researchObject, exampleUri, userM, now);
+        Resource resource = builder.buildResource(exampleUri, researchObject, userM, now);
         Assert.assertEquals(resource.getResearchObject(), researchObject);
         Assert.assertEquals(resource.getCreator(), userM);
         Assert.assertEquals(resource.getCreated(), now);

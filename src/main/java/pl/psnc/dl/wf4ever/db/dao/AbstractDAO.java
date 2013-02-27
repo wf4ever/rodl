@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.hibernate.Criteria;
+import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 
@@ -85,7 +86,11 @@ public abstract class AbstractDAO<T> implements Serializable {
      */
     public void save(T instance) {
         Session session = HibernateUtil.getSessionFactory().getCurrentSession();
-        session.saveOrUpdate(instance);
+        try {
+            session.saveOrUpdate(instance);
+        } catch (NonUniqueObjectException e) {
+            session.merge(instance);
+        }
     }
 
 
