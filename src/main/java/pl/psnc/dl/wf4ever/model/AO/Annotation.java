@@ -306,10 +306,15 @@ public class Annotation extends AggregatedResource {
      */
     public static Annotation assemble(Builder builder, ResearchObject researchObject, URI uri, InputStream content)
             throws BadRequestException {
+        Objects.requireNonNull(content, "Content input stream cannot be null");
         URI bodyUri;
         Set<Thing> targets = new HashSet<>();
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        model.read(content, researchObject.getUri().toString());
+        try {
+            model.read(content, researchObject.getUri().toString());
+        } catch (Exception e) {
+            throw new BadRequestException("The annotation description could not be parsed", e);
+        }
         List<Individual> aggregatedAnnotations = model.listIndividuals(RO.AggregatedAnnotation).toList();
         if (!aggregatedAnnotations.isEmpty()) {
             Individual aggregatedAnnotation = aggregatedAnnotations.get(0);
@@ -326,9 +331,13 @@ public class Annotation extends AggregatedResource {
                     throw new BadRequestException("The body is not an URI resource.");
                 }
             } else {
-                throw new BadRequestException("The ro:AggregatedAnnotation does not have a ao:body property.");
+                throw new BadRequestException("The ro:AggregatedAnnotation does not have an ao:body property.");
             }
             List<RDFNode> targetResources = aggregatedAnnotation.listPropertyValues(AO.annotatesResource).toList();
+            if (targetResources.isEmpty()) {
+                throw new BadRequestException(
+                        "The ro:AggregatedAnnotation does not have an ao:annotatesResource property.");
+            }
             for (RDFNode targetResource : targetResources) {
                 if (targetResource.isURIResource()) {
                     URI targetUri = URI.create(targetResource.asResource().getURI());

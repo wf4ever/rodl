@@ -17,7 +17,6 @@ import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.SnapshotBuilder;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
-import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 /**
  * Test class for AO.Annotation model.
@@ -107,24 +106,20 @@ public class AnnotationTest extends BaseTest {
     }
 
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void testCreateAnnotationWithNoContent()
             throws BadRequestException {
-        //should exception be more precise?
-        Annotation annotation = Annotation.create(builder, researchObject,
-            researchObject.getUri().resolve("new-annotation"), null);
+        Annotation.create(builder, researchObject, researchObject.getUri().resolve("new-annotation"), null);
     }
 
 
     @Test
     public void testCreateAnnotationWithNotExistentInternalBody()
             throws BadRequestException {
-        //internal body witch doesn't exists
-        //should be an error?
+        // URI suggests an internal resource which does not exist but this is acceptable because it may be added later
         InputStream is = getClass().getClassLoader().getResourceAsStream(
             "model/ao/annotation/annotation-wrong-body.rdf");
-        Annotation annotation = Annotation.create(builder, researchObject,
-            researchObject.getUri().resolve("new-annotation"), is);
+        Annotation.create(builder, researchObject, researchObject.getUri().resolve("new-annotation"), is);
     }
 
 
@@ -132,18 +127,15 @@ public class AnnotationTest extends BaseTest {
     public void testCreateAnnotationWithNoBody()
             throws BadRequestException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/no-body.rdf");
-        Annotation annotation = Annotation.create(builder, researchObject,
-            researchObject.getUri().resolve("new-annotation"), is);
+        Annotation.create(builder, researchObject, researchObject.getUri().resolve("new-annotation"), is);
     }
 
 
-    @Test
+    @Test(expected = BadRequestException.class)
     public void testCreateAnnotationWithNoTargets()
             throws BadRequestException {
-        //should be forbidden? 
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/no-targets.rdf");
-        Annotation annotation = Annotation.create(builder, researchObject,
-            researchObject.getUri().resolve("new-annotation"), is);
+        Annotation.create(builder, researchObject, researchObject.getUri().resolve("new-annotation"), is);
     }
 
 
@@ -151,17 +143,15 @@ public class AnnotationTest extends BaseTest {
     public void testCreateAnnotationWithNoBodyNoTargets()
             throws BadRequestException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/no-body-no-targets.rdf");
-        Annotation annotation = Annotation.create(builder, researchObject,
-            researchObject.getUri().resolve("new-annotation"), is);
+        Annotation.create(builder, researchObject, researchObject.getUri().resolve("new-annotation"), is);
     }
 
 
-    @Test
+    @Test(expected = BadRequestException.class)
     public void testCreateAnnotationWithNoRDF()
             throws BadRequestException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/no-rdf.rdf");
-        Annotation annotation = Annotation.create(builder, researchObject,
-            researchObject.getUri().resolve("new-annotation"), is);
+        Annotation.create(builder, researchObject, researchObject.getUri().resolve("new-annotation"), is);
     }
 
 
@@ -169,8 +159,7 @@ public class AnnotationTest extends BaseTest {
     public void testCreateEmptyAnnotation()
             throws BadRequestException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/empty.rdf");
-        Annotation annotation = Annotation.create(builder, researchObject,
-            researchObject.getUri().resolve("new-annotation"), is);
+        Annotation.create(builder, researchObject, researchObject.getUri().resolve("new-annotation"), is);
     }
 
 
@@ -198,55 +187,6 @@ public class AnnotationTest extends BaseTest {
         Assert.assertEquals(annotationCopy.getUri().relativize(researchObject2.getUri()), (researchObject2.getUri()));
         Assert.assertEquals(annotationCopy.getBody().getUri().relativize(researchObject2.getUri()),
             (researchObject2.getUri()));
-    }
-
-
-    @Test
-    public void testSave() {
-        Annotation annotation = new Annotation(userProfile, dataset, false, researchObject,
-                URI.create("new-annotation-save-test"));
-        annotation.setBody(builder.buildThing(URI.create("body")));
-        Set<Thing> annotated = new HashSet<Thing>();
-        annotated.add(researchObject);
-        annotation.setAnnotated(annotated);
-        annotation.save();
-        Assert.assertTrue(researchObject.getAnnotations().containsKey(annotation.getUri()));
-    }
-
-
-    @Test
-    public void testDoubleSave() {
-        int startPoint = researchObject.getAnnotations().size();
-        Annotation annotation = new Annotation(userProfile, dataset, false, researchObject,
-                URI.create("new-annotation-save-test"));
-        annotation.setBody(builder.buildThing(URI.create("body")));
-        Set<Thing> annotated = new HashSet<Thing>();
-        annotated.add(researchObject);
-        annotation.setAnnotated(annotated);
-        annotation.save();
-        annotation.save();
-        annotation.save();
-        Assert.assertTrue(ResearchObject.get(builder, researchObject.getUri()).getAnnotations()
-                .containsKey(annotation.getUri()));
-        Assert.assertEquals(startPoint + 1, ResearchObject.get(builder, researchObject.getUri()).getAnnotations()
-                .size());
-    }
-
-
-    @Test
-    public void testDoubleSave2() {
-        int startPoint = researchObject.getAnnotations().size();
-        Annotation annotation = new Annotation(userProfile, dataset, false, researchObject,
-                URI.create("new-annotation-save-test"));
-        annotation.setBody(builder.buildThing(URI.create("body")));
-        Set<Thing> annotated = new HashSet<Thing>();
-        annotated.add(researchObject);
-        annotation.setAnnotated(annotated);
-        annotation.save();
-        annotation.save();
-        annotation.save();
-        Assert.assertTrue(researchObject.getAnnotations().containsKey(annotation.getUri()));
-        Assert.assertEquals(startPoint + 1, researchObject.getAnnotations().size());
     }
 
 
