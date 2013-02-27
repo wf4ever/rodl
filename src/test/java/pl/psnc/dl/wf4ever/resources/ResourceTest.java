@@ -19,6 +19,7 @@ import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
+import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.util.SafeURI;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
@@ -27,6 +28,7 @@ import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.tdb.TDBFactory;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -189,7 +191,8 @@ public class ResourceTest extends ResourceBase {
                 .header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
         assertEquals("Updating evo_info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         response.close();
-        ResearchObject researchObject = new ResearchObject(null, ro);
+        Builder builder = new Builder(null, TDBFactory.createDataset(), false);
+        ResearchObject researchObject = builder.buildResearchObject(ro);
         OntModel manifestModel = ModelFactory.createOntologyModel();
         manifestModel.read(researchObject.getManifestUri().toString());
 

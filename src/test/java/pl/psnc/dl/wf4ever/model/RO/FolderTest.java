@@ -37,10 +37,7 @@ public class FolderTest extends BaseTest {
 
     @Test
     public void testConstructor() {
-        Folder folder = new Folder(userProfile, researchObject, folderUri);
-        Assert.assertEquals(researchObject, folder.getResearchObject());
-        Assert.assertEquals(folderUri, folder.getUri());
-        folder = new Folder(userProfile, dataset, true, researchObject, folderUri);
+        Folder folder = new Folder(userProfile, dataset, true, researchObject, folderUri);
         Assert.assertEquals(researchObject, folder.getResearchObject());
         Assert.assertEquals(folderUri, folder.getUri());
     }

@@ -46,16 +46,16 @@ public class ThingTest extends BaseTest {
     //FIXME this method is buggy, it shouldn't use URIs
     @Test
     public void testIsSpecial() {
-        Thing ordinaryThing1 = new Thing(null, URI.create("http:///www.example.com/ROS/manifest/thing/"));
-        Thing ordinaryThing2 = new Thing(null, URI.create("http:///www.example.com/ROs/manifest/"));
-        Thing ordinaryThing3 = new Thing(null, URI.create("http:///www.example.com/ROs/manifest.rdf/thing/"));
-        Thing ordinaryThing4 = new Thing(null, URI.create("http:///www.example.com/ROs/oridnary_resource"));
-        Thing specialThing1 = new Thing(null, URI.create("http:///www.example.com/ROs/manifest.rdf/"));
-        Thing specialThing2 = new Thing(null, URI.create("http:///www.example.com/ROs/evo_info.ttl/"));
-        Thing specialThing3 = new Thing(null, URI.create("http:///www.example.com/ROs/manifest.rdf"));
-        Thing specialThing4 = new Thing(null, URI.create("http:///www.example.com/ROs/evo_info.ttl"));
-        Thing specialThing5 = new Thing(null, URI.create("manifest.rdf"));
-        Thing specialThing6 = new Thing(null, URI.create("evo_info.ttl"));
+        Thing ordinaryThing1 = builder.buildThing(URI.create("http:///www.example.com/ROS/manifest/thing/"));
+        Thing ordinaryThing2 = builder.buildThing(URI.create("http:///www.example.com/ROs/manifest/"));
+        Thing ordinaryThing3 = builder.buildThing(URI.create("http:///www.example.com/ROs/manifest.rdf/thing/"));
+        Thing ordinaryThing4 = builder.buildThing(URI.create("http:///www.example.com/ROs/oridnary_resource"));
+        Thing specialThing1 = builder.buildThing(URI.create("http:///www.example.com/ROs/manifest.rdf/"));
+        Thing specialThing2 = builder.buildThing(URI.create("http:///www.example.com/ROs/evo_info.ttl/"));
+        Thing specialThing3 = builder.buildThing(URI.create("http:///www.example.com/ROs/manifest.rdf"));
+        Thing specialThing4 = builder.buildThing(URI.create("http:///www.example.com/ROs/evo_info.ttl"));
+        Thing specialThing5 = builder.buildThing(URI.create("manifest.rdf"));
+        Thing specialThing6 = builder.buildThing(URI.create("evo_info.ttl"));
         Assert.assertFalse(ordinaryThing1.isSpecialResource());
         Assert.assertFalse(ordinaryThing2.isSpecialResource());
         Assert.assertFalse(ordinaryThing3.isSpecialResource());
@@ -75,15 +75,6 @@ public class ThingTest extends BaseTest {
         Thing thing = new Thing(userProfile, dataset, true, thingUri);
         Assert.assertEquals(userProfile, thing.getUser());
         Assert.assertEquals(thingUri, thing.getUri());
-
-        Thing thing2 = new Thing(userProfile);
-        Assert.assertEquals(userProfile, thing2.getUser());
-        Assert.assertEquals(null, thing2.getUri());
-
-        Thing thing3 = new Thing(userProfile, thingUri);
-        Assert.assertEquals(userProfile, thing3.getUser());
-        Assert.assertEquals(thingUri, thing3.getUri());
-
     }
 
 
@@ -128,7 +119,7 @@ public class ThingTest extends BaseTest {
     public void testIsNamedGraph() {
         Assert.assertFalse(researchObject2.isNamedGraph());
         Assert.assertTrue(researchObject.getManifest().isNamedGraph());
-        ResearchObject noSavedRO = new ResearchObject(userProfile, URI.create("http://www.example.com/no-saved-ro/"));
+        ResearchObject noSavedRO = builder.buildResearchObject(URI.create("http://www.example.com/no-saved-ro/"));
         Assert.assertFalse(noSavedRO.isNamedGraph());
     }
 

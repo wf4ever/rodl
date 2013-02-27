@@ -58,21 +58,6 @@ public class Manifest extends ResourceMap {
     }
 
 
-    /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param uri
-     *            manifest uri
-     * @param researchObject
-     *            research object being described
-     */
-    public Manifest(UserMetadata user, URI uri, ResearchObject researchObject) {
-        super(user, researchObject, uri);
-    }
-
-
     @Override
     public void save() {
         super.save();
@@ -444,7 +429,7 @@ public class Manifest extends ResourceMap {
                     Annotation annotation;
                     if (annotationsByUri.containsKey(aURI)) {
                         annotation = annotationsByUri.get(aURI);
-                        annotation.getAnnotated().add(new Thing(user, tUri));
+                        annotation.getAnnotated().add(builder.buildThing(tUri));
                     } else {
                         RDFNode b = solution.get("body");
                         URI bUri = URI.create(b.asResource().getURI());

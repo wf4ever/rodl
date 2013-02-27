@@ -230,9 +230,9 @@ public class AnnotationTest extends BaseTest {
         Annotation newAnnotation = new Annotation(userProfile, dataset, false, researchObject,
                 URI.create("new-annotation"));
         Set<Thing> annotated = new HashSet<Thing>();
-        annotated.add(new Thing(userProfile, researchObject.getUri().resolve("a%20workflow.t2flow")));
+        annotated.add(builder.buildThing(researchObject.getUri().resolve("a%20workflow.t2flow")));
         newAnnotation.setAnnotated(annotated);
-        Thing newBody = new Thing(userProfile, URI.create("http://example.org/external"));
+        Thing newBody = builder.buildThing(URI.create("http://example.org/external"));
         newAnnotation.setBody(newBody);
         annotation.update(newAnnotation);
         Assert.assertEquals(annotation.getBody(), newBody);

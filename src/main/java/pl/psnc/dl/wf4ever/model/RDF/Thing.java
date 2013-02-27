@@ -127,30 +127,6 @@ public class Thing {
     }
 
 
-    /**
-     * Constructor that uses a default dataset on a local drive using transactions.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param uri
-     *            resource URI
-     */
-    public Thing(UserMetadata user, URI uri) {
-        this(user, null, true, uri);
-    }
-
-
-    /**
-     * Constructor that uses a default dataset on a local drive using transactions.
-     * 
-     * @param user
-     *            user creating the instance
-     */
-    public Thing(UserMetadata user) {
-        this(user, null, true, null);
-    }
-
-
     public URI getUri() {
         return uri;
     }

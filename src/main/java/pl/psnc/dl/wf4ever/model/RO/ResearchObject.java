@@ -139,19 +139,6 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param uri
-     *            the RO URI
-     */
-    public ResearchObject(UserMetadata user, URI uri) {
-        super(user, uri);
-    }
-
-
-    /**
      * Create new Research Object.
      * 
      * @param builder

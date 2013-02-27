@@ -38,11 +38,6 @@ public class LiveEvoInfo extends EvoInfo {
     }
 
 
-    public LiveEvoInfo(UserMetadata user, ResearchObject researchObject, URI uri) {
-        super(user, researchObject, uri);
-    }
-
-
     /**
      * Create and save a new evolution information resource. Add it to the RO properties.
      * 

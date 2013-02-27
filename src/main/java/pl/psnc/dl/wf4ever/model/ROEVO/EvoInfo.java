@@ -21,11 +21,6 @@ public abstract class EvoInfo extends AggregatedResource {
     }
 
 
-    public EvoInfo(UserMetadata user, ResearchObject researchObject, URI uri) {
-        super(user, researchObject, uri);
-    }
-
-
     public EvoType getEvoType() {
         return this.evoType;
     }

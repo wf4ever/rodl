@@ -34,8 +34,7 @@ public class ManifestTest extends BaseTest {
 
     @Test
     public void testConstructor() {
-        Manifest manifest = new Manifest(userProfile, manifestUri, researchObject);
-        Manifest manifest2 = new Manifest(userProfile, null, false, manifestUri, researchObject);
+        new Manifest(userProfile, null, false, manifestUri, researchObject);
     }
 
 

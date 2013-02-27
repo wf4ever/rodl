@@ -48,21 +48,6 @@ public class Resource extends AggregatedResource {
 
 
     /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param researchObject
-     *            The RO it is aggregated by
-     * @param uri
-     *            resource URI
-     */
-    public Resource(UserMetadata user, ResearchObject researchObject, URI uri) {
-        super(user, researchObject, uri);
-    }
-
-
-    /**
      * Create and save a new ro:Resource.
      * 
      * @param builder

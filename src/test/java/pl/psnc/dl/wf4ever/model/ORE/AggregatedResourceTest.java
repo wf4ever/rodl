@@ -35,12 +35,8 @@ public class AggregatedResourceTest extends BaseTest {
 
     @Test
     public void testConstructor() {
-        AggregatedResource aggregatedResource = new AggregatedResource(userProfile, researchObject,
+        AggregatedResource aggregatedResource = new AggregatedResource(userProfile, dataset, true, researchObject,
                 aggregatedResourceUri);
-        Assert.assertEquals(researchObject, aggregatedResource.getResearchObject());
-        Assert.assertEquals(aggregatedResourceUri, aggregatedResource.getUri());
-
-        aggregatedResource = new AggregatedResource(userProfile, dataset, true, researchObject, aggregatedResourceUri);
         Assert.assertEquals(researchObject, aggregatedResource.getResearchObject());
         Assert.assertEquals(aggregatedResourceUri, aggregatedResource.getUri());
     }

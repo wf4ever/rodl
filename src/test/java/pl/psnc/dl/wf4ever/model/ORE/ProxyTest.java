@@ -12,7 +12,6 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.BaseTest;
-import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.hp.hpl.jena.rdf.model.Model;
@@ -111,7 +110,7 @@ public class ProxyTest extends BaseTest {
     public void testAssembleNotSavedRO()
             throws BadRequestException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ore/proxy/proxy.rdf");
-        URI proxyUri = Proxy.assemble(new ResearchObject(userProfile, researchObject.getUri()
-                .resolve("../not-saved-ro")), is);
+        URI proxyUri = Proxy.assemble(builder.buildResearchObject(researchObject.getUri().resolve("../not-saved-ro")),
+            is);
     }
 }
