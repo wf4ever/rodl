@@ -265,10 +265,8 @@ public class Annotation extends AggregatedResource {
     }
 
 
-    /**
-     * Save the annotation in the triple store.
-     */
-    public void save() {
+    @Override
+    protected void save() {
         super.save();
         researchObject.getManifest().saveAnnotationData(this);
     }
