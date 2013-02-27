@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.dl.ConflictException;
@@ -37,6 +38,9 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
  * 
  */
 public class Folder extends Resource implements Aggregation {
+
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(Folder.class);
 
     /** folder entries. */
     private Map<URI, FolderEntry> folderEntries;
@@ -168,7 +172,7 @@ public class Folder extends Resource implements Aggregation {
 
 
     @Override
-    public void save() {
+    protected void save() {
         super.save();
         getResourceMap().save();
         researchObject.getManifest().saveFolderData(this);
@@ -310,7 +314,16 @@ public class Folder extends Resource implements Aggregation {
             entry.save();
         }
         folder.getResourceMap().serialize();
+        folder.onCreated();
         return folder;
+    }
+
+
+    @Override
+    protected void onCreated() {
+        super.onCreated();
+        researchObject.getResources().remove(this.getUri());
+        researchObject.getFolders().put(this.getUri(), this);
     }
 
 
@@ -341,6 +354,7 @@ public class Folder extends Resource implements Aggregation {
             folder2.addFolderEntry(entry.copy(builder, this));
         }
         folder2.getResourceMap().serialize();
+        folder2.onCreated();
         return folder2;
     }
 
