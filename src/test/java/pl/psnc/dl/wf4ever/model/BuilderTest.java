@@ -24,9 +24,6 @@ import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 
-import com.hp.hpl.jena.query.Dataset;
-import com.hp.hpl.jena.tdb.TDBFactory;
-
 /**
  * Test class for builder.
  * 
@@ -35,10 +32,6 @@ import com.hp.hpl.jena.tdb.TDBFactory;
  */
 public class BuilderTest extends BaseTest {
 
-    private Dataset dataset = TDBFactory.createDataset();
-    private UserMetadata user = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED);
-    private Boolean useTransaction = false;
-    Builder builder = new Builder(user, dataset, useTransaction);
     URI exampleUri = URI.create("http://www.example.com/exampleUri/");
     DateTime now;
     UserMetadata userM;
@@ -54,8 +47,10 @@ public class BuilderTest extends BaseTest {
 
     @Test
     public void testBuilder() {
-        Assert.assertEquals(builder.getUser(), user);
-        Assert.assertEquals(builder.getDataset(), dataset);
+        Builder builder2 = new Builder(userProfile, dataset, false);
+        Assert.assertEquals(builder2.getUser(), userProfile);
+        Assert.assertEquals(builder2.getDataset(), dataset);
+        Assert.assertFalse(builder2.isUseTransactions());
     }
 
 
@@ -77,7 +72,7 @@ public class BuilderTest extends BaseTest {
     @Test
     public void testBuildResearchObject() {
         ResearchObject researchObject = builder.buildResearchObject(exampleUri);
-        researchObject.getCreated();
+        Assert.assertNull(researchObject.getCreated());
         Assert.assertNull(researchObject.getCreator());
     }
 
@@ -86,9 +81,9 @@ public class BuilderTest extends BaseTest {
     public void testBuildImmutableResearchObject() {
         ImmutableResearchObject immutableResearchObject = builder.buildImmutableResearchObject(researchObject.getUri()
                 .resolve("immutable"));
-        Assert.assertNotNull(immutableResearchObject.getCopyOf());
-        Assert.assertNotNull(immutableResearchObject.getCopyAuthor());
-        Assert.assertNotNull(immutableResearchObject.getCopyDateTime());
+        Assert.assertNull(immutableResearchObject.getCopyOf());
+        Assert.assertNull(immutableResearchObject.getCopyAuthor());
+        Assert.assertNull(immutableResearchObject.getCopyDateTime());
     }
 
 
@@ -101,9 +96,9 @@ public class BuilderTest extends BaseTest {
 
     @Test
     public void testBuildManifest2() {
-        Manifest manifest = builder.buildManifest(exampleUri, researchObject, user, now);
+        Manifest manifest = builder.buildManifest(exampleUri, researchObject, userProfile, now);
         Assert.assertEquals(manifest.getResearchObject(), researchObject);
-        Assert.assertEquals(manifest.getCreator(), user);
+        Assert.assertEquals(manifest.getCreator(), userProfile);
         Assert.assertEquals(manifest.getCreated(), now);
     }
 
@@ -111,9 +106,9 @@ public class BuilderTest extends BaseTest {
     @Test
     public void testBuildAggregatedResource() {
         AggregatedResource aggregatedResource = builder.buildAggregatedResource(
-            exampleUri.resolve("aggregated-resource"), researchObject, user, now);
+            exampleUri.resolve("aggregated-resource"), researchObject, userProfile, now);
         Assert.assertEquals(aggregatedResource.getCreated(), now);
-        Assert.assertEquals(aggregatedResource.getCreator(), user);
+        Assert.assertEquals(aggregatedResource.getCreator(), userProfile);
         Assert.assertEquals(aggregatedResource.getResearchObject(), researchObject);
     }
 
@@ -121,7 +116,7 @@ public class BuilderTest extends BaseTest {
     @Test
     public void testBuildProxy() {
         AggregatedResource aggregatedResource = builder.buildAggregatedResource(
-            exampleUri.resolve("aggregated-resource"), researchObject, user, DateTime.now());
+            exampleUri.resolve("aggregated-resource"), researchObject, userProfile, DateTime.now());
         Proxy proxy = builder.buildProxy(exampleUri, aggregatedResource, researchObject);
         Assert.assertEquals(proxy.getProxyFor(), aggregatedResource);
         Assert.assertEquals(proxy.getProxyIn(), researchObject);
@@ -192,7 +187,7 @@ public class BuilderTest extends BaseTest {
     @Test
     public void testBuildFolderEntry() {
         AggregatedResource aggregatedResource = builder.buildAggregatedResource(
-            exampleUri.resolve("aggregated-resource"), researchObject, user, now);
+            exampleUri.resolve("aggregated-resource"), researchObject, userProfile, now);
         Folder folder = builder.buildFolder(researchObject, exampleUri.resolve("folder"), userM, now);
         FolderEntry folderEntry = builder.buildFolderEntry(exampleUri, aggregatedResource, folder, "entry");
         Assert.assertEquals(folderEntry.getName(), exampleUri.getPath().replaceAll("/", ""));

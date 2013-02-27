@@ -146,7 +146,9 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
     public ImmutableEvoInfo getImmutableEvoInfo() {
         if (evoInfo == null) {
             evoInfo = ImmutableEvoInfo.get(builder, getFixedEvolutionAnnotationBodyUri(), this);
-            evoInfo.load();
+            if (evoInfo != null) {
+                evoInfo.load();
+            }
         }
         return evoInfo;
     }

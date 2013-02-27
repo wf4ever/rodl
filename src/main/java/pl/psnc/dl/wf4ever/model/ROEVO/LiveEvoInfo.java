@@ -63,8 +63,22 @@ public class LiveEvoInfo extends EvoInfo {
     }
 
 
+    /**
+     * Return an evolution information resource or null if not found in the triplestore.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param uri
+     *            evolution information resource URI
+     * @param researchObject
+     *            research object which this evo info should describe
+     * @return an existing evo info or null
+     */
     public static LiveEvoInfo get(Builder builder, URI uri, ResearchObject researchObject) {
         LiveEvoInfo evoInfo = builder.buildLiveEvoInfo(uri, researchObject, null, null);
+        if (!evoInfo.isNamedGraph()) {
+            return null;
+        }
         researchObject.getAggregatedResources().put(evoInfo.getUri(), evoInfo);
         return evoInfo;
     }

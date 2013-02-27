@@ -196,7 +196,9 @@ public class ResearchObject extends Thing implements Aggregation {
     public LiveEvoInfo getLiveEvoInfo() {
         if (evoInfo == null) {
             evoInfo = LiveEvoInfo.get(builder, getFixedEvolutionAnnotationBodyUri(), this);
-            evoInfo.load();
+            if (evoInfo != null) {
+                evoInfo.load();
+            }
         }
         return evoInfo;
     }
