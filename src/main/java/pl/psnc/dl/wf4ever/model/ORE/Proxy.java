@@ -3,7 +3,7 @@ package pl.psnc.dl.wf4ever.model.ORE;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.UUID;
+import java.util.Objects;
 
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
@@ -11,7 +11,6 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
-import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -38,30 +37,6 @@ public class Proxy extends Thing {
 
     /** Aggregating resource. */
     protected Aggregation proxyIn;
-
-
-    /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
-     */
-    public Proxy(UserMetadata user) {
-        super(user);
-    }
-
-
-    /**
-     * Constructor.
-     * 
-     * @param user
-     *            user creating the instance
-     * @param uri
-     *            proxy URI
-     */
-    public Proxy(UserMetadata user, URI uri) {
-        super(user, uri);
-    }
 
 
     /**
@@ -102,25 +77,6 @@ public class Proxy extends Thing {
     }
 
 
-    /**
-     * Create and save a new proxy.
-     * 
-     * @param builder
-     *            model instances builder
-     * @param researchObject
-     *            research object aggregating the proxy
-     * @param resource
-     *            resource for which the proxy is
-     * @return a proxy instance
-     */
-    public static Proxy create(Builder builder, ResearchObject researchObject, AggregatedResource resource) {
-        URI proxyUri = researchObject.getUri().resolve(".ro/proxies/" + UUID.randomUUID());
-        Proxy proxy = builder.buildProxy(proxyUri, resource, researchObject);
-        proxy.save();
-        return proxy;
-    }
-
-
     @Override
     public void save()
             throws ConflictException, DigitalLibraryException, AccessDeniedException, NotFoundException {
@@ -154,6 +110,8 @@ public class Proxy extends Thing {
      */
     public static URI assemble(ResearchObject researchObject, InputStream content)
             throws BadRequestException {
+        Objects.requireNonNull(researchObject, "Research object cannot be null");
+        Objects.requireNonNull(content, "Input stream cannot be null");
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         model.read(content, researchObject.getUri().toString());
         ExtendedIterator<Individual> it = model.listIndividuals(ORE.Proxy);

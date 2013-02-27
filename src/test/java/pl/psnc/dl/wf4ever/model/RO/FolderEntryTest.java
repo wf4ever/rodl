@@ -30,10 +30,7 @@ public class FolderEntryTest extends BaseTest {
 
     @Test
     public void testConstructor() {
-        FolderEntry fe = new FolderEntry(userProfile, folderEntryUri);
-        Assert.assertEquals(folderEntryUri, fe.getUri());
-
-        fe = new FolderEntry(userProfile, dataset, true, folderEntryUri);
+        FolderEntry fe = new FolderEntry(userProfile, dataset, true, folderEntryUri);
         Assert.assertEquals(folderEntryUri, fe.getUri());
     }
 

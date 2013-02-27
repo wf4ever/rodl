@@ -186,7 +186,6 @@ public class FilesystemDL implements DigitalLibrary {
             ResourceInfo res = new ResourceInfo(path.toString(), path.getFileName().toString(), md5, Files.size(path),
                     "MD5", lastModified, mimeType);
             dao.save(res);
-            //            HibernateUtil.getSessionFactory().getCurrentSession().flush();
             return res;
         } catch (IOException e) {
             throw new DigitalLibraryException(e);

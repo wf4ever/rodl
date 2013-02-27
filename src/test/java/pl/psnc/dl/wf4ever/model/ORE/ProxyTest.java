@@ -34,26 +34,9 @@ public class ProxyTest extends BaseTest {
 
     @Test
     public void testConstructor() {
-        Proxy proxy = new Proxy(userProfile);
-        Assert.assertEquals(userProfile, proxy.getCreator());
-        proxy = new Proxy(userProfile, proxyUri);
-        Assert.assertEquals(userProfile, proxy.getCreator());
-        Assert.assertEquals(proxyUri, proxy.getUri());
-        proxy = new Proxy(userProfile, dataset, true, proxyUri);
+        Proxy proxy = new Proxy(userProfile, dataset, true, proxyUri);
         Assert.assertEquals(proxyUri, proxy.getUri());
         Assert.assertEquals(proxyUri, proxy.getUri());
-    }
-
-
-    @Test
-    public void testCreate() {
-        URI aggregatedResourceUri = researchObject.getUri().resolve("aggregated-resource");
-        AggregatedResource aggregatedResource = builder.buildAggregatedResource(aggregatedResourceUri, researchObject,
-            userProfile, DateTime.now());
-        Proxy proxy = Proxy.create(builder, researchObject, aggregatedResource);
-        Assert.assertEquals(aggregatedResource, proxy.getProxyFor());
-        Assert.assertEquals(researchObject, proxy.getProxyIn());
-
     }
 
 
@@ -72,10 +55,6 @@ public class ProxyTest extends BaseTest {
                 .asResource().getURI());
         Assert.assertEquals(researchObject.getUri().toString(), r.getProperty(ORE.proxyIn).getObject().asResource()
                 .getURI());
-        //TODO WHY??
-        //WHY??
-        ResearchObject ro = ResearchObject.get(builder, researchObject.getUri());
-        Assert.assertNotNull(ro.getProxies().get(proxy.getUri()));
     }
 
 
@@ -88,10 +67,8 @@ public class ProxyTest extends BaseTest {
         proxy.save();
         proxy.delete();
         Model model = ModelFactory.createDefaultModel();
-        //TODO WHY??
-        //WHY??
         model.read(researchObject.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
-        Assert.assertNull(model.getResource(proxyUri.toString()));
+        Assert.assertFalse(model.containsResource(model.getResource(proxyUri.toString())));
     }
 
 
@@ -108,25 +85,23 @@ public class ProxyTest extends BaseTest {
     }
 
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = NullPointerException.class)
     public void testAssembleNullContent()
             throws BadRequestException {
-        URI proxyUri = Proxy.assemble(researchObject, null);
+        Proxy.assemble(researchObject, null);
     }
 
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void testAssembleNullContentNullRO()
             throws BadRequestException {
-        //TODO Null Pointer Excpetion or BadRequest?
-        URI proxyUri = Proxy.assemble(null, null);
+        Proxy.assemble(null, null);
     }
 
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void testAssembleNullRO()
             throws BadRequestException {
-        //TODO Null Pointer Excpetion or BadRequest?
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ore/proxy/proxy.rdf");
         URI proxyUri = Proxy.assemble(null, is);
     }

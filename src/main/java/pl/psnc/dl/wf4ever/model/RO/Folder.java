@@ -308,7 +308,7 @@ public class Folder extends Resource implements Aggregation {
         Folder folder = assemble(builder, researchObject, uri, content);
         folder.setCreated(DateTime.now());
         folder.setCreator(builder.getUser());
-        folder.setProxy(Proxy.create(builder, researchObject, folder));
+        folder.setProxy(researchObject.addProxy(folder));
         folder.save();
         for (FolderEntry entry : folder.getFolderEntries().values()) {
             entry.save();
@@ -348,7 +348,7 @@ public class Folder extends Resource implements Aggregation {
         folder2.setCopyDateTime(DateTime.now());
         folder2.setCopyAuthor(builder.getUser());
         folder2.setCopyOf(this);
-        folder2.setProxy(Proxy.create(builder, researchObject, folder2));
+        folder2.setProxy(researchObject.addProxy(folder2));
         folder2.save();
         for (FolderEntry entry : getFolderEntries().values()) {
             folder2.addFolderEntry(entry.copy(builder, this));

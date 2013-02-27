@@ -18,7 +18,6 @@ import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
-import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
@@ -163,7 +162,7 @@ public class Annotation extends AggregatedResource {
             throws BadRequestException {
         Annotation annotation = builder.buildAnnotation(researchObject, uri, builder.buildThing(bodyUri), targets,
             builder.getUser(), DateTime.now());
-        annotation.setProxy(Proxy.create(builder, researchObject, annotation));
+        annotation.setProxy(researchObject.addProxy(annotation));
         annotation.save();
         annotation.onCreated();
         return annotation;
@@ -190,7 +189,7 @@ public class Annotation extends AggregatedResource {
         Annotation annotation = assemble(builder, researchObject, uri, content);
         annotation.setCreated(DateTime.now());
         annotation.setCreator(builder.getUser());
-        annotation.setProxy(Proxy.create(builder, researchObject, annotation));
+        annotation.setProxy(researchObject.addProxy(annotation));
         annotation.save();
         annotation.onCreated();
         return annotation;
@@ -258,7 +257,7 @@ public class Annotation extends AggregatedResource {
         annotation2.setCopyDateTime(DateTime.now());
         annotation2.setCopyAuthor(builder.getUser());
         annotation2.setCopyOf(this);
-        annotation2.setProxy(Proxy.create(builder, researchObject, annotation2));
+        annotation2.setProxy(researchObject.addProxy(annotation2));
         annotation2.save();
         annotation2.onCreated();
         return annotation2;
