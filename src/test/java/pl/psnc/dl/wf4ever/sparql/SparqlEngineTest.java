@@ -12,7 +12,6 @@ import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.model.BaseTest;
-import pl.psnc.dl.wf4ever.sms.QueryResult;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.hp.hpl.jena.ontology.Individual;
