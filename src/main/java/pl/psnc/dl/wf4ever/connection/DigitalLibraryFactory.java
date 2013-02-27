@@ -108,7 +108,7 @@ public final class DigitalLibraryFactory {
      *            properties file with the connection details
      */
     public static void loadDigitalLibraryConfiguration(String configFileName) {
-        LOGGER.info("Loading connection properties file " + configFileName);
+        LOGGER.debug("Loading connection properties file " + configFileName);
         InputStream inputStream = DigitalLibraryFactory.class.getClassLoader().getResourceAsStream(configFileName);
         if (inputStream == null) {
             LOGGER.error("Connection properties file not found! ");

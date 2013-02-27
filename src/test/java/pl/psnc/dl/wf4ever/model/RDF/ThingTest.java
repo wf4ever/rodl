@@ -73,16 +73,16 @@ public class ThingTest extends BaseTest {
     public void testConstructor() {
         URI thingUri = URI.create("http://www.example.org/thing");
         Thing thing = new Thing(userProfile, dataset, true, thingUri);
-        Assert.assertEquals(thing.getCreator(), userProfile);
-        Assert.assertEquals(thing.getUri(), thingUri);
+        Assert.assertEquals(userProfile, thing.getUser());
+        Assert.assertEquals(thingUri, thing.getUri());
 
         Thing thing2 = new Thing(userProfile);
-        Assert.assertEquals(thing2.getCreator(), userProfile);
-        Assert.assertEquals(thing2.getUri(), null);
+        Assert.assertEquals(userProfile, thing2.getUser());
+        Assert.assertEquals(null, thing2.getUri());
 
         Thing thing3 = new Thing(userProfile, thingUri);
-        Assert.assertEquals(thing.getCreator(), userProfile);
-        Assert.assertEquals(thing.getUri(), thingUri);
+        Assert.assertEquals(userProfile, thing3.getUser());
+        Assert.assertEquals(thingUri, thing3.getUri());
 
     }
 
@@ -120,7 +120,7 @@ public class ThingTest extends BaseTest {
         Thing thing = builder.buildThing(thingUri);
         Thing thing2 = builder.buildThing(thingUri2);
         Assert.assertEquals(thing.getName(), "thing");
-        Assert.assertEquals(thing.getName(), "thing");
+        Assert.assertEquals(thing2.getName(), "thing");
     }
 
 

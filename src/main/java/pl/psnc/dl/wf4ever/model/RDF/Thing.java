@@ -201,6 +201,11 @@ public class Thing {
     }
 
 
+    public UserMetadata getUser() {
+        return user;
+    }
+
+
     public UserMetadata getCreator() {
         return creator;
     }
