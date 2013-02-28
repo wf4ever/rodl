@@ -81,9 +81,8 @@ public class ResourceMapTest extends BaseTest {
     @Test
     public void testDelete() {
         resourceMap.save();
+        resourceMap.serialize();
         resourceMap.delete();
-        //TODO DL ERROR, WHY?
-        assert false;
     }
 
 
