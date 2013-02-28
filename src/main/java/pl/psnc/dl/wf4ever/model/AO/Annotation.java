@@ -217,6 +217,12 @@ public class Annotation extends AggregatedResource {
         annotation2.setCopyOf(this);
         annotation2.setProxy(researchObject.addProxy(annotation2));
         annotation2.save();
+        AggregatedResource resource = annotation2.getResearchObject().getAggregatedResources()
+                .get(annotation2.getBody().getUri());
+        if (resource != null && resource.isInternal()) {
+            int c = resource.updateReferences(resource.getResearchObject());
+            LOGGER.debug(String.format("Updated %d triples in %s", c, resource.getUri()));
+        }
         annotation2.onCreated();
         return annotation2;
     }
@@ -361,8 +367,6 @@ public class Annotation extends AggregatedResource {
         AggregatedResource resource = getResearchObject().getAggregatedResources().get(getBody().getUri());
         if (resource != null && resource.isInternal()) {
             resource.saveGraphAndSerialize();
-            int c = resource.updateReferences(resource.getResearchObject());
-            LOGGER.debug(String.format("Updated %d triples in %s", c, resource.getUri()));
             getResearchObject().getManifest().removeRoResourceClass(resource);
         }
         getResearchObject().getManifest().serialize();

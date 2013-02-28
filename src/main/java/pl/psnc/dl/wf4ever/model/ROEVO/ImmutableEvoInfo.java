@@ -91,7 +91,7 @@ public class ImmutableEvoInfo extends EvoInfo {
         ImmutableEvoInfo evoInfo = builder.buildImmutableEvoInfo(uri, researchObject, builder.getUser(),
             DateTime.now(), evoType);
         evoInfo.save();
-        evoInfo.serialize(uri, RDFFormat.TURTLE);
+        evoInfo.serialize(researchObject.getUri(), RDFFormat.TURTLE);
         researchObject.getAggregatedResources().put(evoInfo.getUri(), evoInfo);
         return evoInfo;
     }

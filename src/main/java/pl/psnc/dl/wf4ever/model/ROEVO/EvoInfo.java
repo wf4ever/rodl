@@ -2,8 +2,6 @@ package pl.psnc.dl.wf4ever.model.ROEVO;
 
 import java.net.URI;
 
-import org.openrdf.rio.RDFFormat;
-
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -39,7 +37,7 @@ public abstract class EvoInfo extends AggregatedResource {
      */
     public void update() {
         save();
-        serialize(uri, RDFFormat.TURTLE);
+        serialize();
     }
 
 }
