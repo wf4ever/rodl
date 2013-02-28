@@ -17,30 +17,36 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.util.FileManager;
 import com.hp.hpl.jena.vocabulary.RDF;
 
 public class FolderResourceMapTest extends BaseTest {
 
     private URI folderResourceMapUri;
     private FolderBuilder folderBuilder;
+    private Folder folder;
+    private FolderResourceMap folderResourceMap;
 
 
     @Override
     @Before
-    public void setUp() {
+    public void setUp()
+            throws Exception {
         super.setUp();
-        folderResourceMapUri = researchObject.getUri().resolve("folder-resource-map");
+        folderResourceMapUri = researchObject.getUri().resolve("folder-rm.ttl");
+        Model model = FileManager.get().loadModel(folderResourceMapUri.toString(), folderResourceMapUri.toString(),
+            "TURTLE");
+        dataset.addNamedModel(folderResourceMapUri.toString(), model);
         folderBuilder = new FolderBuilder();
+        folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
+            folderResourceMapUri.resolve("folder"));
+        folderResourceMap = builder.buildFolderResourceMap(folderResourceMapUri, folder);
     }
 
 
     @Test
     public void testConstructor()
             throws BadRequestException {
-        Folder folder = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
-            folderResourceMapUri.resolve("folder"));
-        FolderResourceMap folderResourceMap = builder.buildFolderResourceMap(folderResourceMapUri, folder);
-        Assert.assertEquals(folderResourceMap.getFolder(), folder);
         folderResourceMap = new FolderResourceMap(userProfile, dataset, true, folder, folderResourceMapUri);
         Assert.assertEquals(folderResourceMap.getFolder(), folder);
     }
@@ -49,13 +55,10 @@ public class FolderResourceMapTest extends BaseTest {
     @Test
     public void testSaveFolderEntryData()
             throws BadRequestException {
-        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
-            folderResourceMapUri.resolve("folder"));
         InputStream is = getClass().getClassLoader().getResourceAsStream(FolderBuilder.DEFAULT_FOLDER_PATH);
         researchObject.aggregate("new-resource", is, "text/plain");
         is = getClass().getClassLoader().getResourceAsStream("model/ro/folder_resource_map/folder_entry.rdf");
         FolderEntry fe = folder.createFolderEntry(is);
-        FolderResourceMap folderResourceMap = builder.buildFolderResourceMap(folderResourceMapUri, folder);
         folderResourceMap.saveFolderEntryData(fe);
         Model model = ModelFactory.createDefaultModel();
         model.read(folderResourceMap.getGraphAsInputStream(RDFFormat.RDFXML), null);
@@ -106,21 +109,13 @@ public class FolderResourceMapTest extends BaseTest {
     @Test
     public void testExtractFolderEntries()
             throws BadRequestException {
-        Folder folder = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
-            folderResourceMapUri.resolve("folder"));
-        FolderResourceMap folderResourceMap = builder.buildFolderResourceMap(folderResourceMapUri, folder);
-        folderResourceMap.save();
-        Assert.assertEquals(4, folderResourceMap.extractFolderEntries().size());
+        Assert.assertEquals(3, folderResourceMap.extractFolderEntries().size());
     }
 
 
     @Test
     public void testExtractResearchObject()
             throws BadRequestException {
-        Folder folder = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
-            folderResourceMapUri.resolve("folder"));
-        FolderResourceMap folderResourceMap = builder.buildFolderResourceMap(folderResourceMapUri, folder);
-        folderResourceMap.save();
         Assert.assertEquals(researchObject, folderResourceMap.extractResearchObject());
     }
 
@@ -128,9 +123,6 @@ public class FolderResourceMapTest extends BaseTest {
     @Test
     public void testSave()
             throws BadRequestException {
-        Folder folder = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
-            folderResourceMapUri.resolve("folder"));
-        FolderResourceMap folderResourceMap = builder.buildFolderResourceMap(folderResourceMapUri, folder);
         folderResourceMap.save();
         Model model = ModelFactory.createDefaultModel();
         model.read(folderResourceMap.getGraphAsInputStream(RDFFormat.RDFXML), null);

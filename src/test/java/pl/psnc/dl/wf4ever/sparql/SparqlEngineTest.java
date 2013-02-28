@@ -72,9 +72,12 @@ public class SparqlEngineTest extends BaseTest {
 
     /**
      * Init the instance under test.
+     * 
+     * @throws Exception
      */
     @Before
-    public void setUp() {
+    public void setUp()
+            throws Exception {
         super.setUp();
         engine = new SparqlEngine(builder);
     }

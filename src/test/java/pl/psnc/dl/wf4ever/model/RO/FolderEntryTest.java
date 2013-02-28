@@ -22,7 +22,8 @@ public class FolderEntryTest extends BaseTest {
 
     @Override
     @Before
-    public void setUp() {
+    public void setUp()
+            throws Exception {
         super.setUp();
         folderEntryUri = researchObject.getUri().resolve("folder-entry-uri");
         folderBuilder = new FolderBuilder();

@@ -12,6 +12,7 @@ import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 import com.hp.hpl.jena.query.Dataset;
@@ -77,10 +78,13 @@ public class BaseTest {
     /**
      * Create the dataset, load the RDF files.
      * 
+     * @throws BadRequestException
+     * 
      * @throws IOException
      */
     @Before
-    public void setUp() {
+    public void setUp()
+            throws Exception {
         DigitalLibraryFactory.loadDigitalLibraryConfiguration("connection.properties");
         dataset = TDBFactory.createDataset();
         Model model;

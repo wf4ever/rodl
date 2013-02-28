@@ -26,7 +26,8 @@ public class ManifestTest extends BaseTest {
 
     @Override
     @Before
-    public void setUp() {
+    public void setUp()
+            throws Exception {
         super.setUp();
         manifestUri = researchObject.getUri().resolve("manifest");
         manifest = builder.buildManifest(manifestUri, researchObject);

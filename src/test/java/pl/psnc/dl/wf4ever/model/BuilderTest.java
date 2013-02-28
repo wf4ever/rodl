@@ -38,9 +38,10 @@ public class BuilderTest extends BaseTest {
 
 
     @Before
-    public void setUp() {
+    public void setUp()
+            throws Exception {
         super.setUp();
-        DateTime.now();
+        now = DateTime.now();
         userM = new UserMetadata("janek", "Jane Kowalski", Role.AUTHENTICATED);
     }
 
