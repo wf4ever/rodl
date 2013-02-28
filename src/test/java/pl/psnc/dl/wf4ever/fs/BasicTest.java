@@ -6,7 +6,6 @@ package pl.psnc.dl.wf4ever.fs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -136,26 +135,6 @@ public class BasicTest {
         UserMetadata user = dl.getUserProfile(USER.getLogin());
         Assert.assertEquals("User login is equal", USER.getLogin(), user.getLogin());
         Assert.assertEquals("User name is equal", USER.getName(), user.getName());
-    }
-
-
-    @Test
-    public final void testCreateDuplicateVersion()
-            throws DigitalLibraryException, IOException, ConflictException, AccessDeniedException {
-        DigitalLibrary dlA = new FilesystemDL(BASE);
-        dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName());
-        DigitalLibrary dl = new FilesystemDL(BASE);
-        dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
-            MAIN_FILE_MIME_TYPE);
-        try {
-            dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
-                MAIN_FILE_MIME_TYPE);
-            fail("Should throw conflict exception");
-        } catch (ConflictException e) {
-            // good
-        } catch (Exception e) {
-            fail("Threw a wrong exception: " + e.getClass().toString());
-        }
     }
 
 

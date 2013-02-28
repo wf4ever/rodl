@@ -209,8 +209,8 @@ public class FolderTest extends BaseTest {
     public void testAddFolderEntry()
             throws BadRequestException {
         Folder f = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
-        FolderEntry fe = builder.buildFolderEntry(folderUri.resolve("fe"), f.getAggregatedResources().values()
-                .iterator().next(), f, "fe");
+        AggregatedResource resource = researchObject.aggregate(URI.create("http://example.org/fake-uri"));
+        FolderEntry fe = builder.buildFolderEntry(folderUri.resolve("fe"), resource, f, "fe");
         f.addFolderEntry(fe);
         Assert.assertEquals(fe, f.getFolderEntries().get(fe.getUri()));
     }

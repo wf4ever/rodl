@@ -345,7 +345,7 @@ public class Folder extends Resource implements Aggregation {
         folder2.setProxy(researchObject.addProxy(folder2));
         folder2.save();
         for (FolderEntry entry : getFolderEntries().values()) {
-            folder2.addFolderEntry(entry.copy(builder, folder2));
+            entry.copy(builder, folder2);
         }
         folder2.getResourceMap().serialize();
         folder2.onCreated();
@@ -365,11 +365,6 @@ public class Folder extends Resource implements Aggregation {
     public FolderEntry createFolderEntry(InputStream content)
             throws BadRequestException {
         FolderEntry entry = FolderEntry.assemble(builder, this, content);
-        for (FolderEntry entry2 : getFolderEntries().values()) {
-            if (entry2.getProxyFor().equals(entry.getProxyFor())) {
-                throw new ConflictException("Folder entry for this resource already exists");
-            }
-        }
         return addFolderEntry(entry);
     }
 
@@ -383,6 +378,11 @@ public class Folder extends Resource implements Aggregation {
      */
     public FolderEntry addFolderEntry(FolderEntry entry) {
         Objects.requireNonNull(entry, "Folder entry cannot be null");
+        for (FolderEntry entry2 : getFolderEntries().values()) {
+            if (entry2.getProxyFor().equals(entry.getProxyFor())) {
+                throw new ConflictException("Folder entry for this resource already exists");
+            }
+        }
         getFolderEntries().put(entry.getUri(), entry);
         getResearchObject().getFolderEntries().put(entry.getUri(), entry);
         getResearchObject().getFolderEntriesByResourceUri().put(entry.getProxyFor().getUri(), entry);
