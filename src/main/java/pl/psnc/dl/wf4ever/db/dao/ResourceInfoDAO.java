@@ -44,6 +44,12 @@ public final class ResourceInfoDAO extends AbstractDAO<ResourceInfo> {
         if (res == null) {
             return new ResourceInfo(path, name, checksum, sizeInBytes, digestMethod, lastModified, mimeType);
         } else {
+            res.setName(name);
+            res.setChecksum(checksum);
+            res.setSizeInBytes(sizeInBytes);
+            res.setDigestMethod(digestMethod);
+            res.setLastModifiedInMilis(lastModified.getMillis());
+            res.setMimeType(mimeType);
             return res;
         }
     }

@@ -183,8 +183,8 @@ public class FilesystemDL implements DigitalLibrary {
 
             DateTime lastModified = new DateTime(Files.getLastModifiedTime(path).toMillis());
             ResourceInfoDAO dao = new ResourceInfoDAO();
-            ResourceInfo res = new ResourceInfo(path.toString(), path.getFileName().toString(), md5, Files.size(path),
-                    "MD5", lastModified, mimeType);
+            ResourceInfo res = dao.create(path.toString(), path.getFileName().toString(), md5, Files.size(path), "MD5",
+                lastModified, mimeType);
             dao.save(res);
             return res;
         } catch (IOException e) {
