@@ -1,6 +1,9 @@
 package pl.psnc.dl.wf4ever.model.RO;
 
+import java.io.InputStream;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.junit.Assert;
@@ -9,8 +12,11 @@ import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.hp.hpl.jena.rdf.model.Model;
@@ -132,4 +138,78 @@ public class ManifestTest extends BaseTest {
         Assert.assertTrue(r.hasProperty(RO.filesize));
     }
 
+
+    @Test
+    public void testExtractAggreagtedResource() {
+        //TODO totally confused
+        assert false;
+    }
+
+
+    @Test
+    public void testExtractResources() {
+        Manifest m = researchObject.getManifest();
+        int start = m.extractResources().size();
+        researchObject.aggregate(URI.create("http://example.com/external/"));
+        Assert.assertEquals(start, m.extractResources().size());
+    }
+
+
+    @Test
+    public void extractFolders()
+            throws BadRequestException {
+        Manifest m = researchObject.getManifest();
+        int start = m.extractFolders().size();
+        URI folderUri = researchObject.getUri().resolve("new-folder-uri");
+        FolderBuilder folderBuilder = new FolderBuilder();
+        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
+        Assert.assertEquals(start + 1, m.extractFolders().size());
+    }
+
+
+    @Test
+    public void testExtractAnnotations()
+            throws BadRequestException {
+        Manifest m = researchObject.getManifest();
+        int start = m.extractAnnotations().size();
+        InputStream is = getClass().getClassLoader().getResourceAsStream(FolderBuilder.DEFAULT_FOLDER_PATH);
+        researchObject.annotate(is);
+        is = getClass().getClassLoader().getResourceAsStream(FolderBuilder.DEFAULT_FOLDER_PATH);
+        researchObject.annotate(is);
+        is = getClass().getClassLoader().getResourceAsStream(FolderBuilder.DEFAULT_FOLDER_PATH);
+        researchObject.annotate(is);
+        Assert.assertEquals(start + 3, m.extractAnnotations().size());
+    }
+
+
+    @Test
+    public void testSaveAnnotationData() {
+        URI annotationUri = manifest.getUri().resolve("new-annotation");
+        Set<Thing> targets = new HashSet<Thing>();
+        targets.add(manifest);
+        manifest.saveAnnotationData(builder.buildAnnotation(researchObject, annotationUri, manifest, targets));
+        Model model = ModelFactory.createDefaultModel();
+        model.read(manifest.getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Resource r = model.getResource(annotationUri.toString());
+        Assert.assertTrue(r.hasProperty(RO.annotatesAggregatedResource));
+        Assert.assertTrue(r.hasProperty(AO.body));
+    }
+
+
+    @Test
+    public void testSaveDuplicatedAnnotationData() {
+        URI annotationUri = manifest.getUri().resolve("new-annotation");
+        Set<Thing> targets = new HashSet<Thing>();
+        targets.add(manifest);
+        manifest.saveAnnotationData(builder.buildAnnotation(researchObject, annotationUri, manifest, targets));
+        Model model = ModelFactory.createDefaultModel();
+        model.read(manifest.getGraphAsInputStream(RDFFormat.RDFXML), null);
+        manifest.saveAnnotationData(builder.buildAnnotation(researchObject, annotationUri, manifest, targets));
+
+        Assert.assertEquals(1, model.listSubjectsWithProperty(RO.annotatesAggregatedResource).toList().size());
+        Resource r = model.getResource(annotationUri.toString());
+        Assert.assertEquals(1, r.listProperties(RO.annotatesAggregatedResource));
+        Assert.assertEquals(1, r.listProperties(AO.body));
+
+    }
 }
