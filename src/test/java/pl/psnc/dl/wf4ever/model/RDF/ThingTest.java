@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever.model.RDF;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.util.Map;
 
 import junit.framework.Assert;
 
@@ -15,6 +16,7 @@ import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
+import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -234,5 +236,19 @@ public class ThingTest extends BaseTest {
         verifyTriple(model, URI.create(RESOURCE2), URI.create(DCTerms.description.getURI()), "Something interesting");
         verifyTriple(model, /* "../a_workflow.t2flow#somePartOfIt" */"a%20workflow.t2flow#somePartOfIt",
             URI.create(DCTerms.description.getURI()), "The key part");
+    }
+
+
+    @Test
+    public void testGetDescriptionFor() {
+        Thing manifest = researchObject.getManifest();
+        Multimap<URI, Object> result = ((Thing) manifest).getDescriptionFor(researchObject.getUri());
+        for (Map.Entry<URI, Object> entry : result.entries()) {
+            System.out.println("******");
+            System.out.println(entry.getKey());
+            System.out.println(entry.getValue());
+            System.out.println("******");
+        }
+
     }
 }

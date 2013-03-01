@@ -34,6 +34,8 @@ import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.FOAF;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -708,6 +710,31 @@ public class Thing {
 
     public void setCopyOf(Thing copyOf) {
         this.copyOf = copyOf;
+    }
+
+
+    /**
+     * Get map of objects related to the pointed subject. The object are looked in the graph returned by
+     * getGraphAsInputStream method.
+     * 
+     * @param subject
+     *            uri searched in the graph.
+     * @return the map of objects related to the pointed subject
+     * @see Thing#getGraphAsInputStream
+     */
+    public Multimap<URI, Object> getDescriptionFor(URI subject) {
+        Multimap<URI, Object> result = ArrayListMultimap.create();
+        InputStream is = getGraphAsInputStream(RDFFormat.RDFXML);
+        if (is == null) {
+            return result;
+        }
+        Model tmpModel = ModelFactory.createDefaultModel();
+        model.read(is, null);
+        Resource r = model.getResource(subject.toString());
+        for (Statement s : r.listProperties().toList()) {
+            result.put(URI.create(s.getPredicate().getURI()), s.getObject());
+        }
+        return result;
     }
 
 
