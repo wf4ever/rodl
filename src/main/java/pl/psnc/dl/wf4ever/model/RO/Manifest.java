@@ -349,8 +349,6 @@ public class Manifest extends ResourceMap {
                     RDFNode p = solution.get("proxy");
                     URI pUri = p != null ? URI.create(p.asResource().getURI()) : null;
                     RDFNode rm = solution.get("resourcemap");
-                    //this is not used because the URI of resource map is fixed
-                    @SuppressWarnings("unused")
                     URI rmUri = URI.create(rm.asResource().getURI());
                     RDFNode creatorNode = solution.get("creator");
                     URI resCreator = creatorNode != null && creatorNode.isURIResource() ? URI.create(creatorNode
@@ -376,7 +374,7 @@ public class Manifest extends ResourceMap {
                         qe2.close();
                     }
 
-                    Folder folder = builder.buildFolder(fURI, getResearchObject(), profile, resCreated);
+                    Folder folder = builder.buildFolder(fURI, getResearchObject(), profile, resCreated, rmUri);
                     folder.setRootFolder(isRootFolder);
                     if (pUri != null) {
                         folder.setProxy(builder.buildProxy(pUri, folder, getResearchObject()));

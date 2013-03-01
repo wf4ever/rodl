@@ -55,6 +55,9 @@ public class Folder extends Resource implements Aggregation {
     /** is the folder a root folder in the RO. */
     private boolean rootFolder;
 
+    /** resource map URI. */
+    private final URI resourceMapUri;
+
 
     /**
      * Constructor.
@@ -70,9 +73,14 @@ public class Folder extends Resource implements Aggregation {
      *            The RO it is aggregated by
      * @param uri
      *            resource URI
+     * @param resourceMapUri2
+     *            folder resource map URI, or null for default
      */
-    public Folder(UserMetadata user, Dataset dataset, boolean useTransactions, ResearchObject researchObject, URI uri) {
+    public Folder(UserMetadata user, Dataset dataset, boolean useTransactions, ResearchObject researchObject, URI uri,
+            URI resourceMapUri2) {
         super(user, dataset, useTransactions, researchObject, uri);
+        this.resourceMapUri = resourceMapUri2 != null ? resourceMapUri2 : FolderResourceMap
+                .generateResourceMapUri(this);
     }
 
 
@@ -119,7 +127,6 @@ public class Folder extends Resource implements Aggregation {
     @Override
     public FolderResourceMap getResourceMap() {
         if (resourceMap == null) {
-            URI resourceMapUri = FolderResourceMap.generateResourceMapUri(this);
             resourceMap = builder.buildFolderResourceMap(resourceMapUri, this);
         }
         return resourceMap;
@@ -146,13 +153,12 @@ public class Folder extends Resource implements Aggregation {
      * @return a folder instance or URI
      */
     public static Folder get(Builder builder, URI uri) {
-        Folder folder = builder.buildFolder(uri, null, null, null);
-        FolderResourceMap resourceMap = builder.buildFolderResourceMap(
-            FolderResourceMap.generateResourceMapUri(folder), folder);
-        if (!resourceMap.isNamedGraph()) {
+        // default resource map URI
+        Folder folder = builder.buildFolder(uri, null, null, null, null);
+        if (!folder.getResourceMap().isNamedGraph()) {
             return null;
         }
-        ResearchObject researchObject = resourceMap.extractResearchObject();
+        ResearchObject researchObject = folder.getResourceMap().extractResearchObject();
         return researchObject.getFolders().get(uri);
     }
 
@@ -197,9 +203,8 @@ public class Folder extends Resource implements Aggregation {
             throws BadRequestException {
         Objects.requireNonNull(researchObject, "Research object cannot be null");
         Objects.requireNonNull(content, "Input stream object cannot be null");
-        Folder folder = builder.buildFolder(folderUri, researchObject, builder.getUser(), DateTime.now());
-        folder.resourceMap = FolderResourceMap
-                .create(builder, folder, FolderResourceMap.generateResourceMapUri(folder));
+        Folder folder = builder.buildFolder(folderUri, researchObject, builder.getUser(), DateTime.now(), null);
+        folder.resourceMap = FolderResourceMap.create(builder, folder, folder.getResourceMapUri());
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         try {
             model.read(content, researchObject.getUri().toString());
@@ -338,7 +343,7 @@ public class Folder extends Resource implements Aggregation {
         if (researchObject.isUriUsed(folderUri)) {
             throw new ConflictException("Resource already exists: " + folderUri);
         }
-        Folder folder2 = builder.buildFolder(folderUri, researchObject, getCreator(), getCreated());
+        Folder folder2 = builder.buildFolder(folderUri, researchObject, getCreator(), getCreated(), null);
         folder2.setCopyDateTime(DateTime.now());
         folder2.setCopyAuthor(builder.getUser());
         folder2.setCopyOf(this);
@@ -395,6 +400,11 @@ public class Folder extends Resource implements Aggregation {
     @Override
     public Map<URI, ? extends Proxy> getProxies() {
         return getFolderEntries();
+    }
+
+
+    public URI getResourceMapUri() {
+        return resourceMapUri;
     }
 
 

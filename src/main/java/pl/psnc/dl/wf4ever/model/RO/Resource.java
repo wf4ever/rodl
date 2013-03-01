@@ -123,7 +123,7 @@ public class Resource extends AggregatedResource {
      * @param evoBuilder
      *            builder of evolution properties
      * @param researchObject
-     *            research object that aggregates the resource
+     *            research object that should aggregate the new resource
      * @return the new resource
      * @throws BadRequestException
      *             if it is expected to be an RDF file and isn't

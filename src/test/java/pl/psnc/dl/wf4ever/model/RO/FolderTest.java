@@ -38,7 +38,7 @@ public class FolderTest extends BaseTest {
 
     @Test
     public void testConstructor() {
-        Folder folder = new Folder(userProfile, dataset, true, researchObject, folderUri);
+        Folder folder = new Folder(userProfile, dataset, true, researchObject, folderUri, null);
         Assert.assertEquals(researchObject, folder.getResearchObject());
         Assert.assertEquals(folderUri, folder.getUri());
     }
@@ -80,7 +80,7 @@ public class FolderTest extends BaseTest {
 
     @Test
     public void testSave() {
-        Folder folder = builder.buildFolder(folderUri, researchObject, userProfile, DateTime.now());
+        Folder folder = builder.buildFolder(folderUri, researchObject, userProfile, DateTime.now(), null);
         folder.save();
         Model model = ModelFactory.createDefaultModel();
         model.read(researchObject.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
@@ -90,7 +90,7 @@ public class FolderTest extends BaseTest {
 
     @Test
     public void testDelete() {
-        Folder folder = builder.buildFolder(folderUri, researchObject, userProfile, DateTime.now());
+        Folder folder = builder.buildFolder(folderUri, researchObject, userProfile, DateTime.now(), null);
         folder.save();
         Model model = ModelFactory.createDefaultModel();
         model.read(researchObject.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);

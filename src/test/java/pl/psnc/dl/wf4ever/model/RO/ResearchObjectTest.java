@@ -26,11 +26,13 @@ import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.util.FileManager;
 import com.hp.hpl.jena.vocabulary.RDF;
 
 public class ResearchObjectTest extends BaseTest {
 
-    private URI researchObjectUri;
+    /** a new empty RO. */
+    private ResearchObject ro;
 
 
     @Override
@@ -38,20 +40,23 @@ public class ResearchObjectTest extends BaseTest {
     public void setUp()
             throws Exception {
         super.setUp();
-        researchObjectUri = researchObject.getUri().resolve("new-research-object-unit-test/");
+        URI folderResourceMapUri = researchObject.getUri().resolve("folder-rm.ttl");
+        Model model = FileManager.get().loadModel(folderResourceMapUri.toString(), folderResourceMapUri.toString(),
+            "TURTLE");
+        dataset.addNamedModel(folderResourceMapUri.toString(), model);
         clearDLFileSystem();
+        ro = ResearchObject.create(builder, URI.create("http://example.org/ro-test/"));
     }
 
 
     @Test
     public void testConstructor() {
-        ResearchObject ro = new ResearchObject(userProfile, dataset, true, researchObjectUri);
+        new ResearchObject(userProfile, dataset, true, ro.getUri());
     }
 
 
     @Test
     public void testCreate() {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         Assert.assertNotNull(ro.getManifest());
         Assert.assertNotNull(ro.getEvoInfo());
 
@@ -69,8 +74,7 @@ public class ResearchObjectTest extends BaseTest {
 
     @Test(expected = ConflictException.class)
     public void testCreateDuplication() {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
-        ro = ResearchObject.create(builder, researchObjectUri);
+        ResearchObject.create(builder, ro.getUri());
     }
 
 
@@ -93,37 +97,30 @@ public class ResearchObjectTest extends BaseTest {
 
     @Test
     public void testGetEvoInfo() {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         Assert.assertNotNull(ro.getEvoInfo());
     }
 
 
     @Test
     public void testGetLiveEvoInfo() {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         Assert.assertNotNull(ro.getLiveEvoInfo());
     }
 
 
     @Test
     public void testGetManifest() {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         Assert.assertNotNull(ro.getManifest());
     }
 
 
     @Test
     public void testGet() {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
-        Assert.assertEquals(ro, ResearchObject.get(builder, ro.getUri()));
+        Assert.assertEquals(researchObject, ResearchObject.get(builder, researchObject.getUri()));
     }
 
 
     @Test
     public void testSave() {
-        ResearchObject ro = builder.buildResearchObject(researchObjectUri);
-        ro.save();
-
         Model model = ModelFactory.createDefaultModel();
 
         model.read(ro.getEvoInfo().getGraphAsInputStream(RDFFormat.RDFXML), null);
@@ -141,9 +138,8 @@ public class ResearchObjectTest extends BaseTest {
 
     @Test
     public void testDelete() {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         ro.delete();
-        Assert.assertEquals(ro, ResearchObject.get(builder, researchObjectUri));
+        Assert.assertNull(ResearchObject.get(builder, ro.getUri()));
     }
 
 
@@ -156,7 +152,6 @@ public class ResearchObjectTest extends BaseTest {
     @Test
     public void testAggregate()
             throws BadRequestException {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/resource.txt");
         pl.psnc.dl.wf4ever.model.RO.Resource r = ro.aggregate("resource.txt", is, "text/plain");
         Assert.assertNotNull(ro.getAggregatedResources().get(r.getUri()));
@@ -170,7 +165,6 @@ public class ResearchObjectTest extends BaseTest {
 
     @Test
     public void testAggregateExternal() {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         ro.aggregate(researchObject.getUri());
         Assert.assertNotNull(ro.getAggregatedResources().get(researchObject.getUri()));
         Assert.assertNotNull(ResearchObject.get(builder, ro.getUri()).getAggregatedResources()
@@ -181,7 +175,6 @@ public class ResearchObjectTest extends BaseTest {
     @Test
     public void testResourceCopy()
             throws BadRequestException {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/resource.txt");
         pl.psnc.dl.wf4ever.model.RO.Resource r = ro.aggregate("resource.txt", is, "text/plain");
         pl.psnc.dl.wf4ever.model.RO.Resource result = researchObject.copy(r, new SnapshotBuilder());
@@ -195,8 +188,7 @@ public class ResearchObjectTest extends BaseTest {
     @Test
     public void testAggregateFolder()
             throws BadRequestException {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
-        pl.psnc.dl.wf4ever.model.RO.Resource resource = ro.aggregate(URI.create("http://example.org"));
+        ro.aggregate(URI.create("http://example.org"));
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/folder.rdf");
         Folder f = ro.aggregateFolder(ro.getUri().resolve("folder"), is);
         Assert.assertNotNull(f);
@@ -208,10 +200,10 @@ public class ResearchObjectTest extends BaseTest {
     @Test
     public void testCopyFolder()
             throws BadRequestException {
-        FolderBuilder folderBuilder = new FolderBuilder();
-        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
-            researchObjectUri.resolve("folderUri"));
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
+        Folder folder = researchObject.getFolders().values().iterator().next();
+        for (FolderEntry entry : folder.getFolderEntries().values()) {
+            ro.aggregate(ro.getUri().resolve(entry.getProxyFor().getRawPath()));
+        }
         Folder result = ro.copy(folder, new SnapshotBuilder());
         Assert.assertNotNull(ro.getFolders().get(result.getUri()));
         Assert.assertTrue(result.getUri().relativize(ro.getUri()).equals(ro.getUri()));
@@ -222,7 +214,6 @@ public class ResearchObjectTest extends BaseTest {
     @Test
     public void testAnnotate()
             throws BadRequestException {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         Set<Thing> targets = new HashSet<>();
         targets.add(ro);
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
@@ -242,7 +233,6 @@ public class ResearchObjectTest extends BaseTest {
     @Test
     public void testAnnotate2()
             throws BadRequestException {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
         pl.psnc.dl.wf4ever.model.RO.Resource body = ro.aggregate("body.rdf", is, "application/rdf+xml");
         is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/annotation.rdf");
@@ -261,7 +251,6 @@ public class ResearchObjectTest extends BaseTest {
     @Test
     public void testAnnotate3()
             throws BadRequestException {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
         pl.psnc.dl.wf4ever.model.RO.Resource body = ro.aggregate("body.rdf", is, "application/rdf+xml");
         Annotation annotation = ro.annotate(body.getUri(), ro);
@@ -280,7 +269,6 @@ public class ResearchObjectTest extends BaseTest {
     public void testAnnotate4()
             throws BadRequestException {
         String annotationId = "annotation-id";
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         Set<Thing> targets = new HashSet<>();
         targets.add(ro);
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
@@ -290,7 +278,7 @@ public class ResearchObjectTest extends BaseTest {
         Model model = ModelFactory.createDefaultModel();
         model.read(ro.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
         Resource r = model.getResource(annotation.getUri().toString());
-        Assert.assertEquals(ro.getUri().resolve(".ro/annotation/").resolve(annotationId), annotation.getUri());
+        Assert.assertEquals(ro.getUri().resolve(".ro/annotations/").resolve(annotationId), annotation.getUri());
         Assert.assertTrue(r.hasProperty(RDF.type, AO.Annotation));
         Assert.assertTrue(r.hasProperty(RDF.type, RO.AggregatedAnnotation));
         Assert.assertTrue(r.hasProperty(RO.annotatesAggregatedResource, model.getResource(ro.getUri().toString())));
@@ -298,30 +286,27 @@ public class ResearchObjectTest extends BaseTest {
     }
 
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void testAnnotateWithNullBody()
             throws BadRequestException {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         Set<Thing> targets = new HashSet<>();
         targets.add(ro);
-        Annotation annotation = ro.annotate(null, targets);
+        ro.annotate(null, targets);
     }
 
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void testAnnotateWithNullTarget()
             throws BadRequestException {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
         pl.psnc.dl.wf4ever.model.RO.Resource body = ro.aggregate("body.rdf", is, "application/rdf+xml");
-        Annotation annotation = ro.annotate(body.getUri(), (Thing) null);
+        ro.annotate(body.getUri(), (Thing) null);
     }
 
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testAnnotateWithEmptyTarget()
             throws BadRequestException {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         Set<Thing> targets = new HashSet<>();
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
         pl.psnc.dl.wf4ever.model.RO.Resource body = ro.aggregate("body.rdf", is, "application/rdf+xml");
@@ -338,7 +323,6 @@ public class ResearchObjectTest extends BaseTest {
     @Test
     public void testCopyAnnotation()
             throws BadRequestException {
-        ResearchObject ro = ResearchObject.create(builder, researchObjectUri);
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ro/research_object/body.rdf");
         pl.psnc.dl.wf4ever.model.RO.Resource body = ro.aggregate("body.rdf", is, "application/rdf+xml");
         Annotation annotation = ro.annotate(body.getUri(), ro);

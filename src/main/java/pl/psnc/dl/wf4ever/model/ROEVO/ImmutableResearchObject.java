@@ -79,8 +79,7 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
         immutableResearchObject.setCopyOf(researchObject);
         EvoBuilder evoBuilder = EvoBuilder.get(evoType);
         immutableResearchObject.copy(researchObject.getManifest(), evoBuilder);
-        immutableResearchObject.save();
-        immutableResearchObject.createEvoInfo(evoType);
+        immutableResearchObject.save(evoType);
         // copy the ro:Resources
         for (pl.psnc.dl.wf4ever.model.RO.Resource resource : researchObject.getResources().values()) {
             try {
@@ -167,6 +166,7 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
      * @param evoType
      *            snapshot or archive
      */
+    @Override
     public void createEvoInfo(EvoType evoType) {
         try {
             evoInfo = ImmutableEvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this, evoType);

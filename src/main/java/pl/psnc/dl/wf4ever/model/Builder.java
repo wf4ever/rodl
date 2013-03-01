@@ -432,10 +432,12 @@ public class Builder {
      *            author
      * @param created
      *            creation date
+     * @param resourceMapUri
      * @return a new folder
      */
-    public Folder buildFolder(URI uri, ResearchObject researchObject, UserMetadata creator, DateTime created) {
-        Folder folder = new Folder(user, dataset, useTransactions, researchObject, uri);
+    public Folder buildFolder(URI uri, ResearchObject researchObject, UserMetadata creator, DateTime created,
+            URI resourceMapUri) {
+        Folder folder = new Folder(user, dataset, useTransactions, researchObject, uri, resourceMapUri);
         folder.setCreator(creator);
         folder.setCreated(created);
         folder.setBuilder(this);

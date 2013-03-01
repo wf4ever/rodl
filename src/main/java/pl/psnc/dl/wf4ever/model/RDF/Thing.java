@@ -402,10 +402,20 @@ public class Thing {
                 throw new IncorrectModelException("RO not found in the manifest" + thing.getUri());
             }
             com.hp.hpl.jena.rdf.model.Resource c = ro.getPropertyResourceValue(DCTerms.creator);
-            URI curi = c != null ? URI.create(c.getURI()) : null;
-            RDFNode n = c.getProperty(FOAF.name).getObject();
-            String name = n != null ? n.asLiteral().getString() : null;
-            return new UserProfile(null, name, null, curi);
+            if (c != null) {
+                URI curi = null;
+                String name = null;
+                curi = URI.create(c.getURI());
+                RDFNode n = c.getProperty(FOAF.name).getObject();
+                if (n != null) {
+                    name = n.asLiteral().getString();
+                } else {
+                    name = curi.toString();
+                }
+                return new UserProfile(name, name, null, curi);
+            } else {
+                return null;
+            }
         } finally {
             endTransaction(transactionStarted);
         }

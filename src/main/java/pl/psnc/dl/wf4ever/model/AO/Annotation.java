@@ -118,6 +118,11 @@ public class Annotation extends AggregatedResource {
     public static Annotation create(Builder builder, ResearchObject researchObject, URI uri, URI bodyUri,
             Set<Thing> targets)
             throws BadRequestException {
+        Objects.requireNonNull(bodyUri, "Body URI cannot be null");
+        Objects.requireNonNull(targets, "Targets cannot be null");
+        if (targets.isEmpty()) {
+            throw new IllegalArgumentException("The set of targets cannot be empty");
+        }
         Annotation annotation = builder.buildAnnotation(uri, researchObject, builder.buildThing(bodyUri), targets,
             builder.getUser(), DateTime.now());
         annotation.setProxy(researchObject.addProxy(annotation));

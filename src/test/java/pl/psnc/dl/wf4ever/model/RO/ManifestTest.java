@@ -117,7 +117,7 @@ public class ManifestTest extends BaseTest {
     @Test
     public void testSaveFolderData() {
         URI folderUri = researchObject.getUri().resolve("folder");
-        Folder folder = builder.buildFolder(folderUri, researchObject, userProfile, DateTime.now());
+        Folder folder = builder.buildFolder(folderUri, researchObject, userProfile, DateTime.now(), null);
         manifest.saveFolderData(folder);
         Model model = ModelFactory.createDefaultModel();
         model.read(manifest.getGraphAsInputStream(RDFFormat.RDFXML), null);
@@ -182,7 +182,7 @@ public class ManifestTest extends BaseTest {
 
 
     private void putFolder(Map<URI, Folder> expected, URI uri) {
-        expected.put(uri, builder.buildFolder(uri, researchObject, null, null));
+        expected.put(uri, builder.buildFolder(uri, researchObject, null, null, null));
     }
 
 
