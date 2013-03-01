@@ -73,7 +73,7 @@ public interface SearchServer {
      * @param query
      *            query string
      * @return query response
-     * @throws SolrServerException.
+     * @throws SolrServerException .
      */
     QueryResponse query(String query)
             throws SolrServerException;
