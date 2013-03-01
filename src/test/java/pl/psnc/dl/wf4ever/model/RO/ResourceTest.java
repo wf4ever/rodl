@@ -6,6 +6,7 @@ import junit.framework.Assert;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
@@ -34,14 +35,13 @@ public class ResourceTest extends BaseTest {
 
     @Test
     public void testConstructor() {
-
-        Resource resource = new Resource(userProfile, dataset, true, researchObject, resourceUri);
+        new Resource(userProfile, dataset, true, researchObject, resourceUri);
     }
 
 
     @Test
     public void testCreate() {
-        Resource resource = Resource.create(builder, researchObject, resourceUri);
+        Resource.create(builder, researchObject, resourceUri);
         Assert.assertTrue(researchObject.getResources().containsKey(resourceUri));
     }
 
@@ -51,7 +51,7 @@ public class ResourceTest extends BaseTest {
         Resource resource = Resource.create(builder, researchObject, resourceUri);
         resource.save();
         Model model = ModelFactory.createDefaultModel();
-        model.read(researchObject.getGraphAsInputStream(RDFFormat.RDFXML), null);
+        model.read(researchObject.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
         com.hp.hpl.jena.rdf.model.Resource r = model.getResource(resourceUri.toString());
         Assert.assertTrue(r.hasProperty(RDF.type, RO.Resource));
     }
@@ -66,10 +66,13 @@ public class ResourceTest extends BaseTest {
 
 
     @Test
+    @Ignore
+    //FIXME this test is bad - it tests saving graph but has no content to save?
     public void testSaveGraphAndSerialize()
             throws BadRequestException {
         //TODO test serialization
-        Resource resource = builder.buildResource(resourceUri, researchObject, userProfile, DateTime.now());
+        Resource resource = builder.buildResource(researchObject.getUri().resolve("resource.rdf"), researchObject,
+            userProfile, DateTime.now());
         resource.save();
         resource.saveGraphAndSerialize();
         Model model = ModelFactory.createDefaultModel();

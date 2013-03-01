@@ -73,7 +73,6 @@ public class Proxy extends Thing {
 
 
     public void setProxyFor(AggregatedResource proxyFor) {
-        Objects.requireNonNull(proxyFor, "Proxy for cannot be null");
         this.proxyFor = proxyFor;
     }
 

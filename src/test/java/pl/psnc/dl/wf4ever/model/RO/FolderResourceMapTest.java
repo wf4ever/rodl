@@ -32,13 +32,12 @@ public class FolderResourceMapTest extends BaseTest {
     public void setUp()
             throws Exception {
         super.setUp();
-        folderResourceMapUri = researchObject.getUri().resolve("folder-rm.ttl");
+        folderResourceMapUri = URI.create(FOLDER_RESOURCE_MAP);
         Model model = FileManager.get().loadModel(folderResourceMapUri.toString(), folderResourceMapUri.toString(),
             "TURTLE");
         dataset.addNamedModel(folderResourceMapUri.toString(), model);
         folderBuilder = new FolderBuilder();
-        folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
-            folderResourceMapUri.resolve("folder"));
+        folder = researchObject.getFolders().values().iterator().next();
         folderResourceMap = builder.buildFolderResourceMap(folderResourceMapUri, folder);
     }
 
@@ -100,7 +99,7 @@ public class FolderResourceMapTest extends BaseTest {
     @Test
     public void testExtractFolderEntries()
             throws BadRequestException {
-        Assert.assertEquals(3, folderResourceMap.extractFolderEntries().size());
+        Assert.assertEquals(1, folderResourceMap.extractFolderEntries().size());
     }
 
 
