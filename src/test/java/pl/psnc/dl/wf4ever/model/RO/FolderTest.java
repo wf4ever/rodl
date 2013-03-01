@@ -80,7 +80,7 @@ public class FolderTest extends BaseTest {
 
     @Test
     public void testSave() {
-        Folder folder = builder.buildFolder(researchObject, folderUri, userProfile, DateTime.now());
+        Folder folder = builder.buildFolder(folderUri, researchObject, userProfile, DateTime.now());
         folder.save();
         Model model = ModelFactory.createDefaultModel();
         model.read(researchObject.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
@@ -90,7 +90,7 @@ public class FolderTest extends BaseTest {
 
     @Test
     public void testDelete() {
-        Folder folder = builder.buildFolder(researchObject, folderUri, userProfile, DateTime.now());
+        Folder folder = builder.buildFolder(folderUri, researchObject, userProfile, DateTime.now());
         folder.save();
         Model model = ModelFactory.createDefaultModel();
         model.read(researchObject.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);

@@ -335,7 +335,7 @@ public class Manifest extends ResourceMap {
             Map<URI, Folder> folders2 = new HashMap<>();
             String queryString = String
                     .format(
-                        "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ro: <%s> PREFIX foaf: <%s> SELECT ?folder ?proxy ?resourcemap ?created ?creator ?creatorname WHERE { <%s> ore:aggregates ?folder . ?folder a ro:Folder ; ore:isDescribedBy ?resourcemap . ?proxy ore:proxyFor ?folder . OPTIONAL { ?folder dcterms:creator ?creator . OPTIONAL { ?creator foaf:name ?creatorname . } } OPTIONAL { ?folder dcterms:created ?created . } }",
+                        "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX ro: <%s> PREFIX foaf: <%s> SELECT ?folder ?proxy ?resourcemap ?created ?creator ?creatorname WHERE { <%s> ore:aggregates ?folder . ?folder a ro:Folder ; ore:isDescribedBy ?resourcemap . OPTIONAL { ?proxy ore:proxyFor ?folder . } OPTIONAL { ?folder dcterms:creator ?creator . OPTIONAL { ?creator foaf:name ?creatorname . } } OPTIONAL { ?folder dcterms:created ?created . } }",
                         ORE.NAMESPACE, DCTerms.NS, RO.NAMESPACE, FOAF.NAMESPACE, aggregation.getUri().toString());
 
             Query query = QueryFactory.create(queryString);
@@ -347,7 +347,7 @@ public class Manifest extends ResourceMap {
                     RDFNode f = solution.get("folder");
                     URI fURI = URI.create(f.asResource().getURI());
                     RDFNode p = solution.get("proxy");
-                    URI pUri = URI.create(p.asResource().getURI());
+                    URI pUri = p != null ? URI.create(p.asResource().getURI()) : null;
                     RDFNode rm = solution.get("resourcemap");
                     //this is not used because the URI of resource map is fixed
                     @SuppressWarnings("unused")
@@ -376,7 +376,7 @@ public class Manifest extends ResourceMap {
                         qe2.close();
                     }
 
-                    Folder folder = builder.buildFolder(getResearchObject(), fURI, profile, resCreated);
+                    Folder folder = builder.buildFolder(fURI, getResearchObject(), profile, resCreated);
                     folder.setRootFolder(isRootFolder);
                     if (pUri != null) {
                         folder.setProxy(builder.buildProxy(pUri, folder, getResearchObject()));
@@ -448,7 +448,7 @@ public class Manifest extends ResourceMap {
                         DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime
                                 .parse(createdNode.asLiteral().getString()) : null;
                         //FIXME don't build things, look for them
-                        annotation = builder.buildAnnotation(getResearchObject(), aURI, builder.buildThing(bUri),
+                        annotation = builder.buildAnnotation(aURI, getResearchObject(), builder.buildThing(bUri),
                             builder.buildThing(tUri), profile, resCreated);
                         if (pUri != null) {
                             annotation.setProxy(builder.buildProxy(pUri, annotation, getResearchObject()));

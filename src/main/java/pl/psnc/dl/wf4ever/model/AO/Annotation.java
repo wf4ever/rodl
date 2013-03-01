@@ -118,7 +118,7 @@ public class Annotation extends AggregatedResource {
     public static Annotation create(Builder builder, ResearchObject researchObject, URI uri, URI bodyUri,
             Set<Thing> targets)
             throws BadRequestException {
-        Annotation annotation = builder.buildAnnotation(researchObject, uri, builder.buildThing(bodyUri), targets,
+        Annotation annotation = builder.buildAnnotation(uri, researchObject, builder.buildThing(bodyUri), targets,
             builder.getUser(), DateTime.now());
         annotation.setProxy(researchObject.addProxy(annotation));
         annotation.save();
@@ -210,7 +210,7 @@ public class Annotation extends AggregatedResource {
                 targets.add(builder.buildThing(targetUri));
             }
         }
-        Annotation annotation2 = builder.buildAnnotation(researchObject, annotationUri, body2, targets, getCreator(),
+        Annotation annotation2 = builder.buildAnnotation(annotationUri, researchObject, body2, targets, getCreator(),
             getCreated());
         annotation2.setCopyDateTime(DateTime.now());
         annotation2.setCopyAuthor(builder.getUser());
@@ -324,7 +324,7 @@ public class Annotation extends AggregatedResource {
             throw new BadRequestException("The entity body does not define any ro:AggregatedAnnotation.");
         }
 
-        Annotation annotation = builder.buildAnnotation(researchObject, uri, builder.buildThing(bodyUri), targets);
+        Annotation annotation = builder.buildAnnotation(uri, researchObject, builder.buildThing(bodyUri), targets);
         return annotation;
     }
 

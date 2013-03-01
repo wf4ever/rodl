@@ -146,7 +146,7 @@ public class Folder extends Resource implements Aggregation {
      * @return a folder instance or URI
      */
     public static Folder get(Builder builder, URI uri) {
-        Folder folder = builder.buildFolder(null, uri, null, null);
+        Folder folder = builder.buildFolder(uri, null, null, null);
         FolderResourceMap resourceMap = builder.buildFolderResourceMap(
             FolderResourceMap.generateResourceMapUri(folder), folder);
         if (!resourceMap.isNamedGraph()) {
@@ -197,7 +197,7 @@ public class Folder extends Resource implements Aggregation {
             throws BadRequestException {
         Objects.requireNonNull(researchObject, "Research object cannot be null");
         Objects.requireNonNull(content, "Input stream object cannot be null");
-        Folder folder = builder.buildFolder(researchObject, folderUri, builder.getUser(), DateTime.now());
+        Folder folder = builder.buildFolder(folderUri, researchObject, builder.getUser(), DateTime.now());
         folder.resourceMap = FolderResourceMap
                 .create(builder, folder, FolderResourceMap.generateResourceMapUri(folder));
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
@@ -338,7 +338,7 @@ public class Folder extends Resource implements Aggregation {
         if (researchObject.isUriUsed(folderUri)) {
             throw new ConflictException("Resource already exists: " + folderUri);
         }
-        Folder folder2 = builder.buildFolder(researchObject, folderUri, getCreator(), getCreated());
+        Folder folder2 = builder.buildFolder(folderUri, researchObject, getCreator(), getCreated());
         folder2.setCopyDateTime(DateTime.now());
         folder2.setCopyAuthor(builder.getUser());
         folder2.setCopyOf(this);

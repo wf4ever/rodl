@@ -244,33 +244,33 @@ public class AnnotationTest extends BaseTest {
 
     @Test
     public void testIsSpecialResource() {
-        Annotation ordinaryAnnotation1 = builder.buildAnnotation(researchObject,
-            URI.create("http://www.example.com/ROs/ro/annotations/ordinaryAnnotation1"),
+        Annotation ordinaryAnnotation1 = builder.buildAnnotation(
+            URI.create("http://www.example.com/ROs/ro/annotations/ordinaryAnnotation1"), researchObject,
             builder.buildThing(URI.create("http://www.example.com/ROs/ro/.ro/manifest.rdf/ordinary")),
             new HashSet<Thing>(Arrays.asList(researchObject)));
 
-        Annotation ordinaryAnnotation2 = builder.buildAnnotation(researchObject,
-            URI.create("http://www.example.com/ROs/ro/annotations/ordinaryAnnotation1"),
+        Annotation ordinaryAnnotation2 = builder.buildAnnotation(
+            URI.create("http://www.example.com/ROs/ro/annotations/ordinaryAnnotation1"), researchObject,
             builder.buildThing(URI.create("http://www.example.com/ROs/ro/.ro/evo_info.ttlordinary")),
             new HashSet<Thing>(Arrays.asList(researchObject)));
 
-        Annotation ordinaryAnnotation3 = builder.buildAnnotation(researchObject,
-            URI.create("http://www.example.com/ROs/ro/annotations/evo_info.ttl/annotation"),
+        Annotation ordinaryAnnotation3 = builder.buildAnnotation(
+            URI.create("http://www.example.com/ROs/ro/annotations/evo_info.ttl/annotation"), researchObject,
             builder.buildThing(URI.create("http://www.example.com/ROs/ro/annotations/evo_info.ttl/annotation")),
             new HashSet<Thing>(Arrays.asList(researchObject)));
 
-        Annotation specialAnnotation1 = builder.buildAnnotation(researchObject,
-            URI.create("http://www.example.com/ROs/ro/annotations/annotation"),
+        Annotation specialAnnotation1 = builder.buildAnnotation(
+            URI.create("http://www.example.com/ROs/ro/annotations/annotation"), researchObject,
             builder.buildThing(URI.create("http://www.example.com/ROs/ro/.ro/manifest.rdf")),
             new HashSet<Thing>(Arrays.asList(researchObject)));
 
-        Annotation specialAnnotation2 = builder.buildAnnotation(researchObject,
-            URI.create("http://www.example.com/ROs/ro/annotations/annotation"),
+        Annotation specialAnnotation2 = builder.buildAnnotation(
+            URI.create("http://www.example.com/ROs/ro/annotations/annotation"), researchObject,
             builder.buildThing(URI.create("http://www.example.com/ROs/ro/.ro/evo_info.ttl")),
             new HashSet<Thing>(Arrays.asList(researchObject)));
 
-        Annotation specialAnnotation3 = builder.buildAnnotation(researchObject, URI
-                .create("http://www.example.com/ROs/ro/annotations/annotation"), builder.buildThing(URI
+        Annotation specialAnnotation3 = builder.buildAnnotation(URI
+                .create("http://www.example.com/ROs/ro/annotations/annotation"), researchObject, builder.buildThing(URI
                 .create("http://www.example.com/ROs/ro/.ro/evo_info.ttl/")),
             new HashSet<Thing>(Arrays.asList(researchObject)));
 

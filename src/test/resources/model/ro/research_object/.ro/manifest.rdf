@@ -84,6 +84,8 @@
   
   <rdf:Description rdf:about="../afolder/">
     <ore:isDescribedBy rdf:resource="../afolder.ttl"/>
+    <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/AggregatedResource"/>
+    <rdf:type rdf:resource="http://purl.org/wf4ever/ro#Resource"/>
     <rdf:type rdf:resource="http://purl.org/wf4ever/ro#Folder"/>
   </rdf:Description>
   
