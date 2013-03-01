@@ -2,6 +2,9 @@ package pl.psnc.dl.wf4ever.searchserver;
 
 import java.net.URI;
 
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.response.QueryResponse;
+
 import com.google.common.collect.Multimap;
 
 /**
@@ -62,4 +65,17 @@ public interface SearchServer {
      * @return the connection url
      */
     String getConnectionUrl();
+
+
+    /**
+     * The most general request query.
+     * 
+     * @param query
+     *            query string
+     * @return query response
+     * @throws SolrServerException.
+     */
+    QueryResponse query(String query)
+            throws SolrServerException;
+
 }

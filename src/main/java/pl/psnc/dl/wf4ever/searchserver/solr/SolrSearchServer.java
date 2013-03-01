@@ -9,8 +9,10 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrInputDocument;
 
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -111,8 +113,10 @@ public class SolrSearchServer implements SearchServer {
         SolrInputDocument document = new SolrInputDocument();
         document.addField("uri", source.toString());
         document.addField("ro_uri", ro.toString());
-        for (Map.Entry<URI, Object> entry : attributes.entries()) {
-            document.addField("property_" + entry.getKey().toString(), entry.getValue());
+        if (attributes != null) {
+            for (Map.Entry<URI, Object> entry : attributes.entries()) {
+                document.addField("property_" + entry.getKey().toString(), entry.getValue());
+            }
         }
         Collection<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
         docs.add(document);
@@ -139,5 +143,12 @@ public class SolrSearchServer implements SearchServer {
     @Override
     public String getConnectionUrl() {
         return getUrl();
+    }
+
+
+    @Override
+    public QueryResponse query(String query)
+            throws SolrServerException {
+        return server.query(new SolrQuery(query));
     }
 }
