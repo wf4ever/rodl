@@ -214,7 +214,7 @@ public class Manifest extends ResourceMap {
             Map<URI, AggregatedResource> aggregated = new HashMap<>();
             String queryString = String
                     .format(
-                        "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX foaf: <%s> SELECT ?resource ?proxy ?created ?creator ?creatorname WHERE { <%s> ore:aggregates ?resource . ?resource a ore:AggregatedResource . OPTIONAL { ?proxy ore:proxyFor ?resource . } OPTIONAL { ?resource dcterms:creator ?creator . OPTIONAL { ?creator foaf:name ?creatorname . } } OPTIONAL { ?resource dcterms:created ?created . } }",
+                        "PREFIX ore: <%s> PREFIX dcterms: <%s> PREFIX foaf: <%s> SELECT ?resource ?proxy ?created ?creator ?creatorname WHERE { <%s> ore:aggregates ?resource . OPTIONAL { ?resource a ore:AggregatedResource . } OPTIONAL { ?proxy ore:proxyFor ?resource . } OPTIONAL { ?resource dcterms:creator ?creator . OPTIONAL { ?creator foaf:name ?creatorname . } } OPTIONAL { ?resource dcterms:created ?created . } }",
                         ORE.NAMESPACE, DCTerms.NS, FOAF.NAMESPACE, aggregation.getUri().toString());
 
             Query query = QueryFactory.create(queryString);

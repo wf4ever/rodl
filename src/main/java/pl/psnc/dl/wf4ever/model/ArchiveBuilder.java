@@ -15,6 +15,8 @@ import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.rdf.model.Literal;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.Resource;
 
 /**
  * The builder setting properties of an archived resource.
@@ -79,8 +81,20 @@ public class ArchiveBuilder extends EvoBuilder {
     public UserMetadata extractCopyAuthor(OntModel model, ImmutableResearchObject researchObject) {
         Individual ro = model.getIndividual(researchObject.getUri().toString());
         Individual author = ro.getPropertyResourceValue(ROEVO.archivedBy).as(Individual.class);
-        Literal name = author.getPropertyValue(FOAF.name).asLiteral();
-        return new UserMetadata(name.getString(), name.getString(), Role.AUTHENTICATED, URI.create(author.getURI()));
+        String name;
+        if (author.hasProperty(FOAF.name)) {
+            name = author.getPropertyValue(FOAF.name).asLiteral().getString();
+        } else {
+            // backwards compatibility
+            Model authorModel = researchObject.getBuilder().getDataset().getNamedModel(author.getURI());
+            Resource author2 = authorModel.getResource(author.getURI());
+            if (author2.hasProperty(FOAF.name)) {
+                name = author2.getProperty(FOAF.name).getObject().asLiteral().getString();
+            } else {
+                name = author.getURI();
+            }
+        }
+        return new UserMetadata(name, name, Role.AUTHENTICATED, URI.create(author.getURI()));
     }
 
 

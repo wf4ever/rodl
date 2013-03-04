@@ -690,7 +690,11 @@ public class ResearchObject extends Thing implements Aggregation {
         if (folderEntriesByResourceUri == null) {
             folderEntriesByResourceUri = HashMultimap.<URI, FolderEntry> create();
             for (FolderEntry entry : getFolderEntries().values()) {
-                folderEntriesByResourceUri.put(entry.getProxyFor().getUri(), entry);
+                if (entry.getProxyFor() != null) {
+                    folderEntriesByResourceUri.put(entry.getProxyFor().getUri(), entry);
+                } else {
+                    LOGGER.warn("Folder entry " + entry + " has no proxy for");
+                }
             }
         }
         return folderEntriesByResourceUri;
