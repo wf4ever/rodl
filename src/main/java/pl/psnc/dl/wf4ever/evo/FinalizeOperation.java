@@ -45,7 +45,7 @@ public class FinalizeOperation implements Operation {
                 throw new NotFoundException("Research Object not found " + status.getTarget());
             }
             immutableResearchObject.setFinalized(true);
-            immutableResearchObject.getEvoInfo().update();
+            immutableResearchObject.getEvoInfo().updateHistory();
         } catch (RodlException e) {
             throw new OperationFailedException("Could not generate evo info", e);
         } finally {

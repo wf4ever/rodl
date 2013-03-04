@@ -27,6 +27,7 @@ import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.model.ModelUpdateListener;
 import pl.psnc.dl.wf4ever.sparql.RO_RDFXMLWriter;
 import pl.psnc.dl.wf4ever.sparql.RO_TurtleWriter;
 import pl.psnc.dl.wf4ever.sparql.ResearchObjectRelativeWriter;
@@ -106,6 +107,11 @@ public class Thing {
 
     /** The original resource (if this resource has been shapshotted/archived). */
     protected Thing copyOf;
+
+    /**
+     * The list of observers listening on update event.
+     */
+    protected List<ModelUpdateListener> updateListeners = new ArrayList<ModelUpdateListener>();
 
 
     /**
@@ -769,4 +775,24 @@ public class Thing {
         return true;
     }
 
+
+    /**
+     * Invoke once the model is updated.
+     */
+    protected void update() {
+        for (ModelUpdateListener listener : updateListeners) {
+            listener.onModelUpdate();
+        }
+    }
+
+
+    /**
+     * Append a new updateLister.
+     * 
+     * @param listener
+     *            listener
+     */
+    public void addUpdateListener(ModelUpdateListener listener) {
+        updateListeners.add(listener);
+    }
 }

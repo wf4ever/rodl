@@ -37,7 +37,7 @@ public abstract class EvoInfo extends AggregatedResource {
     /**
      * Update the evolution info in the triplestore and in the storage based on its properties.
      */
-    public void update() {
+    public void updateHistory() {
         save();
         serialize(uri, RDFFormat.TURTLE);
     }
