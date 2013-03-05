@@ -167,7 +167,10 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         resource2.setCopyOf(this);
         resource2.setProxy(researchObject.addProxy(resource2));
         if (isInternal()) {
-            resource2.save(getSerialization(), getStats().getMimeType());
+            // backwards compatiblity
+            resource2.save(getSerialization(),
+                getStats() != null ? getStats().getMimeType() : RDFFormat.forFileName(getName(), RDFFormat.RDFXML)
+                        .getDefaultMIMEType());
             if (researchObject.getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
                 resource2.saveGraphAndSerialize();
             }
@@ -359,8 +362,12 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         try (InputStream data = getGraphAsInputStream(RDFFormat.RDFXML)) {
             // can only be null if a resource that is an annotation body exists serialized but not in the triple store
             if (data != null) {
-                DigitalLibraryFactory.getDigitalLibrary().createOrUpdateFile(researchObject.getUri(), filePath, data,
-                    getStats().getMimeType());
+                DigitalLibraryFactory.getDigitalLibrary().createOrUpdateFile(
+                    researchObject.getUri(),
+                    filePath,
+                    data,
+                    getStats() != null ? getStats().getMimeType() : RDFFormat.forFileName(getName(), RDFFormat.RDFXML)
+                            .getDefaultMIMEType());
             }
         } catch (IOException e) {
             LOGGER.warn("Could not close stream", e);
