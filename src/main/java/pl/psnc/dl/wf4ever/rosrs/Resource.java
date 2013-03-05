@@ -134,6 +134,7 @@ public class Resource {
                 rb = rb.cacheControl(cache).tag(resource.getStats().getChecksum())
                         .lastModified(resource.getStats().getLastModified().toDate());
             }
+            researchObject.updateIndexAttributes();
             return rb.build();
         } else {
             throw new NotFoundException(
@@ -200,6 +201,7 @@ public class Resource {
                     .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
             response = response.header(Constants.LINK_HEADER, targetHeader);
         }
+        researchObject.updateIndexAttributes();
         return response.build();
     }
 
@@ -448,6 +450,7 @@ public class Resource {
             throw new NotFoundException("Resource not found");
         }
         resource.delete();
+        researchObject.updateIndexAttributes();
         return Response.noContent().build();
     }
 
@@ -464,7 +467,6 @@ public class Resource {
         if (resource.isInternal()) {
             return Response.status(Status.TEMPORARY_REDIRECT).location(resource.getUri()).build();
         } else {
-            resource.delete();
             return Response.noContent().build();
         }
     }
@@ -488,7 +490,6 @@ public class Resource {
         if (folder == null) {
             throw new NotFoundException("Folder not found; " + uri);
         }
-
         FolderEntry entry = folder.createFolderEntry(content);
         String link = String.format(Constants.LINK_HEADER_TEMPLATE, entry.getProxyFor(), ORE.proxyFor.getURI());
         return Response.created(entry.getUri()).header("Link", link).build();

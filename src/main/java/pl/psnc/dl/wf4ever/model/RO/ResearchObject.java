@@ -502,6 +502,16 @@ public class ResearchObject extends Thing implements Aggregation {
 
 
     /**
+     * Delete the RO index.
+     * 
+     */
+    public void deleteIndexAttributes() {
+        SearchServer searchServer = SolrSearchServer.get();
+        searchServer.deleteROAttributes(getUri());
+    }
+
+
+    /**
      * Update the RO index.
      */
     public void updateIndexAttributes() {

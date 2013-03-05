@@ -347,7 +347,6 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
             LOGGER.warn("Could not close stream", e);
         }
         serialize();
-        researchObject.updateIndexAttributes();
     }
 
 

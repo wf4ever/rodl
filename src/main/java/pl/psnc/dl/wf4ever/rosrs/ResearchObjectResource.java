@@ -136,6 +136,7 @@ public class ResearchObjectResource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
+        researchObject.deleteIndexAttributes();
         researchObject.delete();
     }
 
@@ -225,6 +226,7 @@ public class ResearchObjectResource {
                 rb = rb.cacheControl(cache).tag(resource.getStats().getChecksum())
                         .lastModified(resource.getStats().getLastModified().toDate());
             }
+            researchObject.updateIndexAttributes();
             return rb.build();
         }
     }
@@ -313,6 +315,7 @@ public class ResearchObjectResource {
                     .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
             response = response.header(Constants.LINK_HEADER, targetHeader);
         }
+        researchObject.updateIndexAttributes();
         return response.build();
     }
 
