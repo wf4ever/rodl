@@ -161,12 +161,16 @@ public class FolderTest extends BaseTest {
     @Test
     public void testCopy()
             throws BadRequestException {
-        Folder folder = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
-        Folder folderCopy = folder.copy(builder, new SnapshotBuilder(), researchObject2);
+        ResearchObject researchObject3 = ResearchObject.create(builder, URI.create("http://example.org/ro-3/"));
+        Folder folder = researchObject.getFolders().values().iterator().next();
+        for (FolderEntry entry : folder.getFolderEntries().values()) {
+            researchObject3.aggregate(researchObject3.getUri().resolve(entry.getProxyFor().getRawPath()));
+        }
+        Folder folderCopy = folder.copy(builder, new SnapshotBuilder(), researchObject3);
         Assert.assertNotNull(folderCopy.getCopyAuthor());
         Assert.assertNotNull(folderCopy.getCopyDateTime());
         URI expected = researchObject.getUri().relativize(folder.getUri());
-        URI result = researchObject2.getUri().relativize(folderCopy.getUri());
+        URI result = researchObject3.getUri().relativize(folderCopy.getUri());
         Assert.assertEquals(expected, result);
         for (FolderEntry entry : folderCopy.getFolderEntries().values()) {
             URI oldResourceUri = researchObject.getUri().resolve(entry.getProxyFor().getRawPath());
@@ -176,7 +180,7 @@ public class FolderTest extends BaseTest {
             Assert.assertEquals(expected2, result2);
         }
         for (AggregatedResource resource : folderCopy.getAggregatedResources().values()) {
-            Assert.assertEquals(resource.getRawPath(), researchObject2.getUri().relativize(resource.getUri())
+            Assert.assertEquals(resource.getRawPath(), researchObject3.getUri().relativize(resource.getUri())
                     .getRawPath());
         }
     }
