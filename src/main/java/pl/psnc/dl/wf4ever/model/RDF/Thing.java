@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.ws.rs.core.UriBuilder;
@@ -406,12 +407,19 @@ public class Thing {
                 URI curi = null;
                 String name = null;
                 curi = URI.create(c.getURI());
-                RDFNode n = c.getProperty(FOAF.name).getObject();
-                if (n != null) {
-                    name = n.asLiteral().getString();
+                if (c.hasProperty(FOAF.name)) {
+                    name = c.getProperty(FOAF.name).getObject().asLiteral().getString();
                 } else {
-                    name = curi.toString();
+                    // backwards compatibility
+                    Model authorModel = dataset.getNamedModel(c.getURI());
+                    Resource author2 = authorModel.getResource(c.getURI());
+                    if (author2.hasProperty(FOAF.name)) {
+                        name = author2.getProperty(FOAF.name).getObject().asLiteral().getString();
+                    } else {
+                        name = c.getURI();
+                    }
                 }
+
                 return new UserProfile(name, name, null, curi);
             } else {
                 return null;
@@ -617,6 +625,10 @@ public class Thing {
     public void deleteResource(Thing resource) {
         boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
         try {
+            Objects.requireNonNull(resource, "Resource cannot be null");
+            if (resource.getUri() == null) {
+                throw new IllegalArgumentException("Resource " + resource + "must have an URI");
+            }
             Resource resR = model.getResource(resource.getUri().toString());
             if (resR != null) {
                 model.removeAll(resR, null, null);
@@ -645,7 +657,10 @@ public class Thing {
             if (!subjectR.hasProperty(DCTerms.creator) && subject.getCreator() != null) {
                 Individual author = model.createIndividual(subject.getCreator().getUri().toString(), FOAF.Agent);
                 model.add(subjectR, DCTerms.creator, author);
-                author.setPropertyValue(FOAF.name, model.createLiteral(subject.getCreator().getName()));
+                if (subject.getCreator().getName() != null) {
+                    // backwards compatibility
+                    author.setPropertyValue(FOAF.name, model.createLiteral(subject.getCreator().getName()));
+                }
             }
             commitTransaction(transactionStarted);
         } finally {

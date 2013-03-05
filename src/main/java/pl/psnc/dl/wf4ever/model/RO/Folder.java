@@ -107,7 +107,11 @@ public class Folder extends Resource implements Aggregation {
         if (aggregatedResources == null) {
             aggregatedResources = new HashMap<>();
             for (FolderEntry entry : getFolderEntries().values()) {
-                aggregatedResources.put(entry.getProxyFor().getUri(), entry.getProxyFor());
+                if (entry.getProxyFor() != null) {
+                    aggregatedResources.put(entry.getProxyFor().getUri(), entry.getProxyFor());
+                } else {
+                    LOGGER.warn("Folder entry " + entry + " has no proxy for");
+                }
             }
         }
         return aggregatedResources;

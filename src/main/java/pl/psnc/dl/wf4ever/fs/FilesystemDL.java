@@ -206,7 +206,11 @@ public class FilesystemDL implements DigitalLibrary {
             throws DigitalLibraryException, NotFoundException {
         Path path = getPath(ro, filePath);
         try {
-            Files.delete(path);
+            try {
+                Files.delete(path);
+            } catch (DirectoryNotEmptyException e) {
+                LOGGER.debug("Won't delete a folder from DL storage: " + e.getMessage());
+            }
             ResourceInfoDAO dao = new ResourceInfoDAO();
             ResourceInfo res = dao.findByPath(path.toString());
             if (res != null) {
