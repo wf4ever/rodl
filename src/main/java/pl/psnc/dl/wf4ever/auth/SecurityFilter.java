@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
@@ -105,7 +106,7 @@ public class SecurityFilter implements ContainerRequestFilter {
      * @return user credentials
      */
     public UserMetadata getBearerCredentials(String tokenValue) {
-        if (tokenValue.equals(DigitalLibraryFactory.getAdminToken())) {
+        if (DigestUtils.md5Hex(tokenValue).equalsIgnoreCase(DigitalLibraryFactory.getAdminTokenHash())) {
             return UserProfile.ADMIN;
         }
         AccessTokenDAO accessTokenDAO = new AccessTokenDAO();
