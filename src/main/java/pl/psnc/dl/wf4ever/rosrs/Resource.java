@@ -347,7 +347,7 @@ public class Resource {
             throw new NotFoundException("Resource has no content");
         }
 
-        ContentDisposition cd = ContentDisposition.type(mimeType).fileName(filename).build();
+        ContentDisposition cd = ContentDisposition.type("attachment").fileName(filename).build();
         CacheControl cache = new CacheControl();
         cache.setMustRevalidate(true);
         return Response.ok(data).type(mimeType).header("Content-disposition", cd).cacheControl(cache)
