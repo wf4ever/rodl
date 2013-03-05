@@ -2,7 +2,6 @@ package pl.psnc.dl.wf4ever.model.RDF;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Map;
 
 import junit.framework.Assert;
 
@@ -244,12 +243,12 @@ public class ThingTest extends BaseTest {
     public void testGetDescriptionFor() {
         Thing manifest = researchObject.getManifest();
         Multimap<URI, Object> result = ((Thing) manifest).getDescriptionFor(researchObject.getUri());
+        /* verify description
         for (Map.Entry<URI, Object> entry : result.entries()) {
-            System.out.println("******");
             System.out.println(entry.getKey());
             System.out.println(entry.getValue());
-            System.out.println("******");
         }
+        */
 
     }
 }

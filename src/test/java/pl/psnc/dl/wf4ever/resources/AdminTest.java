@@ -37,16 +37,36 @@ public class AdminTest extends W4ETest {
     }
 
 
+    @Override
+    public void tearDown()
+            throws Exception {
+        deleteAccessToken(accessToken);
+        super.tearDown();
+    }
+
+
     @Test
     public void testUpdateIndexAttributes()
             throws IOException {
+        System.out.println("********************");
+        System.out.println("**********1*********");
+        System.out.println("********************");
         URI ro1uri = createRO(accessToken);
         URI ro2uri = createRO(accessToken);
+        System.out.println("********************");
+        System.out.println("**********2*********");
+        System.out.println("********************");
         ClientResponse response = webResource.uri(URI.create(urlConnectionString)).path("select")
                 .queryParam("q", getAllQuery).get(ClientResponse.class);
+        System.out.println("********************");
+        System.out.println("**********3*********");
+        System.out.println("********************");
         InputStream is = response.getEntityInputStream();
         String result = IOUtils.toString(is);
         System.out.println(result);
+        System.out.println("********************");
+        System.out.println("**********4*********");
+        System.out.println("********************");
     }
 
 
