@@ -151,4 +151,12 @@ public class SolrSearchServer implements SearchServer {
             throws SolrServerException {
         return server.query(new SolrQuery(query));
     }
+
+
+    @Override
+    public void clearIndex()
+            throws IOException, SolrServerException {
+        server.deleteByQuery("*:*");
+        server.commit();
+    }
 }

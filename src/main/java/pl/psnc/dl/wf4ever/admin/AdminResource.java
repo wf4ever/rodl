@@ -30,7 +30,7 @@ public class AdminResource {
 
     @POST
     @Path("solr/reindex/")
-    public void solrReindex() {
+    public String solrReindex() {
         for (ResearchObject ro : ResearchObject.getAll(builder, null)) {
             Multimap<URI, Object> roDescription = ro.getManifest().getDescriptionFor(ro.getUri());
             for (Annotation annotation : ro.getAnnotations().values()) {
@@ -39,6 +39,7 @@ public class AdminResource {
             SearchServer searchServer = SolrSearchServer.get();
             searchServer.saveROAttributes(ro.getUri(), roDescription);
         }
+        return "Operation succeed";
 
     }
 }

@@ -760,8 +760,8 @@ public class Thing {
             return result;
         }
         Model tmpModel = ModelFactory.createDefaultModel();
-        model.read(is, null);
-        Resource r = model.getResource(subject.toString());
+        tmpModel.read(is, null);
+        Resource r = tmpModel.getResource(subject.toString());
         for (Statement s : r.listProperties().toList()) {
             result.put(URI.create(s.getPredicate().getURI()), s.getObject());
         }

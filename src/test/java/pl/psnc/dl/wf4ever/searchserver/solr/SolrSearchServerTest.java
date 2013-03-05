@@ -103,4 +103,17 @@ public class SolrSearchServerTest extends BaseTest {
         Assert.assertEquals(1, asnwer.getResults().toArray().length);
         server.deleteROAttributes(researchObject.getUri());
     }
+
+
+    @Test
+    public void testClearIndex()
+            throws SolrServerException, IOException {
+        SearchServer server = SolrSearchServer.get();
+        server.saveROAttributes(researchObject.getUri(), null);
+        QueryResponse asnwer = server.query("uri:" + "\"" + researchObject.getUri().toString() + "\"");
+        Assert.assertEquals(1, asnwer.getResults().toArray().length);
+        server.clearIndex();
+        asnwer = server.query("*:*");
+        Assert.assertEquals(0, asnwer.getResults().toArray().length);
+    }
 }

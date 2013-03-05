@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.searchserver;
 
+import java.io.IOException;
 import java.net.URI;
 
 import org.apache.solr.client.solrj.SolrServerException;
@@ -77,5 +78,15 @@ public interface SearchServer {
      */
     QueryResponse query(String query)
             throws SolrServerException;
+
+
+    /**
+     * Clear index.
+     * 
+     * @throws IOException .
+     * @throws SolrServerException .
+     */
+    void clearIndex()
+            throws SolrServerException, IOException;
 
 }
