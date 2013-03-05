@@ -1,9 +1,10 @@
 Introduction
 ============
 
-This is the Research Object Digital Library. The main service of the library is the Research Object Storage and Retrieval Service (ROSRS), which 
-allows users to store and retrieve Research Objects. Users can also create snapshots and releases of their Research Objects using the 
-Research Object Evolution Service.
+This is the Research Object Digital Library. The main services provided by the system 
+are the  Research Object Storage and Retrieval Service (ROSRS), which allows users to 
+store and retrieve Research Objects, and the Research Object Evolution Service, which 
+allows users to create snapshots and releases of their Research Objects.
 
 Documentation
 =============
@@ -37,8 +38,8 @@ and configuration procedure is the same.
 3. Edit the rosrs/WEB-INF/classes/hibernate.cfg.xml to point to a database for RODL.
 4. Create a file rosrs/WEB-INF/classes/profiles.properties:
 	1. Create a property adminToken which should contain the MD5 checksum of the admin OAuth Bearer token.
-	2. If dLibra is used, create a property adminUser which should contain the admin user in dLibra.
-	3. If dLibra is used, create a property adminPassword which should contain the admin password in dLibra (not encrypted).
+	2. In the standard installation, create a property adminUser which should contain the admin user in dLibra.
+	3. In the standard installation, create a property adminPassword which should contain the admin password in dLibra (not encrypted).
 5. Reload the application in the servlet container to load the configuration changes.
 
 
