@@ -52,19 +52,13 @@ public final class DigitalLibraryFactory {
     private static String filesystemBase;
 
     /** admin's access token. */
-    private static String adminToken;
+    private static String adminTokenHash;
 
     /** dLibra admin. */
     private static String adminUser;
 
     /** dLibra admin password. */
     private static String adminPassword;
-
-    /** dLibra public user. */
-    private static String publicUser;
-
-    /** dLibra public user password. */
-    private static String publicPassword;
 
     /** Thread local dLibra instance. */
     private static final ThreadLocal<DLibraDataSource> DLIBRA = new ThreadLocal<>();
@@ -170,36 +164,14 @@ public final class DigitalLibraryFactory {
                 LOGGER.warn("Exception when closing the properties input stream", e);
             }
         }
-        adminToken = properties.getProperty("adminToken");
+        adminTokenHash = properties.getProperty("adminToken");
         adminUser = properties.getProperty("adminUser");
         adminPassword = properties.getProperty("adminPassword");
-        publicUser = properties.getProperty("publicUser");
-        publicPassword = properties.getProperty("publicPassword");
     }
 
 
-    public static String getAdminToken() {
-        return adminToken;
-    }
-
-
-    public static String getAdminUser() {
-        return adminUser;
-    }
-
-
-    public static String getAdminPassword() {
-        return adminPassword;
-    }
-
-
-    public static String getPublicUser() {
-        return publicUser;
-    }
-
-
-    public static String getPublicPassword() {
-        return publicPassword;
+    public static String getAdminTokenHash() {
+        return adminTokenHash;
     }
 
 
