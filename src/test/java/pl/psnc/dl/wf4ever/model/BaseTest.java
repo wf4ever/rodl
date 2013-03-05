@@ -14,6 +14,7 @@ import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 import com.hp.hpl.jena.query.Dataset;
@@ -58,6 +59,13 @@ public class BaseTest {
 
     /** Resource URI as String, mapped. */
     protected static final String RESOURCE2 = "http://workflows.org/a%20workflow.scufl";
+
+    /** Folder resource map URI as String, mapped. */
+    protected static final String FOLDER_RESOURCE_MAP = "http://example.org/ro-1/folder-rm.ttl";
+
+    /** Folder resource map URI as String, mapped. */
+    protected static final String FOLDER_RESOURCE_MAP_2 = "http://example.org/ro-2/folder-rm.ttl";
+
     /** Empty RO. */
     protected ResearchObject researchObject;
     /** Empty RO. */
@@ -79,10 +87,13 @@ public class BaseTest {
     /**
      * Create the dataset, load the RDF files.
      * 
+     * @throws BadRequestException
+     * 
      * @throws IOException
      */
     @Before
-    public void setUp() {
+    public void setUp()
+            throws Exception {
         DigitalLibraryFactory.loadDigitalLibraryConfiguration("connection.properties");
         dataset = TDBFactory.createDataset();
         Model model;
@@ -90,6 +101,10 @@ public class BaseTest {
         dataset.addNamedModel(MANIFEST, model);
         model = FileManager.get().loadModel(ANNOTATION_BODY, ANNOTATION_BODY, "TURTLE");
         dataset.addNamedModel(ANNOTATION_BODY, model);
+        model = FileManager.get().loadModel(FOLDER_RESOURCE_MAP, FOLDER_RESOURCE_MAP, "TURTLE");
+        dataset.addNamedModel(FOLDER_RESOURCE_MAP, model);
+        model = FileManager.get().loadModel(FOLDER_RESOURCE_MAP_2, FOLDER_RESOURCE_MAP_2, "TURTLE");
+        dataset.addNamedModel(FOLDER_RESOURCE_MAP_2, model);
         userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED, URI.create("http://jank"));
         builder = new Builder(userProfile, dataset, false);
         researchObject = builder.buildResearchObject(URI.create(RESEARCH_OBJECT));

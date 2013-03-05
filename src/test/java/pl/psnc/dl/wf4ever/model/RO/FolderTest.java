@@ -28,7 +28,8 @@ public class FolderTest extends BaseTest {
 
     @Override
     @Before
-    public void setUp() {
+    public void setUp()
+            throws Exception {
         super.setUp();
         folderUri = researchObject.getUri().resolve(folderName);
         folderBuilder = new FolderBuilder();
@@ -37,7 +38,7 @@ public class FolderTest extends BaseTest {
 
     @Test
     public void testConstructor() {
-        Folder folder = new Folder(userProfile, dataset, true, researchObject, folderUri);
+        Folder folder = new Folder(userProfile, dataset, true, researchObject, folderUri, null);
         Assert.assertEquals(researchObject, folder.getResearchObject());
         Assert.assertEquals(folderUri, folder.getUri());
     }
@@ -79,7 +80,7 @@ public class FolderTest extends BaseTest {
 
     @Test
     public void testSave() {
-        Folder folder = builder.buildFolder(researchObject, folderUri, userProfile, DateTime.now());
+        Folder folder = builder.buildFolder(folderUri, researchObject, userProfile, DateTime.now(), null);
         folder.save();
         Model model = ModelFactory.createDefaultModel();
         model.read(researchObject.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
@@ -89,7 +90,7 @@ public class FolderTest extends BaseTest {
 
     @Test
     public void testDelete() {
-        Folder folder = builder.buildFolder(researchObject, folderUri, userProfile, DateTime.now());
+        Folder folder = builder.buildFolder(folderUri, researchObject, userProfile, DateTime.now(), null);
         folder.save();
         Model model = ModelFactory.createDefaultModel();
         model.read(researchObject.getManifest().getGraphAsInputStream(RDFFormat.RDFXML), null);
@@ -209,8 +210,8 @@ public class FolderTest extends BaseTest {
     public void testAddFolderEntry()
             throws BadRequestException {
         Folder f = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject, folderUri);
-        FolderEntry fe = builder.buildFolderEntry(folderUri.resolve("fe"), f.getAggregatedResources().values()
-                .iterator().next(), f, "fe");
+        AggregatedResource resource = researchObject.aggregate(URI.create("http://example.org/fake-uri"));
+        FolderEntry fe = builder.buildFolderEntry(folderUri.resolve("fe"), resource, f, "fe");
         f.addFolderEntry(fe);
         Assert.assertEquals(fe, f.getFolderEntries().get(fe.getUri()));
     }

@@ -25,7 +25,8 @@ public class ProxyTest extends BaseTest {
 
     @Override
     @Before
-    public void setUp() {
+    public void setUp()
+            throws Exception {
         super.setUp();
         proxyUri = researchObject.getUri().resolve("proxy");
     }

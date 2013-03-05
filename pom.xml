@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pl.psnc.dl.wf4ever</groupId>
 	<artifactId>rosrs</artifactId>
@@ -46,7 +45,7 @@
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
 			<artifactId>rodl-common</artifactId>
-			<version>1.1.6-SNAPSHOT</version>
+			<version>1.1.6</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
@@ -356,5 +355,5 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
-	<version>7.0.15-SNAPSHOT</version>
+	<version>8.0.2-SNAPSHOT</version>
 </project>

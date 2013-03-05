@@ -118,7 +118,12 @@ public class Annotation extends AggregatedResource {
     public static Annotation create(Builder builder, ResearchObject researchObject, URI uri, URI bodyUri,
             Set<Thing> targets)
             throws BadRequestException {
-        Annotation annotation = builder.buildAnnotation(researchObject, uri, builder.buildThing(bodyUri), targets,
+        Objects.requireNonNull(bodyUri, "Body URI cannot be null");
+        Objects.requireNonNull(targets, "Targets cannot be null");
+        if (targets.isEmpty()) {
+            throw new IllegalArgumentException("The set of targets cannot be empty");
+        }
+        Annotation annotation = builder.buildAnnotation(uri, researchObject, builder.buildThing(bodyUri), targets,
             builder.getUser(), DateTime.now());
         annotation.setProxy(researchObject.addProxy(annotation));
         annotation.save();
@@ -210,13 +215,19 @@ public class Annotation extends AggregatedResource {
                 targets.add(builder.buildThing(targetUri));
             }
         }
-        Annotation annotation2 = builder.buildAnnotation(researchObject, annotationUri, body2, targets, getCreator(),
+        Annotation annotation2 = builder.buildAnnotation(annotationUri, researchObject, body2, targets, getCreator(),
             getCreated());
         annotation2.setCopyDateTime(DateTime.now());
         annotation2.setCopyAuthor(builder.getUser());
         annotation2.setCopyOf(this);
         annotation2.setProxy(researchObject.addProxy(annotation2));
         annotation2.save();
+        AggregatedResource resource = annotation2.getResearchObject().getAggregatedResources()
+                .get(annotation2.getBody().getUri());
+        if (resource != null && resource.isInternal()) {
+            int c = resource.updateReferences(resource.getResearchObject());
+            LOGGER.debug(String.format("Updated %d triples in %s", c, resource.getUri()));
+        }
         annotation2.onCreated();
         return annotation2;
     }
@@ -318,7 +329,7 @@ public class Annotation extends AggregatedResource {
             throw new BadRequestException("The entity body does not define any ro:AggregatedAnnotation.");
         }
 
-        Annotation annotation = builder.buildAnnotation(researchObject, uri, builder.buildThing(bodyUri), targets);
+        Annotation annotation = builder.buildAnnotation(uri, researchObject, builder.buildThing(bodyUri), targets);
         return annotation;
     }
 
@@ -361,8 +372,6 @@ public class Annotation extends AggregatedResource {
         AggregatedResource resource = getResearchObject().getAggregatedResources().get(getBody().getUri());
         if (resource != null && resource.isInternal()) {
             resource.saveGraphAndSerialize();
-            int c = resource.updateReferences(resource.getResearchObject());
-            LOGGER.debug(String.format("Updated %d triples in %s", c, resource.getUri()));
             getResearchObject().getManifest().removeRoResourceClass(resource);
         }
         getResearchObject().getManifest().serialize();

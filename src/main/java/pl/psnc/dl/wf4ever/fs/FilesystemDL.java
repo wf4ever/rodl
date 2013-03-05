@@ -183,8 +183,8 @@ public class FilesystemDL implements DigitalLibrary {
 
             DateTime lastModified = new DateTime(Files.getLastModifiedTime(path).toMillis());
             ResourceInfoDAO dao = new ResourceInfoDAO();
-            ResourceInfo res = new ResourceInfo(path.toString(), path.getFileName().toString(), md5, Files.size(path),
-                    "MD5", lastModified, mimeType);
+            ResourceInfo res = dao.create(path.toString(), path.getFileName().toString(), md5, Files.size(path), "MD5",
+                lastModified, mimeType);
             dao.save(res);
             return res;
         } catch (IOException e) {
@@ -206,10 +206,18 @@ public class FilesystemDL implements DigitalLibrary {
             throws DigitalLibraryException, NotFoundException {
         Path path = getPath(ro, filePath);
         try {
-            Files.delete(path);
+            try {
+                Files.delete(path);
+            } catch (DirectoryNotEmptyException e) {
+                LOGGER.debug("Won't delete a folder from DL storage: " + e.getMessage());
+            }
             ResourceInfoDAO dao = new ResourceInfoDAO();
             ResourceInfo res = dao.findByPath(path.toString());
-            dao.delete(res);
+            if (res != null) {
+                dao.delete(res);
+            } else {
+                LOGGER.warn("Resource info not found in database: " + filePath);
+            }
             HibernateUtil.getSessionFactory().getCurrentSession().flush();
         } catch (NoSuchFileException e) {
             throw new NotFoundException("File doesn't exist: " + filePath, e);

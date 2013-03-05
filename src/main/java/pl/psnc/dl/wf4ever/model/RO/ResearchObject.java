@@ -32,6 +32,7 @@ import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
+import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
@@ -156,16 +157,17 @@ public class ResearchObject extends Thing implements Aggregation {
         ResearchObject researchObject = builder.buildResearchObject(uri, builder.getUser(), DateTime.now());
         researchObject.manifest = Manifest.create(builder, researchObject.getUri().resolve(MANIFEST_PATH),
             researchObject);
-        researchObject.save();
-        researchObject.createEvoInfo();
+        researchObject.save(EvoType.LIVE);
         return researchObject;
     }
 
 
     /**
      * Generate new evolution information, including the evolution annotation.
+     * 
+     * @param live
      */
-    public void createEvoInfo() {
+    protected void createEvoInfo(EvoType type) {
         try {
             evoInfo = LiveEvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this);
 
@@ -235,7 +237,7 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
-    public void save() {
+    protected void save(EvoType evoType) {
         super.save();
         getManifest().save();
 
@@ -243,6 +245,8 @@ public class ResearchObject extends Thing implements Aggregation {
         DigitalLibraryFactory.getDigitalLibrary().createResearchObject(uri,
             getManifest().getGraphAsInputStream(RDFFormat.RDFXML), ResearchObject.MANIFEST_PATH,
             RDFFormat.RDFXML.getDefaultMIMEType());
+
+        createEvoInfo(evoType);
     }
 
 
@@ -696,7 +700,11 @@ public class ResearchObject extends Thing implements Aggregation {
         if (folderEntriesByResourceUri == null) {
             folderEntriesByResourceUri = HashMultimap.<URI, FolderEntry> create();
             for (FolderEntry entry : getFolderEntries().values()) {
-                folderEntriesByResourceUri.put(entry.getProxyFor().getUri(), entry);
+                if (entry.getProxyFor() != null) {
+                    folderEntriesByResourceUri.put(entry.getProxyFor().getUri(), entry);
+                } else {
+                    LOGGER.warn("Folder entry " + entry + " has no proxy for");
+                }
             }
         }
         return folderEntriesByResourceUri;

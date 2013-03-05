@@ -5,6 +5,7 @@ import java.net.URI;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -123,7 +124,7 @@ public class Resource extends AggregatedResource {
      * @param evoBuilder
      *            builder of evolution properties
      * @param researchObject
-     *            research object that aggregates the resource
+     *            research object that should aggregate the new resource
      * @return the new resource
      * @throws BadRequestException
      *             if it is expected to be an RDF file and isn't
@@ -140,7 +141,10 @@ public class Resource extends AggregatedResource {
         resource2.setCopyOf(this);
         resource2.setProxy(researchObject.addProxy(resource2));
         if (isInternal()) {
-            resource2.save(getSerialization(), getStats().getMimeType());
+            // backwards compatiblity
+            resource2.save(getSerialization(),
+                getStats() != null ? getStats().getMimeType() : RDFFormat.forFileName(getName(), RDFFormat.RDFXML)
+                        .getDefaultMIMEType());
             if (researchObject.getAnnotationsByBodyUri().containsKey(resource2.getUri())) {
                 resource2.saveGraphAndSerialize();
             }

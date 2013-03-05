@@ -302,8 +302,8 @@ public class Resource {
         } else {
             throw new NotFoundException("Resource not found");
         }
-        ResponseBuilder rb = request.evaluatePreconditions(resource.getStats().getLastModified().toDate(),
-            new EntityTag(resource.getStats().getChecksum()));
+        ResponseBuilder rb = resource.getStats() != null ? request.evaluatePreconditions(resource.getStats()
+                .getLastModified().toDate(), new EntityTag(resource.getStats().getChecksum())) : null;
         if (rb != null) {
             return rb.build();
         }
@@ -343,18 +343,24 @@ public class Resource {
             }
         } else {
             data = resource.getSerialization();
-            mimeType = resource.getStats().getMimeType();
+            // backward compatibility
+            mimeType = resource.getStats() != null ? resource.getStats().getMimeType() : "text/plain";
         }
         if (data == null) {
             throw new NotFoundException("Resource has no content");
         }
 
-        ContentDisposition cd = ContentDisposition.type(mimeType).fileName(filename).build();
+        ContentDisposition cd = ContentDisposition.type("attachment").fileName(filename).build();
         CacheControl cache = new CacheControl();
         cache.setMustRevalidate(true);
-        return Response.ok(data).type(mimeType).header("Content-disposition", cd).cacheControl(cache)
-                .tag(resource.getStats().getChecksum()).lastModified(resource.getStats().getLastModified().toDate())
-                .build();
+        if (resource.getStats() != null) {
+            return Response.ok(data).type(mimeType).header("Content-disposition", cd).cacheControl(cache)
+                    .tag(resource.getStats().getChecksum())
+                    .lastModified(resource.getStats().getLastModified().toDate()).build();
+        } else {
+            // backwards compatibility
+            return Response.ok(data).type(mimeType).header("Content-disposition", cd).cacheControl(cache).build();
+        }
     }
 
 

@@ -1,0 +1,42 @@
+@base <./> .
+@prefix ore: <http://www.openarchives.org/ore/terms/> .
+@prefix ro: <http://purl.org/wf4ever/ro#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<afolder/> a ro:Folder, ro:Resource, ore:AggregatedResource, ore:Aggregation;
+    # The research object
+    ore:isAggregatedBy <.>;
+    # resource map, ie. this file
+    ore:isDescribedBy <folder-rm.ttl>;
+    # The (direct) content of this folder
+    ore:aggregates 
+        <a%20workflow.t2flow>.
+# No dct: metadata and ao:Annotations needed here as this aggregation is
+# not an ro:ResearchObject
+
+
+# Useful links and types, including
+# links back to research object
+<.> a ro:ResearchObject, ore:Aggregation;
+    ore:isDescribedBy <.ro/manifest.rdf> .
+
+<a%20workflow.t2flow> a ro:Resource, ore:AggregatedResource;
+    ore:isAggregatedBy <.> .
+
+# The folder entries, which assign the entry names to 
+# each of the aggregated resources. 
+
+# Note that the ro:entryName must be unique within the ro:Folder of
+# ore:proxyIn, but don't need to match the URI of ore:proxyFor (the
+# aggregated resource) or the URI of the ro:FolderEntry resource
+# (the proxy)
+
+# TODO: Should folder entries have "proper" hash URIs such as :entry1 to 
+# allow annotations on a folder entry proxy? (ie. about the resource being in a
+# folder)
+
+<entry1> a ro:FolderEntry, ore:Proxy;
+    ro:entryName "a workflow.t2flow";
+    ore:proxyFor <a%20workflow.t2flow>;
+    ore:proxyIn <afolder/> .

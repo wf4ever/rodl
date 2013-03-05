@@ -338,7 +338,7 @@ public class Builder {
      *            annotated resources
      * @return a new annotation
      */
-    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, Thing body, Set<Thing> targets) {
+    public Annotation buildAnnotation(URI uri, ResearchObject researchObject, Thing body, Set<Thing> targets) {
         Annotation annotation = new Annotation(user, dataset, useTransactions, researchObject, uri);
         annotation.setBody(body);
         annotation.setAnnotated(targets);
@@ -364,9 +364,9 @@ public class Builder {
      *            creation date
      * @return a new annotation
      */
-    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, Thing body, Set<Thing> targets,
+    public Annotation buildAnnotation(URI uri, ResearchObject researchObject, Thing body, Set<Thing> targets,
             UserMetadata creator, DateTime created) {
-        Annotation annotation = buildAnnotation(researchObject, uri, body, targets);
+        Annotation annotation = buildAnnotation(uri, researchObject, body, targets);
         annotation.setCreator(creator);
         annotation.setCreated(created);
         annotation.setBuilder(this);
@@ -391,11 +391,11 @@ public class Builder {
      *            creation date
      * @return a new annotation
      */
-    public Annotation buildAnnotation(ResearchObject researchObject, URI uri, Thing body, Thing target,
+    public Annotation buildAnnotation(URI uri, ResearchObject researchObject, Thing body, Thing target,
             UserMetadata creator, DateTime created) {
         Set<Thing> targets = new HashSet<>();
         targets.add(target);
-        return buildAnnotation(researchObject, uri, body, targets, creator, created);
+        return buildAnnotation(uri, researchObject, body, targets, creator, created);
     }
 
 
@@ -432,10 +432,12 @@ public class Builder {
      *            author
      * @param created
      *            creation date
+     * @param resourceMapUri
      * @return a new folder
      */
-    public Folder buildFolder(ResearchObject researchObject, URI uri, UserMetadata creator, DateTime created) {
-        Folder folder = new Folder(user, dataset, useTransactions, researchObject, uri);
+    public Folder buildFolder(URI uri, ResearchObject researchObject, UserMetadata creator, DateTime created,
+            URI resourceMapUri) {
+        Folder folder = new Folder(user, dataset, useTransactions, researchObject, uri, resourceMapUri);
         folder.setCreator(creator);
         folder.setCreated(created);
         folder.setBuilder(this);

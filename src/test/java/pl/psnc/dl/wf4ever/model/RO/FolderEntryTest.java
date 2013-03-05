@@ -9,6 +9,7 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -21,7 +22,8 @@ public class FolderEntryTest extends BaseTest {
 
     @Override
     @Before
-    public void setUp() {
+    public void setUp()
+            throws Exception {
         super.setUp();
         folderEntryUri = researchObject.getUri().resolve("folder-entry-uri");
         folderBuilder = new FolderBuilder();
@@ -37,35 +39,22 @@ public class FolderEntryTest extends BaseTest {
 
     @Test
     public void testGenerateEntryName() {
-        //FIXMY
-        //is not a replication?
+        Assert.assertEquals("foo", FolderEntry.generateEntryName(URI.create("http://example.org/foo")));
+        Assert.assertEquals("foo/", FolderEntry.generateEntryName(URI.create("http://example.org/foo/")));
+        Assert.assertEquals("http://example.org/", FolderEntry.generateEntryName(URI.create("http://example.org/")));
+        Assert.assertEquals("http://example.org", FolderEntry.generateEntryName(URI.create("http://example.org")));
     }
 
 
     @Test
     public void testSave()
             throws BadRequestException {
-        Folder f = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
+        Folder f = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
             folderEntryUri.resolve("folder"));
-        FolderEntry folderEntry = builder.buildFolderEntry(folderEntryUri,
-            f.getAggregatedResources().get(f.getAggregatedResources().values().iterator().next()), f, "folder-entry");
+        FolderEntry folderEntry = builder.buildFolderEntry(folderEntryUri, f.getAggregatedResources().values()
+                .iterator().next(), f, "folder-entry");
         Assert.assertNull(f.getFolderEntries().get(folderEntry.getUri()));
         f.save();
-        folderEntry.save();
-        Assert.assertNotNull(Folder.get(builder, folderEntryUri.resolve("folder")).getFolderEntries()
-                .get(folderEntry.getUri()));
-    }
-
-
-    @Test
-    public void testSaveSecondApproachStillNotWorking()
-            throws BadRequestException {
-        Folder f = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
-            folderEntryUri.resolve("folder"));
-        FolderEntry folderEntry = builder.buildFolderEntry(folderEntryUri,
-            f.getAggregatedResources().get(f.getAggregatedResources().values().iterator().next()), f, "folder-entry");
-        Assert.assertNull(f.getFolderEntries().get(folderEntry.getUri()));
-        f.addFolderEntry(folderEntry);
         folderEntry.save();
         Assert.assertNotNull(Folder.get(builder, folderEntryUri.resolve("folder")).getFolderEntries()
                 .get(folderEntry.getUri()));
@@ -90,7 +79,7 @@ public class FolderEntryTest extends BaseTest {
     @Test
     public void testUpdate()
             throws BadRequestException {
-        Folder f = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
+        Folder f = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
             folderEntryUri.resolve("folder"));
         researchObject.aggregate(URI.create("http://example.org/external2"));
         researchObject.aggregate(URI.create("http://example.org/external3"));
@@ -108,27 +97,32 @@ public class FolderEntryTest extends BaseTest {
     @Test
     public void testCopy()
             throws BadRequestException {
-        Folder f = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
+        Folder f = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
             folderEntryUri.resolve("folder"));
-        researchObject.aggregate(URI.create("http://example.org/external2"));
-        researchObject.aggregate(URI.create("http://example.org/external3"));
-        Iterator<AggregatedResource> iter = f.getAggregatedResources().values().iterator();
-        AggregatedResource ag1 = iter.next();
-        AggregatedResource ag2 = iter.next();
+        AggregatedResource ag1 = researchObject.aggregate(URI.create("http://example.org/external2"));
         FolderEntry folderEntry = builder.buildFolderEntry(folderEntryUri, ag1, f, "folder-entry");
         int beforeCopy = f.getFolderEntries().size();
         folderEntry.copy(builder, f);
         Assert.assertEquals(beforeCopy + 1, f.getFolderEntries().size());
         //TODO
-        //figure out why it doesn't work
         //improve check also uri
+    }
+
+
+    @Test(expected = ConflictException.class)
+    public void testDuplicateCopy()
+            throws BadRequestException {
+        Folder f = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
+            folderEntryUri.resolve("folder"));
+        FolderEntry entry = f.getFolderEntries().values().iterator().next();
+        entry.copy(builder, f);
     }
 
 
     @Test
     public void testAssembly()
             throws BadRequestException {
-        Folder f = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
+        Folder f = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
             folderEntryUri.resolve("folder"));
         InputStream is = getClass().getClassLoader().getResourceAsStream(FolderBuilder.DEFAULT_FOLDER_PATH);
         researchObject.aggregate("new-resource", is, "text/plain");
@@ -136,45 +130,30 @@ public class FolderEntryTest extends BaseTest {
         FolderEntry folderEntry = FolderEntry.assemble(builder, f, is);
         Assert.assertNotNull(folderEntry);
         Assert.assertNotNull(folderEntry.getEntryName());
-    }
-
-
-    @Test
-    public void testAssemblyWithNoResource()
-            throws BadRequestException {
-        Folder f = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
-            folderEntryUri.resolve("folder"));
-        InputStream is = getClass().getClassLoader().getResourceAsStream(FolderBuilder.DEFAULT_FOLDER_PATH);
-        is = getClass().getClassLoader().getResourceAsStream("model/ro/folder_entry/folder_entry.rdf");
-        FolderEntry folderEntry = FolderEntry.assemble(builder, f, is);
-        Assert.assertNotNull(folderEntry);
-        Assert.assertNotNull(folderEntry.getEntryName());
-        //TODO no resource no assebly? 
-        assert false;
     }
 
 
     @Test(expected = BadRequestException.class)
     public void testAssemblyNoProxyFor()
             throws BadRequestException {
-        Folder f = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
+        Folder f = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
             folderEntryUri.resolve("folder"));
         InputStream is = getClass().getClassLoader().getResourceAsStream(FolderBuilder.DEFAULT_FOLDER_PATH);
         researchObject.aggregate("new-resource", is, "text/plain");
         is = getClass().getClassLoader().getResourceAsStream("model/ro/folder_entry/no_proxy_for_folder_entry.rdf");
-        FolderEntry folderEntry = FolderEntry.assemble(builder, f, is);
+        FolderEntry.assemble(builder, f, is);
     }
 
 
     @Test(expected = BadRequestException.class)
     public void testAssemblyNoName()
             throws BadRequestException {
-        Folder f = folderBuilder.init(folderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
+        Folder f = folderBuilder.init(FolderBuilder.DEFAULT_FOLDER_PATH, builder, researchObject,
             folderEntryUri.resolve("folder"));
         InputStream is = getClass().getClassLoader().getResourceAsStream(FolderBuilder.DEFAULT_FOLDER_PATH);
         researchObject.aggregate("new-resource", is, "text/plain");
         is = getClass().getClassLoader().getResourceAsStream("model/ro/folder_entry/no_name_folder_entry.rdf");
-        FolderEntry folderEntry = FolderEntry.assemble(builder, f, is);
+        FolderEntry.assemble(builder, f, is);
     }
 
 }

@@ -6,6 +6,8 @@ import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.UUID;
 
+import org.apache.log4j.Logger;
+
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -35,6 +37,9 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  * 
  */
 public class FolderEntry extends Proxy {
+
+    /** Logger. */
+    private static final Logger LOGGER = Logger.getLogger(FolderEntry.class);
 
     /** Name of the resource in the folder. */
     protected String entryName;
@@ -119,10 +124,14 @@ public class FolderEntry extends Proxy {
      */
     @Override
     public void delete() {
-        getProxyIn().getResourceMap().deleteResource(getProxyFor());
-        getProxyIn().getAggregatedResources().remove(getProxyFor().getUri());
-        getProxyFor().getResearchObject().getFolderEntries().remove(uri);
-        getProxyFor().getResearchObject().getFolderEntriesByResourceUri().get(getProxyFor().getUri()).remove(this);
+        if (getProxyFor() != null) {
+            getProxyIn().getResourceMap().deleteResource(getProxyFor());
+            getProxyIn().getAggregatedResources().remove(getProxyFor().getUri());
+            getProxyFor().getResearchObject().getFolderEntries().remove(uri);
+            getProxyFor().getResearchObject().getFolderEntriesByResourceUri().get(getProxyFor().getUri()).remove(this);
+        } else {
+            LOGGER.warn("No proxy for folder entry: " + this);
+        }
         super.delete();
     }
 
@@ -207,6 +216,7 @@ public class FolderEntry extends Proxy {
         URI resourceUri = folder.getResearchObject().getUri().resolve(getProxyFor().getRawPath());
         FolderEntry entry = builder.buildFolderEntry(entryUri,
             folder.getResearchObject().getAggregatedResources().get(resourceUri), folder, getEntryName());
+        folder.addFolderEntry(entry);
         return entry;
     }
 

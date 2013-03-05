@@ -3,8 +3,8 @@ package pl.psnc.dl.wf4ever.db.dao;
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
-import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 
@@ -23,6 +23,8 @@ public abstract class AbstractDAO<T> implements Serializable {
 
     /** id. */
     private static final long serialVersionUID = 258330617173783552L;
+    /** Logger. */
+    private static final Logger LOGGER = Logger.getLogger(AbstractDAO.class);
 
 
     /**
@@ -41,6 +43,7 @@ public abstract class AbstractDAO<T> implements Serializable {
             T activeRecord = (T) session.get(clazz, id);
             return activeRecord;
         } else {
+            LOGGER.warn("Transaction is not active");
             return null;
         }
     }
@@ -86,11 +89,7 @@ public abstract class AbstractDAO<T> implements Serializable {
      */
     public void save(T instance) {
         Session session = HibernateUtil.getSessionFactory().getCurrentSession();
-        try {
-            session.saveOrUpdate(instance);
-        } catch (NonUniqueObjectException e) {
-            session.merge(instance);
-        }
+        session.saveOrUpdate(instance);
     }
 
 

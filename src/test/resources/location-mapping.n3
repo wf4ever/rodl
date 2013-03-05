@@ -20,4 +20,6 @@
    , [ lm:name "http://example.org/ro-1/.ro/manifest.rdf" ; lm:altName "file:src/test/resources/model/ro/research_object/.ro/manifest.rdf" ] 
    , [ lm:name "http://example.org/ro-2/.ro/manifest.rdf" ; lm:altName "file:src/test/resources/model/ro/research_object/.ro/manifest.rdf" ] 
    , [ lm:name "http://example.org/ro-1/.ro/annotationBody.ttl" ; lm:altName "file:src/test/resources/model/ro/research_object/.ro/annotationBody.ttl" ] 
+   , [ lm:name "http://example.org/ro-1/folder-rm.ttl" ; lm:altName "file:src/test/resources/model/ro/research_object/folder-rm.ttl" ] 
+   , [ lm:name "http://example.org/ro-2/folder-rm.ttl" ; lm:altName "file:src/test/resources/model/ro/research_object/folder-rm.ttl" ] 
    .

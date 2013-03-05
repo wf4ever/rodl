@@ -27,7 +27,8 @@ public class AggregatedResourceTest extends BaseTest {
 
     @Override
     @Before
-    public void setUp() {
+    public void setUp()
+            throws Exception {
         super.setUp();
         aggregatedResourceUri = researchObject.getUri().resolve("aggregated-resource");
     }
@@ -142,8 +143,6 @@ public class AggregatedResourceTest extends BaseTest {
         is.close();
         Model result = ModelFactory.createDefaultModel();
         result.read(aggregatedResource.getGraphAsInputStream(RDFFormat.RDFXML), "");
-        expected.write(System.out, "TURTLE");
-        result.write(System.out, "TURTLE");
         Assert.assertTrue(expected.isIsomorphicWith(result));
     }
 }

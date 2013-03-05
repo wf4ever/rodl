@@ -38,9 +38,10 @@ public class BuilderTest extends BaseTest {
 
 
     @Before
-    public void setUp() {
+    public void setUp()
+            throws Exception {
         super.setUp();
-        DateTime.now();
+        now = DateTime.now();
         userM = new UserMetadata("janek", "Jane Kowalski", Role.AUTHENTICATED);
     }
 
@@ -128,7 +129,7 @@ public class BuilderTest extends BaseTest {
         Thing body = builder.buildThing(exampleUri.resolve("body"));
         Set<Thing> targets = new HashSet<Thing>();
         targets.add(researchObject);
-        Annotation annotation = builder.buildAnnotation(researchObject, exampleUri, body, targets);
+        Annotation annotation = builder.buildAnnotation(exampleUri, researchObject, body, targets);
         Assert.assertEquals(annotation.getResearchObject(), researchObject);
         Assert.assertEquals(annotation.getBody(), body);
     }
@@ -139,7 +140,7 @@ public class BuilderTest extends BaseTest {
         Thing body = builder.buildThing(exampleUri.resolve("body"));
         Set<Thing> targets = new HashSet<Thing>();
         targets.add(researchObject);
-        Annotation annotation = builder.buildAnnotation(researchObject, exampleUri, body, targets, userM, now);
+        Annotation annotation = builder.buildAnnotation(exampleUri, researchObject, body, targets, userM, now);
         Assert.assertEquals(annotation.getResearchObject(), researchObject);
         Assert.assertEquals(annotation.getBody(), body);
         Assert.assertEquals(annotation.getCreator(), userM);
@@ -150,7 +151,7 @@ public class BuilderTest extends BaseTest {
     @Test
     public void testBuildAnnotation3() {
         Thing body = builder.buildThing(exampleUri.resolve("body"));
-        Annotation annotation = builder.buildAnnotation(researchObject, exampleUri, body, researchObject, userM, now);
+        Annotation annotation = builder.buildAnnotation(exampleUri, researchObject, body, researchObject, userM, now);
         Assert.assertEquals(annotation.getResearchObject(), researchObject);
         Assert.assertEquals(annotation.getBody(), body);
         Assert.assertEquals(annotation.getCreator(), userM);
@@ -169,7 +170,7 @@ public class BuilderTest extends BaseTest {
 
     @Test
     public void testBuildFolder() {
-        Folder folder = builder.buildFolder(researchObject, exampleUri, userM, now);
+        Folder folder = builder.buildFolder(exampleUri, researchObject, userM, now, null);
         Assert.assertEquals(folder.getResearchObject(), researchObject);
         Assert.assertEquals(folder.getCreator(), userM);
         Assert.assertEquals(folder.getCreated(), now);
@@ -178,7 +179,7 @@ public class BuilderTest extends BaseTest {
 
     @Test
     public void testBuildFolderResourceMap() {
-        Folder folder = builder.buildFolder(researchObject, exampleUri.resolve("folder"), userM, now);
+        Folder folder = builder.buildFolder(exampleUri.resolve("folder"), researchObject, userM, now, null);
         FolderResourceMap folderResourceMap = builder.buildFolderResourceMap(exampleUri, folder);
         Assert.assertEquals(folderResourceMap.getFolder(), folder);
     }
@@ -188,7 +189,7 @@ public class BuilderTest extends BaseTest {
     public void testBuildFolderEntry() {
         AggregatedResource aggregatedResource = builder.buildAggregatedResource(
             exampleUri.resolve("aggregated-resource"), researchObject, userProfile, now);
-        Folder folder = builder.buildFolder(researchObject, exampleUri.resolve("folder"), userM, now);
+        Folder folder = builder.buildFolder(exampleUri.resolve("folder"), researchObject, userM, now, null);
         FolderEntry folderEntry = builder.buildFolderEntry(exampleUri, aggregatedResource, folder, "entry");
         Assert.assertEquals(folderEntry.getName(), exampleUri.getPath().replaceAll("/", ""));
         Assert.assertEquals(folderEntry.getEntryName(), "entry");

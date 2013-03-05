@@ -28,7 +28,8 @@ public class ResourceMapTest extends BaseTest {
 
     @Override
     @Before
-    public void setUp() {
+    public void setUp()
+            throws Exception {
         super.setUp();
         resourceMapUri = researchObject.getUri().resolve(resourceMapName);
         resourceMap = new ResourceMap(userProfile, dataset, true, researchObject, resourceMapUri) {
@@ -80,9 +81,8 @@ public class ResourceMapTest extends BaseTest {
     @Test
     public void testDelete() {
         resourceMap.save();
+        resourceMap.serialize();
         resourceMap.delete();
-        //TODO DL ERROR, WHY?
-        assert false;
     }
 
 

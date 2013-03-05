@@ -223,9 +223,10 @@ public class SparqlResource {
         try {
             QueryResult queryResult = engine.executeSparql(query, inFormat);
             RDFFormat outFormat = queryResult.getFormat();
-            ContentDisposition cd = ContentDisposition.type(outFormat.getDefaultMIMEType())
+            ContentDisposition cd = ContentDisposition.type("attachment")
                     .fileName("result." + outFormat.getDefaultFileExtension()).build();
-            return Response.ok(queryResult.getInputStream()).header("Content-disposition", cd).build();
+            return Response.ok(queryResult.getInputStream()).header("Content-disposition", cd)
+                    .type(outFormat.getDefaultMIMEType()).build();
         } catch (NullPointerException | IllegalArgumentException e) {
             return Response.status(Status.BAD_REQUEST).type("text/plain").entity(e.getMessage()).build();
         }
