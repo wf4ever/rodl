@@ -31,6 +31,7 @@ public class AdminResource {
     @POST
     @Path("solr/reindex/")
     public String solrReindex() {
+        //HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         for (ResearchObject ro : ResearchObject.getAll(builder, null)) {
             Multimap<URI, Object> roDescription = ro.getManifest().getDescriptionFor(ro.getUri());
             for (Annotation annotation : ro.getAnnotations().values()) {
@@ -39,6 +40,7 @@ public class AdminResource {
             SearchServer searchServer = SolrSearchServer.get();
             searchServer.saveROAttributes(ro.getUri(), roDescription);
         }
+        //HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         return "Operation succeed";
 
     }

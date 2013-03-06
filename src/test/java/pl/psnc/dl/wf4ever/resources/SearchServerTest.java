@@ -65,6 +65,14 @@ public class SearchServerTest extends W4ETest {
 
 
     @Test
+    public void testSearchByAnnotation() {
+        URI searchRO = createRO("search-ro/", accessToken);
+        InputStream is = getClass().getClassLoader().getResourceAsStream("resources/searchROAnnotationBody.ttl");
+        URI annotationUri = addAnnotation(is, searchRO, accessToken).getLocation();
+    }
+
+
+    @Test
     public void testDeleteIndexAttributes()
             throws SolrServerException {
         URI ro1uri = createRO(accessToken);

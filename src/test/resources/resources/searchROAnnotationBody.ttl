@@ -1,0 +1,12 @@
+@base <../> .
+@prefix : <.> .
+
+@prefix dc: <http://purl.org/dc/terms/> .
+
+<a%20workflow.t2flow> dc:title "A test" .
+<a%20workflow.t2flow> dc:title "An alternative title" .
+<a%20workflow.t2flow> dc:license "GPL" .
+
+<http://localhost:8082/ROs/searchRO/> dc:description "Something interesting" .
+
+<a%20workflow.t2flow#somePartOfIt> dc:description "The key part" .
