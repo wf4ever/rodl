@@ -97,8 +97,12 @@ public class ResearchObjectResource {
     @Produces({ "application/rdf+xml", "application/x-turtle", "text/turtle", "application/x-trig", "application/trix",
             "text/rdf+n3" })
     public Response getROMetadata(@PathParam("ro_id") String researchObjectId) {
-        return Response.seeOther(getROMetadataURI(uriInfo.getBaseUriBuilder(), researchObjectId + "/"))
-                .header(Constants.LINK_HEADER, getROEvoLinkURI(uriInfo.getBaseUriBuilder(), researchObjectId)).build();
+        return Response
+                .seeOther(getROMetadataURI(uriInfo.getBaseUriBuilder(), researchObjectId + "/"))
+                .header(
+                    Constants.LINK_HEADER,
+                    String.format(Constants.LINK_HEADER_TEMPLATE,
+                        getROEvoLinkURI(uriInfo.getBaseUriBuilder(), researchObjectId), ORE.isDescribedBy)).build();
     }
 
 
