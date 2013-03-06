@@ -9,6 +9,7 @@ import junit.framework.Assert;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.model.BaseTest;
@@ -18,6 +19,7 @@ import pl.psnc.dl.wf4ever.searchserver.SearchServer;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
+@Ignore
 public class SolrSearchServerTest extends BaseTest {
 
     private static final String CONNECTION_PROPERTIES = "connection.properties";

@@ -73,8 +73,12 @@ public class ResourceTest extends ResourceBase {
             throws URISyntaxException {
         client().setFollowRedirects(false);
         ClientResponse response = webResource.uri(ro).accept("text/turtle").get(ClientResponse.class);
-        assertTrue(response.getHeaders().get(Constants.LINK_HEADER)
-                .contains(webResource.path("/evo/info").queryParam("ro", ro.toString()).toString()));
+        assertTrue(response
+                .getHeaders()
+                .get(Constants.LINK_HEADER)
+                .contains(
+                    "<" + webResource.path("/evo/info").queryParam("ro", ro.toString()).toString()
+                            + ">; rel=\"http://www.openarchives.org/ore/terms/isDescribedBy\""));
 
         assertEquals(HttpServletResponse.SC_SEE_OTHER, response.getStatus());
         assertEquals(webResource.uri(ro).path(".ro/manifest.rdf").getURI().getPath(), response.getLocation().getPath());
