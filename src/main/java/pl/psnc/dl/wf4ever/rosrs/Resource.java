@@ -118,6 +118,7 @@ public class Resource {
             CacheControl cache = new CacheControl();
             cache.setMustRevalidate(true);
             ResponseBuilder rb = exists ? Response.ok() : Response.created(resource.getUri());
+            researchObject.updateIndexAttributes();
             return rb.cacheControl(cache).tag(resource.getStats().getChecksum())
                     .lastModified(resource.getStats().getLastModified().toDate()).build();
         } else if (researchObject.getAnnotationsByBodyUri().containsKey(resourceUri)) {
