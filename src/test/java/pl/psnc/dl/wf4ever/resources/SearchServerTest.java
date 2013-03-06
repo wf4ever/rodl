@@ -9,6 +9,7 @@ import junit.framework.Assert;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.W4ETest;
@@ -16,6 +17,7 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.searchserver.SearchServer;
 import pl.psnc.dl.wf4ever.searchserver.solr.SolrSearchServer;
 
+@Ignore
 public class SearchServerTest extends W4ETest {
 
     protected String urlConnectionString;
