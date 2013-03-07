@@ -6,6 +6,7 @@ import java.net.URI;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.joda.time.DateTime;
 
 import com.google.common.collect.Multimap;
 
@@ -25,7 +26,7 @@ public interface SearchServer {
      * @param attributes
      *            a set of attributes
      */
-    void saveROAttributes(URI ro, Multimap<URI, Object> attributes);
+    void saveROAttributes(URI ro, Multimap<URI, Object> attributes, URI creator, DateTime created);
 
 
     /**
@@ -47,7 +48,7 @@ public interface SearchServer {
      * @param source
      *            the resource that contains these attributes
      */
-    void saveROAttributes(URI ro, Multimap<URI, Object> attributes, URI source);
+    void saveROAttributes(URI ro, Multimap<URI, Object> attributes, URI source, URI creator, DateTime created);
 
 
     /**

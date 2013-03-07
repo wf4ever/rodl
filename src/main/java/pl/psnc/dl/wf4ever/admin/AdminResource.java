@@ -45,7 +45,7 @@ public class AdminResource {
                     roDescription.putAll(annotation.getBody().getDescriptionFor(ro.getUri()));
                 }
                 SearchServer searchServer = SolrSearchServer.get();
-                searchServer.saveROAttributes(ro.getUri(), roDescription);
+                searchServer.saveROAttributes(ro.getUri(), roDescription, ro.getCreator().getUri(), ro.getCreated());
             } catch (Throwable e) {
                 LOGGER.error("Can not read to index " + ro.getUri(), e);
             }

@@ -524,7 +524,7 @@ public class ResearchObject extends Thing implements Aggregation {
             roDescription.putAll(annotation.getBody().getDescriptionFor(this.getUri()));
         }
         SearchServer searchServer = SolrSearchServer.get();
-        searchServer.saveROAttributes(this.getUri(), roDescription);
+        searchServer.saveROAttributes(this.getUri(), roDescription, getCreator().getUri(), getCreated());
     }
 
 
