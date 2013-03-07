@@ -149,7 +149,10 @@ public class SolrSearchServer implements SearchServer {
     @Override
     public QueryResponse query(String query)
             throws SolrServerException {
+        SolrQuery a = new SolrQuery(query);
+
         return server.query(new SolrQuery(query));
+
     }
 
 
@@ -159,4 +162,5 @@ public class SolrSearchServer implements SearchServer {
         server.deleteByQuery("*:*");
         server.commit();
     }
+
 }
