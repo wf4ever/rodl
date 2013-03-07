@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.searchserver;
 import java.io.IOException;
 import java.net.URI;
 
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 
@@ -88,5 +89,17 @@ public interface SearchServer {
      */
     void clearIndex()
             throws SolrServerException, IOException;
+
+
+    /**
+     * Execute solr query.
+     * 
+     * @param query
+     *            solr query
+     * @return solr QueryResponse
+     * @throws SolrServerException .
+     */
+    QueryResponse query(SolrQuery query)
+            throws SolrServerException;
 
 }

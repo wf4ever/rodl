@@ -147,10 +147,15 @@ public class SolrSearchServer implements SearchServer {
 
 
     @Override
+    public QueryResponse query(SolrQuery query)
+            throws SolrServerException {
+        return server.query(query);
+    }
+
+
+    @Override
     public QueryResponse query(String query)
             throws SolrServerException {
-        SolrQuery a = new SolrQuery(query);
-
         return server.query(new SolrQuery(query));
 
     }
