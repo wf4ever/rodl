@@ -117,7 +117,8 @@ public class SolrSearchServer implements SearchServer {
         document.addField("creator", ro.getCreator().getName());
         document.addField("created", ro.getCreated());
         document.addField("evo_type", ro.getEvoInfo().getEvoType());
-        document.addField("size", ro.getAggregatedResources().size());
+        document.addField("resources_size", ro.getAggregatedResources().size());
+        document.addField("annotations_size", ro.getAnnotations().size());
         if (roAttributes != null) {
             for (Map.Entry<URI, Object> entry : roAttributes.entries()) {
                 document.addField("property_" + entry.getKey().toString(), entry.getValue());
