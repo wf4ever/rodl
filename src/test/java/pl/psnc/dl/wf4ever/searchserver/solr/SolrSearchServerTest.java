@@ -51,7 +51,7 @@ public class SolrSearchServerTest extends BaseTest {
         SearchServer server = SolrSearchServer.get();
         Multimap<URI, Object> map = ArrayListMultimap.create();
         map.put(URI.create("attribute"), "attributeValue");
-        server.saveROAttributes(researchObject.getUri(), map, null, null);
+        server.saveROAttributes(researchObject.getUri(), map);
         QueryResponse asnwer = server.query("property_attribute:attributeValue");
         Assert.assertTrue(0 < asnwer.getResults().toArray().length);
         asnwer = server.query("uri:" + "\"" + researchObject.getUri().toString() + "\"");
@@ -60,7 +60,7 @@ public class SolrSearchServerTest extends BaseTest {
 
         //version2
         URI sourceUri = researchObject.getUri().resolve("new-indexes-resource");
-        server.saveROAttributes(researchObject.getUri(), map, sourceUri, null, null);
+        server.saveROAttributes(researchObject.getUri(), map, sourceUri);
         asnwer = server.query("property_attribute:attributeValue");
         Assert.assertTrue(0 < asnwer.getResults().toArray().length);
         asnwer = server.query("uri:" + "\"" + sourceUri.toString() + "\"");
@@ -75,7 +75,7 @@ public class SolrSearchServerTest extends BaseTest {
             throws SolrServerException {
         SearchServer server = SolrSearchServer.get();
         Multimap<URI, Object> map = ArrayListMultimap.create();
-        server.saveROAttributes(researchObject.getUri(), map, null, null);
+        server.saveROAttributes(researchObject.getUri(), map);
         QueryResponse asnwer = server.query("uri:" + "\"" + researchObject.getUri().toString() + "\"");
         Assert.assertEquals(1, asnwer.getResults().toArray().length);
         server.deleteROAttributes(researchObject.getUri());
@@ -89,7 +89,7 @@ public class SolrSearchServerTest extends BaseTest {
             throws SolrServerException {
         SearchServer server = SolrSearchServer.get();
         Multimap<URI, Object> map = ArrayListMultimap.create();
-        server.saveROAttributes(researchObject.getUri(), map, null, null);
+        server.saveROAttributes(researchObject.getUri(), map);
         QueryResponse asnwer = server.query("uri:" + "\"" + researchObject.getUri().toString() + "\"");
         Assert.assertEquals(1, asnwer.getResults().toArray().length);
         server.deleteROAttributes(researchObject.getUri());
@@ -100,7 +100,7 @@ public class SolrSearchServerTest extends BaseTest {
     public void testSaveROWithNullAttributes()
             throws SolrServerException {
         SearchServer server = SolrSearchServer.get();
-        server.saveROAttributes(researchObject.getUri(), null, null, null);
+        server.saveROAttributes(researchObject.getUri(), null);
         QueryResponse asnwer = server.query("uri:" + "\"" + researchObject.getUri().toString() + "\"");
         Assert.assertEquals(1, asnwer.getResults().toArray().length);
         server.deleteROAttributes(researchObject.getUri());
@@ -111,7 +111,7 @@ public class SolrSearchServerTest extends BaseTest {
     public void testClearIndex()
             throws SolrServerException, IOException {
         SearchServer server = SolrSearchServer.get();
-        server.saveROAttributes(researchObject.getUri(), null, null, null);
+        server.saveROAttributes(researchObject.getUri(), null);
         QueryResponse asnwer = server.query("uri:" + "\"" + researchObject.getUri().toString() + "\"");
         Assert.assertEquals(1, asnwer.getResults().toArray().length);
         server.clearIndex();

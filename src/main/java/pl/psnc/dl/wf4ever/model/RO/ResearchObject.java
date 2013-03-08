@@ -519,12 +519,16 @@ public class ResearchObject extends Thing implements Aggregation {
      * Update the RO index.
      */
     public void updateIndexAttributes() {
-        Multimap<URI, Object> roDescription = this.getManifest().getDescriptionFor(this.getUri());
-        for (Annotation annotation : this.getAnnotations().values()) {
-            roDescription.putAll(annotation.getBody().getDescriptionFor(this.getUri()));
+        try {
+            Multimap<URI, Object> roDescription = this.getManifest().getDescriptionFor(this.getUri());
+            for (Annotation annotation : this.getAnnotations().values()) {
+                roDescription.putAll(annotation.getBody().getDescriptionFor(this.getUri()));
+            }
+            SearchServer searchServer = SolrSearchServer.get();
+            searchServer.saveRO(this, roDescription);
+        } catch (Exception e) {
+            LOGGER.error("Can not store index in the search server", e);
         }
-        SearchServer searchServer = SolrSearchServer.get();
-        searchServer.saveROAttributes(this.getUri(), roDescription, getCreator().getUri(), getCreated());
     }
 
 

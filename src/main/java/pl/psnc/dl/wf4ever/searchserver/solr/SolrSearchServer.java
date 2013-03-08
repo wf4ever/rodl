@@ -14,9 +14,9 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrInputDocument;
-import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.searchserver.SearchServer;
 
 import com.google.common.collect.Multimap;
@@ -98,8 +98,8 @@ public class SolrSearchServer implements SearchServer {
 
 
     @Override
-    public void saveROAttributes(URI ro, Multimap<URI, Object> attributes, URI creator, DateTime created) {
-        saveROAttributes(ro, attributes, ro, creator, created);
+    public void saveROAttributes(URI ro, Multimap<URI, Object> attributes) {
+        saveROAttributes(ro, attributes, ro);
     }
 
 
@@ -110,16 +110,35 @@ public class SolrSearchServer implements SearchServer {
 
 
     @Override
-    public void saveROAttributes(URI ro, Multimap<URI, Object> attributes, URI source, URI creator, DateTime created) {
+    public void saveRO(ResearchObject ro, Multimap<URI, Object> roAttributes) {
+        SolrInputDocument document = new SolrInputDocument();
+        document.addField("uri", ro.toString());
+        document.addField("ro_uri", ro.toString());
+        document.addField("creator", ro.getCreator().getName());
+        document.addField("created", ro.getCreated());
+        document.addField("evo_type", ro.getEvoInfo().getEvoType());
+        document.addField("size", ro.getAggregatedResources().size());
+        if (roAttributes != null) {
+            for (Map.Entry<URI, Object> entry : roAttributes.entries()) {
+                document.addField("property_" + entry.getKey().toString(), entry.getValue());
+            }
+        }
+        Collection<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
+        docs.add(document);
+        try {
+            server.add(docs);
+            server.commit();
+        } catch (SolrServerException | IOException e) {
+            LOGGER.error("Could not add a document to the Solr server", e);
+        }
+    }
+
+
+    @Override
+    public void saveROAttributes(URI ro, Multimap<URI, Object> attributes, URI source) {
         SolrInputDocument document = new SolrInputDocument();
         document.addField("uri", source.toString());
         document.addField("ro_uri", ro.toString());
-        if (creator != null) {
-            document.addField("creator", creator);
-        }
-        if (created != null) {
-            document.addField("created", created);
-        }
         if (attributes != null) {
             for (Map.Entry<URI, Object> entry : attributes.entries()) {
                 document.addField("property_" + entry.getKey().toString(), entry.getValue());
