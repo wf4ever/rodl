@@ -14,12 +14,19 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrInputDocument;
+import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.searchserver.SearchServer;
+import pl.psnc.dl.wf4ever.vocabulary.ROEVO;
 
 import com.google.common.collect.Multimap;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.vocabulary.RDF;
 
 /**
  * Solr implementation of search/idex server represented by SearchServer interface.
@@ -112,13 +119,28 @@ public class SolrSearchServer implements SearchServer {
     @Override
     public void saveRO(ResearchObject ro, Multimap<URI, Object> roAttributes) {
         SolrInputDocument document = new SolrInputDocument();
-        document.addField("uri", ro.toString());
-        document.addField("ro_uri", ro.toString());
-        document.addField("creator", ro.getCreator().getName());
-        document.addField("created", ro.getCreated());
-        document.addField("evo_type", ro.getEvoInfo().getEvoType());
-        document.addField("resources_size", ro.getAggregatedResources().size());
-        document.addField("annotations_size", ro.getAnnotations().size());
+        document.addField("uri", ro.getUri().toString());
+        document.addField("ro_uri", ro.getUri().toString());
+        if (ro.getCreator() != null) {
+            document.addField("creator", ro.getCreator().getName());
+        }
+        document.addField("created", ro.getCreated().toDate());
+        Model model = ModelFactory.createDefaultModel();
+        model.read(ro.getEvoInfo().getGraphAsInputStream(RDFFormat.RDFXML), null);
+        Resource r = model.getResource(ro.getUri().toString());
+        if (r.hasProperty(RDF.type, ROEVO.LiveRO)) {
+            document.addField("evo_type", EvoType.LIVE);
+        } else if (r.hasProperty(RDF.type, ROEVO.ArchivedRO)) {
+            document.addField("evo_type", EvoType.ARCHIVE);
+        } else if (r.hasProperty(RDF.type, ROEVO.SnapshotRO)) {
+            document.addField("evo_type", EvoType.SNAPSHOT);
+        }
+        if (ro.getAggregatedResources() != null) {
+            document.addField("resources_size", ro.getAggregatedResources().size());
+        }
+        if (ro.getAnnotations() != null) {
+            document.addField("annotations_size", ro.getAnnotations().size());
+        }
         if (roAttributes != null) {
             for (Map.Entry<URI, Object> entry : roAttributes.entries()) {
                 document.addField("property_" + entry.getKey().toString(), entry.getValue());
