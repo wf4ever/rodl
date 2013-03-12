@@ -146,6 +146,7 @@ public class SolrSearchServer implements SearchServer {
                 document.addField("property_" + entry.getKey().toString(), entry.getValue());
             }
         }
+
         Collection<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
         docs.add(document);
         try {
