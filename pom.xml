@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pl.psnc.dl.wf4ever</groupId>
-	<artifactId>rosrs</artifactId>
+	<artifactId>rodl</artifactId>
 	<packaging>war</packaging>
-	<name>rosrs</name>
+	<name>rodl</name>
 	<url>http://maven.apache.org</url>
 	<inceptionYear>2010</inceptionYear>
 	<developers>
