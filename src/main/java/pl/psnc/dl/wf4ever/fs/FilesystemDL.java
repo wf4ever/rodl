@@ -226,7 +226,7 @@ public class FilesystemDL implements DigitalLibrary {
         }
         try {
             path = path.getParent();
-            while (path != null) {
+            while (path != null && !path.equals(basePath)) {
                 Files.delete(path);
                 path = path.getParent();
             }

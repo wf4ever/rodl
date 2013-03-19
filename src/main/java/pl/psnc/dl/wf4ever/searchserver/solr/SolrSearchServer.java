@@ -122,7 +122,7 @@ public class SolrSearchServer implements SearchServer {
         document.addField("uri", ro.getUri().toString());
         document.addField("ro_uri", ro.getUri().toString());
         if (ro.getCreator() != null) {
-            document.addField("creator", ro.getCreator().getName());
+            document.addField("creator", ro.getCreator().getUri().toString());
         }
         document.addField("created", ro.getCreated().toDate());
         Model model = ModelFactory.createDefaultModel();

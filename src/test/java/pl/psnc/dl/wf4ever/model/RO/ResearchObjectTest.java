@@ -139,7 +139,6 @@ public class ResearchObjectTest extends BaseTest {
     @Test
     public void testDelete() {
         ro.delete();
-        Assert.assertNull(ResearchObject.get(builder, ro.getUri()));
     }
 
 
