@@ -14,21 +14,27 @@ import java.util.UUID;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletResponse;
 
+import junit.framework.Assert;
+
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.util.SafeURI;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
+import pl.psnc.dl.wf4ever.vocabulary.FOAF;
 
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.tdb.TDBFactory;
+import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -62,9 +68,9 @@ public class ResourceTest extends ResourceBase {
 
     @Test
     public void testGetROWithWhitespaces() {
-        URI ro3 = createRO("ro " + UUID.randomUUID().toString(), accessToken);
+        URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
-        assertTrue(list.contains(ro3.toString()));
+        assertTrue(list.contains(ro.toString()));
     }
 
 
@@ -214,5 +220,20 @@ public class ResourceTest extends ResourceBase {
                 .header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
         assertEquals("Removing evo info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         response.close();
+    }
+
+
+    @Test
+    public void testFulfillCreatorNames() {
+        URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
+        Builder builder = new Builder(null, TDBFactory.createDataset(), false);
+        ResearchObject researchObject = builder.buildResearchObject(ro);
+        Thing manifest = researchObject.getManifest();
+        OntModel manifestModel = ModelFactory.createOntologyModel();
+        manifestModel.read(researchObject.getManifestUri().toString());
+        for (RDFNode n : manifestModel.listObjectsOfProperty(DCTerms.creator).toList()) {
+            Assert.assertNotNull(manifestModel.getProperty(manifestModel.getResource(n.toString()), FOAF.name));
+        }
+
     }
 }

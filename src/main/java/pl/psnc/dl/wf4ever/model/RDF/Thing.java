@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.model.RDF;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
@@ -665,9 +667,9 @@ public class Thing {
             if (!subjectR.hasProperty(DCTerms.creator) && subject.getCreator() != null) {
                 Individual author = model.createIndividual(subject.getCreator().getUri().toString(), FOAF.Agent);
                 model.add(subjectR, DCTerms.creator, author);
-                if (subject.getCreator().getName() != null) {
-                    // backwards compatibility
-                    author.setPropertyValue(FOAF.name, model.createLiteral(subject.getCreator().getName()));
+                if (author.hasProperty(FOAF.name)) {
+                    //cleaning RODL??
+                    author.removeAll(FOAF.name);
                 }
             }
             commitTransaction(transactionStarted);
@@ -819,5 +821,62 @@ public class Thing {
      */
     public void addUpdateListener(ModelUpdateListener listener) {
         updateListeners.add(listener);
+    }
+
+
+    /**
+     * Append a FOAF.name property to exported object.
+     * 
+     * @param output
+     *            the output stream.
+     * @param filterUri
+     *            the he URI used to determine which URIs will be relativized. Only URIs with the same host and paths
+     *            having the filter path as suffix will be relativized.
+     * @param format
+     *            The format in which in thing should be written
+     */
+    public void addAuthorsName(OutputStream output, URI filterUri, RDFFormat format) {
+        Model exportedModel = ModelFactory.createDefaultModel();
+
+        exportedModel.read(getGraphAsInputStream(RDFFormat.RDFXML), null);
+        if (!exportedModel.listSubjectsWithProperty(DCTerms.creator).hasNext()) {
+            exportedModel.write(output);
+            return;
+        }
+        for (com.hp.hpl.jena.rdf.model.Resource r : exportedModel.listSubjectsWithProperty(DCTerms.creator).toList()) {
+            com.hp.hpl.jena.rdf.model.Resource author = r.getPropertyResourceValue(DCTerms.creator);
+            UserProfile profile = (UserProfile) HibernateUtil.getSessionFactory().getCurrentSession()
+                    .get(UserProfile.class, author.getURI());
+            if (author.hasProperty(FOAF.name)) {
+                author.removeAll(FOAF.name);
+            }
+            author.addProperty(FOAF.name, exportedModel.createLiteral(profile.getName()));
+        }
+        //there is nothing to filter
+        if (filterUri == null) {
+            if (format == null || format == RDFFormat.RDFXML) {
+                exportedModel.write(output, "RDF/XML");
+            } else if (format == RDFFormat.N3) {
+                exportedModel.write(output, "N-TRIPLE");
+            } else if (format == RDFFormat.TURTLE) {
+                exportedModel.write(output, "TTL");
+            } else {
+                throw new IllegalArgumentException("Format " + format + " is not supported");
+            }
+            return;
+        }
+        //there is something to filter
+        ResearchObjectRelativeWriter writer = new RO_RDFXMLWriter();
+        if (format == RDFFormat.RDFXML) {
+            writer = new RO_RDFXMLWriter();
+        } else if (format == RDFFormat.TURTLE) {
+            writer = new RO_TurtleWriter();
+        } else {
+            throw new IllegalArgumentException("Format " + format + " is not supported");
+        }
+        writer.setResearchObjectURI(filterUri);
+        writer.setBaseURI(getUri());
+        writer.write(exportedModel, output, null);
+        return;
     }
 }
