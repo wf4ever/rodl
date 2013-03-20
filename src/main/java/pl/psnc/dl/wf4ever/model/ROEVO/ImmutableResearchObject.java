@@ -63,8 +63,8 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
      *            live research object
      * @param builder
      *            model instance builder
-     * @param evoBuilder
-     *            builder of evolution properties
+     * @param evoType
+     *            evolution type
      * @return the new research object
      */
     public static ImmutableResearchObject create(URI uri, ResearchObject researchObject, Builder builder,
