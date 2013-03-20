@@ -276,7 +276,7 @@
 		</plugins>
 	</reporting>
 	<scm>
-		<developerConnection>scm:git:git@github.com:wf4ever/rosrs.git</developerConnection>
+		<developerConnection>scm:git:git@github.com:wf4ever/rodl.git</developerConnection>
 		<tag>rosrs-6.2.4</tag>
 	</scm>
 	<repositories>
