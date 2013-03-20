@@ -347,6 +347,7 @@ public class Resource {
                         thing.addAuthorsName(output, null, format);
                         output.close();
                         data = new FileInputStream(tmpRDFResourceFile);
+                        tmpRDFResourceFile.delete();
                     } catch (IOException e) {
                         LOGGER.error("Can not prepare " + resourceUri.toString(), e);
                         e.printStackTrace();

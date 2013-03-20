@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -77,6 +78,7 @@ public class ZippedResearchObjectResource {
         File tmpZipFileOut = null;
         ZipOutputStream zipOutputStream = null;
         FileOutputStream fout;
+        FileInputStream resultInputStream = null;
         try {
             tmpZipFile = File.createTempFile("zippedROIn", ".zip");
             tmpZipFileOut = File.createTempFile("zippedROut", ".zip");
@@ -108,12 +110,15 @@ public class ZippedResearchObjectResource {
                 }
             }
             zipOutputStream.close();
+            resultInputStream = new FileInputStream(tmpZipFileOut);
         } catch (IOException e) {
             e.printStackTrace();
             LOGGER.error("Can't zip " + researchObject.getUri().toString(), e);
         }
+        tmpZipFile.delete();
+        tmpZipFileOut.delete();
         ContentDisposition cd = ContentDisposition.type("attachment").fileName(researchObjectId + ".zip").build();
-        return ResearchObjectResource.addLinkHeaders(Response.ok(tmpZipFileOut), uriInfo, researchObjectId)
+        return ResearchObjectResource.addLinkHeaders(Response.ok(resultInputStream), uriInfo, researchObjectId)
                 .header("Content-disposition", cd).type("application/zip").build();
     }
 }
