@@ -286,7 +286,7 @@ public class FilesystemDL implements DigitalLibrary {
 
 
     @Override
-    public boolean createUser(String login, String password, String username)
+    public boolean createOrUpdateUser(String login, String password, String username)
             throws DigitalLibraryException {
         UserProfile.Role role;
         if (login.equals("wfadmin")) {
@@ -296,10 +296,14 @@ public class FilesystemDL implements DigitalLibrary {
         } else {
             role = Role.AUTHENTICATED;
         }
+        UserProfileDAO dao = new UserProfileDAO();
         if (userExists(login)) {
+            UserProfile updatedUser = dao.findByLogin(login);
+            updatedUser.setName(username);
+            dao.save(updatedUser);
+            HibernateUtil.getSessionFactory().getCurrentSession().flush();
             return false;
         }
-        UserProfileDAO dao = new UserProfileDAO();
         UserProfile user2 = dao.create(login, username, role);
         dao.save(user2);
         HibernateUtil.getSessionFactory().getCurrentSession().flush();

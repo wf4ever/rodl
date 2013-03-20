@@ -105,6 +105,14 @@ public interface SearchServer {
             throws SolrServerException;
 
 
+    /**
+     * Save RO in index.
+     * 
+     * @param ro
+     *            the research object to save
+     * @param roAttributes
+     *            the dynamic properties to save
+     */
     void saveRO(ResearchObject ro, Multimap<URI, Object> roAttributes);
 
 }

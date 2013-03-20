@@ -111,7 +111,7 @@ public class BasicTest {
             throws DigitalLibraryException, NotFoundException, ConflictException, IOException,
             pl.psnc.dl.wf4ever.dl.AccessDeniedException {
         DigitalLibrary dlA = new FilesystemDL(BASE);
-        assertTrue(dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName()));
+        assertTrue(dlA.createOrUpdateUser(USER.getLogin(), USER_PASSWORD, USER.getName()));
         DigitalLibrary dl = new FilesystemDL(BASE);
         dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
             MAIN_FILE_MIME_TYPE);
@@ -129,8 +129,8 @@ public class BasicTest {
     public final void testGetUserProfile()
             throws DigitalLibraryException, IOException, NotFoundException {
         DigitalLibrary dlA = new FilesystemDL(BASE);
-        assertTrue(dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName()));
-        assertFalse(dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName()));
+        assertTrue(dlA.createOrUpdateUser(USER.getLogin(), USER_PASSWORD, USER.getName()));
+        assertFalse(dlA.createOrUpdateUser(USER.getLogin(), USER_PASSWORD, USER.getName()));
         DigitalLibrary dl = new FilesystemDL(BASE);
         UserMetadata user = dl.getUserProfile(USER.getLogin());
         Assert.assertEquals("User login is equal", USER.getLogin(), user.getLogin());
@@ -142,7 +142,7 @@ public class BasicTest {
     public final void testStoreAttributes()
             throws DigitalLibraryException, IOException, ConflictException, NotFoundException, AccessDeniedException {
         DigitalLibrary dlA = new FilesystemDL(BASE);
-        dlA.createUser(USER.getLogin(), USER_PASSWORD, USER.getName());
+        dlA.createOrUpdateUser(USER.getLogin(), USER_PASSWORD, USER.getName());
         DigitalLibrary dl = new FilesystemDL(BASE);
         dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
             MAIN_FILE_MIME_TYPE);

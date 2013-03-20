@@ -90,7 +90,7 @@ public class FlowTests {
             throws Exception {
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
         dl = new FilesystemDL(BASE);
-        dl.createUser(USER.getLogin(), USER_PASSWORD, USER.getName());
+        dl.createOrUpdateUser(USER.getLogin(), USER_PASSWORD, USER.getName());
         dl = new FilesystemDL(BASE);
         dl.createResearchObject(RO_URI, new ByteArrayInputStream(MAIN_FILE_CONTENT.getBytes()), MAIN_FILE_PATH,
             MAIN_FILE_MIME_TYPE);

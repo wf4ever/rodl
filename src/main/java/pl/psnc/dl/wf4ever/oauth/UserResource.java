@@ -31,7 +31,6 @@ import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
@@ -128,7 +127,6 @@ public class UserResource {
             throw new NotFoundException("User not found");
         }
         InputStream userDesc = user.getAsInputStream(rdfFormat);
-
         if (DigitalLibraryFactory.getDigitalLibrary().userExists(userId)) {
             return Response.ok(userDesc).type(rdfFormat.getDefaultMIMEType()).build();
         } else {
@@ -164,11 +162,10 @@ public class UserResource {
      */
     @PUT
     @Consumes("text/plain")
-    public Response createUser(@PathParam("U_ID") String urlSafeUserId, String username)
+    public Response createOrUpdateUser(@PathParam("U_ID") String urlSafeUserId, String username)
             throws DigitalLibraryException, ConflictException, ClassNotFoundException, IOException, NamingException,
             SQLException, pl.psnc.dl.wf4ever.dl.NotFoundException {
         String userId = new String(Base64.decodeBase64(urlSafeUserId));
-
         try {
             new URI(userId);
         } catch (URISyntaxException e) {
@@ -176,13 +173,18 @@ public class UserResource {
         }
 
         String password = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 20);
-        boolean created = DigitalLibraryFactory.getDigitalLibrary().createUser(userId, password,
+        boolean created = DigitalLibraryFactory.getDigitalLibrary().createOrUpdateUser(userId, password,
             username != null && !username.isEmpty() ? username : userId);
-        UserMetadata user = DigitalLibraryFactory.getDigitalLibrary().getUserProfile(userId);
-
         if (created) {
             return Response.created(uriInfo.getAbsolutePath()).build();
         } else {
+            UserProfileDAO userProfileDAO = new UserProfileDAO();
+            UserProfile user = userProfileDAO.findByLogin(userId);
+            if (user != null) {
+                for (ResearchObject ro : ResearchObject.getAll(builder, user)) {
+                    ro.updateIndexAttributes();
+                }
+            }
             return Response.ok().build();
         }
     }

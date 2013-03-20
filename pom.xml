@@ -45,7 +45,7 @@
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
 			<artifactId>rodl-common</artifactId>
-			<version>1.1.6</version>
+			<version>1.1.7-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>

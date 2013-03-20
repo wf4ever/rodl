@@ -148,6 +148,14 @@ public final class UserProfile extends UserMetadata implements Serializable {
     }
 
 
+    /**
+     * Get user profile as a RDF data.
+     * 
+     * @param format
+     *            rdf format.
+     * 
+     * @return Input stream
+     */
     public InputStream getAsInputStream(RDFFormat format) {
         OntModel userModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
         Individual agent = userModel.createIndividual(getUri().toString(), FOAF.Agent);

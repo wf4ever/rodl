@@ -165,7 +165,8 @@ public class ResearchObject extends Thing implements Aggregation {
     /**
      * Generate new evolution information, including the evolution annotation.
      * 
-     * @param live
+     * @param type
+     *            evolution type
      */
     protected void createEvoInfo(EvoType type) {
         try {
@@ -237,6 +238,12 @@ public class ResearchObject extends Thing implements Aggregation {
     }
 
 
+    /**
+     * Save.
+     * 
+     * @param evoType
+     *            evolution type
+     */
     protected void save(EvoType evoType) {
         super.save();
         getManifest().save();
