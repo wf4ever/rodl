@@ -188,7 +188,7 @@ public class UserResource {
             if (updated) {
                 UserProfile user = userProfileDAO.findByLogin(userId);
                 UpdateUserIndexThread updateThread = new UpdateUserIndexThread(ResearchObject.getAll(builder, user));
-                updateThread.run();
+                updateThread.start();
             }
             return Response.ok().build();
         }
