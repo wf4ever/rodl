@@ -508,7 +508,7 @@ public class Manifest extends ResourceMap {
 
 
     @Override
-    public InputStream getGrapsAsPublicInputStream(RDFFormat syntax) {
+    public InputStream getPublicGraphAsInputStream(RDFFormat syntax) {
         File tmpRDFResourceFile;
         try {
             tmpRDFResourceFile = File.createTempFile("tmpRDFResource", ".rdf");
@@ -517,8 +517,9 @@ public class Manifest extends ResourceMap {
             OutputStream output = new FileOutputStream(tmpRDFResourceFile);
             this.addAuthorsName(output, null, syntax);
             output.close();
+            InputStream result = new FileInputStream(tmpRDFResourceFile);
             tmpRDFResourceFile.delete();
-            return new FileInputStream(tmpRDFResourceFile);
+            return result;
         } catch (IOException e) {
             e.printStackTrace();
             return null;

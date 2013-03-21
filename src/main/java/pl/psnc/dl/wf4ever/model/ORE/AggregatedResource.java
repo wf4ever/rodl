@@ -480,4 +480,10 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
             endTransaction(transactionStarted);
         }
     }
+
+
+    @Override
+    public InputStream getPublicGraphAsInputStream(RDFFormat syntax) {
+        return getGraphAsInputStream(syntax);
+    }
 }

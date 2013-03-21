@@ -1,8 +1,11 @@
 package pl.psnc.dl.wf4ever.model.RO;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -217,5 +220,11 @@ public class FolderResourceMap extends ResourceMap {
     @Override
     public ResearchObject getResearchObject() {
         return getFolder().getResearchObject();
+    }
+
+
+    @Override
+    public InputStream getPublicGraphAsInputStream(RDFFormat syntax) {
+        return getGraphAsInputStream(syntax);
     }
 }

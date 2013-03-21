@@ -84,6 +84,16 @@ public interface ResearchObjectComponent {
 
 
     /**
+     * Get the preprocessed resource as it is stored in the triplestore.
+     * 
+     * @param syntax
+     *            RDF syntax
+     * @return input stream from the manifest or null if not a named graph
+     */
+    InputStream getPublicGraphAsInputStream(RDFFormat syntax);
+
+
+    /**
      * Check if the resource is internal. Resource is internal only if its content has been deployed under the control
      * of the service. A resource that has "internal" URI but the content has not been uploaded is considered external.
      * 

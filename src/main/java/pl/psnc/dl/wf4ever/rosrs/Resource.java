@@ -333,7 +333,7 @@ public class Resource {
                 if (extensionFormat != null && (format == null || extensionFormat == format)) {
                     // 1. GET manifest.rdf Accept: application/rdf+xml
                     // 2. GET manifest.rdf
-                    data = resource.getGraphAsInputStream(extensionFormat);
+                    data = resource.getPublicGraphAsInputStream(extensionFormat);
                     mimeType = extensionFormat.getDefaultMIMEType();
                 } else {
                     // 3. GET manifest.rdf Accept: text/turtle
