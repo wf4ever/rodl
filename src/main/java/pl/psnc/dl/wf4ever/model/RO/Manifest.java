@@ -1,5 +1,11 @@
 package pl.psnc.dl.wf4ever.model.RO;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -7,6 +13,7 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -496,6 +503,25 @@ public class Manifest extends ResourceMap {
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);
+        }
+    }
+
+
+    @Override
+    public InputStream getGrapsAsPublicInputStream(RDFFormat syntax) {
+        File tmpRDFResourceFile;
+        try {
+            tmpRDFResourceFile = File.createTempFile("tmpRDFResource", ".rdf");
+            tmpRDFResourceFile.delete();
+            tmpRDFResourceFile.deleteOnExit();
+            OutputStream output = new FileOutputStream(tmpRDFResourceFile);
+            this.addAuthorsName(output, null, syntax);
+            output.close();
+            tmpRDFResourceFile.delete();
+            return new FileInputStream(tmpRDFResourceFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 

@@ -1,11 +1,6 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 
 import javax.ws.rs.Consumes;
@@ -338,21 +333,7 @@ public class Resource {
                 if (extensionFormat != null && (format == null || extensionFormat == format)) {
                     // 1. GET manifest.rdf Accept: application/rdf+xml
                     // 2. GET manifest.rdf
-                    try {
-                        File tmpRDFResourceFile = File.createTempFile("tmpRDFResource", ".rdf");
-                        tmpRDFResourceFile.delete();
-                        tmpRDFResourceFile.deleteOnExit();
-                        Thing thing = builder.buildThing(resourceUri);
-                        OutputStream output = new FileOutputStream(tmpRDFResourceFile);
-                        thing.addAuthorsName(output, null, format);
-                        output.close();
-                        data = new FileInputStream(tmpRDFResourceFile);
-                        tmpRDFResourceFile.delete();
-                    } catch (IOException e) {
-                        LOGGER.error("Can not prepare " + resourceUri.toString(), e);
-                        e.printStackTrace();
-                    }
-                    //data = resource.getGraphAsInputStream(extensionFormat);
+                    data = resource.getGraphAsInputStream(extensionFormat);
                     mimeType = extensionFormat.getDefaultMIMEType();
                 } else {
                     // 3. GET manifest.rdf Accept: text/turtle

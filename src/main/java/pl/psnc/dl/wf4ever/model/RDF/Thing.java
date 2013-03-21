@@ -324,6 +324,18 @@ public class Thing {
 
 
     /**
+     * Return this resource as a named graph in a selected RDF format.
+     * 
+     * @param syntax
+     *            RDF format
+     * @return an rewritten input stream or null of no model is found
+     */
+    public InputStream getGrapsAsPublicInputStream(RDFFormat syntax) {
+        return getGraphAsInputStream(syntax);
+    }
+
+
+    /**
      * Return this resource as a named graph in a selected RDF format. Only triples describing the resources given as
      * parameters will be returned.
      * 
@@ -827,7 +839,7 @@ public class Thing {
      *            The format in which in thing should be written
      */
     public void addAuthorsName(OutputStream output, URI filterUri, RDFFormat format) {
-        Model exportedModel = ModelFactory.createDefaultModel();
+        OntModel exportedModel = ModelFactory.createOntologyModel();
 
         exportedModel.read(getGraphAsInputStream(RDFFormat.RDFXML), null);
         if (!exportedModel.listSubjectsWithProperty(DCTerms.creator).hasNext()) {
@@ -838,7 +850,7 @@ public class Thing {
             com.hp.hpl.jena.rdf.model.Resource author = r.getPropertyResourceValue(DCTerms.creator);
             UserProfile profile = (UserProfile) HibernateUtil.getSessionFactory().getCurrentSession()
                     .get(UserProfile.class, author.getURI());
-            author.as(Individual.class).addRDFType(FOAF.Agent);
+            exportedModel.createIndividual(author.getURI(), FOAF.Agent);
             if (author.hasProperty(FOAF.name)) {
                 author.removeAll(FOAF.name);
             }
