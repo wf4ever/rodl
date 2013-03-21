@@ -22,6 +22,7 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -414,23 +415,13 @@ public class Thing {
             }
             com.hp.hpl.jena.rdf.model.Resource c = ro.getPropertyResourceValue(DCTerms.creator);
             if (c != null) {
-                URI curi = null;
-                String name = null;
-                curi = URI.create(c.getURI());
-                if (c.hasProperty(FOAF.name)) {
-                    name = c.getProperty(FOAF.name).getObject().asLiteral().getString();
+                UserProfileDAO userProfileDAO = new UserProfileDAO();
+                UserProfile userProfile = userProfileDAO.findByLogin(c.getURI());
+                if (userProfile != null) {
+                    return userProfile;
                 } else {
-                    // backwards compatibility
-                    Model authorModel = dataset.getNamedModel(c.getURI());
-                    Resource author2 = authorModel.getResource(c.getURI());
-                    if (author2.hasProperty(FOAF.name)) {
-                        name = author2.getProperty(FOAF.name).getObject().asLiteral().getString();
-                    } else {
-                        name = c.getURI();
-                    }
+                    return new UserProfile(c.getURI(), c.getURI(), null, URI.create(c.getURI()));
                 }
-
-                return new UserProfile(name, name, null, curi);
             } else {
                 return null;
             }

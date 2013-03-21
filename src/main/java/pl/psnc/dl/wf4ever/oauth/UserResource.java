@@ -166,8 +166,15 @@ public class UserResource {
             throws DigitalLibraryException, ConflictException, ClassNotFoundException, IOException, NamingException,
             SQLException, pl.psnc.dl.wf4ever.dl.NotFoundException {
         String userId = new String(Base64.decodeBase64(urlSafeUserId));
+        boolean updated = false;
+        UserProfileDAO userProfileDAO = new UserProfileDAO();
         try {
             new URI(userId);
+
+            UserProfile user = userProfileDAO.findByLogin(userId);
+            if (user != null && username != null && !(user.getName().equals(username))) {
+                updated = true;
+            }
         } catch (URISyntaxException e) {
             LOGGER.warn("URI " + userId + " is not valid", e);
         }
@@ -178,12 +185,10 @@ public class UserResource {
         if (created) {
             return Response.created(uriInfo.getAbsolutePath()).build();
         } else {
-            UserProfileDAO userProfileDAO = new UserProfileDAO();
-            UserProfile user = userProfileDAO.findByLogin(userId);
-            if (user != null) {
-                for (ResearchObject ro : ResearchObject.getAll(builder, user)) {
-                    ro.updateIndexAttributes();
-                }
+            if (updated) {
+                UserProfile user = userProfileDAO.findByLogin(userId);
+                UpdateUserIndexThread updateThread = new UpdateUserIndexThread(ResearchObject.getAll(builder, user));
+                updateThread.run();
             }
             return Response.ok().build();
         }
@@ -226,5 +231,38 @@ public class UserResource {
         }
         DigitalLibraryFactory.getDigitalLibrary().deleteUser(userId);
         userProfileDAO.delete(user);
+    }
+
+
+    /**
+     * Simple Thread to update users information (update names in index) in the background when they are changed.
+     * 
+     * @author pejot
+     * 
+     */
+    class UpdateUserIndexThread extends Thread {
+
+        /** Set of ros to update. */
+        Set<ResearchObject> roSet;
+
+
+        /**
+         * Constructor.
+         * 
+         * @param set
+         *            set of ros
+         */
+        public UpdateUserIndexThread(Set<ResearchObject> set) {
+            this.roSet = set;
+        }
+
+
+        @Override
+        public void run() {
+            super.run();
+            for (ResearchObject ro : roSet) {
+                ro.updateIndexAttributes();
+            }
+        }
     }
 }

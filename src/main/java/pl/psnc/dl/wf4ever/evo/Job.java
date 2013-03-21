@@ -71,7 +71,6 @@ public class Job extends Thread {
         this.status.setState(State.RUNNING);
         this.container = container;
         this.operations = operations;
-
         setDaemon(true);
     }
 
