@@ -838,10 +838,13 @@ public class Thing {
             com.hp.hpl.jena.rdf.model.Resource author = r.getPropertyResourceValue(DCTerms.creator);
             UserProfile profile = (UserProfile) HibernateUtil.getSessionFactory().getCurrentSession()
                     .get(UserProfile.class, author.getURI());
+            author.as(Individual.class).addRDFType(FOAF.Agent);
             if (author.hasProperty(FOAF.name)) {
                 author.removeAll(FOAF.name);
             }
-            author.addProperty(FOAF.name, exportedModel.createLiteral(profile.getName()));
+            if (profile.getName() != null) {
+                author.addProperty(FOAF.name, exportedModel.createLiteral(profile.getName()));
+            }
         }
         //there is nothing to filter
         if (filterUri == null) {
