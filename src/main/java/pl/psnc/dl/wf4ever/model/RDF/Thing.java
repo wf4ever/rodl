@@ -23,7 +23,6 @@ import org.openrdf.rio.RDFFormat;
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
-import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
@@ -846,16 +845,16 @@ public class Thing {
             exportedModel.write(output);
             return;
         }
-        for (com.hp.hpl.jena.rdf.model.Resource r : exportedModel.listSubjectsWithProperty(DCTerms.creator).toList()) {
-            com.hp.hpl.jena.rdf.model.Resource author = r.getPropertyResourceValue(DCTerms.creator);
-            UserProfile profile = (UserProfile) HibernateUtil.getSessionFactory().getCurrentSession()
-                    .get(UserProfile.class, author.getURI());
-            exportedModel.createIndividual(author.getURI(), FOAF.Agent);
-            if (author.hasProperty(FOAF.name)) {
-                author.removeAll(FOAF.name);
+        for (RDFNode author : exportedModel.listObjectsOfProperty(DCTerms.creator).toList()) {
+            if (!author.isURIResource()) {
+                continue;
             }
-            if (profile.getName() != null) {
-                author.addProperty(FOAF.name, exportedModel.createLiteral(profile.getName()));
+            Resource autorResource = exportedModel.createIndividual(author.asResource().getURI(), FOAF.Agent);
+            UserProfileDAO dao = new UserProfileDAO();
+            UserProfile profile = dao.findByLogin(autorResource.getURI());
+            if (profile != null && profile.getName() != null) {
+                autorResource.removeAll(FOAF.name);
+                autorResource.addProperty(FOAF.name, exportedModel.createLiteral(profile.getName()));
             }
         }
         //there is nothing to filter
