@@ -187,7 +187,8 @@ public class UserResource {
         } else {
             if (updated) {
                 UserProfile user = userProfileDAO.findByLogin(userId);
-                UpdateUserIndexThread updateThread = new UpdateUserIndexThread(ResearchObject.getAll(builder, user));
+                UpdateUserIndexThread updateThread = new UpdateUserIndexThread(ResearchObject.getAll(builder, user),
+                        user);
                 updateThread.start();
             }
             return Response.ok().build();
@@ -244,6 +245,8 @@ public class UserResource {
 
         /** Set of ros to update. */
         Set<ResearchObject> roSet;
+        /** the new value of UserProfile from db. */
+        UserProfile creator;
 
 
         /**
@@ -251,9 +254,12 @@ public class UserResource {
          * 
          * @param set
          *            set of ros
+         * @param creator
+         *            new value of creator
          */
-        public UpdateUserIndexThread(Set<ResearchObject> set) {
+        public UpdateUserIndexThread(Set<ResearchObject> set, UserProfile creator) {
             this.roSet = set;
+            this.creator = creator;
         }
 
 
@@ -261,6 +267,7 @@ public class UserResource {
         public void run() {
             super.run();
             for (ResearchObject ro : roSet) {
+                ro.setCreator(creator);
                 ro.updateIndexAttributes();
             }
         }
