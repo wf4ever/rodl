@@ -325,7 +325,7 @@ public class Resource {
                     format = specificResourceUri.getPath() != null ? RDFFormat.forFileName(
                         specificResourceUri.getPath(), RDFFormat.RDFXML) : RDFFormat.RDFXML;
                 }
-                data = resource.getGraphAsInputStream(format);
+                data = resource.getPublicGraphAsInputStream(format);
                 mimeType = format.getDefaultMIMEType();
                 filename = specificName;
             } else {

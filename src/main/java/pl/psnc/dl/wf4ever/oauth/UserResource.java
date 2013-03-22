@@ -254,7 +254,7 @@ public class UserResource {
          * 
          * @param set
          *            set of ros
-         * @param creator
+         *            @param creator
          *            new value of creator
          */
         public UpdateUserIndexThread(Set<ResearchObject> set, UserProfile creator) {
