@@ -45,6 +45,7 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.ROEVO.EvoInfo;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.LiveEvoInfo;
+import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectSerializable;
 import pl.psnc.dl.wf4ever.searchserver.SearchServer;
 import pl.psnc.dl.wf4ever.searchserver.solr.SolrSearchServer;
 import pl.psnc.dl.wf4ever.util.MemoryZipFile;
@@ -72,7 +73,7 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
  * @author piotrekhol
  * 
  */
-public class ResearchObject extends Thing implements Aggregation {
+public class ResearchObject extends Thing implements Aggregation, ResearchObjectSerializable {
 
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(ResearchObject.class);
