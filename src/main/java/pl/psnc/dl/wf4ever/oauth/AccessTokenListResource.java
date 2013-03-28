@@ -17,7 +17,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
@@ -70,9 +69,6 @@ public class AccessTokenListResource {
             @QueryParam("user_id") String userId) {
         if (builder.getUser().getRole() != UserMetadata.Role.ADMIN) {
             throw new ForbiddenException("Only admin users can manage access tokens.");
-        }
-        if (userId != null) {
-            userId = new String(Base64.decodeBase64(userId));
         }
         OAuthClientDAO oAuthClientDAO = new OAuthClientDAO();
         OAuthClient client = clientId != null ? oAuthClientDAO.findById(clientId) : null;
