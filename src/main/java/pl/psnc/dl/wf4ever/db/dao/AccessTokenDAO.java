@@ -42,18 +42,18 @@ public final class AccessTokenDAO extends AbstractDAO<AccessToken> {
      * 
      * @param client
      *            client
-     * @param creds
+     * @param userProfile
      *            owner
      * @return access token active record
      */
     @SuppressWarnings("unchecked")
-    public List<AccessToken> findByClientOrUser(OAuthClient client, UserProfile creds) {
+    public List<AccessToken> findByClientOrUser(OAuthClient client, UserProfile userProfile) {
         Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(AccessToken.class);
         if (client != null) {
             criteria.add(Restrictions.eq("client.clientId", client.getClientId()));
         }
-        if (creds != null) {
-            criteria.add(Restrictions.eq("user.userId", creds.getLogin()));
+        if (userProfile != null) {
+            criteria.add(Restrictions.eq("user.login", userProfile.getLogin()));
         }
         return criteria.list();
     }
