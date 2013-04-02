@@ -12,7 +12,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -918,12 +917,14 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
 
 
     @Override
-    public Set<ResearchObjectComponentSerializable> getSerializables() {
-        Collection<ResourceMap> resourceMap = getResourceMaps().values();
-        Collection<AggregatedResource> aggregated = getAggregatedResources().values();
-        Set<ResearchObjectComponentSerializable> result = new HashSet<>();
-        result.addAll(resourceMap);
-        result.addAll(aggregated);
+    public Map<URI, ResearchObjectComponentSerializable> getSerializables() {
+        HashMap<URI, ResearchObjectComponentSerializable> result = new HashMap<>();
+        for (URI uri : getAggregatedResources().keySet()) {
+            result.put(uri, getAggregatedResources().get(uri));
+        }
+        for (URI uri : getResourceMaps().keySet()) {
+            result.put(uri, getResourceMaps().get(uri));
+        }
         return result;
     }
 }
