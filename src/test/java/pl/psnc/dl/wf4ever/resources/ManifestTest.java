@@ -96,16 +96,18 @@ public class ManifestTest extends ResourceBase {
 
     @Test
     public void getManifestWithAnnotationBody() {
+        //TODO
+        //How to handle TriG ?!?!?!
         addFile(ro, filePath, accessToken);
         rdfProxy = addRDFFile(ro, rdfFileBody, rdfFilePath, accessToken).getLocation();
         String manifest = webResource.uri(ro).path("/.ro/manifest.rdf")
-                .header("Authorization", "Bearer " + accessToken).accept("application/x-trig").get(String.class);
+                .header("Authorization", "Bearer " + accessToken).accept("application/x-turtle").get(String.class);
         assertTrue("Manifest should contain user id", manifest.contains(userId));
         assertTrue("Manifest should contain user id", manifest.contains(filePathEncoded));
         //assertTrue("Annotation body should contain file path: " + filePath, manifest.contains("a_workflow.t2flow"));
         //assertTrue(manifest.contains("A test"));
 
-        manifest = webResource.uri(ro).path("/.ro/manifest.trig").queryParam("original", "manifest.rdf")
+        manifest = webResource.uri(ro).path("/.ro/manifest.ttl").queryParam("original", "manifest.rdf")
                 .header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue("Manifest should contain user id", manifest.contains(userId));
         assertTrue("Manifest should contain user id", manifest.contains(filePathEncoded));

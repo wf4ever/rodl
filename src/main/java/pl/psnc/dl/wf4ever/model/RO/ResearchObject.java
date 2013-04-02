@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -45,6 +46,8 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.ROEVO.EvoInfo;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.LiveEvoInfo;
+import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectComponentSerializable;
+import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectSerializable;
 import pl.psnc.dl.wf4ever.searchserver.SearchServer;
 import pl.psnc.dl.wf4ever.searchserver.solr.SolrSearchServer;
 import pl.psnc.dl.wf4ever.util.MemoryZipFile;
@@ -72,7 +75,7 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
  * @author piotrekhol
  * 
  */
-public class ResearchObject extends Thing implements Aggregation {
+public class ResearchObject extends Thing implements Aggregation, ResearchObjectSerializable {
 
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(ResearchObject.class);
@@ -913,4 +916,14 @@ public class ResearchObject extends Thing implements Aggregation {
         return getLiveEvoInfo();
     }
 
+
+    @Override
+    public Set<ResearchObjectComponentSerializable> getSerializables() {
+        Collection<ResourceMap> resourceMap = getResourceMaps().values();
+        Collection<AggregatedResource> aggregated = getAggregatedResources().values();
+        Set<ResearchObjectComponentSerializable> result = new HashSet<>();
+        result.addAll(resourceMap);
+        result.addAll(aggregated);
+        return result;
+    }
 }

@@ -19,6 +19,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
@@ -77,7 +78,6 @@ public class ZippedResearchObjectResource {
         File tmpZipFile = null;
         File tmpZipFileOut = null;
         ZipOutputStream zipOutputStream = null;
-        FileOutputStream fout;
         FileInputStream resultInputStream = null;
         try {
             tmpZipFile = File.createTempFile("zippedROIn", ".zip");
@@ -87,11 +87,7 @@ public class ZippedResearchObjectResource {
             tmpZipFile.deleteOnExit();
             tmpZipFileOut.deleteOnExit();
             zipOutputStream = new ZipOutputStream(new FileOutputStream(tmpZipFileOut));
-            fout = new FileOutputStream(tmpZipFile);
-            int c;
-            while ((c = body.read()) != -1) {
-                fout.write(c);
-            }
+            IOUtils.copy(body, new FileOutputStream(tmpZipFile));
             ZipFile zipFile = new ZipFile(tmpZipFile);
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements()) {
@@ -103,10 +99,7 @@ public class ZippedResearchObjectResource {
                         RDFFormat.RDFXML);
                 } else {
                     zipOutputStream.putNextEntry(originalEntry);
-                    InputStream is = zipFile.getInputStream(originalEntry);
-                    while ((c = is.read()) != -1) {
-                        zipOutputStream.write(c);
-                    }
+                    IOUtils.copy(zipFile.getInputStream(originalEntry), zipOutputStream);
                 }
             }
             zipOutputStream.close();

@@ -28,6 +28,7 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObjectComponent;
+import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectComponentSerializable;
 
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
@@ -41,7 +42,7 @@ import com.hp.hpl.jena.rdf.model.Statement;
  * @author pejot
  * 
  */
-public class AggregatedResource extends Thing implements ResearchObjectComponent {
+public class AggregatedResource extends Thing implements ResearchObjectComponent, ResearchObjectComponentSerializable {
 
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(AggregatedResource.class);

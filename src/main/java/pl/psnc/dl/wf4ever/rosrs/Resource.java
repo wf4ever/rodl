@@ -40,6 +40,7 @@ import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObjectComponent;
+import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectComponentSerializable;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
@@ -298,11 +299,14 @@ public class Resource {
             return getFolder(researchObject.getFolders().get(resourceUri), format);
         }
 
-        ResearchObjectComponent resource;
+        ResearchObjectComponentSerializable resource;
+        ResearchObjectComponent resourceComponent;
         if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
             resource = researchObject.getAggregatedResources().get(resourceUri);
+            resourceComponent = researchObject.getAggregatedResources().get(resourceUri);
         } else if (researchObject.getResourceMaps().containsKey(resourceUri)) {
             resource = researchObject.getResourceMaps().get(resourceUri);
+            resourceComponent = researchObject.getResourceMaps().get(resourceUri);
         } else {
             throw new NotFoundException("Resource not found");
         }
@@ -313,8 +317,8 @@ public class Resource {
         }
         InputStream data = null;
         String mimeType;
-        String filename = resource.getName();
-        if (!resource.isInternal()) {
+        String filename = resourceComponent.getName();
+        if (!resourceComponent.isInternal()) {
             throw new NotFoundException("Resource has no content");
         }
         if (resource.isNamedGraph()) {

@@ -15,6 +15,7 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObjectComponent;
+import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectComponentSerializable;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.hp.hpl.jena.ontology.Individual;
@@ -27,7 +28,7 @@ import com.hp.hpl.jena.query.ReadWrite;
  * @author piotrekhol
  * 
  */
-public abstract class ResourceMap extends Thing implements ResearchObjectComponent {
+public abstract class ResourceMap extends Thing implements ResearchObjectComponent, ResearchObjectComponentSerializable {
 
     /** ore:Aggregation described by this resource map. */
     protected Aggregation aggregation;
