@@ -481,6 +481,7 @@ public class Resource {
         if (resource.isInternal()) {
             return Response.status(Status.TEMPORARY_REDIRECT).location(resource.getUri()).build();
         } else {
+            resource.delete();
             return Response.noContent().build();
         }
     }
