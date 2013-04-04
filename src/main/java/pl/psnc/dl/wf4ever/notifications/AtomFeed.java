@@ -2,9 +2,10 @@ package pl.psnc.dl.wf4ever.notifications;
 
 import java.util.Collections;
 
+import org.joda.time.DateTime;
+
 import com.sun.syndication.feed.atom.Feed;
-import com.sun.syndication.feed.synd.SyndPerson;
-import com.sun.syndication.feed.synd.SyndPersonImpl;
+import com.sun.syndication.feed.atom.Person;
 
 /**
  * Feeds factory.
@@ -34,11 +35,12 @@ public class AtomFeed {
     static Feed createNewFeed(String title, String id) {
         Feed feed = new Feed();
         feed.setFeedType("atom_1.0");
-        feed.setId(id);
+        feed.setId(id.toString());
         feed.setTitle(title);
-        SyndPerson author = new SyndPersonImpl();
-        author.setEmail("example@example.org");
-        author.setName("My name is rodl ;)");
+        feed.setUpdated(DateTime.now().toDate());
+        Person author = new Person();
+        author.setEmail("rodl@wf4ever.org");
+        author.setName("My name is rodl :)");
         feed.setAuthors(Collections.singletonList(author));
         return feed;
     }

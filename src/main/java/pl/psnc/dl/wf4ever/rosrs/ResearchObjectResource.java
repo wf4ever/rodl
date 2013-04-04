@@ -274,7 +274,6 @@ public class ResearchObjectResource {
             }
         }
         pl.psnc.dl.wf4ever.model.RO.Resource resource = researchObject.aggregate(proxyFor);
-
         RDFFormat syntax = accept != null ? RDFFormat.forMIMEType(accept, RDFFormat.RDFXML) : RDFFormat.RDFXML;
         String proxyForHeader = String.format(Constants.LINK_HEADER_TEMPLATE, proxyFor.toString(),
             ORE.proxyFor.getURI());
