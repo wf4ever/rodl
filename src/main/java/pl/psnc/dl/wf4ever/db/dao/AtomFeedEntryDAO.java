@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 
 import pl.psnc.dl.wf4ever.db.AtomFeedEntry;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
@@ -48,6 +49,15 @@ public class AtomFeedEntryDAO extends AbstractDAO<AtomFeedEntry> {
         Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(AtomFeedEntry.class);
         criteria.addOrder(Order.asc("created"));
         criteria.addOrder(Order.asc("id"));
+        if (subjectUri != null) {
+            criteria.add(Restrictions.eq("subject", subjectUri.toString()));
+        }
+        if (from != null) {
+            criteria.add(Restrictions.gt("from", from.toString()));
+        }
+        if (to != null) {
+            criteria.add(Restrictions.eq("to", to.toString()));
+        }
         return criteria.list();
     }
 
