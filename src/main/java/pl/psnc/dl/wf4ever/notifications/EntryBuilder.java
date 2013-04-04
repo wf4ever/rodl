@@ -1,5 +1,7 @@
 package pl.psnc.dl.wf4ever.notifications;
 
+import java.net.URI;
+
 import pl.psnc.dl.wf4ever.db.AtomFeedEntry;
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -33,7 +35,8 @@ public class EntryBuilder {
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
         AtomFeedEntry entry = new AtomFeedEntry();
         entry.setTitle("Research Object Created");
-        entry.setSource(researchObject.getUri());
+        entry.setSubject(researchObject.getUri());
+        entry.setSource(URI.create("."));
         entry.setSummary("The new Research Object was created.\nResearch Object uri:"
                 + researchObject.getUri().toString() + "\n");
         dao.save(entry);

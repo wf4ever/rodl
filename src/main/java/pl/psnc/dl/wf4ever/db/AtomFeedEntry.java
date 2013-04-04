@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.net.URI;
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -29,15 +30,21 @@ public class AtomFeedEntry implements Serializable {
     private Integer id;
 
     /** Timestamp. */
+    @Column(nullable = false)
     private Date created = DateTime.now().toDate();
 
     /** Title. */
     private String title;
+
     /** The event source/discover. */
-    private URI source;
+    private String source;
 
     /** Summary/Description(Content). */
     private String summary;
+
+    /** Related object (for example Research Object uri). */
+    @Column(nullable = false)
+    private String subject;
 
 
     public Integer getId() {
@@ -51,12 +58,12 @@ public class AtomFeedEntry implements Serializable {
 
 
     public URI getSource() {
-        return source;
+        return URI.create(source);
     }
 
 
     public void setSource(URI source) {
-        this.source = source;
+        this.source = source.toString();
     }
 
 
@@ -87,6 +94,16 @@ public class AtomFeedEntry implements Serializable {
 
     public void setCreated(Date created) {
         this.created = created;
+    }
+
+
+    public URI getSubject() {
+        return URI.create(subject);
+    }
+
+
+    public void setSubject(URI subject) {
+        this.subject = subject.toString();
     }
 
 }

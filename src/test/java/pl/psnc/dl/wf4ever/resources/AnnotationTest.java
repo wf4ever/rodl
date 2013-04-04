@@ -27,12 +27,6 @@ import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
-/**
- * Tests for adding annotations and annotation bodies.
- * 
- * @author piotrekhol
- * 
- */
 public class AnnotationTest extends ResourceBase {
 
     /** An annotation body path. */
@@ -52,7 +46,6 @@ public class AnnotationTest extends ResourceBase {
     @Override
     public void tearDown()
             throws Exception {
-        super.tearDown();
     }
 
 

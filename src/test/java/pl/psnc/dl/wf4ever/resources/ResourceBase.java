@@ -55,7 +55,7 @@ public class ResourceBase extends W4ETest {
     @Override
     public void tearDown()
             throws Exception {
-        //deleteROs();
+        deleteROs();
         deleteAccessToken(accessToken);
         deleteUser(userIdSafe);
         super.tearDown();
