@@ -17,8 +17,12 @@ import javax.ws.rs.core.UriInfo;
 
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.evo.CopyResource;
+import pl.psnc.dl.wf4ever.evo.EvoInfoResource;
+import pl.psnc.dl.wf4ever.evo.FinalizeResource;
 import pl.psnc.dl.wf4ever.notifications.NotificationResource;
 import pl.psnc.dl.wf4ever.vocabulary.NotificationService;
+import pl.psnc.dl.wf4ever.vocabulary.ROEVOService;
 
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -73,6 +77,16 @@ public class RootResource {
         URI baseNotificationUri = uriInfo.getAbsolutePathBuilder().path(NotificationResource.class).build();
         Literal notificationsTpl = model.createLiteral(baseNotificationUri.toString() + "{?ro}");
         service.addProperty(NotificationService.notifications, notificationsTpl);
+
+        URI copyUri = uriInfo.getAbsolutePathBuilder().path(CopyResource.class).build();
+        Literal copyTpl = model.createLiteral(copyUri.toString());
+        URI finalizeUri = uriInfo.getAbsolutePathBuilder().path(FinalizeResource.class).build();
+        Literal finalizeTpl = model.createLiteral(finalizeUri.toString());
+        URI infoUri = uriInfo.getAbsolutePathBuilder().path(EvoInfoResource.class).build();
+        Literal infoTpl = model.createLiteral(infoUri.toString() + "{?ro}");
+        service.addProperty(ROEVOService.copy, copyTpl);
+        service.addProperty(ROEVOService.finalize, finalizeTpl);
+        service.addProperty(ROEVOService.info, infoTpl);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         model.write(out, format.getName().toUpperCase(), null);
