@@ -101,6 +101,7 @@ public class ResearchObjectListResource {
         InputStream manifest = researchObject.getManifest().getGraphAsInputStream(format);
         ContentDisposition cd = ContentDisposition.type("attachment").fileName(ResearchObject.MANIFEST_PATH).build();
         researchObject.updateIndexAttributes();
+
         return Response.created(researchObject.getUri()).entity(manifest).header("Content-disposition", cd)
                 .type(format.getDefaultMIMEType()).build();
     }

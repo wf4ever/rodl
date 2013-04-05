@@ -34,7 +34,7 @@ import com.hp.hpl.jena.vocabulary.RDF;
  * @author pejot
  * 
  */
-public class SolrSearchServer implements SearchServer {
+public final class SolrSearchServer implements SearchServer {
 
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(SearchServer.class);
@@ -59,7 +59,7 @@ public class SolrSearchServer implements SearchServer {
      *            solr URL
      */
     private SolrSearchServer(String url) {
-        this.url = url;
+        SolrSearchServer.url = url;
         server = new HttpSolrServer(url);
     }
 
