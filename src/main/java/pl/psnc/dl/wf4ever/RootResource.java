@@ -1,15 +1,30 @@
 package pl.psnc.dl.wf4ever;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.openrdf.rio.RDFFormat;
+
+import pl.psnc.dl.wf4ever.notifications.NotificationResource;
+import pl.psnc.dl.wf4ever.vocabulary.NotificationService;
+
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.Literal;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Resource;
 import com.sun.jersey.api.view.Viewable;
 
 /**
@@ -36,5 +51,33 @@ public class RootResource {
         map.put("rosrsuri", uriInfo.getAbsolutePathBuilder().path("ROs/").build());
         map.put("roevouri", uriInfo.getAbsolutePathBuilder().path("evo/").build());
         return Response.ok(new Viewable("/index", map)).build();
+    }
+
+
+    /**
+     * Get a service description as an RDF graph.
+     * 
+     * @param uriInfo
+     *            injected context information
+     * @param accept
+     *            accept header
+     * @return RDF service description, format subject to content-negotiation
+     */
+    @GET
+    @Produces({ "application/rdf+xml", "text/turtle", "*/*" })
+    public Response getServiceDescription(@Context UriInfo uriInfo, @HeaderParam("Accept") String accept) {
+        RDFFormat format = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
+
+        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+        Resource service = model.createResource(uriInfo.getAbsolutePath().toString());
+        URI baseNotificationUri = uriInfo.getAbsolutePathBuilder().path(NotificationResource.class).build();
+        Literal notificationsTpl = model.createLiteral(baseNotificationUri.toString() + "{?ro}");
+        service.addProperty(NotificationService.notifications, notificationsTpl);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        model.write(out, format.getName().toUpperCase(), null);
+        InputStream description = new ByteArrayInputStream(out.toByteArray());
+
+        return Response.ok(description, format.getDefaultMIMEType()).build();
     }
 }

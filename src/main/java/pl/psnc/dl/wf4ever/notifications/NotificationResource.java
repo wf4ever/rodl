@@ -1,14 +1,10 @@
 package pl.psnc.dl.wf4ever.notifications;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.Date;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -19,17 +15,10 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.db.AtomFeedEntry;
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
-import pl.psnc.dl.wf4ever.vocabulary.NotificationService;
 
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.rdf.model.Literal;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Resource;
 import com.sun.syndication.feed.atom.Feed;
 import com.sun.syndication.io.FeedException;
 import com.sun.syndication.io.WireFeedOutput;
@@ -48,33 +37,6 @@ public class NotificationResource {
 
 
     /**
-     * Get a service description as an RDF graph.
-     * 
-     * @param uriInfo
-     *            injected context information
-     * @param accept
-     *            accept header
-     * @return RDF service description, format subject to content-negotiation
-     */
-    @GET
-    public Response getServiceDescription(@Context UriInfo uriInfo, @HeaderParam("Accept") String accept) {
-        RDFFormat format = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
-
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        Resource service = model.createResource(uriInfo.getAbsolutePath().toString());
-        URI baseNotificationUri = uriInfo.getAbsolutePathBuilder().path(getClass(), "getAtomFeeds").build();
-        Literal notificationsTpl = model.createLiteral(baseNotificationUri.toString() + "{?ro}");
-        service.addProperty(NotificationService.notifications, notificationsTpl);
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        model.write(out, format.getName().toUpperCase(), null);
-        InputStream description = new ByteArrayInputStream(out.toByteArray());
-
-        return Response.ok(description, format.getDefaultMIMEType()).build();
-    }
-
-
-    /**
      * Get AtomFeed with list of entries.
      * 
      * @param uriInfo
@@ -88,7 +50,6 @@ public class NotificationResource {
      * @return Atom Feed with the list of requested entrires.
      */
     @GET
-    @Path("notifications/")
     @Produces(MediaType.APPLICATION_ATOM_XML)
     public Response getAtomFeeds(@Context UriInfo uriInfo, @QueryParam("ro") URI roUri,
             @QueryParam("from") String from, @QueryParam("to") String to) {
