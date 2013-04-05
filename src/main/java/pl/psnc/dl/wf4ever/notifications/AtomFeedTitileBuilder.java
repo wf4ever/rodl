@@ -39,7 +39,7 @@ public class AtomFeedTitileBuilder {
         }
         if (from != null || to != null) {
             result += "\nRange:\n";
-            if (from.toString() != null) {
+            if (from != null) {
                 result += "\nfrom: " + from.toString();
             }
             if (to != null) {

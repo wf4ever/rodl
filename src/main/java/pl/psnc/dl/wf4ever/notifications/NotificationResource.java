@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.db.AtomFeedEntry;
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
@@ -65,13 +66,15 @@ public class NotificationResource {
     @GET
     @Path("notifications/")
     @Produces(MediaType.APPLICATION_ATOM_XML)
-    public Response getAtomFeeds(@Context UriInfo uriInfo, @QueryParam("ro") URI roUri, @QueryParam("from") Date from,
-            @QueryParam("to") Date to) {
+    public Response getAtomFeeds(@Context UriInfo uriInfo, @QueryParam("ro") URI roUri,
+            @QueryParam("from") String from, @QueryParam("to") String to) {
         AtomFeedEntryDAO entryDAO = new AtomFeedEntryDAO();
         //title depends on fitlers
-        Feed feed = AtomFeed.createNewFeed(AtomFeedTitileBuilder.buildTitle(roUri, from, to), uriInfo.getRequestUri()
-                .toString());
-        feed.setEntries(AtomFeedEntryDAO.convertToRawEntry(entryDAO.find(roUri, from, to)));
+        Date dateFrom = (from != null) ? DateTime.parse(from).toDate() : null;
+        Date dateTo = (to != null) ? DateTime.parse(to).toDate() : null;
+        Feed feed = AtomFeed.createNewFeed(AtomFeedTitileBuilder.buildTitle(roUri, dateFrom, dateTo), uriInfo
+                .getRequestUri().toString());
+        feed.setEntries(AtomFeedEntryDAO.convertToRawEntry(entryDAO.find(roUri, dateFrom, dateTo)));
         WireFeedOutput wire = new WireFeedOutput();
         try {
             return Response.ok(wire.outputString(feed)).build();

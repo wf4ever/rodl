@@ -54,10 +54,10 @@ public class AtomFeedEntryDAO extends AbstractDAO<AtomFeedEntry> {
             criteria.add(Restrictions.eq("subject", subjectUri.toString()));
         }
         if (from != null) {
-            criteria.add(Restrictions.gt("from", from.toString()));
+            criteria.add(Restrictions.ge("created", from));
         }
         if (to != null) {
-            criteria.add(Restrictions.eq("to", to.toString()));
+            criteria.add(Restrictions.le("created", to));
         }
         return criteria.list();
     }
