@@ -14,11 +14,12 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.vocabulary.ROEVOService;
+
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 
 /**
@@ -52,17 +53,14 @@ public class ServiceResource {
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         Resource service = model.createResource(uriInfo.getAbsolutePath().toString());
-        Property copy = model.createProperty("http://purl.org/ro/service/evolution/copy");
-        Property finalize = model.createProperty("http://purl.org/ro/service/evolution/finalize");
-        Property info = model.createProperty("http://purl.org/ro/service/evolution/info");
         Resource copyR = model.createResource(uriInfo.getAbsolutePathBuilder().path("copy/").build().toString());
         Resource finalizeR = model
                 .createResource(uriInfo.getAbsolutePathBuilder().path("finalize/").build().toString());
         Literal infoTpl = model.createLiteral(uriInfo.getAbsolutePathBuilder().path("info").build().toString()
                 + "{?ro}");
-        service.addProperty(copy, copyR);
-        service.addProperty(finalize, finalizeR);
-        service.addProperty(info, infoTpl);
+        service.addProperty(ROEVOService.copy, copyR);
+        service.addProperty(ROEVOService.finalize, finalizeR);
+        service.addProperty(ROEVOService.info, infoTpl);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         model.write(out, format.getName().toUpperCase(), null);
