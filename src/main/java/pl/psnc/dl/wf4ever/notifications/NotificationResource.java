@@ -5,7 +5,6 @@ import java.util.Date;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -38,25 +37,12 @@ public class NotificationResource {
 
 
     /**
-     * Get a service description as an RDF graph.
-     * 
-     * @param accept
-     *            accept header
-     * @return RDF service description, format subject to content-negotiation
-     */
-    @GET
-    public Response getServiceDescription(@HeaderParam("Accept") String accept) {
-        return null;
-    }
-
-
-    /**
      * Get AtomFeed with list of entries.
      * 
      * @param uriInfo
-     *            injected context infomration
+     *            injected context information
      * @param roUri
-     *            Research Object uri
+     *            Research Object URI
      * @param from
      *            time - from
      * @param to
@@ -64,12 +50,11 @@ public class NotificationResource {
      * @return Atom Feed with the list of requested entrires.
      */
     @GET
-    @Path("notifications/")
     @Produces(MediaType.APPLICATION_ATOM_XML)
     public Response getAtomFeeds(@Context UriInfo uriInfo, @QueryParam("ro") URI roUri,
             @QueryParam("from") String from, @QueryParam("to") String to) {
         AtomFeedEntryDAO entryDAO = new AtomFeedEntryDAO();
-        //title depends on fitlers
+        //title depends on filters
         Date dateFrom = (from != null) ? DateTime.parse(from).toDate() : null;
         Date dateTo = (to != null) ? DateTime.parse(to).toDate() : null;
         Feed feed = AtomFeed.createNewFeed(AtomFeedTitileBuilder.buildTitle(roUri, dateFrom, dateTo), uriInfo

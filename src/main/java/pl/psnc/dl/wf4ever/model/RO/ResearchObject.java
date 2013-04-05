@@ -279,6 +279,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
             // good, nothing was left so the folder was deleted
             LOGGER.debug("As expected. RO folder was empty and was deleted: " + e.getMessage());
         }
+        EntryBuilder.create(this, ActionType.DELETED_RO);
         super.delete();
     }
 

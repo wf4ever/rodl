@@ -30,7 +30,9 @@ public class AtomFeedEntryDAO extends AbstractDAO<AtomFeedEntry> {
 
     /** Serialization. */
     private static final long serialVersionUID = 1L;
+
     /** Logger. */
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = Logger.getLogger(AtomFeedEntryDAO.class);
 
 
@@ -83,43 +85,38 @@ public class AtomFeedEntryDAO extends AbstractDAO<AtomFeedEntry> {
     public static List<Entry> convertToRawEntry(List<AtomFeedEntry> dbEntries) {
         List<Entry> result = new ArrayList<>();
         for (AtomFeedEntry dbEntry : dbEntries) {
-            try {
-                Entry resultEntry = new Entry();
-                resultEntry.setId("urn:X-rodl:" + dbEntry.getId().toString());
-                if (dbEntry.getTitle() != null) {
-                    resultEntry.setTitle(dbEntry.getTitle());
-                }
-                resultEntry.setPublished(dbEntry.getCreated());
-                //set summary
-                Content content = new Content();
-                if (dbEntry.getSummary() != null) {
-                    content.setValue(dbEntry.getSummary());
-                    content.setValue(StringEscapeUtils.escapeHtml4(dbEntry.getSummary()));
-                }
-                resultEntry.setSummary(content);
-                //set links
-                List<Link> links = new ArrayList<>();
-                if (dbEntry.getSource() != null) {
-                    Link sourceLink = new Link();
-                    sourceLink.setHref(dbEntry.getSource().toString());
-                    sourceLink.setRel(DCTerms.source.toString());
-                    sourceLink.setTitle("Action source/service");
-                    links.add(sourceLink);
-                }
-                if (dbEntry.getSubject() != null) {
-                    Link sourceLink = new Link();
-                    sourceLink.setHref(dbEntry.getSubject().toString());
-                    sourceLink.setRel(ORE.describes.toString());
-                    sourceLink.setTitle("Description for");
-                    links.add(sourceLink);
-                }
-
-                resultEntry.setOtherLinks(links);
-                result.add(resultEntry);
-            } catch (NullPointerException e) {
-                String infoID = dbEntry.getId() != null ? dbEntry.getId().toString() : "Unknown";
-                LOGGER.error("AtomFeedEntry " + infoID + " isn't completed", e);
+            Entry resultEntry = new Entry();
+            resultEntry.setId("urn:X-rodl:" + dbEntry.getId().toString());
+            if (dbEntry.getTitle() != null) {
+                resultEntry.setTitle(dbEntry.getTitle());
             }
+            resultEntry.setPublished(dbEntry.getCreated());
+            //set summary
+            Content content = new Content();
+            if (dbEntry.getSummary() != null) {
+                content.setValue(dbEntry.getSummary());
+                content.setValue(StringEscapeUtils.escapeHtml4(dbEntry.getSummary()));
+            }
+            resultEntry.setSummary(content);
+            //set links
+            List<Link> links = new ArrayList<>();
+            if (dbEntry.getSource() != null) {
+                Link sourceLink = new Link();
+                sourceLink.setHref(dbEntry.getSource().toString());
+                sourceLink.setRel(DCTerms.source.toString());
+                sourceLink.setTitle("Action source/service");
+                links.add(sourceLink);
+            }
+            if (dbEntry.getSubject() != null) {
+                Link sourceLink = new Link();
+                sourceLink.setHref(dbEntry.getSubject().toString());
+                sourceLink.setRel(ORE.describes.toString());
+                sourceLink.setTitle("Description for");
+                links.add(sourceLink);
+            }
+
+            resultEntry.setOtherLinks(links);
+            result.add(resultEntry);
         }
         return result;
     }
