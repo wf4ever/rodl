@@ -69,7 +69,8 @@ public class NotificationResource {
             @QueryParam("to") Date to) {
         AtomFeedEntryDAO entryDAO = new AtomFeedEntryDAO();
         //title depends on fitlers
-        Feed feed = AtomFeed.createNewFeed("Some title", uriInfo.toString());
+        Feed feed = AtomFeed.createNewFeed(AtomFeedTitileBuilder.buildTitle(roUri, from, to), uriInfo.getRequestUri()
+                .toString());
         feed.setEntries(AtomFeedEntryDAO.convertToRawEntry(entryDAO.find(roUri, from, to)));
         WireFeedOutput wire = new WireFeedOutput();
         try {
@@ -81,10 +82,21 @@ public class NotificationResource {
     }
 
 
+    /**
+     * Delete Atom feed entries.
+     * 
+     * @param roUri
+     *            Research Object uri
+     * @param from
+     *            time - from
+     * @param to
+     *            time - to
+     * @return Atom Feed with the list of requested entrires.
+     */
     @DELETE
-    @Path("notifications")
-    public Response deleteAtomFeeds(@Context UriInfo uriInfo, @QueryParam("ro") URI roUri,
-            @QueryParam("from") Date from, @QueryParam("to") Date to) {
+    @Path("notifications/")
+    public Response deleteAtomFeeds(@QueryParam("ro") URI roUri, @QueryParam("from") Date from,
+            @QueryParam("to") Date to) {
         AtomFeedEntryDAO entryDAO = new AtomFeedEntryDAO();
         for (AtomFeedEntry entry : entryDAO.find(roUri, from, to)) {
             entryDAO.delete(entry);

@@ -2,7 +2,6 @@ package pl.psnc.dl.wf4ever.db.dao;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -14,7 +13,9 @@ import org.hibernate.criterion.Restrictions;
 
 import pl.psnc.dl.wf4ever.db.AtomFeedEntry;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
+import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.sun.syndication.feed.atom.Content;
 import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Link;
@@ -84,7 +85,7 @@ public class AtomFeedEntryDAO extends AbstractDAO<AtomFeedEntry> {
         for (AtomFeedEntry dbEntry : dbEntries) {
             try {
                 Entry resultEntry = new Entry();
-                resultEntry.setId(dbEntry.getId().toString());
+                resultEntry.setId("urn:X-rodl:" + dbEntry.getId().toString());
                 if (dbEntry.getTitle() != null) {
                     resultEntry.setTitle(dbEntry.getTitle());
                 }
@@ -97,12 +98,23 @@ public class AtomFeedEntryDAO extends AbstractDAO<AtomFeedEntry> {
                 }
                 resultEntry.setSummary(content);
                 //set links
-                Link sourceLink = new Link();
+                List<Link> links = new ArrayList<>();
                 if (dbEntry.getSource() != null) {
+                    Link sourceLink = new Link();
                     sourceLink.setHref(dbEntry.getSource().toString());
-                    sourceLink.setTitle("entry source");
-                    resultEntry.setOtherLinks(Collections.singletonList(sourceLink));
+                    sourceLink.setRel(DCTerms.source.toString());
+                    sourceLink.setTitle("Action source/service");
+                    links.add(sourceLink);
                 }
+                if (dbEntry.getSubject() != null) {
+                    Link sourceLink = new Link();
+                    sourceLink.setHref(dbEntry.getSubject().toString());
+                    sourceLink.setRel(ORE.describes.toString());
+                    sourceLink.setTitle("Description for");
+                    links.add(sourceLink);
+                }
+
+                resultEntry.setOtherLinks(links);
                 result.add(resultEntry);
             } catch (NullPointerException e) {
                 String infoID = dbEntry.getId() != null ? dbEntry.getId().toString() : "Unknown";
