@@ -15,7 +15,7 @@
 		<property name="connection.password">biQuijiu4Ii=</property>
  		-->
 		<property name="connection.driver_class">com.mysql.jdbc.Driver</property>
-		<property name="connection.url">jdbc:mysql://localhost/wf4ever_tests_db_clear3</property>
+		<property name="connection.url">jdbc:mysql://localhost/wf4ever_tests_db_clear2</property>
 		<property name="connection.username">root</property>
 		<property name="connection.password">root</property>
 
