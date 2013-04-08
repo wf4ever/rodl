@@ -19,7 +19,7 @@
 		<property name="connection.password">root</property>
  -->
 		<property name="connection.driver_class">com.mysql.jdbc.Driver</property>
-		<property name="connection.url">jdbc:mysql://localhost/wf4ever_tests_db_clear2</property>
+		<property name="connection.url">jdbc:mysql://localhost/wf4ever_tests_db_clear3</property>
 		<property name="connection.username">root</property>
 		<property name="connection.password">root</property>
 		<!-- JDBC connection pool (use the built-in) -->
@@ -35,7 +35,7 @@
 		<property name="cache.provider_class">org.hibernate.cache.NoCacheProvider</property>
 
 		<!-- Echo all executed SQL to stdout -->
-		<property name="show_sql">false</property>
+		<property name="show_sql">true</property>
 
 		<!-- Drop and re-create the database schema on startup -->
 		<property name="hbm2ddl.auto">update</property>
@@ -45,6 +45,7 @@
 		<mapping class="pl.psnc.dl.wf4ever.db.UserProfile" />
 		<mapping class="pl.psnc.dl.wf4ever.db.ResourceInfo" />
 		<mapping class="pl.psnc.dl.wf4ever.db.AtomFeedEntry" />
-
+		<mapping class="pl.psnc.dl.wf4ever.db.ResearchObjectId" />
+		
 	</session-factory>
 </hibernate-configuration>

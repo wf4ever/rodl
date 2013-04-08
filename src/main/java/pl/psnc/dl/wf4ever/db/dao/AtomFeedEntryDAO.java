@@ -21,7 +21,7 @@ import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Link;
 
 /**
- * Atom Feed entry model.
+ * Atom Feed Entry DAO.
  * 
  * @author pejot
  * 
