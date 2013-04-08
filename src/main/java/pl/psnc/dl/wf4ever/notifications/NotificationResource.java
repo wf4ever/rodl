@@ -82,7 +82,6 @@ public class NotificationResource {
      * @return Atom Feed with the list of requested entrires.
      */
     @DELETE
-    @Path("notifications/")
     public Response deleteAtomFeeds(@QueryParam("ro") URI roUri, @QueryParam("from") Date from,
             @QueryParam("to") Date to) {
         AtomFeedEntryDAO entryDAO = new AtomFeedEntryDAO();
