@@ -153,7 +153,7 @@ public final class SolrSearchServer implements SearchServer {
             server.add(docs);
             server.commit();
         } catch (SolrServerException | IOException e) {
-            LOGGER.error("Could not add a document to the Solr server", e);
+            LOGGER.error("Could not add a document to the Solr server: " + e.getMessage());
         }
     }
 

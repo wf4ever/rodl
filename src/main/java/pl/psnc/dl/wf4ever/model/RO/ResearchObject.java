@@ -523,8 +523,12 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
      * 
      */
     public void deleteIndexAttributes() {
-        SearchServer searchServer = SolrSearchServer.get();
-        searchServer.deleteROAttributes(getUri());
+        try {
+            SearchServer searchServer = SolrSearchServer.get();
+            searchServer.deleteROAttributes(getUri());
+        } catch (Exception e) {
+            LOGGER.error("Cannot delete index from the search server: " + e.getMessage());
+        }
     }
 
 
@@ -540,7 +544,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
             SearchServer searchServer = SolrSearchServer.get();
             searchServer.saveRO(this, roDescription);
         } catch (Exception e) {
-            LOGGER.error("Can not store index in the search server", e);
+            LOGGER.error("Cannot store index in the search server: " + e.getMessage());
         }
     }
 
