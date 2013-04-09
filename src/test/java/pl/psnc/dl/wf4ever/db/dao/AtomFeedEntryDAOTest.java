@@ -5,6 +5,7 @@ import java.net.URI;
 import junit.framework.Assert;
 
 import org.joda.time.DateTime;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,9 +29,20 @@ public class AtomFeedEntryDAOTest extends BaseTest {
         super.setUp();
         ro = builder.buildResearchObject(roUri);
         dao = new AtomFeedEntryDAO();
-        for (AtomFeedEntry entry : dao.all()) {
+        for (AtomFeedEntry entry : dao.find(roUri, null, null)) {
             dao.delete(entry);
         }
+    }
+
+
+    @Override
+    @After
+    public void tearDown()
+            throws Exception {
+        for (AtomFeedEntry entry : dao.find(roUri, null, null)) {
+            dao.delete(entry);
+        }
+        super.tearDown();
     }
 
 
