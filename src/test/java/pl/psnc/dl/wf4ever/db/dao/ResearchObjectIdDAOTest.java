@@ -97,7 +97,9 @@ public class ResearchObjectIdDAOTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testSaveReplication() {
-
+        researchObjectId = new ResearchObjectId(idUri);
+        dao.save(researchObjectId);
+        dao.save(researchObjectId);
     }
 
 

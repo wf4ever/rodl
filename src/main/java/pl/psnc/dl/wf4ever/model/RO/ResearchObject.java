@@ -191,7 +191,6 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
     protected void createEvoInfo(EvoType type) {
         try {
             evoInfo = LiveEvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this);
-
             this.evoInfoAnnotation = annotate(evoInfo.getUri(), this);
             this.getManifest().serialize();
         } catch (BadRequestException e) {

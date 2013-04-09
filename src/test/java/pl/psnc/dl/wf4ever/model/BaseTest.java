@@ -9,6 +9,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
+import pl.psnc.dl.wf4ever.db.dao.ResearchObjectIdDAO;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
@@ -105,8 +106,7 @@ public class BaseTest {
         model = FileManager.get().loadModel(MANIFEST_2, MANIFEST_2, "RDF/XML");
         dataset.addNamedModel(MANIFEST_2, model);
         researchObject2 = builder.buildResearchObject(URI.create(RESEARCH_OBJECT_2));
-
-        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
+        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
     }
 
 
@@ -224,4 +224,15 @@ public class BaseTest {
         return directory.delete();
     }
 
+
+    protected void deleteResearchObjectIds(URI uri) {
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        ResearchObjectIdDAO dao = new ResearchObjectIdDAO();
+        if (dao.findByPrimaryKey(uri) != null) {
+            dao.delete(dao.findByPrimaryKey(uri));
+        }
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+    }
 }
