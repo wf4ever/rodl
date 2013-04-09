@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 
 import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.db.dao.ResearchObjectIdDAO;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
@@ -112,7 +113,6 @@ public class BaseTest {
         dataset.addNamedModel(MANIFEST_2, model);
         builder = new Builder(userProfile, dataset, false);
         researchObject2 = builder.buildResearchObject(URI.create(RESEARCH_OBJECT_2));
-
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
     }
 
@@ -231,4 +231,15 @@ public class BaseTest {
         return directory.delete();
     }
 
+
+    protected void deleteResearchObjectIds(URI uri) {
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        ResearchObjectIdDAO dao = new ResearchObjectIdDAO();
+        if (dao.findByPrimaryKey(uri) != null) {
+            dao.delete(dao.findByPrimaryKey(uri));
+        }
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+    }
 }
