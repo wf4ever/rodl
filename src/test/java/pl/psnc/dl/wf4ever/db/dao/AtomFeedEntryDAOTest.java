@@ -55,11 +55,14 @@ public class AtomFeedEntryDAOTest extends BaseTest {
 
     @Test
     public void testAll() {
-        dao.save(EntryBuilder.create(researchObject, ActionType.NEW_RO));
-        dao.save(EntryBuilder.create(researchObject, ActionType.NEW_RO));
-        dao.save(EntryBuilder.create(researchObject, ActionType.NEW_RO));
-        dao.save(EntryBuilder.create(researchObject, ActionType.NEW_RO));
-        dao.save(EntryBuilder.create(researchObject, ActionType.NEW_RO));
+        for (AtomFeedEntry entry : dao.all()) {
+            dao.delete(entry);
+        }
+        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
+        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
+        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
+        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
+        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
         Assert.assertEquals(5, dao.all().size());
     }
 
@@ -69,23 +72,22 @@ public class AtomFeedEntryDAOTest extends BaseTest {
             throws InterruptedException {
         Thread.currentThread();
         DateTime start = DateTime.now();
-        dao.save(EntryBuilder.create(researchObject, ActionType.NEW_RO));
+        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
         Thread.sleep(1000);
         DateTime middle = DateTime.now();
         Thread.sleep(1000);
-        dao.save(EntryBuilder.create(researchObject, ActionType.NEW_RO));
+        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
         Thread.sleep(1000);
-        dao.save(EntryBuilder.create(researchObject, ActionType.NEW_RO));
+        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
         DateTime end = DateTime.now();
 
-        Assert.assertEquals(3, dao.find(researchObject.getUri(), null, null).size());
-        Assert.assertEquals(3, dao.find(null, null, null).size());
-        Assert.assertEquals(3, dao.find(null, start.toDate(), null).size());
-        Assert.assertEquals(3, dao.find(null, null, end.toDate()).size());
-        Assert.assertEquals(3, dao.find(researchObject.getUri(), start.toDate(), end.toDate()).size());
-        Assert.assertEquals(2, dao.find(researchObject.getUri(), middle.toDate(), end.toDate()).size());
-        Assert.assertEquals(1, dao.find(researchObject.getUri(), start.toDate(), middle.toDate()).size());
-        Assert.assertEquals(0, dao.find(researchObject.getUri(), end.toDate(), start.toDate()).size());
+        Assert.assertEquals(3, dao.find(ro.getUri(), null, null).size());
+        Assert.assertEquals(3, dao.find(ro.getUri(), start.toDate(), null).size());
+        Assert.assertEquals(3, dao.find(ro.getUri(), null, end.toDate()).size());
+        Assert.assertEquals(3, dao.find(ro.getUri(), start.toDate(), end.toDate()).size());
+        Assert.assertEquals(2, dao.find(ro.getUri(), middle.toDate(), end.toDate()).size());
+        Assert.assertEquals(1, dao.find(ro.getUri(), start.toDate(), middle.toDate()).size());
+        Assert.assertEquals(0, dao.find(ro.getUri(), end.toDate(), start.toDate()).size());
     }
 
 }
