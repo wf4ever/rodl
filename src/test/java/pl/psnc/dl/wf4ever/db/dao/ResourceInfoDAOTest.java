@@ -40,6 +40,7 @@ public class ResourceInfoDAOTest extends BaseTest {
     @Test
     public void testCreate() {
         ResourceInfo info = dao.create(path, name, checksum, sizeInBytes, digestMethod, lastModified, mimeType);
+        dao.save(info);
         Assert.assertEquals(info, dao.findByPath(path));
         dao.delete(info);
     }
