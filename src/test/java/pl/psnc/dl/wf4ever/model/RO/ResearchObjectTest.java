@@ -47,7 +47,6 @@ public class ResearchObjectTest extends BaseTest {
         //bacuase annotations bodies have fixed 
         deleteResearchObjectIds(URI.create("http://example.org/ro-test/"));
         ro = ResearchObject.create(builder, URI.create("http://example.org/ro-test/"));
-        ResearchObject.create(builder, URI.create("http://example.org/e/"));
     }
 
 
@@ -76,11 +75,10 @@ public class ResearchObjectTest extends BaseTest {
 
     @Test
     public void testCreateDuplication() {
-        //URI duplicateUri = ro.getUri().resolve("createdDespit/");
-        //URI duplicateUri = (URI.create("http://example.org/ro-test-cos/"));
-        //ResearchObject duplicated = ResearchObject.create(builder, duplicateUri);
-        //duplicated = ResearchObject.create(builder, duplicateUri);
-        //Assert.assertTrue(duplicated.getUri().toString().contains("-"));
+        URI duplicateUri = ro.getUri().resolve("duplicatedUri/");
+        ResearchObject duplicated = ResearchObject.create(builder, duplicateUri);
+        duplicated = ResearchObject.create(builder, duplicateUri);
+        Assert.assertTrue(duplicated.getUri().toString().contains("-"));
     }
 
 
