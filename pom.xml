@@ -248,6 +248,8 @@
 				<version>8.1.10.v20130312</version>
 				<configuration>
 					<scanIntervalSeconds>10</scanIntervalSeconds>
+					<stopKey>stop</stopKey>
+					<stopPort>9999</stopPort>
 					<webApp>
 						<contextPath>/</contextPath>
 					</webApp>
