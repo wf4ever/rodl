@@ -363,6 +363,9 @@
 		<profile>
 			<id>buildhive</id>
 			<!-- http://dev-snapshot.blogspot.com/2012/08/use-java-7-on-buildhive.html -->
+			<properties>
+				<jdk>/opt/jdk/jdk1.7.0/</jdk>
+			</properties>
 			<build>
 				<plugins>
 					<plugin>
