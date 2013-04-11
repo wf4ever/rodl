@@ -8,6 +8,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
+import org.junit.experimental.categories.Category;
 
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 
@@ -16,6 +17,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 
+@Category(IntegrationTest.class)
 public class W4ETest extends JerseyTest {
 
     protected WebResource webResource;

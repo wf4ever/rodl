@@ -5,7 +5,9 @@ import java.net.URI;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.junit.experimental.categories.Category;
 
+import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.W4ETest;
 import pl.psnc.dl.wf4ever.evo.Job.State;
 
@@ -17,7 +19,7 @@ import com.sun.jersey.api.client.WebResource.Builder;
  * @author filipwis
  * 
  */
-
+@Category(IntegrationTest.class)
 public class EvoTest extends W4ETest {
 
     public static final int WAIT_FOR_COPY = 2000;
