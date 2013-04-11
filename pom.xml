@@ -385,6 +385,15 @@
 							<forkMode>once</forkMode>
 						</configuration>
 					</plugin>
+					
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<configuration>
+							<jvm>/opt/jdk/jdk1.7.0/bin/java</jvm>
+							<forkMode>once</forkMode>
+						</configuration>
+					</plugin>
 				</plugins>
 			</build>
 		</profile>
