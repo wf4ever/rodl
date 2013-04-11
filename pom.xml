@@ -396,6 +396,14 @@
 							<forkMode>once</forkMode>
 						</configuration>
 					</plugin>
+					<plugin>
+						<groupId>org.mortbay.jetty</groupId>
+						<artifactId>jetty-maven-plugin</artifactId>
+						<configuration>
+							<jvm>/opt/jdk/jdk1.7.0/bin/java</jvm>
+							<forkMode>once</forkMode>
+						</configuration>
+					</plugin>
 				</plugins>
 			</build>
 		</profile>
