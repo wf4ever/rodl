@@ -363,9 +363,6 @@
 		<profile>
 			<id>buildhive</id>
 			<!-- http://dev-snapshot.blogspot.com/2012/08/use-java-7-on-buildhive.html -->
-			<properties>
-				<jdk>/opt/jdk/jdk1.7.0/</jdk>
-			</properties>
 			<build>
 				<plugins>
 					<plugin>
@@ -395,6 +392,9 @@
 						<artifactId>maven-failsafe-plugin</artifactId>
 						<configuration>
 							<jvm>/opt/jdk/jdk1.7.0/bin/java</jvm>
+							<!-- skip these tests on Buildhive until it can run jetty with Java 
+								7 -->
+							<skipITs>true</skipITs>
 							<!-- <forkMode>once</forkMode> -->
 						</configuration>
 					</plugin>
@@ -402,7 +402,9 @@
 						<groupId>org.mortbay.jetty</groupId>
 						<artifactId>jetty-maven-plugin</artifactId>
 						<configuration>
-							<executable>/opt/jdk/jdk1.7.0/bin/javac</executable>
+							<!-- skip these tests on Buildhive until it can run jetty with Java 
+								7 -->
+							<skip>true</skip>
 							<fork>true</fork>
 							<jvm>/opt/jdk/jdk1.7.0/bin/java</jvm>
 						</configuration>
