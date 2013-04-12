@@ -2,11 +2,13 @@ package pl.psnc.dl.wf4ever.monitoring;
 
 import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
+import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 import org.apache.log4j.Logger;
 import org.quartz.Job;
 import org.quartz.JobDetail;
+import org.quartz.ScheduleBuilder;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
@@ -70,9 +72,10 @@ public final class MonitoringScheduler {
                 continue;
             }
             String cron = sched.getContext().getString(plugin.trim() + ".cron");
+            ScheduleBuilder<? extends Trigger> schedule = cron != null ? cronSchedule(cron)
+                    .withMisfireHandlingInstructionIgnoreMisfires() : simpleSchedule();
             JobDetail job = newJob(pluginClass).withIdentity(plugin).build();
-            Trigger trigger = newTrigger().withSchedule(
-                cronSchedule(cron).withMisfireHandlingInstructionIgnoreMisfires()).build();
+            Trigger trigger = newTrigger().withSchedule(schedule).build();
             sched.scheduleJob(job, trigger);
         }
 
