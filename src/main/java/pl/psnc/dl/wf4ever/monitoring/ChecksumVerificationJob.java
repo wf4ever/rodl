@@ -1,5 +1,7 @@
 package pl.psnc.dl.wf4ever.monitoring;
 
+import java.net.URI;
+
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -13,11 +15,15 @@ import org.quartz.JobExecutionException;
  */
 public class ChecksumVerificationJob implements Job {
 
+    /** Key for the input data. The value must be a URI. */
+    public static final String RESEARCH_OBJECT_URI = "ResearchObjectUri";
+
+
     @Override
     public void execute(JobExecutionContext context)
             throws JobExecutionException {
+        URI researchObjectUri = (URI) context.getMergedJobDataMap().get(RESEARCH_OBJECT_URI);
         // TODO Auto-generated method stub
 
     }
-
 }
