@@ -11,9 +11,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.HttpStatus;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import pl.psnc.dl.wf4ever.IntegrationTest;
 
 import com.sun.jersey.api.client.ClientResponse;
 
+@Category(IntegrationTest.class)
 public class ManifestTest extends ResourceBase {
 
     private final String filePath = "foo/bar ra.txt";

@@ -12,7 +12,9 @@ import junit.framework.Assert;
 
 import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.W4ETest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
@@ -20,6 +22,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 
+@Category(IntegrationTest.class)
 public class ResourceBase extends W4ETest {
 
     protected List<String> linkHeadersR = new ArrayList<>();

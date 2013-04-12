@@ -8,9 +8,12 @@ import java.net.URI;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.evo.Job.State;
 
+@Category(IntegrationTest.class)
 public class StoringHistoryTest extends EvoTest {
 
     protected URI ro2;

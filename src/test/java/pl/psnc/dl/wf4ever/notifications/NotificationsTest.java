@@ -6,9 +6,12 @@ import junit.framework.Assert;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.W4ETest;
 
+@Category(IntegrationTest.class)
 public class NotificationsTest extends W4ETest {
 
     @Override

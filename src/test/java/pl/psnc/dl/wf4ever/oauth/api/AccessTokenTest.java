@@ -6,12 +6,15 @@ import static org.junit.Assert.assertTrue;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.W4ETest;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 
+@Category(IntegrationTest.class)
 public class AccessTokenTest extends W4ETest {
 
     private static String testAccessToken;

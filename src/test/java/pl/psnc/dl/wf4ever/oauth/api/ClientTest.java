@@ -6,12 +6,15 @@ import static org.junit.Assert.assertTrue;
 import java.net.URI;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.W4ETest;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 
+@Category(IntegrationTest.class)
 public class ClientTest extends W4ETest {
 
     private String testClientName = "Test client name";

@@ -5,11 +5,14 @@ import javax.ws.rs.core.Response;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.W4ETest;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 
+@Category(IntegrationTest.class)
 public class CheckWhoAmITest extends W4ETest {
 
     @Override

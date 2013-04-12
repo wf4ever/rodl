@@ -1,3 +1,5 @@
+[![Build Status](https://buildhive.cloudbees.com/job/wf4ever/job/rodl/badge/icon)](https://buildhive.cloudbees.com/job/wf4ever/job/rodl/)
+
 Introduction
 ============
 
@@ -11,7 +13,7 @@ Documentation
 
 Brief project documentation: http://wf4ever-project.org/wiki/display/docs/Research+Objects+Digital+Library+%28including+the+ROSRS%29.
 
-The ROSR API specification: http://wf4ever-project.org/wiki/display/docs/RO+SRS+interface+6.
+The RO API specification: http://wf4ever-project.org/wiki/display/docs/RO+API+6.
 
 The RO Evolution API specification: http://wf4ever-project.org/wiki/display/docs/RO+evolution+API.
 
@@ -50,8 +52,25 @@ Building the digital library
 2. Run `mvn package`.
 
 
+Testing the digital library
+===========================
+
+If you want to run RODL from the source on your local machine, run `mvn jetty:run`. RODL will be available at http://localhost:8080.
+If you want to change the default port, for example to 9999, run `mvn -Djetty.port=9999 jetty:run`. 
+
+The 'test' phase of the maven build runs only unit tests. The 'integration-tests' phase runs tests of the REST API. For this to work,
+you must use the following maven properties:
+* jersey.test.containerFactory=com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory
+* jersey.test.port=8082
+* jersey.test.host=localhost
+* jetty.port=8082
+
+The 2nd and 4th properties must point to the same port. The last property is not necessary if the port is 8080.  
+
+
 Authors
 =======
 
 Raúl Palma, Piotr Hołubowicz, Filip Wiśniewski
+
 Poznań Supercomputing and Networking Center, http://www.psnc.pl

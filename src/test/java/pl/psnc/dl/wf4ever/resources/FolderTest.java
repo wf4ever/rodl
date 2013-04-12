@@ -15,7 +15,9 @@ import junit.framework.Assert;
 
 import org.apache.http.HttpStatus;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
@@ -35,7 +37,7 @@ import com.sun.jersey.api.client.ClientResponse;
  * @author piotrekhol
  * 
  */
-
+@Category(IntegrationTest.class)
 public class FolderTest extends ResourceBase {
 
     /** folder path. */
