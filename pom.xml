@@ -34,7 +34,15 @@
 			</roles>
 			<organization>PSNC</organization>
 		</developer>
-
+		<developer>
+			<id>filipwis</id>
+			<name>Filip</name>
+			<email>filipwis@man.poznan.pl</email>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<organization>PSNC</organization>
+		</developer>
 	</developers>
 	<dependencies>
 		<dependency>
@@ -136,6 +144,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		
 		<dependency>
 			<groupId>com.sun.jersey</groupId>
 			<artifactId>jersey-server</artifactId>
