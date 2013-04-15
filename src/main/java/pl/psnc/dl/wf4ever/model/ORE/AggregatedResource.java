@@ -14,7 +14,6 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -215,7 +214,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
             // resource may no longer be internal if it is deleted by different classes independently, 
             // or if it's a folder that has just been emptied (i.e. the resource map was deleted), 
             // in which case it was also deleted automatically
-            DigitalLibraryFactory.getDigitalLibrary().deleteFile(getResearchObject().getUri(), getPath());
+            builder.getDigitalLibrary().deleteFile(getResearchObject().getUri(), getPath());
         }
         if (getProxy() != null) {
             getProxy().delete();
@@ -264,7 +263,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     @Override
     public ResourceMetadata getStats() {
         if (stats == null) {
-            stats = DigitalLibraryFactory.getDigitalLibrary().getFileInfo(getResearchObject().getUri(), getPath());
+            stats = builder.getDigitalLibrary().getFileInfo(getResearchObject().getUri(), getPath());
         }
         return stats;
     }
@@ -308,8 +307,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     @Override
     public boolean isInternal() {
         String path = getPath();
-        return !path.isEmpty()
-                && DigitalLibraryFactory.getDigitalLibrary().fileExists(getResearchObject().getUri(), path);
+        return !path.isEmpty() && builder.getDigitalLibrary().fileExists(getResearchObject().getUri(), path);
     }
 
 
@@ -333,8 +331,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         if (format == null) {
             throw new BadRequestException("Unrecognized RDF format for file: " + filePath);
         }
-        try (InputStream data = DigitalLibraryFactory.getDigitalLibrary().getFileContents(researchObject.getUri(),
-            filePath)) {
+        try (InputStream data = builder.getDigitalLibrary().getFileContents(researchObject.getUri(), filePath)) {
             if (data == null) {
                 throw new BadRequestException("No data for resource: " + uri);
             }
@@ -361,7 +358,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
         try (InputStream data = getGraphAsInputStream(RDFFormat.RDFXML)) {
             // can only be null if a resource that is an annotation body exists serialized but not in the triple store
             if (data != null) {
-                DigitalLibraryFactory.getDigitalLibrary().createOrUpdateFile(
+                builder.getDigitalLibrary().createOrUpdateFile(
                     researchObject.getUri(),
                     filePath,
                     data,
@@ -383,7 +380,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
 
     @Override
     public InputStream getSerialization() {
-        return DigitalLibraryFactory.getDigitalLibrary().getFileContents(researchObject.getUri(), getPath());
+        return builder.getDigitalLibrary().getFileContents(researchObject.getUri(), getPath());
     }
 
 
@@ -400,7 +397,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     public void save(InputStream content, String contentType)
             throws BadRequestException {
         String path = researchObject.getUri().relativize(uri).getPath();
-        setStats(DigitalLibraryFactory.getDigitalLibrary().createOrUpdateFile(researchObject.getUri(), path, content,
+        setStats(builder.getDigitalLibrary().createOrUpdateFile(researchObject.getUri(), path, content,
             contentType != null ? contentType : "text/plain"));
         if (isNamedGraph()) {
             saveGraphAndSerialize();

@@ -6,7 +6,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.storage.DLibraFactory;
 
 /**
  * Application properties.
@@ -44,7 +44,7 @@ public final class ApplicationProperties {
      * Read application properties.
      */
     public static void load() {
-        InputStream inputStream = DigitalLibraryFactory.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE);
+        InputStream inputStream = DLibraFactory.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE);
         if (inputStream == null) {
             LOGGER.error("Application properties file not found! ");
             throw new RuntimeException("Application properties file not found! ");

@@ -5,7 +5,6 @@ import java.net.URI;
 
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -82,7 +81,7 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
      */
     @Override
     public void delete() {
-        DigitalLibraryFactory.getDigitalLibrary().deleteFile(getResearchObject().getUri(), getPath());
+        builder.getDigitalLibrary().deleteFile(getResearchObject().getUri(), getPath());
         super.delete();
     }
 
@@ -162,7 +161,7 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
     @Override
     public ResourceMetadata getStats() {
         if (stats == null) {
-            stats = DigitalLibraryFactory.getDigitalLibrary().getFileInfo(getResearchObject().getUri(), getPath());
+            stats = builder.getDigitalLibrary().getFileInfo(getResearchObject().getUri(), getPath());
         }
         return stats;
     }
@@ -175,7 +174,7 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
 
     @Override
     public InputStream getSerialization() {
-        return DigitalLibraryFactory.getDigitalLibrary().getFileContents(getResearchObject().getUri(), getPath());
+        return builder.getDigitalLibrary().getFileContents(getResearchObject().getUri(), getPath());
     }
 
 

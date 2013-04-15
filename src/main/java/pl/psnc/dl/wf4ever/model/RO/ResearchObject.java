@@ -27,7 +27,6 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -254,9 +253,8 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         getManifest().save();
 
         //TODO check if to create an RO or only serialize the manifest
-        DigitalLibraryFactory.getDigitalLibrary().createResearchObject(uri,
-            getManifest().getGraphAsInputStream(RDFFormat.RDFXML), ResearchObject.MANIFEST_PATH,
-            RDFFormat.RDFXML.getDefaultMIMEType());
+        builder.getDigitalLibrary().createResearchObject(uri, getManifest().getGraphAsInputStream(RDFFormat.RDFXML),
+            ResearchObject.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
 
         createEvoInfo(evoType);
     }
@@ -274,7 +272,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         }
         getManifest().delete();
         try {
-            DigitalLibraryFactory.getDigitalLibrary().deleteResearchObject(uri);
+            builder.getDigitalLibrary().deleteResearchObject(uri);
         } catch (NotFoundException e) {
             // good, nothing was left so the folder was deleted
             LOGGER.debug("As expected. RO folder was empty and was deleted: " + e.getMessage());
@@ -870,7 +868,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
 
 
     public InputStream getAsZipArchive() {
-        return DigitalLibraryFactory.getDigitalLibrary().getZippedResearchObject(uri);
+        return builder.getDigitalLibrary().getZippedResearchObject(uri);
     }
 
 

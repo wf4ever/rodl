@@ -9,6 +9,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
@@ -28,6 +29,9 @@ import pl.psnc.dl.wf4ever.model.ROEVO.ChangeSpecification;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableEvoInfo;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.LiveEvoInfo;
+import pl.psnc.dl.wf4ever.storage.DLibraFactory;
+import pl.psnc.dl.wf4ever.storage.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.storage.FilesystemDLFactory;
 import pl.psnc.dl.wf4ever.vocabulary.W4E;
 
 import com.hp.hpl.jena.query.Dataset;
@@ -46,10 +50,17 @@ public class Builder {
     /** Triple store location. */
     protected static final String TRIPLE_STORE_DIR = getStoreDirectory("connection.properties");
 
+    /** Default digital factory library. */
+    protected static final DigitalLibraryFactory DEFAULT_DL_FACTORY = getDLFactory("connection.properties");
+
     /** Logger. */
     private static final Logger LOGGER = Logger.getLogger(Builder.class);
+
     /** Jena dataset. */
     private final Dataset dataset;
+
+    /** A digital library (storage) used for storing content. */
+    private final DigitalLibrary digitalLibrary;
 
     /** Use transactions on the Jena dataset. */
     private final boolean useTransactions;
@@ -71,11 +82,32 @@ public class Builder {
      *            Jena dataset
      * @param useTransactions
      *            Use transactions on the Jena dataset
+     * @param digitalLibrary
+     *            a digital library
+     */
+    public Builder(UserMetadata user, Dataset dataset, boolean useTransactions, DigitalLibrary digitalLibrary) {
+        this.dataset = dataset;
+        this.user = user;
+        this.useTransactions = useTransactions;
+        this.digitalLibrary = digitalLibrary;
+    }
+
+
+    /**
+     * Constructor.
+     * 
+     * @param user
+     *            Authenticated user
+     * @param dataset
+     *            Jena dataset
+     * @param useTransactions
+     *            Use transactions on the Jena dataset
      */
     public Builder(UserMetadata user, Dataset dataset, boolean useTransactions) {
         this.dataset = dataset;
         this.user = user;
         this.useTransactions = useTransactions;
+        this.digitalLibrary = DEFAULT_DL_FACTORY.getDigitalLibrary();
     }
 
 
@@ -104,7 +136,31 @@ public class Builder {
             return props.getProperty("store.directory");
 
         } catch (Exception e) {
-            LOGGER.error("Trple store location can not be loaded from the properties file", e);
+            LOGGER.error("Triple store location can not be loaded from the properties file", e);
+        }
+        return null;
+    }
+
+
+    /**
+     * Create a digital library factory based on the "dlibra" setting from the properties file. In case of any
+     * exceptions, log them and return null.
+     * 
+     * @param filename
+     *            properties file name
+     * @return the dLibra factory if dlibra=true, the filesystem factory otherwise
+     */
+    private static DigitalLibraryFactory getDLFactory(String filename) {
+        try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(filename)) {
+            Properties properties = new Properties();
+            properties.load(is);
+            if ("true".equals(properties.getProperty("dlibra", "false"))) {
+                return new DLibraFactory(properties);
+            } else {
+                return new FilesystemDLFactory(properties);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Digital Library factory can not be loaded from the properties file", e);
         }
         return null;
     }
@@ -132,6 +188,11 @@ public class Builder {
 
     public UserMetadata getUser() {
         return user;
+    }
+
+
+    public DigitalLibrary getDigitalLibrary() {
+        return digitalLibrary;
     }
 
 
@@ -433,6 +494,7 @@ public class Builder {
      * @param created
      *            creation date
      * @param resourceMapUri
+     *            folder resource map URI
      * @return a new folder
      */
     public Folder buildFolder(URI uri, ResearchObject researchObject, UserMetadata creator, DateTime created,

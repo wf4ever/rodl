@@ -9,9 +9,8 @@
  * in accordance with the terms of the license agreement you entered into
  * with PSNC.
  */
-package pl.psnc.dl.wf4ever.connection;
+package pl.psnc.dl.wf4ever.storage;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
@@ -25,17 +24,8 @@ import pl.psnc.dl.wf4ever.ApplicationProperties;
  */
 public class DlibraConnectionConfigurationListener implements ServletContextListener {
 
-    /** connection properties file name. */
-    private static final String CONNECTION_PROPERTIES_FILENAME = "connection.properties.filename";
-
-
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        ServletContext servletContext = sce.getServletContext();
-
-        String fileName = servletContext.getInitParameter(CONNECTION_PROPERTIES_FILENAME);
-        DigitalLibraryFactory.loadDigitalLibraryConfiguration(fileName);
-
         ApplicationProperties.load();
     }
 

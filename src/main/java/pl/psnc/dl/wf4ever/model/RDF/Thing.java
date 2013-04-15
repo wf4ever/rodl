@@ -20,7 +20,6 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
@@ -279,8 +278,7 @@ public class Thing {
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         String filePath = base.relativize(uri).getPath();
         InputStream dataStream = getGraphAsInputStreamWithRelativeURIs(base, format);
-        return DigitalLibraryFactory.getDigitalLibrary().createOrUpdateFile(base, filePath, dataStream,
-            format.getDefaultMIMEType());
+        return builder.getDigitalLibrary().createOrUpdateFile(base, filePath, dataStream, format.getDefaultMIMEType());
     }
 
 

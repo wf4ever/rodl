@@ -26,7 +26,6 @@ import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
@@ -127,7 +126,7 @@ public class UserResource {
             throw new NotFoundException("User not found");
         }
         InputStream userDesc = user.getAsInputStream(rdfFormat);
-        if (DigitalLibraryFactory.getDigitalLibrary().userExists(userId)) {
+        if (builder.getDigitalLibrary().userExists(userId)) {
             return Response.ok(userDesc).type(rdfFormat.getDefaultMIMEType()).build();
         } else {
             return Response.status(Status.NOT_FOUND).type("text/plain").entity("User " + userId + " does not exist")
@@ -180,7 +179,7 @@ public class UserResource {
         }
 
         String password = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 20);
-        boolean created = DigitalLibraryFactory.getDigitalLibrary().createOrUpdateUser(userId, password,
+        boolean created = builder.getDigitalLibrary().createOrUpdateUser(userId, password,
             username != null && !username.isEmpty() ? username : userId);
         if (created) {
             return Response.created(uriInfo.getAbsolutePath()).build();
@@ -230,7 +229,7 @@ public class UserResource {
         for (ResearchObject ro : ros) {
             ro.delete();
         }
-        DigitalLibraryFactory.getDigitalLibrary().deleteUser(userId);
+        builder.getDigitalLibrary().deleteUser(userId);
         userProfileDAO.delete(user);
     }
 
@@ -254,7 +253,7 @@ public class UserResource {
          * 
          * @param set
          *            set of ros
-         *            @param creator
+         * @param creator
          *            new value of creator
          */
         public UpdateUserIndexThread(Set<ResearchObject> set, UserProfile creator) {

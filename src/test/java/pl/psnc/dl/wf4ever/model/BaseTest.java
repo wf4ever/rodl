@@ -10,7 +10,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
@@ -94,7 +93,6 @@ public class BaseTest {
     @Before
     public void setUp()
             throws Exception {
-        DigitalLibraryFactory.loadDigitalLibraryConfiguration("connection.properties");
         dataset = TDBFactory.createDataset();
         Model model;
         model = FileManager.get().loadModel(MANIFEST, MANIFEST, "RDF/XML");
