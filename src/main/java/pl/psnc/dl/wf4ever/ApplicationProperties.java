@@ -28,6 +28,9 @@ public final class ApplicationProperties {
     /** application version in Maven. */
     private static String version;
 
+    /** admin's access token. */
+    private static String adminTokenHash;
+
 
     /**
      * Private constructor.
@@ -61,6 +64,7 @@ public final class ApplicationProperties {
         }
         name = properties.getProperty("application.name");
         version = properties.getProperty("application.version");
+        adminTokenHash = properties.getProperty("adminToken");
     }
 
 
@@ -73,4 +77,8 @@ public final class ApplicationProperties {
         return version;
     }
 
+
+    public static String getAdminTokenHash() {
+        return adminTokenHash;
+    }
 }

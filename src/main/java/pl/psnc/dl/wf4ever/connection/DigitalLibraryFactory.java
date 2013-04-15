@@ -51,9 +51,6 @@ public final class DigitalLibraryFactory {
     /** the root folder for filesystem storage. */
     private static String filesystemBase;
 
-    /** admin's access token. */
-    private static String adminTokenHash;
-
     /** dLibra admin. */
     private static String adminUser;
 
@@ -132,46 +129,11 @@ public final class DigitalLibraryFactory {
             LOGGER.debug("Workspaces directory: " + workspacesDirectory);
             collectionId = Long.parseLong(properties.getProperty("collectionId"));
             LOGGER.debug("Collection id: " + collectionId);
+            adminUser = properties.getProperty("adminUser");
+            adminPassword = properties.getProperty("adminPassword");
         }
         filesystemBase = properties.getProperty("filesystemBase", "/tmp/dl/");
         LOGGER.debug("Filesystem base: " + filesystemBase);
-    }
-
-
-    /**
-     * Load connection details.
-     * 
-     * @param configFileName
-     *            properties file with the connection details
-     */
-    public static void loadProfilesConfiguration(String configFileName) {
-        LOGGER.info("Loading profiles file " + configFileName);
-        InputStream inputStream = DigitalLibraryFactory.class.getClassLoader().getResourceAsStream(configFileName);
-        if (inputStream == null) {
-            LOGGER.error("Profiles file not found! ");
-            throw new RuntimeException("Profiles file not found! ");
-        }
-        Properties properties = new Properties();
-        try {
-            properties.load(inputStream);
-        } catch (IOException e) {
-            LOGGER.error("Unable to read profiles file", e);
-            throw new RuntimeException("Unable to read profiles file", e);
-        } finally {
-            try {
-                inputStream.close();
-            } catch (IOException e) {
-                LOGGER.warn("Exception when closing the properties input stream", e);
-            }
-        }
-        adminTokenHash = properties.getProperty("adminToken");
-        adminUser = properties.getProperty("adminUser");
-        adminPassword = properties.getProperty("adminPassword");
-    }
-
-
-    public static String getAdminTokenHash() {
-        return adminTokenHash;
     }
 
 

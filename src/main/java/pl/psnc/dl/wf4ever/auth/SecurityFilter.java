@@ -9,7 +9,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.ApplicationProperties;
 import pl.psnc.dl.wf4ever.db.AccessToken;
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.AccessTokenDAO;
@@ -106,7 +106,7 @@ public class SecurityFilter implements ContainerRequestFilter {
      * @return user credentials
      */
     public UserMetadata getBearerCredentials(String tokenValue) {
-        if (DigestUtils.md5Hex(tokenValue).equalsIgnoreCase(DigitalLibraryFactory.getAdminTokenHash())) {
+        if (DigestUtils.md5Hex(tokenValue).equalsIgnoreCase(ApplicationProperties.getAdminTokenHash())) {
             return UserProfile.ADMIN;
         }
         AccessTokenDAO accessTokenDAO = new AccessTokenDAO();
