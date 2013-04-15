@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.fs;
+package pl.psnc.dl.wf4ever.storage;
 
 import java.io.FileInputStream;
 import java.io.IOException;

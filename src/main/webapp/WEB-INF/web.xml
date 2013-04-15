@@ -10,7 +10,7 @@
 	</context-param>
 
 	<listener>
-		<listener-class>pl.psnc.dl.wf4ever.connection.DlibraConnectionConfigurationListener</listener-class>
+		<listener-class>pl.psnc.dl.wf4ever.InitConfigurationListener</listener-class>
 	</listener>
 
 	<filter>

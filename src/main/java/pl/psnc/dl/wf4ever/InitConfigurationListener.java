@@ -9,12 +9,11 @@
  * in accordance with the terms of the license agreement you entered into
  * with PSNC.
  */
-package pl.psnc.dl.wf4ever.storage;
+package pl.psnc.dl.wf4ever;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import pl.psnc.dl.wf4ever.ApplicationProperties;
 
 /**
  * Read in the dLibra connection parameters on startup.
@@ -22,7 +21,7 @@ import pl.psnc.dl.wf4ever.ApplicationProperties;
  * @author nowakm
  * 
  */
-public class DlibraConnectionConfigurationListener implements ServletContextListener {
+public class InitConfigurationListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {

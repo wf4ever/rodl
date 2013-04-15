@@ -5,7 +5,6 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
-import pl.psnc.dl.wf4ever.fs.FilesystemDL;
 
 /**
  * A factory creating a filesystem storage backend.
