@@ -10,7 +10,9 @@ import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.model.BaseTest;
+import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Result;
 
 public class ChecksumVerificationJobTest extends BaseTest {
@@ -36,8 +38,12 @@ public class ChecksumVerificationJobTest extends BaseTest {
         jobDataMap.put(ChecksumVerificationJob.RESEARCH_OBJECT_URI, researchObject.getUri());
         JobExecutionContext context = Mockito.mock(JobExecutionContext.class);
         Mockito.when(context.getMergedJobDataMap()).thenReturn(jobDataMap);
+        DigitalLibrary dl = Mockito.spy(builder.getDigitalLibrary());
+        //TODO mockup dl
+        Builder fsBuilder = new Builder(builder.getUser(), builder.getDataset(), builder.isUseTransactions(), dl);
+
         ChecksumVerificationJob job = new ChecksumVerificationJob();
-        job.setBuilder(builder);
+        job.setBuilder(fsBuilder);
         job.execute(context);
         Assert.assertNotNull(jobDataMap.get(ChecksumVerificationJob.RESULT));
         Result result = (Result) jobDataMap.get(ChecksumVerificationJob.RESULT);
