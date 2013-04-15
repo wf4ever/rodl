@@ -37,14 +37,19 @@ public class ChecksumVerificationJob implements Job {
     /** Key for the result. The value will be a Result. */
     public static final String RESULT = "Result";
 
+    /** Resource model builder. */
+    private Builder builder;
+
 
     @Override
     public void execute(JobExecutionContext context)
             throws JobExecutionException {
         URI researchObjectUri = (URI) context.getMergedJobDataMap().get(RESEARCH_OBJECT_URI);
-        //FIXME RODL URI should be better
-        UserMetadata userMetadata = new UserMetadata("rodl", "RODL decay monitor", Role.ADMIN, URI.create("rodl"));
-        Builder builder = new Builder(userMetadata);
+        if (builder == null) {
+            //FIXME RODL URI should be better
+            UserMetadata userMetadata = new UserMetadata("rodl", "RODL decay monitor", Role.ADMIN, URI.create("rodl"));
+            builder = new Builder(userMetadata);
+        }
         ResearchObject researchObject = ResearchObject.get(builder, researchObjectUri);
         if (researchObject != null) {
             Result result = new Result();
@@ -63,6 +68,16 @@ public class ChecksumVerificationJob implements Job {
             }
             context.put(RESULT, result);
         }
+    }
+
+
+    public Builder getBuilder() {
+        return builder;
+    }
+
+
+    public void setBuilder(Builder builder) {
+        this.builder = builder;
     }
 
 
