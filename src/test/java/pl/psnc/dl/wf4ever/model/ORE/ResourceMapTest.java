@@ -32,7 +32,7 @@ public class ResourceMapTest extends BaseTest {
             throws Exception {
         super.setUp();
         resourceMapUri = researchObject.getUri().resolve(resourceMapName);
-        resourceMap = new ResourceMap(userProfile, dataset, true, researchObject, resourceMapUri) {
+        resourceMap = new ResourceMap(userProfile, dataset, false, researchObject, resourceMapUri) {
 
             @Override
             public ResearchObject getResearchObject() {
@@ -40,7 +40,7 @@ public class ResourceMapTest extends BaseTest {
                 return researchObject;
             }
         };
-
+        resourceMap.setBuilder(builder);
     }
 
 
