@@ -220,7 +220,8 @@ public class FilesystemDL implements DigitalLibrary {
             }
             HibernateUtil.getSessionFactory().getCurrentSession().flush();
         } catch (NoSuchFileException e) {
-            throw new NotFoundException("File doesn't exist: " + filePath, e);
+            LOGGER.warn("File doesn't exist: " + filePath, e);
+            return;
         } catch (IOException e) {
             throw new DigitalLibraryException(e);
         }

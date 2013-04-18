@@ -169,6 +169,10 @@ public class Manifest extends ResourceMap {
             com.hp.hpl.jena.rdf.model.Resource folderMapR = model.createResource(folder.getResourceMap().getUri()
                     .toString());
             folderInd.addProperty(ORE.isDescribedBy, folderMapR);
+            if (folder.isRootFolder()) {
+                Individual ro = model.getIndividual(getResearchObject().getUri().toString());
+                ro.addProperty(RO.rootFolder, folderInd);
+            }
             commitTransaction(transactionStarted);
         } finally {
             endTransaction(transactionStarted);

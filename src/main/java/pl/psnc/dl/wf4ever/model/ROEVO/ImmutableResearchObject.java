@@ -1,6 +1,8 @@
 package pl.psnc.dl.wf4ever.model.ROEVO;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -13,6 +15,7 @@ import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
+import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.Manifest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
@@ -96,11 +99,39 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
                 LOGGER.warn("Failed to copy the annotation", e);
             }
         }
-        //copy the folders
+        //sort the folders topologically
+        List<Folder> sorted = new ArrayList<>();
         for (Folder folder : researchObject.getFolders().values()) {
+            if (!sorted.contains(folder)) {
+                sorted.addAll(visit(folder, sorted));
+            }
+        }
+        //copy the folders
+        for (Folder folder : sorted) {
             immutableResearchObject.copy(folder, evoBuilder);
         }
         return immutableResearchObject;
+    }
+
+
+    /**
+     * Sort folders topologically based on subfolders.
+     * 
+     * @param folder
+     *            folder to visit
+     * @param sorted
+     *            all already sorted folders
+     * @return this folder and all not visited subfolders, sorted topologically
+     */
+    private static List<Folder> visit(Folder folder, List<Folder> sorted) {
+        List<Folder> list = new ArrayList<>();
+        for (FolderEntry entry : folder.getFolderEntries().values()) {
+            if (entry.getProxyFor() instanceof Folder && !sorted.contains(entry.getProxyFor())) {
+                list.addAll(visit((Folder) entry.getProxyFor(), sorted));
+            }
+        }
+        list.add(folder);
+        return list;
     }
 
 
