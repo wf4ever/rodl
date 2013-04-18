@@ -315,7 +315,7 @@
 	</reporting>
 	<scm>
 		<developerConnection>scm:git:git@github.com:wf4ever/rodl.git</developerConnection>
-	  <tag>rodl-8.0.16</tag>
+	  <tag>HEAD</tag>
   </scm>
 	<repositories>
 		<repository>
@@ -428,5 +428,5 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
-	<version>8.0.16</version>
+	<version>8.0.17-SNAPSHOT</version>
 </project>
