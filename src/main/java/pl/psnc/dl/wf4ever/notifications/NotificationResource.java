@@ -47,19 +47,24 @@ public class NotificationResource {
      *            time - from
      * @param to
      *            time - to
+     * @param source
+     *            feed field source
+     * @param limit
+     *            max number of returned entry
      * @return Atom Feed with the list of requested entrires.
      */
     @GET
     @Produces(MediaType.APPLICATION_ATOM_XML)
     public Response getAtomFeeds(@Context UriInfo uriInfo, @QueryParam("ro") URI roUri,
-            @QueryParam("from") String from, @QueryParam("to") String to) {
+            @QueryParam("from") String from, @QueryParam("to") String to, @QueryParam("source") URI source,
+            @QueryParam("limit") Integer limit) {
         AtomFeedEntryDAO entryDAO = new AtomFeedEntryDAO();
         //title depends on filters
         Date dateFrom = (from != null) ? DateTime.parse(from).toDate() : null;
         Date dateTo = (to != null) ? DateTime.parse(to).toDate() : null;
         Feed feed = AtomFeed.createNewFeed(AtomFeedTitileBuilder.buildTitle(roUri, dateFrom, dateTo), uriInfo
                 .getRequestUri().toString());
-        feed.setEntries(AtomFeedEntryDAO.convertToRawEntry(entryDAO.find(roUri, dateFrom, dateTo)));
+        feed.setEntries(AtomFeedEntryDAO.convertToRawEntry(entryDAO.find(roUri, dateFrom, dateTo, source, limit)));
         WireFeedOutput wire = new WireFeedOutput();
         try {
             return Response.ok(wire.outputString(feed)).build();
@@ -79,13 +84,17 @@ public class NotificationResource {
      *            time - from
      * @param to
      *            time - to
+     * @param source
+     *            feed field source
+     * @param limit
+     *            max number of returned entry
      * @return Atom Feed with the list of requested entrires.
      */
     @DELETE
     public Response deleteAtomFeeds(@QueryParam("ro") URI roUri, @QueryParam("from") Date from,
-            @QueryParam("to") Date to) {
+            @QueryParam("to") Date to, @QueryParam("source") URI source, @QueryParam("limit") Integer limit) {
         AtomFeedEntryDAO entryDAO = new AtomFeedEntryDAO();
-        for (AtomFeedEntry entry : entryDAO.find(roUri, from, to)) {
+        for (AtomFeedEntry entry : entryDAO.find(roUri, from, to, source, limit)) {
             entryDAO.delete(entry);
         }
         return Response.ok().build();
