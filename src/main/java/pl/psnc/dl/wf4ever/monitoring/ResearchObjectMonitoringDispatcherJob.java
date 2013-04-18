@@ -28,12 +28,18 @@ import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
  */
 public class ResearchObjectMonitoringDispatcherJob implements Job {
 
+    /** Resource model builder. */
+    private Builder builder;
+
+
     @Override
     public void execute(JobExecutionContext context)
             throws JobExecutionException {
-        //FIXME RODL URI should be better
-        UserMetadata userMetadata = new UserMetadata("rodl", "RODL decay monitor", Role.ADMIN, URI.create("rodl"));
-        Builder builder = new Builder(userMetadata);
+        if (builder == null) {
+            //FIXME RODL URI should be better
+            UserMetadata userMetadata = new UserMetadata("rodl", "RODL decay monitor", Role.ADMIN, URI.create("rodl"));
+            builder = new Builder(userMetadata);
+        }
         Set<ResearchObject> researchObjects = ResearchObject.getAll(builder, null);
         for (ResearchObject researchObject : researchObjects) {
             Trigger trigger = newTrigger().withIdentity("Trigger for " + researchObject, "triggers")
@@ -50,5 +56,15 @@ public class ResearchObjectMonitoringDispatcherJob implements Job {
                 throw new JobExecutionException(e);
             }
         }
+    }
+
+
+    public Builder getBuilder() {
+        return builder;
+    }
+
+
+    public void setBuilder(Builder builder) {
+        this.builder = builder;
     }
 }
