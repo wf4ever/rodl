@@ -1,5 +1,7 @@
 package pl.psnc.dl.wf4ever.monitoring;
 
+import javax.ws.rs.core.UriBuilder;
+
 import junit.framework.Assert;
 
 import org.apache.commons.io.IOUtils;
@@ -17,6 +19,7 @@ import pl.psnc.dl.wf4ever.db.ResourceInfo;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Mismatch;
 import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Result;
 
 /**
@@ -91,6 +94,32 @@ public class ChecksumVerificationJobTest extends BaseTest {
         Assert.assertNotNull(resultAnswer.getResult());
         Assert.assertTrue(resultAnswer.getResult().matches());
         Assert.assertTrue(resultAnswer.getResult().getMismatches().isEmpty());
+    }
+
+
+    /**
+     * Test that the job reports mismatches correctly.
+     * 
+     * @throws JobExecutionException
+     *             any problem when running the job
+     */
+    @Test
+    public final void testExecuteWithMismatches()
+            throws JobExecutionException {
+        Mockito.when(fsBuilder.getDigitalLibrary().getFileContents(researchObject.getUri(), FILE_PATH)).thenReturn(
+            IOUtils.toInputStream("lorem ipsum this is something new"));
+
+        ChecksumVerificationJob job = new ChecksumVerificationJob();
+        job.setBuilder(fsBuilder);
+        job.execute(context);
+        Assert.assertNotNull(resultAnswer.getResult());
+        Assert.assertFalse(resultAnswer.getResult().matches());
+        Assert.assertEquals(1, resultAnswer.getResult().getMismatches().size());
+        Mismatch mismatch = resultAnswer.getResult().getMismatches().iterator().next();
+        Assert.assertEquals(UriBuilder.fromUri(researchObject.getUri()).path(FILE_PATH).build(),
+            mismatch.getResourceUri());
+        Assert.assertEquals("663e9f8d61af863dfb207870ee028041", mismatch.getCalculatedChecksum().toLowerCase());
+        Assert.assertEquals("80a751fde577028640c419000e33eba6", mismatch.getExpectedChecksum().toLowerCase());
     }
 
 
