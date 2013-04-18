@@ -23,7 +23,7 @@ import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Mismatch;
 import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Result;
 
 /**
- * Test that the checksum verification plugin detects checksum incosistencies.
+ * Test that the checksum verification plugin detects checksum inconsistencies.
  * 
  * @author piotrekhol
  * 
