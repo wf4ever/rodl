@@ -2,28 +2,73 @@ package pl.psnc.dl.wf4ever.monitoring;
 
 import junit.framework.Assert;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import pl.psnc.dl.wf4ever.db.ResourceInfo;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Result;
 
+/**
+ * Test that the checksum verification plugin detects checksum incosistencies.
+ * 
+ * @author piotrekhol
+ * 
+ */
 public class ChecksumVerificationJobTest extends BaseTest {
 
+    /** The only file that the mock DL will handle. */
+    private static final String FILE_PATH = "a workflow.t2flow";
+
+    /** Result of the last job call. */
+    private ResultAnswer resultAnswer;
+
+    /** A builder using the mock digital library. */
+    private Builder fsBuilder;
+
+    /** Context with the input data. */
+    private JobExecutionContext context;
+
+
+    /**
+     * Prepare the mock digital library.
+     * 
+     * @throws Exception
+     *             it shouldn't happen
+     */
+    @Override
     @Before
     public void setUp()
             throws Exception {
         super.setUp();
+        DigitalLibrary dlMock = Mockito.mock(DigitalLibrary.class);
+        Mockito.when(dlMock.getFileContents(researchObject.getUri(), FILE_PATH)).thenReturn(
+            IOUtils.toInputStream("lorem ipsum"));
+        Mockito.when(dlMock.getFileInfo(researchObject.getUri(), FILE_PATH)).thenReturn(
+            new ResourceInfo(null, null, "80a751fde577028640c419000e33eba6", 0, "MD5", null, null));
+        Mockito.when(dlMock.fileExists(researchObject.getUri(), FILE_PATH)).thenReturn(true);
+
+        JobDataMap jobDataMap = new JobDataMap();
+        jobDataMap.put(ChecksumVerificationJob.RESEARCH_OBJECT_URI, researchObject.getUri());
+        context = Mockito.mock(JobExecutionContext.class);
+        Mockito.when(context.getMergedJobDataMap()).thenReturn(jobDataMap);
+        resultAnswer = new ResultAnswer();
+        Mockito.doAnswer(resultAnswer).when(context).setResult(Mockito.any());
+        fsBuilder = new Builder(builder.getUser(), builder.getDataset(), builder.isUseTransactions(), dlMock);
     }
 
 
+    @Override
     @After
     public void tearDown()
             throws Exception {
@@ -31,23 +76,46 @@ public class ChecksumVerificationJobTest extends BaseTest {
     }
 
 
+    /**
+     * Test that the job reports no mismatches correctly.
+     * 
+     * @throws JobExecutionException
+     *             any problem when running the job
+     */
     @Test
     public final void testExecuteWithNoMismatches()
             throws JobExecutionException {
-        JobDataMap jobDataMap = new JobDataMap();
-        jobDataMap.put(ChecksumVerificationJob.RESEARCH_OBJECT_URI, researchObject.getUri());
-        JobExecutionContext context = Mockito.mock(JobExecutionContext.class);
-        Mockito.when(context.getMergedJobDataMap()).thenReturn(jobDataMap);
-        DigitalLibrary dl = Mockito.spy(builder.getDigitalLibrary());
-        //TODO mockup dl
-        Builder fsBuilder = new Builder(builder.getUser(), builder.getDataset(), builder.isUseTransactions(), dl);
-
         ChecksumVerificationJob job = new ChecksumVerificationJob();
         job.setBuilder(fsBuilder);
         job.execute(context);
-        Assert.assertNotNull(jobDataMap.get(ChecksumVerificationJob.RESULT));
-        Result result = (Result) jobDataMap.get(ChecksumVerificationJob.RESULT);
-        Assert.assertTrue(result.matches());
-        Assert.assertTrue(result.getMismatches().isEmpty());
+        Assert.assertNotNull(resultAnswer.getResult());
+        Assert.assertTrue(resultAnswer.getResult().matches());
+        Assert.assertTrue(resultAnswer.getResult().getMismatches().isEmpty());
+    }
+
+
+    /**
+     * An implementation of Mockito's Answer class that sets the job result.
+     * 
+     * @author piotrekhol
+     * 
+     */
+    private final class ResultAnswer implements Answer<Void> {
+
+        /** The job result. */
+        private Result result;
+
+
+        @Override
+        public Void answer(InvocationOnMock invocation)
+                throws Throwable {
+            result = (Result) invocation.getArguments()[0];
+            return null;
+        }
+
+
+        public Result getResult() {
+            return result;
+        }
     }
 }

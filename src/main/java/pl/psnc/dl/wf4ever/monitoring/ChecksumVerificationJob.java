@@ -34,9 +34,6 @@ public class ChecksumVerificationJob implements Job {
     /** Key for the input data. The value must be a URI. */
     public static final String RESEARCH_OBJECT_URI = "ResearchObjectUri";
 
-    /** Key for the result. The value will be a Result. */
-    public static final String RESULT = "Result";
-
     /** Resource model builder. */
     private Builder builder;
 
@@ -54,19 +51,21 @@ public class ChecksumVerificationJob implements Job {
         if (researchObject != null) {
             Result result = new Result();
             for (AggregatedResource resource : researchObject.getAggregatedResources().values()) {
-                String checksumCalculated;
-                try (InputStream in = resource.getSerialization()) {
-                    checksumCalculated = DigestUtils.md5Hex(in);
-                } catch (IOException e) {
-                    LOGGER.error("Can't calculate checksum for " + resource, e);
-                    continue;
-                }
-                String checksumStored = resource.getStats().getChecksum();
-                if (!checksumCalculated.equalsIgnoreCase(checksumStored)) {
-                    result.getMismatches().add(new Mismatch(resource.getUri(), checksumStored, checksumCalculated));
+                if (resource.isInternal()) {
+                    String checksumStored = resource.getStats().getChecksum();
+                    String checksumCalculated;
+                    try (InputStream in = resource.getSerialization()) {
+                        checksumCalculated = DigestUtils.md5Hex(in);
+                    } catch (IOException e) {
+                        LOGGER.error("Can't calculate checksum for " + resource, e);
+                        continue;
+                    }
+                    if (!checksumCalculated.equalsIgnoreCase(checksumStored)) {
+                        result.getMismatches().add(new Mismatch(resource.getUri(), checksumStored, checksumCalculated));
+                    }
                 }
             }
-            context.put(RESULT, result);
+            context.setResult(result);
         }
     }
 

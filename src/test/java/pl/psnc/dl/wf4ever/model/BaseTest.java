@@ -1,7 +1,6 @@
 package pl.psnc.dl.wf4ever.model;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Properties;
 
@@ -13,7 +12,6 @@ import org.junit.BeforeClass;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
-import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 import com.hp.hpl.jena.query.Dataset;
@@ -86,9 +84,7 @@ public class BaseTest {
     /**
      * Create the dataset, load the RDF files.
      * 
-     * @throws BadRequestException
-     * 
-     * @throws IOException
+     * @throws Exception
      */
     @Before
     public void setUp()
