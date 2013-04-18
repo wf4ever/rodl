@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pl.psnc.dl.wf4ever</groupId>
 	<artifactId>rodl</artifactId>
@@ -35,7 +34,15 @@
 			</roles>
 			<organization>PSNC</organization>
 		</developer>
-
+		<developer>
+			<id>filipwis</id>
+			<name>Filip</name>
+			<email>filipwis@man.poznan.pl</email>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<organization>PSNC</organization>
+		</developer>
 	</developers>
 	<dependencies>
 		<dependency>
@@ -121,6 +128,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		
 		<dependency>
 			<groupId>com.sun.jersey</groupId>
 			<artifactId>jersey-server</artifactId>
@@ -307,7 +315,8 @@
 	</reporting>
 	<scm>
 		<developerConnection>scm:git:git@github.com:wf4ever/rodl.git</developerConnection>
-	</scm>
+	  <tag>HEAD</tag>
+  </scm>
 	<repositories>
 		<repository>
 			<releases>
@@ -414,5 +423,5 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
-	<version>8.0.16-SNAPSHOT</version>
+	<version>8.0.17-SNAPSHOT</version>
 </project>

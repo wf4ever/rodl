@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -43,7 +44,7 @@ public final class SolrSearchServer implements SearchServer {
     private static SearchServer instance;
 
     /** Solr instance. */
-    private HttpSolrServer server;
+    private SolrServer server;
 
     /** Server url. */
     private static String url;
@@ -65,30 +66,25 @@ public final class SolrSearchServer implements SearchServer {
 
 
     /**
-     * Constructor, opens connection to the solr server. Read the solr url from connection.propertie file.
-     */
-    private SolrSearchServer() {
-        try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(CONNECTION_PROPERTIES_FILENAME)) {
-            Properties props = new Properties();
-            props.load(is);
-            url = props.getProperty("solrServer");
-
-        } catch (Exception e) {
-            LOGGER.error("Trple store location can not be loaded from the properties file", e);
-        }
-
-        server = new HttpSolrServer(url);
-    }
-
-
-    /**
      * Get the only instance.
      * 
      * @return a search server singleton instance
      */
     public static SearchServer get() {
         if (instance == null) {
-            instance = new SolrSearchServer();
+            try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(CONNECTION_PROPERTIES_FILENAME)) {
+                Properties props = new Properties();
+                props.load(is);
+                url = props.getProperty("solrServer");
+            } catch (Exception e) {
+                LOGGER.error("Trple store location can not be loaded from the properties file", e);
+            }
+            if (url == null || url.equals("")) {
+                LOGGER.warn("Solr instance isnt' specified. The date won't be indexed");
+                instance = new SolrMockServer();
+            } else {
+                instance = new SolrSearchServer(url);
+            }
         }
         return instance;
     }

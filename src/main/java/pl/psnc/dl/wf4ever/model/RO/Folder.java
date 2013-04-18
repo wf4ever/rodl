@@ -310,6 +310,9 @@ public class Folder extends Resource implements Aggregation {
         folder.setCreated(DateTime.now());
         folder.setCreator(builder.getUser());
         folder.setProxy(researchObject.addProxy(folder));
+        if (researchObject.getFolders().isEmpty()) {
+            folder.setRootFolder(true);
+        }
         folder.save();
         for (FolderEntry entry : folder.getFolderEntries().values()) {
             folder.getResearchObject().getFolderEntries().put(entry.getUri(), entry);
