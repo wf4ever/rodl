@@ -8,24 +8,6 @@
 	<inceptionYear>2010</inceptionYear>
 	<developers>
 		<developer>
-			<id>nowakm</id>
-			<name>Michał Nowak</name>
-			<email>nowakm@man.poznan.pl</email>
-			<roles>
-				<role>Developer</role>
-			</roles>
-			<organization>PSNC</organization>
-		</developer>
-		<developer>
-			<id>mmatela</id>
-			<name>Mateusz Matela</name>
-			<email>mmatela@man.poznan.pl</email>
-			<roles>
-				<role>Developer</role>
-			</roles>
-			<organization>PSNC</organization>
-		</developer>
-		<developer>
 			<id>piotrhol</id>
 			<name>Piotr Hołubowicz</name>
 			<email>piotrhol@man.poznan.pl</email>
