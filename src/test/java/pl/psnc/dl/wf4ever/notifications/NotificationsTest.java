@@ -123,4 +123,15 @@ public class NotificationsTest extends W4ETest {
         Assert.assertFalse(afterEnd.contains(ro2.toString()));
         Assert.assertFalse(afterEnd.contains(ro3.toString()));
     }
+
+
+    @Test
+    public void testNotificationsLimit() {
+        ro = createRO(accessToken);
+        ro2 = createRO(accessToken);
+        String resultAll = (webResource.path("notifications/").queryParam("limit", "1").get(String.class));
+        System.out.println(resultAll);
+        //only one entry
+        Assert.assertEquals(2, resultAll.split("<entry>").length);
+    }
 }
