@@ -9,8 +9,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -20,7 +18,6 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Mismatch;
-import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Result;
 
 /**
  * Test that the checksum verification plugin detects checksum inconsistencies.
@@ -120,31 +117,5 @@ public class ChecksumVerificationJobTest extends BaseTest {
             mismatch.getResourceUri());
         Assert.assertEquals("663e9f8d61af863dfb207870ee028041", mismatch.getCalculatedChecksum().toLowerCase());
         Assert.assertEquals("80a751fde577028640c419000e33eba6", mismatch.getExpectedChecksum().toLowerCase());
-    }
-
-
-    /**
-     * An implementation of Mockito's Answer class that sets the job result.
-     * 
-     * @author piotrekhol
-     * 
-     */
-    private final class ResultAnswer implements Answer<Void> {
-
-        /** The job result. */
-        private Result result;
-
-
-        @Override
-        public Void answer(InvocationOnMock invocation)
-                throws Throwable {
-            result = (Result) invocation.getArguments()[0];
-            return null;
-        }
-
-
-        public Result getResult() {
-            return result;
-        }
     }
 }

@@ -13,6 +13,7 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
+import org.quartz.impl.StdSchedulerFactory;
 
 /**
  * This class manages the jobs and triggers.
@@ -27,6 +28,9 @@ public final class MonitoringScheduler {
 
     /** The only instance. */
     private static MonitoringScheduler instance = null;
+
+    /** A scheduler factory. */
+    private static SchedulerFactory schedulerFactory = new StdSchedulerFactory();;
 
 
     /**
@@ -58,9 +62,7 @@ public final class MonitoringScheduler {
     @SuppressWarnings("unchecked")
     public void start()
             throws SchedulerException {
-        SchedulerFactory schedFact = new org.quartz.impl.StdSchedulerFactory();
-
-        Scheduler sched = schedFact.getScheduler();
+        Scheduler sched = schedulerFactory.getScheduler();
         String[] plugins = sched.getContext().getString("plugins").split(",");
         for (String plugin : plugins) {
             String pluginClassName = sched.getContext().getString(plugin.trim() + ".class");
@@ -80,5 +82,15 @@ public final class MonitoringScheduler {
         }
 
         sched.start();
+    }
+
+
+    public static SchedulerFactory getSchedulerFactory() {
+        return schedulerFactory;
+    }
+
+
+    public static void setSchedulerFactory(SchedulerFactory schedulerFactory) {
+        MonitoringScheduler.schedulerFactory = schedulerFactory;
     }
 }

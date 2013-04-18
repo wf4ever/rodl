@@ -6,17 +6,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -72,35 +68,9 @@ public class ResearchObjectMonitoringDispatcherJobTest extends BaseTest {
         rosExpected.add(researchObject.getUri());
         rosExpected.add(researchObject2.getUri());
         Set<URI> rosScheduled = new HashSet<>();
-        for (JobDetail jobDetail : answer.getJobs()) {
+        for (JobDetail jobDetail : answer.getJobs().keySet()) {
             rosScheduled.add((URI) jobDetail.getJobDataMap().get(ChecksumVerificationJob.RESEARCH_OBJECT_URI));
         }
         Assert.assertEquals(rosExpected, rosScheduled);
-    }
-
-
-    /**
-     * An implementation of Mockito's Answer class that sets the job result.
-     * 
-     * @author piotrekhol
-     * 
-     */
-    private final class ScheduledJobsAnswer implements Answer<Void> {
-
-        /** The job result. */
-        private final List<JobDetail> jobs = new ArrayList<>();
-
-
-        @Override
-        public Void answer(InvocationOnMock invocation)
-                throws Throwable {
-            jobs.add((JobDetail) invocation.getArguments()[0]);
-            return null;
-        }
-
-
-        public List<JobDetail> getJobs() {
-            return jobs;
-        }
     }
 }
