@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.db;
+package pl.psnc.dl.wf4ever.notifications;
 
 import java.io.Serializable;
 import java.net.URI;
