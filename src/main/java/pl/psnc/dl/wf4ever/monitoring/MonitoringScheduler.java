@@ -30,7 +30,10 @@ public final class MonitoringScheduler {
     private static MonitoringScheduler instance = null;
 
     /** A scheduler factory. */
-    private static SchedulerFactory schedulerFactory = new StdSchedulerFactory();;
+    private static SchedulerFactory schedulerFactory = new StdSchedulerFactory();
+
+    /** The main scheduler. */
+    private Scheduler scheduler;
 
 
     /**
@@ -62,10 +65,10 @@ public final class MonitoringScheduler {
     @SuppressWarnings("unchecked")
     public void start()
             throws SchedulerException {
-        Scheduler sched = schedulerFactory.getScheduler();
-        String[] plugins = sched.getContext().getString("plugins").split(",");
+        scheduler = schedulerFactory.getScheduler();
+        String[] plugins = scheduler.getContext().getString("plugins").split(",");
         for (String plugin : plugins) {
-            String pluginClassName = sched.getContext().getString(plugin.trim() + ".class");
+            String pluginClassName = scheduler.getContext().getString(plugin.trim() + ".class");
             Class<? extends Job> pluginClass;
             try {
                 pluginClass = (Class<? extends Job>) Class.forName(pluginClassName);
@@ -73,15 +76,29 @@ public final class MonitoringScheduler {
                 LOGGER.error("Invalid plugin class", e);
                 continue;
             }
-            String cron = sched.getContext().getString(plugin.trim() + ".cron");
+            String cron = scheduler.getContext().getString(plugin.trim() + ".cron");
             ScheduleBuilder<? extends Trigger> schedule = cron != null ? cronSchedule(cron)
                     .withMisfireHandlingInstructionIgnoreMisfires() : simpleSchedule();
             JobDetail job = newJob(pluginClass).withIdentity(plugin).build();
             Trigger trigger = newTrigger().withSchedule(schedule).build();
-            sched.scheduleJob(job, trigger);
+            scheduler.scheduleJob(job, trigger);
         }
 
-        sched.start();
+        scheduler.start();
+    }
+
+
+    /**
+     * Stop all jobs.
+     * 
+     * @throws SchedulerException
+     *             can't stop the Quartz scheduler
+     */
+    public void stop()
+            throws SchedulerException {
+        if (scheduler != null) {
+            scheduler.shutdown();
+        }
     }
 
 

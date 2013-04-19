@@ -14,24 +14,42 @@ package pl.psnc.dl.wf4ever;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import org.apache.log4j.Logger;
+import org.quartz.SchedulerException;
+
+import pl.psnc.dl.wf4ever.monitoring.MonitoringScheduler;
 
 /**
- * Read in the dLibra connection parameters on startup.
+ * Initialize RODL on startup.
  * 
- * @author nowakm
+ * @author piotrekhol
  * 
  */
 public class InitConfigurationListener implements ServletContextListener {
 
+    /** Logger. */
+    private static final Logger LOGGER = Logger.getLogger(InitConfigurationListener.class);
+
+
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         ApplicationProperties.load();
+
+        try {
+            MonitoringScheduler.getInstance().start();
+        } catch (SchedulerException e) {
+            LOGGER.error("Can't start the RO monitoring scheduler", e);
+        }
     }
 
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        // nothing to do
+        try {
+            MonitoringScheduler.getInstance().stop();
+        } catch (SchedulerException e) {
+            LOGGER.error("Can't stop the RO monitoring scheduler", e);
+        }
     }
 
 }
