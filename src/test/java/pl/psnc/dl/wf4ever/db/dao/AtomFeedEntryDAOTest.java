@@ -9,11 +9,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import pl.psnc.dl.wf4ever.db.AtomFeedEntry;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
-import pl.psnc.dl.wf4ever.notifications.ActionType;
-import pl.psnc.dl.wf4ever.notifications.EntryBuilder;
+import pl.psnc.dl.wf4ever.notifications.AtomFeedEntry;
 
 public class AtomFeedEntryDAOTest extends BaseTest {
 
@@ -58,11 +56,11 @@ public class AtomFeedEntryDAOTest extends BaseTest {
         for (AtomFeedEntry entry : dao.all()) {
             dao.delete(entry);
         }
-        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
-        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
-        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
-        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
-        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
+        dao.save(new AtomFeedEntry.Builder(ro).build());
+        dao.save(new AtomFeedEntry.Builder(ro).build());
+        dao.save(new AtomFeedEntry.Builder(ro).build());
+        dao.save(new AtomFeedEntry.Builder(ro).build());
+        dao.save(new AtomFeedEntry.Builder(ro).build());
         Assert.assertEquals(5, dao.all().size());
     }
 
@@ -72,13 +70,13 @@ public class AtomFeedEntryDAOTest extends BaseTest {
             throws InterruptedException {
         Thread.currentThread();
         DateTime start = DateTime.now();
-        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
+        dao.save(new AtomFeedEntry.Builder(ro).build());
         Thread.sleep(1000);
         DateTime middle = DateTime.now();
         Thread.sleep(1000);
-        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
+        dao.save(new AtomFeedEntry.Builder(ro).build());
         Thread.sleep(1000);
-        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
+        dao.save(new AtomFeedEntry.Builder(ro).build());
         DateTime end = DateTime.now();
 
         Assert.assertEquals(3, dao.find(ro.getUri(), null, null, null, null).size());

@@ -13,6 +13,9 @@ import javax.persistence.Table;
 
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+
 /**
  * Represents a simple entry of the feed, contains a simple report of the event like update, damage and so on.
  * 
@@ -31,7 +34,7 @@ public class AtomFeedEntry implements Serializable {
 
     /** Timestamp. */
     @Column(nullable = false)
-    private Date created = DateTime.now().toDate();
+    private Date created;
 
     /** Title. */
     private String title;
@@ -47,6 +50,23 @@ public class AtomFeedEntry implements Serializable {
     private String subject;
 
 
+    public AtomFeedEntry(Builder builder) {
+        this.created = builder.created;
+        this.title = builder.title;
+        this.source = builder.source;
+        this.subject = builder.subject;
+        this.summary = builder.summary;
+        this.title = builder.title;
+    }
+
+
+    /**
+     * Default constructor.
+     */
+    public AtomFeedEntry() {
+    }
+
+
     public Integer getId() {
         return id;
     }
@@ -57,13 +77,13 @@ public class AtomFeedEntry implements Serializable {
     }
 
 
-    public URI getSource() {
-        return URI.create(source);
+    public String getSource() {
+        return source;
     }
 
 
-    public void setSource(URI source) {
-        this.source = source.toString();
+    public void setSource(String source) {
+        this.source = source;
     }
 
 
@@ -97,13 +117,121 @@ public class AtomFeedEntry implements Serializable {
     }
 
 
-    public URI getSubject() {
-        return URI.create(subject);
+    public String getSubject() {
+        return subject;
     }
 
 
-    public void setSubject(URI subject) {
-        this.subject = subject.toString();
+    public void setSubject(String subject) {
+        this.subject = subject;
     }
 
+
+    public static class Builder {
+
+        /** Timestamp. */
+        private Date created = DateTime.now().toDate();
+
+        /** Title. */
+        private String title;
+
+        /** The event source/discover. */
+        //FIXME use RODL URI
+        private String source = ".";
+
+        /** Summary/Description(Content). */
+        private String summary;
+
+        /** Related object (for example Research Object URI). */
+        private String subject;
+
+
+        public Builder(URI subject) {
+            this.subject = subject.toString();
+        }
+
+
+        public Builder(Thing subject) {
+            this(subject.getUri());
+        }
+
+
+        public AtomFeedEntry build() {
+            return new AtomFeedEntry(this);
+        }
+
+
+        public Builder created(Date created) {
+            this.created = created;
+            return this;
+        }
+
+
+        public Builder created(DateTime created) {
+            this.created = created.toDate();
+            return this;
+        }
+
+
+        public Builder title(String title) {
+            this.title = title;
+            return this;
+        }
+
+
+        public Builder title(Title title) {
+            this.title = title.getValue();
+            return this;
+        }
+
+
+        public Builder source(URI source) {
+            this.source = source.toString();
+            return this;
+        }
+
+
+        public Builder summary(String summary) {
+            this.summary = summary;
+            return this;
+        }
+
+    }
+
+
+    public enum Title {
+
+        RESEARCH_OBJECT_CREATED("Research Object has been created"),
+        RESEARCH_OBJECT_DELETED("Research Object has been deleted");
+
+        private final String value;
+
+
+        private Title(String value) {
+            this.value = value;
+        }
+
+
+        public String getValue() {
+            return value;
+        }
+    }
+
+
+    public static class Summary {
+
+        public static String created(ResearchObject researchObject) {
+            return String
+                    .format(
+                        "<p>A new Research Object has been created.</p><p>The Research Object URI is <a href=\"%s\">%<s</a>.</p>",
+                        researchObject.toString());
+        }
+
+
+        public static String deleted(ResearchObject researchObject) {
+            return String.format(
+                "<p>A Research Object has been deleted.</p><p>The Research Object URI was <em>%s</em>.</p>",
+                researchObject.toString());
+        }
+    }
 }

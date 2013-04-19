@@ -16,7 +16,6 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
-import pl.psnc.dl.wf4ever.db.AtomFeedEntry;
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
 
 import com.sun.syndication.feed.atom.Feed;

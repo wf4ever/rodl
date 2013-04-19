@@ -11,8 +11,8 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
-import pl.psnc.dl.wf4ever.db.AtomFeedEntry;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
+import pl.psnc.dl.wf4ever.notifications.AtomFeedEntry;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.hp.hpl.jena.vocabulary.DCTerms;
