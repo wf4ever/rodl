@@ -1,11 +1,8 @@
 package pl.psnc.dl.wf4ever.notifications;
 
-import junit.framework.Assert;
-
 import org.joda.time.DateTime;
+import org.junit.Assert;
 import org.junit.Test;
-
-import pl.psnc.dl.wf4ever.notifications.AtomFeedEntry;
 
 public class AtomFeedEntryTest {
 

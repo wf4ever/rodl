@@ -151,10 +151,13 @@ public final class AtomFeed {
 
 
         /**
-         * A constructor with no parameters.
+         * A constructor.
+         * 
+         * @param id
+         *            feed ID
          */
-        public Builder() {
-
+        public Builder(String id) {
+            this.id = id;
         }
 
 
@@ -165,19 +168,6 @@ public final class AtomFeed {
          */
         public AtomFeed build() {
             return new AtomFeed(this);
-        }
-
-
-        /**
-         * Feed ID.
-         * 
-         * @param id
-         *            feed ID
-         * @return this builder
-         */
-        public Builder id(String id) {
-            this.id = id;
-            return this;
         }
 
 

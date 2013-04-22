@@ -67,7 +67,7 @@ public class NotificationResource {
         String id = uriInfo.getRequestUri().toString();
         String title = Title.build(roUri, dateFrom, dateTo);
         List<AtomFeedEntry> entries = entryDAO.find(roUri, dateFrom, dateTo, source, limit);
-        AtomFeed atomFeed = new AtomFeed.Builder().title(title).id(id).entries(entries).build();
+        AtomFeed atomFeed = new AtomFeed.Builder(id).title(title).entries(entries).build();
         Feed feed = atomFeed.asSunFeed();
         WireFeedOutput wire = new WireFeedOutput();
         try {
