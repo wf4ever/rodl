@@ -1,11 +1,9 @@
 package pl.psnc.dl.wf4ever.db.dao;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
@@ -13,12 +11,6 @@ import org.hibernate.criterion.Restrictions;
 
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.notifications.AtomFeedEntry;
-import pl.psnc.dl.wf4ever.vocabulary.ORE;
-
-import com.hp.hpl.jena.vocabulary.DCTerms;
-import com.sun.syndication.feed.atom.Content;
-import com.sun.syndication.feed.atom.Entry;
-import com.sun.syndication.feed.atom.Link;
 
 /**
  * Atom Feed entry model.
@@ -85,50 +77,4 @@ public class AtomFeedEntryDAO extends AbstractDAO<AtomFeedEntry> {
         return find(null, null, null, null, null);
     }
 
-
-    /**
-     * Convert list of records (AtomFeedEntry) to the list of Entry object (from rome package).
-     * 
-     * @param dbEntries
-     *            db records
-     * @return list of romes entry
-     */
-    public static List<Entry> convertToRawEntry(List<AtomFeedEntry> dbEntries) {
-        List<Entry> result = new ArrayList<>();
-        for (AtomFeedEntry dbEntry : dbEntries) {
-            Entry resultEntry = new Entry();
-            resultEntry.setId("urn:X-rodl:" + dbEntry.getId().toString());
-            if (dbEntry.getTitle() != null) {
-                resultEntry.setTitle(dbEntry.getTitle());
-            }
-            resultEntry.setPublished(dbEntry.getCreated());
-            //set summary
-            Content content = new Content();
-            if (dbEntry.getSummary() != null) {
-                content.setValue(dbEntry.getSummary());
-                content.setValue(StringEscapeUtils.escapeHtml4(dbEntry.getSummary()));
-            }
-            resultEntry.setSummary(content);
-            //set links
-            List<Link> links = new ArrayList<>();
-            if (dbEntry.getSource() != null) {
-                Link sourceLink = new Link();
-                sourceLink.setHref(dbEntry.getSource().toString());
-                sourceLink.setRel(DCTerms.source.toString());
-                sourceLink.setTitle("Action source/service");
-                links.add(sourceLink);
-            }
-            if (dbEntry.getSubject() != null) {
-                Link sourceLink = new Link();
-                sourceLink.setHref(dbEntry.getSubject().toString());
-                sourceLink.setRel(ORE.describes.toString());
-                sourceLink.setTitle("Description for");
-                links.add(sourceLink);
-            }
-
-            resultEntry.setOtherLinks(links);
-            result.add(resultEntry);
-        }
-        return result;
-    }
 }

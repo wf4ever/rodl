@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever.notifications;
 
 import java.net.URI;
 import java.util.Date;
+import java.util.List;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -17,6 +18,7 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
+import pl.psnc.dl.wf4ever.notifications.AtomFeed.Title;
 
 import com.sun.syndication.feed.atom.Feed;
 import com.sun.syndication.io.FeedException;
@@ -45,12 +47,13 @@ public class NotificationResource {
      * @param from
      *            time - from
      * @param to
-     *            time - to
+     *            time - to <<<<<<< Upstream, based on my-develop
      * @param source
      *            feed field source
      * @param limit
      *            max number of returned entry
-     * @return Atom Feed with the list of requested entrires.
+     * @return Atom Feed with the list of requested entrires. =======
+     * @return Atom Feed with the list of requested entries. >>>>>>> 7791107 Atom Feed builder.
      */
     @GET
     @Produces(MediaType.APPLICATION_ATOM_XML)
@@ -61,9 +64,11 @@ public class NotificationResource {
         //title depends on filters
         Date dateFrom = (from != null) ? DateTime.parse(from).toDate() : null;
         Date dateTo = (to != null) ? DateTime.parse(to).toDate() : null;
-        Feed feed = AtomFeed.createNewFeed(AtomFeedTitileBuilder.buildTitle(roUri, dateFrom, dateTo), uriInfo
-                .getRequestUri().toString());
-        feed.setEntries(AtomFeedEntryDAO.convertToRawEntry(entryDAO.find(roUri, dateFrom, dateTo, source, limit)));
+        String id = uriInfo.getRequestUri().toString();
+        String title = Title.build(roUri, dateFrom, dateTo);
+        List<AtomFeedEntry> entries = entryDAO.find(roUri, dateFrom, dateTo, source, limit);
+        AtomFeed atomFeed = new AtomFeed.Builder().title(title).id(id).entries(entries).build();
+        Feed feed = atomFeed.asSunFeed();
         WireFeedOutput wire = new WireFeedOutput();
         try {
             return Response.ok(wire.outputString(feed)).build();

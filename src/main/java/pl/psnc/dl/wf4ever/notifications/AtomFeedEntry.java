@@ -2,7 +2,9 @@ package pl.psnc.dl.wf4ever.notifications;
 
 import java.io.Serializable;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -11,10 +13,17 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
+
+import com.hp.hpl.jena.vocabulary.DCTerms;
+import com.sun.syndication.feed.atom.Content;
+import com.sun.syndication.feed.atom.Entry;
+import com.sun.syndication.feed.atom.Link;
 
 /**
  * Represents a simple entry of the feed, contains a simple report of the event like update, damage and so on.
@@ -30,7 +39,7 @@ public class AtomFeedEntry implements Serializable {
     /** Id. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private int id;
 
     /** Timestamp. */
     @Column(nullable = false)
@@ -130,6 +139,46 @@ public class AtomFeedEntry implements Serializable {
 
     public void setSubject(String subject) {
         this.subject = subject;
+    }
+
+
+    /**
+     * Convert this entry to a {@link Entry}.
+     * 
+     * @return a new instance
+     */
+    public Entry asSunFeedEntry() {
+        Entry resultEntry = new Entry();
+        resultEntry.setId("urn:X-rodl:" + id);
+        if (title != null) {
+            resultEntry.setTitle(title);
+        }
+        resultEntry.setPublished(created);
+        //set summary
+        Content content = new Content();
+        if (summary != null) {
+            content.setValue(StringEscapeUtils.escapeHtml4(summary));
+        }
+        resultEntry.setSummary(content);
+        //set links
+        List<Link> links = new ArrayList<>();
+        if (source != null) {
+            Link sourceLink = new Link();
+            sourceLink.setHref(source);
+            sourceLink.setRel(DCTerms.source.toString());
+            sourceLink.setTitle("Action source/service");
+            links.add(sourceLink);
+        }
+        if (subject != null) {
+            Link sourceLink = new Link();
+            sourceLink.setHref(subject);
+            sourceLink.setRel(ORE.describes.toString());
+            sourceLink.setTitle("Description for");
+            links.add(sourceLink);
+        }
+
+        resultEntry.setOtherLinks(links);
+        return resultEntry;
     }
 
 
