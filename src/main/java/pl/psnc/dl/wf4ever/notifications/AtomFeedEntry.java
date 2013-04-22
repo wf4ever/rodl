@@ -39,10 +39,10 @@ public class AtomFeedEntry implements Serializable {
     /** Title. */
     private String title;
 
-    /** The event source/discover. */
+    /** URI of the service that created this notification. */
     private String source;
 
-    /** Summary/Description(Content). */
+    /** Entry human-friendly content. */
     private String summary;
 
     /** Related object (for example Research Object uri). */
@@ -50,7 +50,13 @@ public class AtomFeedEntry implements Serializable {
     private String subject;
 
 
-    public AtomFeedEntry(Builder builder) {
+    /**
+     * Create an entry based on the builder. Used builder only.
+     * 
+     * @param builder
+     *            the builder that has the fields to set
+     */
+    private AtomFeedEntry(Builder builder) {
         this.created = builder.created;
         this.title = builder.title;
         this.source = builder.source;
@@ -127,6 +133,12 @@ public class AtomFeedEntry implements Serializable {
     }
 
 
+    /**
+     * A builder class that allows to create a {@link AtomFeedEntry} using the builder design pattern.
+     * 
+     * @author piotrekhol
+     * 
+     */
     public static class Builder {
 
         /** Timestamp. */
@@ -135,62 +147,121 @@ public class AtomFeedEntry implements Serializable {
         /** Title. */
         private String title;
 
-        /** The event source/discover. */
+        /** URI of the service that created this notification. */
         //FIXME use RODL URI
         private String source = ".";
 
-        /** Summary/Description(Content). */
+        /** Entry human-friendly content. */
         private String summary;
 
         /** Related object (for example Research Object URI). */
         private String subject;
 
 
+        /**
+         * Constructor, all required fields are parameters.
+         * 
+         * @param subject
+         *            Related object URI
+         */
         public Builder(URI subject) {
             this.subject = subject.toString();
         }
 
 
+        /**
+         * Constructor, all required fields are parameters.
+         * 
+         * @param subject
+         *            Related object (for example Research Object)
+         */
         public Builder(Thing subject) {
             this(subject.getUri());
         }
 
 
+        /**
+         * Finish the build process and return an {@link AtomFeedEntry}.
+         * 
+         * @return an atom feed entry with fields provided using this builder
+         */
         public AtomFeedEntry build() {
             return new AtomFeedEntry(this);
         }
 
 
+        /**
+         * Creation timestamp.
+         * 
+         * @param created
+         *            timestamp
+         * @return this builder
+         */
         public Builder created(Date created) {
             this.created = created;
             return this;
         }
 
 
+        /**
+         * Creation timestamp.
+         * 
+         * @param created
+         *            timestamp
+         * @return this builder
+         */
         public Builder created(DateTime created) {
             this.created = created.toDate();
             return this;
         }
 
 
+        /**
+         * Entry title.
+         * 
+         * @param title
+         *            entry title
+         * @return this builder
+         */
         public Builder title(String title) {
             this.title = title;
             return this;
         }
 
 
+        /**
+         * Entry title.
+         * 
+         * @param title
+         *            entry title
+         * @return this builder
+         */
         public Builder title(Title title) {
             this.title = title.getValue();
             return this;
         }
 
 
+        /**
+         * URI of the service that created this notification.
+         * 
+         * @param source
+         *            URI of the service that created this notification
+         * @return this builder
+         */
         public Builder source(URI source) {
             this.source = source.toString();
             return this;
         }
 
 
+        /**
+         * Entry human-friendly content.
+         * 
+         * @param summary
+         *            Entry human-friendly content
+         * @return this builder
+         */
         public Builder summary(String summary) {
             this.summary = summary;
             return this;
@@ -199,14 +270,29 @@ public class AtomFeedEntry implements Serializable {
     }
 
 
+    /**
+     * Commonly used entry titles.
+     * 
+     * @author piotrekhol
+     * 
+     */
     public enum Title {
 
+        /** Research Object has been created. */
         RESEARCH_OBJECT_CREATED("Research Object has been created"),
+        /** Research Object has been deleted. */
         RESEARCH_OBJECT_DELETED("Research Object has been deleted");
 
+        /** The title itself. */
         private final String value;
 
 
+        /**
+         * Internal constructor.
+         * 
+         * @param value
+         *            The title itself
+         */
         private Title(String value) {
             this.value = value;
         }
@@ -218,8 +304,21 @@ public class AtomFeedEntry implements Serializable {
     }
 
 
+    /**
+     * Commonly used entry content.
+     * 
+     * @author piotrekhol
+     * 
+     */
     public static class Summary {
 
+        /**
+         * An RO has been created.
+         * 
+         * @param researchObject
+         *            the new RO
+         * @return a message in HTML
+         */
         public static String created(ResearchObject researchObject) {
             return String
                     .format(
@@ -228,6 +327,13 @@ public class AtomFeedEntry implements Serializable {
         }
 
 
+        /**
+         * An RO has been deleted.
+         * 
+         * @param researchObject
+         *            the deleted RO
+         * @return a message in HTML
+         */
         public static String deleted(ResearchObject researchObject) {
             return String.format(
                 "<p>A Research Object has been deleted.</p><p>The Research Object URI was <em>%s</em>.</p>",
