@@ -45,10 +45,14 @@ public class AtomFeedEntryDAO extends AbstractDAO<AtomFeedEntry> {
      *            the oldest requested date (if null no limits)
      * @param to
      *            the freshest requested date (if null no limits))
+     * @param source
+     *            entry source
+     * @param limit
+     *            max number of entries in the feed
      * @return list of requested entries
      */
     @SuppressWarnings("unchecked")
-    public List<AtomFeedEntry> find(URI subjectUri, Date from, Date to) {
+    public List<AtomFeedEntry> find(URI subjectUri, Date from, Date to, URI source, Integer limit) {
         Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(AtomFeedEntry.class);
         criteria.addOrder(Order.asc("created"));
         criteria.addOrder(Order.asc("id"));
@@ -61,6 +65,13 @@ public class AtomFeedEntryDAO extends AbstractDAO<AtomFeedEntry> {
         if (to != null) {
             criteria.add(Restrictions.le("created", to));
         }
+        if (source != null) {
+            criteria.add(Restrictions.eq("subject", source.toString()));
+        }
+        if (limit != null && limit > 0) {
+            criteria.setMaxResults(limit);
+        }
+
         return criteria.list();
     }
 
@@ -71,7 +82,7 @@ public class AtomFeedEntryDAO extends AbstractDAO<AtomFeedEntry> {
      * @return list of requested entries.
      */
     public List<AtomFeedEntry> all() {
-        return find(null, null, null);
+        return find(null, null, null, null, null);
     }
 
 

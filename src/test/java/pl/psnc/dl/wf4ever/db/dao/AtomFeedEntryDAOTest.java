@@ -29,7 +29,7 @@ public class AtomFeedEntryDAOTest extends BaseTest {
         super.setUp();
         ro = builder.buildResearchObject(roUri);
         dao = new AtomFeedEntryDAO();
-        for (AtomFeedEntry entry : dao.find(roUri, null, null)) {
+        for (AtomFeedEntry entry : dao.find(roUri, null, null, null, null)) {
             dao.delete(entry);
         }
     }
@@ -39,7 +39,7 @@ public class AtomFeedEntryDAOTest extends BaseTest {
     @After
     public void tearDown()
             throws Exception {
-        for (AtomFeedEntry entry : dao.find(roUri, null, null)) {
+        for (AtomFeedEntry entry : dao.find(roUri, null, null, null, null)) {
             dao.delete(entry);
         }
         super.tearDown();
@@ -81,13 +81,22 @@ public class AtomFeedEntryDAOTest extends BaseTest {
         dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
         DateTime end = DateTime.now();
 
-        Assert.assertEquals(3, dao.find(ro.getUri(), null, null).size());
-        Assert.assertEquals(3, dao.find(ro.getUri(), start.toDate(), null).size());
-        Assert.assertEquals(3, dao.find(ro.getUri(), null, end.toDate()).size());
-        Assert.assertEquals(3, dao.find(ro.getUri(), start.toDate(), end.toDate()).size());
-        Assert.assertEquals(2, dao.find(ro.getUri(), middle.toDate(), end.toDate()).size());
-        Assert.assertEquals(1, dao.find(ro.getUri(), start.toDate(), middle.toDate()).size());
-        Assert.assertEquals(0, dao.find(ro.getUri(), end.toDate(), start.toDate()).size());
+        Assert.assertEquals(3, dao.find(ro.getUri(), null, null, null, null).size());
+        Assert.assertEquals(3, dao.find(ro.getUri(), start.toDate(), null, null, null).size());
+        Assert.assertEquals(3, dao.find(ro.getUri(), null, end.toDate(), null, null).size());
+        Assert.assertEquals(3, dao.find(ro.getUri(), start.toDate(), end.toDate(), null, null).size());
+        Assert.assertEquals(2, dao.find(ro.getUri(), middle.toDate(), end.toDate(), null, null).size());
+        Assert.assertEquals(1, dao.find(ro.getUri(), start.toDate(), middle.toDate(), null, null).size());
+        Assert.assertEquals(0, dao.find(ro.getUri(), end.toDate(), start.toDate(), null, null).size());
+    }
+
+
+    @Test
+    public void testLimit() {
+        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
+        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
+        dao.save(EntryBuilder.create(ro, ActionType.NEW_RO));
+        Assert.assertEquals(1, dao.find(null, null, null, null, 1).size());
     }
 
 }
