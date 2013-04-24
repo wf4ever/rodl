@@ -9,7 +9,6 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
-import pl.psnc.dl.wf4ever.db.AtomFeedEntry;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.notifications.Notification;
 
@@ -46,7 +45,7 @@ public class AtomFeedEntryDAO extends AbstractDAO<Notification> {
      */
     @SuppressWarnings("unchecked")
     public List<Notification> find(URI subjectUri, Date from, Date to, URI source, Integer limit) {
-        Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(AtomFeedEntry.class);
+        Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(Notification.class);
         criteria.addOrder(Order.asc("created"));
         criteria.addOrder(Order.asc("id"));
         if (subjectUri != null) {

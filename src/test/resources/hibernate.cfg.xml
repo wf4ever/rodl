@@ -35,7 +35,7 @@
 		<mapping class="pl.psnc.dl.wf4ever.db.OAuthClient" />
 		<mapping class="pl.psnc.dl.wf4ever.db.UserProfile" />
 		<mapping class="pl.psnc.dl.wf4ever.db.ResourceInfo" />
-		<mapping class="pl.psnc.dl.wf4ever.notifications.AtomFeedEntry" />
+		<mapping class="pl.psnc.dl.wf4ever.notifications.Notification" />
 
 	</session-factory>
 </hibernate-configuration>
