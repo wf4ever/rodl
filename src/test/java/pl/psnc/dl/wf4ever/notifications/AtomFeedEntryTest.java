@@ -8,7 +8,7 @@ public class AtomFeedEntryTest {
 
     @Test
     public void testConstructor() {
-        AtomFeedEntry entry = new AtomFeedEntry();
+        Notification entry = new Notification();
         //check the date transfer
         DateTime now = DateTime.now();
         entry.setCreated(now.toDate());

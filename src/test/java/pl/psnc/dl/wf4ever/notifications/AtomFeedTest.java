@@ -6,7 +6,7 @@ import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
-import pl.psnc.dl.wf4ever.notifications.AtomFeed.Title;
+import pl.psnc.dl.wf4ever.notifications.NotificationFeed.Title;
 
 public class AtomFeedTest {
 

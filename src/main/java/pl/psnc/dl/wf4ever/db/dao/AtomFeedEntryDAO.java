@@ -9,8 +9,9 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
+import pl.psnc.dl.wf4ever.db.AtomFeedEntry;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
-import pl.psnc.dl.wf4ever.notifications.AtomFeedEntry;
+import pl.psnc.dl.wf4ever.notifications.Notification;
 
 /**
  * Atom Feed entry model.
@@ -18,7 +19,7 @@ import pl.psnc.dl.wf4ever.notifications.AtomFeedEntry;
  * @author pejot
  * 
  */
-public class AtomFeedEntryDAO extends AbstractDAO<AtomFeedEntry> {
+public class AtomFeedEntryDAO extends AbstractDAO<Notification> {
 
     /** Serialization. */
     private static final long serialVersionUID = 1L;
@@ -44,7 +45,7 @@ public class AtomFeedEntryDAO extends AbstractDAO<AtomFeedEntry> {
      * @return list of requested entries
      */
     @SuppressWarnings("unchecked")
-    public List<AtomFeedEntry> find(URI subjectUri, Date from, Date to, URI source, Integer limit) {
+    public List<Notification> find(URI subjectUri, Date from, Date to, URI source, Integer limit) {
         Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(AtomFeedEntry.class);
         criteria.addOrder(Order.asc("created"));
         criteria.addOrder(Order.asc("id"));
@@ -73,7 +74,7 @@ public class AtomFeedEntryDAO extends AbstractDAO<AtomFeedEntry> {
      * 
      * @return list of requested entries.
      */
-    public List<AtomFeedEntry> all() {
+    public List<Notification> all() {
         return find(null, null, null, null, null);
     }
 

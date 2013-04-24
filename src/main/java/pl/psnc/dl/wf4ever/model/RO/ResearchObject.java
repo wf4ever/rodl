@@ -45,9 +45,9 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.ROEVO.EvoInfo;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.LiveEvoInfo;
-import pl.psnc.dl.wf4ever.notifications.AtomFeedEntry;
-import pl.psnc.dl.wf4ever.notifications.AtomFeedEntry.Summary;
-import pl.psnc.dl.wf4ever.notifications.AtomFeedEntry.Title;
+import pl.psnc.dl.wf4ever.notifications.Notification;
+import pl.psnc.dl.wf4ever.notifications.Notification.Summary;
+import pl.psnc.dl.wf4ever.notifications.Notification.Title;
 import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectComponentSerializable;
 import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectSerializable;
 import pl.psnc.dl.wf4ever.searchserver.SearchServer;
@@ -166,7 +166,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
 
         //FIXME create an event instead
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
-        AtomFeedEntry entry = new AtomFeedEntry.Builder(researchObject).title(Title.RESEARCH_OBJECT_CREATED)
+        Notification entry = new Notification.Builder(researchObject).title(Title.RESEARCH_OBJECT_CREATED)
                 .summary(Summary.created(researchObject)).build();
         dao.save(entry);
         return researchObject;
@@ -287,7 +287,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
 
         //FIXME create an event instead
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
-        AtomFeedEntry entry = new AtomFeedEntry.Builder(this).title(Title.RESEARCH_OBJECT_DELETED)
+        Notification entry = new Notification.Builder(this).title(Title.RESEARCH_OBJECT_DELETED)
                 .summary(Summary.deleted(this)).build();
         dao.save(entry);
         super.delete();
