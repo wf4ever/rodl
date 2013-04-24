@@ -8,13 +8,9 @@
 		<param-name>connection.properties.filename</param-name>
 		<param-value>connection.properties</param-value>
 	</context-param>
-	<context-param>
-		<param-name>profiles.properties.filename</param-name>
-		<param-value>profiles.properties</param-value>
-	</context-param>
 
 	<listener>
-		<listener-class>pl.psnc.dl.wf4ever.connection.DlibraConnectionConfigurationListener</listener-class>
+		<listener-class>pl.psnc.dl.wf4ever.InitConfigurationListener</listener-class>
 	</listener>
 
 	<filter>

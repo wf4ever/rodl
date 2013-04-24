@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.fs;
+package pl.psnc.dl.wf4ever.storage;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -220,8 +220,7 @@ public class FilesystemDL implements DigitalLibrary {
             }
             HibernateUtil.getSessionFactory().getCurrentSession().flush();
         } catch (NoSuchFileException e) {
-            LOGGER.warn("File doesn't exist: " + filePath, e);
-            return;
+            throw new NotFoundException("File doesn't exist: " + filePath, e);
         } catch (IOException e) {
             throw new DigitalLibraryException(e);
         }

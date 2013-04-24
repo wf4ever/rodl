@@ -34,6 +34,7 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
+import pl.psnc.dl.wf4ever.storage.FilesystemDL;
 
 /**
  * @author piotrek

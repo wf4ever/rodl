@@ -193,12 +193,10 @@ public class AnnotationTest extends BaseTest {
 
     @Test
     public void testDelete() {
-        Annotation annotation = new Annotation(userProfile, dataset, false, researchObject,
-                URI.create("new-annotation-save-test"));
-        annotation.setBody(builder.buildThing(URI.create("body")));
         Set<Thing> annotated = new HashSet<Thing>();
         annotated.add(researchObject);
-        annotation.setAnnotated(annotated);
+        Annotation annotation = builder.buildAnnotation(URI.create("new-annotation-save-test"), researchObject,
+            builder.buildThing(URI.create("body")), annotated);
         annotation.save();
         Assert.assertTrue(researchObject.getAnnotations().containsKey(annotation.getUri()));
         annotation.delete();

@@ -27,7 +27,7 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -45,8 +45,9 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.ROEVO.EvoInfo;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.LiveEvoInfo;
-import pl.psnc.dl.wf4ever.notifications.ActionType;
-import pl.psnc.dl.wf4ever.notifications.EntryBuilder;
+import pl.psnc.dl.wf4ever.notifications.Notification;
+import pl.psnc.dl.wf4ever.notifications.Notification.Summary;
+import pl.psnc.dl.wf4ever.notifications.Notification.Title;
 import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectComponentSerializable;
 import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectSerializable;
 import pl.psnc.dl.wf4ever.searchserver.SearchServer;
@@ -162,7 +163,12 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         researchObject.manifest = Manifest.create(builder, researchObject.getUri().resolve(MANIFEST_PATH),
             researchObject);
         researchObject.save(EvoType.LIVE);
-        EntryBuilder.create(researchObject, ActionType.NEW_RO);
+
+        //FIXME create an event instead
+        AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
+        Notification entry = new Notification.Builder(researchObject).title(Title.RESEARCH_OBJECT_CREATED)
+                .summary(Summary.created(researchObject)).build();
+        dao.save(entry);
         return researchObject;
     }
 
@@ -254,9 +260,8 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         getManifest().save();
 
         //TODO check if to create an RO or only serialize the manifest
-        DigitalLibraryFactory.getDigitalLibrary().createResearchObject(uri,
-            getManifest().getGraphAsInputStream(RDFFormat.RDFXML), ResearchObject.MANIFEST_PATH,
-            RDFFormat.RDFXML.getDefaultMIMEType());
+        builder.getDigitalLibrary().createResearchObject(uri, getManifest().getGraphAsInputStream(RDFFormat.RDFXML),
+            ResearchObject.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
 
         createEvoInfo(evoType);
     }
@@ -274,12 +279,17 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         }
         getManifest().delete();
         try {
-            DigitalLibraryFactory.getDigitalLibrary().deleteResearchObject(uri);
+            builder.getDigitalLibrary().deleteResearchObject(uri);
         } catch (NotFoundException e) {
             // good, nothing was left so the folder was deleted
             LOGGER.debug("As expected. RO folder was empty and was deleted: " + e.getMessage());
         }
-        EntryBuilder.create(this, ActionType.DELETED_RO);
+
+        //FIXME create an event instead
+        AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
+        Notification entry = new Notification.Builder(this).title(Title.RESEARCH_OBJECT_DELETED)
+                .summary(Summary.deleted(this)).build();
+        dao.save(entry);
         super.delete();
     }
 
@@ -870,7 +880,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
 
 
     public InputStream getAsZipArchive() {
-        return DigitalLibraryFactory.getDigitalLibrary().getZippedResearchObject(uri);
+        return builder.getDigitalLibrary().getZippedResearchObject(uri);
     }
 
 

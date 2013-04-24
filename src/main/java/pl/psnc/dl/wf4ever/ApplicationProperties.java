@@ -6,7 +6,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.connection.DigitalLibraryFactory;
+import pl.psnc.dl.wf4ever.storage.DLibraFactory;
 
 /**
  * Application properties.
@@ -28,6 +28,9 @@ public final class ApplicationProperties {
     /** application version in Maven. */
     private static String version;
 
+    /** admin's access token. */
+    private static String adminTokenHash;
+
 
     /**
      * Private constructor.
@@ -41,7 +44,7 @@ public final class ApplicationProperties {
      * Read application properties.
      */
     public static void load() {
-        InputStream inputStream = DigitalLibraryFactory.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE);
+        InputStream inputStream = DLibraFactory.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE);
         if (inputStream == null) {
             LOGGER.error("Application properties file not found! ");
             throw new RuntimeException("Application properties file not found! ");
@@ -61,6 +64,7 @@ public final class ApplicationProperties {
         }
         name = properties.getProperty("application.name");
         version = properties.getProperty("application.version");
+        adminTokenHash = properties.getProperty("adminToken");
     }
 
 
@@ -73,4 +77,8 @@ public final class ApplicationProperties {
         return version;
     }
 
+
+    public static String getAdminTokenHash() {
+        return adminTokenHash;
+    }
 }

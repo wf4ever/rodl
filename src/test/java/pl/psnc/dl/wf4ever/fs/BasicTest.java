@@ -32,6 +32,7 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
+import pl.psnc.dl.wf4ever.storage.FilesystemDL;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
