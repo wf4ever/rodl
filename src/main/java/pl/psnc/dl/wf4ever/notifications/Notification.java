@@ -32,7 +32,7 @@ import com.sun.syndication.feed.atom.Link;
  */
 @Entity
 @Table(name = "atom_feed_entries")
-public class AtomFeedEntry implements Serializable {
+public class Notification implements Serializable {
 
     /** Serialization. */
     private static final long serialVersionUID = 1L;
@@ -65,7 +65,7 @@ public class AtomFeedEntry implements Serializable {
      * @param builder
      *            the builder that has the fields to set
      */
-    private AtomFeedEntry(Builder builder) {
+    private Notification(Builder builder) {
         this.created = builder.created;
         this.title = builder.title;
         this.source = builder.source;
@@ -78,7 +78,7 @@ public class AtomFeedEntry implements Serializable {
     /**
      * Default constructor.
      */
-    public AtomFeedEntry() {
+    public Notification() {
     }
 
 
@@ -147,7 +147,7 @@ public class AtomFeedEntry implements Serializable {
      * 
      * @return a new instance
      */
-    public Entry asSunFeedEntry() {
+    public Entry asFeedEntry() {
         Entry resultEntry = new Entry();
         resultEntry.setId("urn:X-rodl:" + id);
         if (title != null) {
@@ -183,7 +183,7 @@ public class AtomFeedEntry implements Serializable {
 
 
     /**
-     * A builder class that allows to create a {@link AtomFeedEntry} using the builder design pattern.
+     * A builder class that allows to create a {@link Notification} using the builder design pattern.
      * 
      * @author piotrekhol
      * 
@@ -230,12 +230,12 @@ public class AtomFeedEntry implements Serializable {
 
 
         /**
-         * Finish the build process and return an {@link AtomFeedEntry}.
+         * Finish the build process and return an {@link Notification}.
          * 
          * @return an atom feed entry with fields provided using this builder
          */
-        public AtomFeedEntry build() {
-            return new AtomFeedEntry(this);
+        public Notification build() {
+            return new Notification(this);
         }
 
 

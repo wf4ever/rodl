@@ -18,7 +18,8 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
-import pl.psnc.dl.wf4ever.notifications.AtomFeed.Title;
+import pl.psnc.dl.wf4ever.notifications.NotificationFeed.FeedType;
+import pl.psnc.dl.wf4ever.notifications.NotificationFeed.Title;
 
 import com.sun.syndication.feed.atom.Feed;
 import com.sun.syndication.io.FeedException;
@@ -66,14 +67,14 @@ public class NotificationResource {
         Date dateTo = (to != null) ? DateTime.parse(to).toDate() : null;
         String id = uriInfo.getRequestUri().toString();
         String title = Title.build(roUri, dateFrom, dateTo);
-        List<AtomFeedEntry> entries = entryDAO.find(roUri, dateFrom, dateTo, source, limit);
-        AtomFeed atomFeed = new AtomFeed.Builder(id).title(title).entries(entries).build();
-        Feed feed = atomFeed.asSunFeed();
+        List<Notification> entries = entryDAO.find(roUri, dateFrom, dateTo, source, limit);
+        NotificationFeed atomFeed = new NotificationFeed.Builder(id).title(title).entries(entries).build();
+        Feed feed = atomFeed.asFeed(FeedType.ATOM_1_0);
         WireFeedOutput wire = new WireFeedOutput();
         try {
             return Response.ok(wire.outputString(feed)).build();
         } catch (IllegalArgumentException | FeedException e) {
-            LOGGER.error("Can not parse entries", e);
+            LOGGER.error("Cannot parse entries", e);
             return Response.serverError().build();
         }
     }
@@ -98,7 +99,7 @@ public class NotificationResource {
     public Response deleteAtomFeeds(@QueryParam("ro") URI roUri, @QueryParam("from") Date from,
             @QueryParam("to") Date to, @QueryParam("source") URI source, @QueryParam("limit") Integer limit) {
         AtomFeedEntryDAO entryDAO = new AtomFeedEntryDAO();
-        for (AtomFeedEntry entry : entryDAO.find(roUri, from, to, source, limit)) {
+        for (Notification entry : entryDAO.find(roUri, from, to, source, limit)) {
             entryDAO.delete(entry);
         }
         return Response.ok().build();

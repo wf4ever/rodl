@@ -19,7 +19,7 @@ import com.sun.syndication.feed.atom.Person;
  * @author piotrekhol
  * 
  */
-public final class AtomFeed {
+public final class NotificationFeed {
 
     /**
      * Feed type for serialization.
@@ -59,14 +59,11 @@ public final class AtomFeed {
     /** Administrator name. */
     private String authorName;
 
-    /** Feed type. */
-    private FeedType feedType;
-
     /** Update date. */
     private DateTime updated;
 
     /** Feed entries. */
-    private List<AtomFeedEntry> entries = new ArrayList<>();
+    private List<Notification> entries = new ArrayList<>();
 
 
     /**
@@ -75,23 +72,22 @@ public final class AtomFeed {
      * @param builder
      *            a builder instance with fields to copy
      */
-    private AtomFeed(Builder builder) {
+    private NotificationFeed(Builder builder) {
         this.id = builder.id;
         this.title = builder.title;
         this.authorEmail = builder.authorEmail;
         this.authorName = builder.authorName;
-        this.feedType = builder.feedType;
         this.updated = builder.updated;
         this.entries = builder.entries;
     }
 
 
-    public List<AtomFeedEntry> getEntries() {
+    public List<Notification> getEntries() {
         return entries;
     }
 
 
-    public void setEntries(List<AtomFeedEntry> entries) {
+    public void setEntries(List<Notification> entries) {
         this.entries = entries;
     }
 
@@ -99,9 +95,11 @@ public final class AtomFeed {
     /**
      * Create a new Sun feed.
      * 
+     * @param feedType
+     *            feed type
      * @return this feed in another format
      */
-    public Feed asSunFeed() {
+    public Feed asFeed(FeedType feedType) {
         Feed feed = new Feed();
         feed.setFeedType(feedType.value);
         feed.setId(id);
@@ -112,8 +110,8 @@ public final class AtomFeed {
         author.setName(authorName);
         feed.setAuthors(Collections.singletonList(author));
         List<Entry> entries2 = new ArrayList<>();
-        for (AtomFeedEntry entry : this.entries) {
-            entries2.add(entry.asSunFeedEntry());
+        for (Notification entry : this.entries) {
+            entries2.add(entry.asFeedEntry());
         }
         feed.setEntries(entries2);
         return feed;
@@ -121,7 +119,7 @@ public final class AtomFeed {
 
 
     /**
-     * A builder for creating the {@link AtomFeed} using the builder design pattern.
+     * A builder for creating the {@link NotificationFeed} using the builder design pattern.
      * 
      * @author piotrekhol
      * 
@@ -140,14 +138,11 @@ public final class AtomFeed {
         /** Administrator name. */
         private String authorName = "My name is rodl :)";
 
-        /** Feed type. */
-        private FeedType feedType = FeedType.ATOM_1_0;
-
         /** Update date. */
         private DateTime updated = DateTime.now();
 
         /** Feed entries. */
-        private List<AtomFeedEntry> entries = new ArrayList<>();
+        private List<Notification> entries = new ArrayList<>();
 
 
         /**
@@ -162,12 +157,12 @@ public final class AtomFeed {
 
 
         /**
-         * Create an {@link AtomFeed} instance based on this builder.
+         * Create an {@link NotificationFeed} instance based on this builder.
          * 
          * @return a new feed instance
          */
-        public AtomFeed build() {
-            return new AtomFeed(this);
+        public NotificationFeed build() {
+            return new NotificationFeed(this);
         }
 
 
@@ -211,19 +206,6 @@ public final class AtomFeed {
 
 
         /**
-         * Feed type.
-         * 
-         * @param feedType
-         *            feed type
-         * @return this builder
-         */
-        public Builder feedType(FeedType feedType) {
-            this.feedType = feedType;
-            return this;
-        }
-
-
-        /**
          * Update timestamp.
          * 
          * @param updated
@@ -243,7 +225,7 @@ public final class AtomFeed {
          *            feed entries
          * @return this builder
          */
-        public Builder entries(List<AtomFeedEntry> entries) {
+        public Builder entries(List<Notification> entries) {
             this.entries = entries;
             return this;
         }
