@@ -161,9 +161,11 @@ public class Notification implements Serializable {
     /**
      * Convert this entry to a {@link Entry}.
      * 
+     * @param sourceBase
+     *            the base of the source link uri
      * @return a new instance
      */
-    public Entry asFeedEntry() {
+    public Entry asFeedEntry(URI sourceBase) {
         Entry resultEntry = new Entry();
         resultEntry.setId("urn:X-rodl:" + id);
         if (title != null) {
@@ -180,7 +182,7 @@ public class Notification implements Serializable {
         List<Link> links = new ArrayList<>();
         if (source != null) {
             Link sourceLink = new Link();
-            sourceLink.setHref(source);
+            sourceLink.setHref(sourceBase.resolve(source).toString());
             sourceLink.setRel(DCTerms.source.toString());
             if (sourceName != null) {
                 sourceLink.setTitle(sourceName);

@@ -1,12 +1,16 @@
 package pl.psnc.dl.wf4ever.notifications;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+
+import pl.psnc.dl.wf4ever.ApplicationProperties;
 
 import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Feed;
@@ -20,6 +24,10 @@ import com.sun.syndication.feed.atom.Person;
  * 
  */
 public final class NotificationFeed {
+
+    /** Logger. */
+    private static final Logger LOGGER = Logger.getLogger(NotificationFeed.class);
+
 
     /**
      * Feed type for serialization.
@@ -97,9 +105,11 @@ public final class NotificationFeed {
      * 
      * @param feedType
      *            feed type
+     * @param requestedUri
+     *            requested uri
      * @return this feed in another format
      */
-    public Feed asFeed(FeedType feedType) {
+    public Feed asFeed(FeedType feedType, URI requestedUri) {
         Feed feed = new Feed();
         feed.setFeedType(feedType.value);
         feed.setId(id);
@@ -109,9 +119,17 @@ public final class NotificationFeed {
         author.setEmail(authorEmail);
         author.setName(authorName);
         feed.setAuthors(Collections.singletonList(author));
+        //just in case
+        URI baseUri = requestedUri;
+        try {
+            baseUri = new URI(requestedUri.getScheme(), requestedUri.getAuthority(),
+                    ApplicationProperties.getContextPath());
+        } catch (URISyntaxException e) {
+            LOGGER.error("Can't build base feed uri from " + requestedUri);
+        }
         List<Entry> entries2 = new ArrayList<>();
         for (Notification entry : this.entries) {
-            entries2.add(entry.asFeedEntry());
+            entries2.add(entry.asFeedEntry(baseUri));
         }
         feed.setEntries(entries2);
         return feed;
@@ -227,25 +245,6 @@ public final class NotificationFeed {
          */
         public Builder entries(List<Notification> entries) {
             this.entries = entries;
-            return this;
-        }
-
-
-        /**
-         * Feed entries.
-         * 
-         * @param entries
-         *            feed entries
-         * @param serviceUri
-         *            the service uri to resolve given sources.
-         * @return this builder
-         */
-        public Builder entries(List<Notification> entries, URI serviceUri) {
-            //maybe copy the list?
-            this.entries = entries;
-            for (Notification notification : this.entries) {
-                notification.setSource(serviceUri.resolve(notification.getSource()).toString());
-            }
             return this;
         }
 
