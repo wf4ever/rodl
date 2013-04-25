@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.notifications;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.List;
 
@@ -17,6 +18,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.ApplicationProperties;
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
 import pl.psnc.dl.wf4ever.notifications.NotificationFeed.FeedType;
 import pl.psnc.dl.wf4ever.notifications.NotificationFeed.Title;
@@ -53,8 +55,7 @@ public class NotificationResource {
      *            feed field source
      * @param limit
      *            max number of returned entry
-     * @return Atom Feed with the list of requested entrires. =======
-     * @return Atom Feed with the list of requested entries. >>>>>>> 7791107 Atom Feed builder.
+     * @return Atom Feed with the list of requested entries.
      */
     @GET
     @Produces(MediaType.APPLICATION_ATOM_XML)
@@ -67,8 +68,17 @@ public class NotificationResource {
         Date dateTo = (to != null) ? DateTime.parse(to).toDate() : null;
         String id = uriInfo.getRequestUri().toString();
         String title = Title.build(roUri, dateFrom, dateTo);
+        //just in case
+        URI serviceUri = uriInfo.getAbsolutePath();
+        try {
+            serviceUri = new URI(uriInfo.getAbsolutePath().getScheme(), uriInfo.getAbsolutePath().getAuthority(),
+                    ApplicationProperties.getContextPath());
+        } catch (URISyntaxException e) {
+            LOGGER.error("Can't preapre an service uri from given context " + uriInfo.getAbsolutePath(), e);
+        }
+
         List<Notification> entries = entryDAO.find(roUri, dateFrom, dateTo, source, limit);
-        NotificationFeed atomFeed = new NotificationFeed.Builder(id).title(title).entries(entries).build();
+        NotificationFeed atomFeed = new NotificationFeed.Builder(id).title(title).entries(entries, serviceUri).build();
         Feed feed = atomFeed.asFeed(FeedType.ATOM_1_0);
         WireFeedOutput wire = new WireFeedOutput();
         try {

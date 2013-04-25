@@ -30,6 +30,8 @@ public final class ApplicationProperties {
 
     /** admin's access token. */
     private static String adminTokenHash;
+    /** context path. */
+    private static String contextPath;
 
 
     /**
@@ -37,6 +39,18 @@ public final class ApplicationProperties {
      */
     private ApplicationProperties() {
         //nope
+    }
+
+
+    /**
+     * Read application properties. Set Context path.
+     * 
+     * @param contextPath
+     *            context Path
+     */
+    public static void load(String contextPath) {
+        ApplicationProperties.setContextPath(contextPath);
+        ApplicationProperties.load();
     }
 
 
@@ -80,5 +94,15 @@ public final class ApplicationProperties {
 
     public static String getAdminTokenHash() {
         return adminTokenHash;
+    }
+
+
+    public static String getContextPath() {
+        return contextPath;
+    }
+
+
+    public static void setContextPath(String contextPath) {
+        ApplicationProperties.contextPath = contextPath;
     }
 }

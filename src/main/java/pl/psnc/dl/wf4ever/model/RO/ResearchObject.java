@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.ApplicationProperties;
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
@@ -168,7 +169,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
         Notification entry = new Notification.Builder(researchObject).title(Title.RESEARCH_OBJECT_CREATED)
                 .summary(Summary.created(researchObject)).build();
-        entry.setSource(researchObject.getUri().getAuthority(), "RODL");
+        entry.setSource(ApplicationProperties.getContextPath(), "RODL");
         dao.save(entry);
         return researchObject;
     }
@@ -290,7 +291,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
         Notification entry = new Notification.Builder(this).title(Title.RESEARCH_OBJECT_DELETED)
                 .summary(Summary.deleted(this)).build();
-        entry.setSource(getUri().getAuthority(), "RODL");
+        entry.setSource(ApplicationProperties.getContextPath(), "RODL");
         dao.save(entry);
         super.delete();
     }

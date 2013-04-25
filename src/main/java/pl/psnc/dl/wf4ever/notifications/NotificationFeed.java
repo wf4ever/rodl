@@ -230,6 +230,25 @@ public final class NotificationFeed {
             return this;
         }
 
+
+        /**
+         * Feed entries.
+         * 
+         * @param entries
+         *            feed entries
+         * @param serviceUri
+         *            the service uri to resolve given sources.
+         * @return this builder
+         */
+        public Builder entries(List<Notification> entries, URI serviceUri) {
+            //maybe copy the list?
+            this.entries = entries;
+            for (Notification notification : this.entries) {
+                notification.setSource(serviceUri.resolve(notification.getSource()).toString());
+            }
+            return this;
+        }
+
     }
 
 

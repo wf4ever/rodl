@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.notifications;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import junit.framework.Assert;
 
@@ -10,6 +11,7 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import pl.psnc.dl.wf4ever.ApplicationProperties;
 import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.W4ETest;
 
@@ -89,8 +91,9 @@ public class NotificationsTest extends W4ETest {
 
     @Test
     public void testNotificationSource()
-            throws IllegalArgumentException, MalformedURLException, FeedException, IOException {
+            throws IllegalArgumentException, MalformedURLException, FeedException, IOException, URISyntaxException {
         ro = createRO(accessToken);
+        URI suspectedUri = new URI(ro.getScheme(), ro.getAuthority(), ApplicationProperties.getContextPath());
         SyndFeedInput input = new SyndFeedInput();
         SyndFeed feed = input.build(new XmlReader(webResource.path("notifications/").queryParam("ro", ro.toString())
                 .getURI().toURL()));
@@ -99,7 +102,7 @@ public class NotificationsTest extends W4ETest {
             for (Object obLink : entry.getLinks()) {
                 SyndLink link = (SyndLink) obLink;
                 if (link != null && link.getRel().equals(DCTerms.source.toString())) {
-                    Assert.assertEquals(link.getHref(), ro.getAuthority().toString());
+                    Assert.assertEquals(link.getHref(), suspectedUri.toString());
                 }
             }
         }
@@ -159,7 +162,6 @@ public class NotificationsTest extends W4ETest {
         ro = createRO(accessToken);
         ro2 = createRO(accessToken);
         String resultAll = (webResource.path("notifications/").queryParam("limit", "1").get(String.class));
-        System.out.println(resultAll);
         //only one entry
         Assert.assertEquals(2, resultAll.split("<entry>").length);
     }
