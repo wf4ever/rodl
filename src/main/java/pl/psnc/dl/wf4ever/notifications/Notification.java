@@ -50,6 +50,8 @@ public class Notification implements Serializable {
 
     /** URI of the service that created this notification. */
     private String source;
+    /** Source human-readable name. */
+    private String sourceName;
 
     /** Entry human-friendly content. */
     private String summary;
@@ -99,6 +101,20 @@ public class Notification implements Serializable {
 
     public void setSource(String source) {
         this.source = source;
+    }
+
+
+    /**
+     * Set complete source.
+     * 
+     * @param source
+     *            source
+     * @param name
+     *            source name
+     */
+    public void setSource(String source, String name) {
+        this.source = source;
+        this.sourceName = name;
     }
 
 
@@ -166,8 +182,13 @@ public class Notification implements Serializable {
             Link sourceLink = new Link();
             sourceLink.setHref(source);
             sourceLink.setRel(DCTerms.source.toString());
-            sourceLink.setTitle("Action source/service");
+            if (sourceName != null) {
+                sourceLink.setTitle(sourceName);
+            } else {
+                sourceLink.setTitle(source);
+            }
             links.add(sourceLink);
+
         }
         if (subject != null) {
             Link sourceLink = new Link();

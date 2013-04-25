@@ -1,5 +1,7 @@
 package pl.psnc.dl.wf4ever.notifications;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 
 import junit.framework.Assert;
@@ -10,6 +12,14 @@ import org.junit.experimental.categories.Category;
 
 import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.W4ETest;
+
+import com.hp.hpl.jena.vocabulary.DCTerms;
+import com.sun.syndication.feed.synd.SyndEntry;
+import com.sun.syndication.feed.synd.SyndFeed;
+import com.sun.syndication.feed.synd.SyndLink;
+import com.sun.syndication.io.FeedException;
+import com.sun.syndication.io.SyndFeedInput;
+import com.sun.syndication.io.XmlReader;
 
 @Category(IntegrationTest.class)
 public class NotificationsTest extends W4ETest {
@@ -74,6 +84,25 @@ public class NotificationsTest extends W4ETest {
         String resultAll = (webResource.path("notifications/").queryParam("ro", ro.toString()).get(String.class));
         Assert.assertTrue(resultAll.contains("Notifications for " + ro.toString()));
         Assert.assertFalse(resultAll.contains("Notifications for " + ro2.toString()));
+    }
+
+
+    @Test
+    public void testNotificationSource()
+            throws IllegalArgumentException, MalformedURLException, FeedException, IOException {
+        ro = createRO(accessToken);
+        SyndFeedInput input = new SyndFeedInput();
+        SyndFeed feed = input.build(new XmlReader(webResource.path("notifications/").queryParam("ro", ro.toString())
+                .getURI().toURL()));
+        for (Object object : feed.getEntries()) {
+            SyndEntry entry = (SyndEntry) object;
+            for (Object obLink : entry.getLinks()) {
+                SyndLink link = (SyndLink) obLink;
+                if (link != null && link.getRel().equals(DCTerms.source.toString())) {
+                    Assert.assertEquals(link.getHref(), ro.getAuthority().toString());
+                }
+            }
+        }
     }
 
 
