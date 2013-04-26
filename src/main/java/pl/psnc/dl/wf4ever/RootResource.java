@@ -75,7 +75,7 @@ public class RootResource {
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         Resource service = model.createResource(uriInfo.getAbsolutePath().toString());
         URI baseNotificationUri = uriInfo.getAbsolutePathBuilder().path(NotificationResource.class).build();
-        Literal notificationsTpl = model.createLiteral(baseNotificationUri.toString() + "{?ro}");
+        Literal notificationsTpl = model.createLiteral(baseNotificationUri.toString() + "{?ro,from,to,source,limit}");
         service.addProperty(NotificationService.notifications, notificationsTpl);
 
         URI copyUri = uriInfo.getAbsolutePathBuilder().path(CopyResource.class).build();
