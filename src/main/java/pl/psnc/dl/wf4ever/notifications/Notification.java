@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.notifications;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -18,6 +19,7 @@ import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Mismatch;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.hp.hpl.jena.vocabulary.DCTerms;
@@ -307,19 +309,6 @@ public class Notification implements Serializable {
 
 
         /**
-         * Entry title.
-         * 
-         * @param title
-         *            entry title
-         * @return this builder
-         */
-        public Builder title(Title title) {
-            this.title = title.getValue();
-            return this;
-        }
-
-
-        /**
          * URI of the service that created this notification.
          * 
          * @param source
@@ -379,30 +368,41 @@ public class Notification implements Serializable {
      * @author piotrekhol
      * 
      */
-    public enum Title {
-
-        /** Research Object has been created. */
-        RESEARCH_OBJECT_CREATED("Research Object has been created"),
-        /** Research Object has been deleted. */
-        RESEARCH_OBJECT_DELETED("Research Object has been deleted");
-
-        /** The title itself. */
-        private final String value;
-
+    public static class Title {
 
         /**
-         * Internal constructor.
+         * An RO has been created.
          * 
-         * @param value
-         *            The title itself
+         * @param researchObject
+         *            the new RO
+         * @return a title in plain text
          */
-        private Title(String value) {
-            this.value = value;
+        public static String created(ResearchObject researchObject) {
+            return String.format("Research Object %s has been created", researchObject.getName());
         }
 
 
-        public String getValue() {
-            return value;
+        /**
+         * An RO has been deleted.
+         * 
+         * @param researchObject
+         *            the deleted RO
+         * @return a title in plain text
+         */
+        public static String deleted(ResearchObject researchObject) {
+            return String.format("Research Object %s has been deleted", researchObject.getName());
+        }
+
+
+        /**
+         * Checksum mismatches have been detected.
+         * 
+         * @param researchObject
+         *            the RO
+         * @return a title in plain text
+         */
+        public static String checksumMismatch(ResearchObject researchObject) {
+            return String.format("Research Object %d has become corrupt!", researchObject.getName());
         }
     }
 
@@ -442,5 +442,28 @@ public class Notification implements Serializable {
                 "<p>A Research Object has been deleted.</p><p>The Research Object URI was <em>%s</em>.</p>",
                 researchObject.toString());
         }
+
+
+        /**
+         * Checksum mismatches have been detected.
+         * 
+         * @param researchObject
+         *            the RO
+         * @param mismatches
+         *            a collection of resource checksum mismatches
+         * @return a message in HTML
+         */
+        public static String checksumMismatch(ResearchObject researchObject, Collection<Mismatch> mismatches) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("<p>The following changes have been detected:</p>");
+            sb.append("<ol>");
+            for (Mismatch mismatch : mismatches) {
+                sb.append(String.format("<li>File %s: expected checksum %s, found %s</li>", mismatch.getResourcePath(),
+                    mismatch.getExpectedChecksum(), mismatch.getCalculatedChecksum()));
+            }
+            sb.append("</ol>");
+            return sb.toString();
+        }
+
     }
 }

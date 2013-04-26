@@ -287,6 +287,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
             LOGGER.debug("As expected. RO folder was empty and was deleted: " + e.getMessage());
         }
         this.postEvent(new ROAfterDeleteEvent(this));
+        super.delete();
     }
 
 
