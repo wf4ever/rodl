@@ -173,18 +173,20 @@ public class Notification implements Serializable {
         if (title != null) {
             resultEntry.setTitle(title);
         }
+        resultEntry.setCreated(created);
         resultEntry.setPublished(created);
         //set summary
         Content content = new Content();
         if (summary != null) {
             content.setValue(StringEscapeUtils.escapeHtml4(summary));
+            content.setType(Content.HTML);
         }
         resultEntry.setSummary(content);
         //set links
         List<Link> links = new ArrayList<>();
         if (source != null) {
             Link sourceLink = new Link();
-            sourceLink.setHref(sourceBase.resolve(source).toString());
+            sourceLink.setHref(sourceBase != null ? sourceBase.resolve(source).toString() : source.toString());
             sourceLink.setRel(DCTerms.source.toString());
             if (sourceName != null) {
                 sourceLink.setTitle(sourceName);
