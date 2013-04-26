@@ -5,6 +5,10 @@ import static org.quartz.JobBuilder.newJob;
 import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.quartz.TriggerBuilder.newTrigger;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.apache.log4j.Logger;
 import org.quartz.Job;
 import org.quartz.JobDetail;
@@ -34,6 +38,9 @@ public final class MonitoringScheduler {
 
     /** The main scheduler. */
     private Scheduler scheduler;
+
+    /** Jobs loaded from the config. */
+    private Map<Class<? extends Job>, ScheduleBuilder<? extends Trigger>> jobClasses = new HashMap<>();
 
 
     /**
@@ -66,6 +73,7 @@ public final class MonitoringScheduler {
     public void start()
             throws SchedulerException {
         scheduler = schedulerFactory.getScheduler();
+        scheduler.start();
         String[] plugins = scheduler.getContext().getString("plugins").split(",");
         for (String plugin : plugins) {
             String pluginClassName = scheduler.getContext().getString(plugin.trim() + ".class");
@@ -79,12 +87,59 @@ public final class MonitoringScheduler {
             String cron = scheduler.getContext().getString(plugin.trim() + ".cron");
             ScheduleBuilder<? extends Trigger> schedule = cron != null ? cronSchedule(cron)
                     .withMisfireHandlingInstructionIgnoreMisfires() : simpleSchedule();
-            JobDetail job = newJob(pluginClass).withIdentity(plugin).build();
-            Trigger trigger = newTrigger().withSchedule(schedule).build();
-            scheduler.scheduleJob(job, trigger);
+            jobClasses.put(pluginClass, schedule);
+            scheduleJob(plugin, pluginClass, schedule);
         }
+    }
 
-        scheduler.start();
+
+    /**
+     * Schedule all registered jobs to run now.
+     * 
+     * @throws SchedulerException
+     *             if the job cannot be scheduled
+     */
+    public void scheduleAllJobsNow()
+            throws SchedulerException {
+        for (Entry<Class<? extends Job>, ScheduleBuilder<? extends Trigger>> e : jobClasses.entrySet()) {
+            scheduleJob(e.getKey().getCanonicalName(), e.getKey());
+        }
+    }
+
+
+    /**
+     * Schedule a job to run now.
+     * 
+     * @param id
+     *            job identifier
+     * @param jobClass
+     *            job class
+     * @throws SchedulerException
+     *             if the job cannot be scheduled
+     */
+    public void scheduleJob(String id, Class<? extends Job> jobClass)
+            throws SchedulerException {
+        scheduleJob(id, jobClass, simpleSchedule());
+    }
+
+
+    /**
+     * Schedule a job.
+     * 
+     * @param id
+     *            job identifier
+     * @param jobClass
+     *            job class
+     * @param schedule
+     *            when to run the job
+     * @throws SchedulerException
+     *             if the job cannot be scheduled
+     */
+    public void scheduleJob(String id, Class<? extends Job> jobClass, ScheduleBuilder<? extends Trigger> schedule)
+            throws SchedulerException {
+        JobDetail job = newJob(jobClass).withIdentity(id).build();
+        Trigger trigger = newTrigger().withSchedule(schedule).build();
+        scheduler.scheduleJob(job, trigger);
     }
 
 
