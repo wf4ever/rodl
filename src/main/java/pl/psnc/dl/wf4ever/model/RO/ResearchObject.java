@@ -168,8 +168,8 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         //FIXME create an event instead
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
         Notification entry = new Notification.Builder(researchObject).title(Title.RESEARCH_OBJECT_CREATED)
-                .summary(Summary.created(researchObject)).build();
-        entry.setSource(ApplicationProperties.getContextPath(), "RODL");
+                .summary(Summary.created(researchObject)).source(ApplicationProperties.getContextPath())
+                .sourceName("RODL").build();
         dao.save(entry);
         return researchObject;
     }
@@ -290,8 +290,8 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         //FIXME create an event instead
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
         Notification entry = new Notification.Builder(this).title(Title.RESEARCH_OBJECT_DELETED)
-                .summary(Summary.deleted(this)).build();
-        entry.setSource(ApplicationProperties.getContextPath(), "RODL");
+                .summary(Summary.deleted(this)).source(ApplicationProperties.getContextPath()).sourceName("RODL")
+                .build();
         dao.save(entry);
         super.delete();
     }

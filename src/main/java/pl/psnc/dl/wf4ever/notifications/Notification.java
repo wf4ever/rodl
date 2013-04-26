@@ -50,6 +50,7 @@ public class Notification implements Serializable {
 
     /** URI of the service that created this notification. */
     private String source;
+
     /** Source human-readable name. */
     private String sourceName;
 
@@ -71,6 +72,7 @@ public class Notification implements Serializable {
         this.created = builder.created;
         this.title = builder.title;
         this.source = builder.source;
+        this.sourceName = builder.sourceName;
         this.subject = builder.subject;
         this.summary = builder.summary;
         this.title = builder.title;
@@ -161,28 +163,30 @@ public class Notification implements Serializable {
     /**
      * Convert this entry to a {@link Entry}.
      * 
-     * @param sourceBase
-     *            the base of the source link uri
+     * @param feedUri
+     *            the URI of this feed, used for example for resolving relative URIs
      * @return a new instance
      */
-    public Entry asFeedEntry(URI sourceBase) {
+    public Entry asFeedEntry(URI feedUri) {
         Entry resultEntry = new Entry();
         resultEntry.setId("urn:X-rodl:" + id);
         if (title != null) {
             resultEntry.setTitle(title);
         }
+        resultEntry.setCreated(created);
         resultEntry.setPublished(created);
         //set summary
         Content content = new Content();
         if (summary != null) {
             content.setValue(StringEscapeUtils.escapeHtml4(summary));
+            content.setType(Content.HTML);
         }
         resultEntry.setSummary(content);
         //set links
         List<Link> links = new ArrayList<>();
         if (source != null) {
             Link sourceLink = new Link();
-            sourceLink.setHref(sourceBase.resolve(source).toString());
+            sourceLink.setHref(feedUri != null ? feedUri.resolve(source).toString() : source.toString());
             sourceLink.setRel(DCTerms.source.toString());
             if (sourceName != null) {
                 sourceLink.setTitle(sourceName);
@@ -220,8 +224,10 @@ public class Notification implements Serializable {
         private String title;
 
         /** URI of the service that created this notification. */
-        //FIXME use RODL URI
-        private String source = ".";
+        private String source;
+
+        /** Source human-readable name. */
+        private String sourceName;
 
         /** Entry human-friendly content. */
         private String summary;
@@ -323,6 +329,32 @@ public class Notification implements Serializable {
          */
         public Builder source(URI source) {
             this.source = source.toString();
+            return this;
+        }
+
+
+        /**
+         * URI of the service that created this notification.
+         * 
+         * @param source
+         *            URI of the service that created this notification
+         * @return this builder
+         */
+        public Builder source(String source) {
+            this.source = source;
+            return this;
+        }
+
+
+        /**
+         * Source human-readable name.
+         * 
+         * @param sourceName
+         *            Source human-readable name
+         * @return this builder
+         */
+        public Builder sourceName(String sourceName) {
+            this.sourceName = sourceName;
             return this;
         }
 
