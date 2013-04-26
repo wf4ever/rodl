@@ -1,7 +1,6 @@
 package pl.psnc.dl.wf4ever.notifications;
 
 import java.net.URI;
-import java.util.Date;
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -26,7 +25,7 @@ public class NotificationTest {
     private Notification notification;
 
     /** Sample notification creation date. */
-    private Date now = DateTime.now().toDate();
+    private DateTime now = DateTime.now();
 
 
     /**
@@ -35,7 +34,7 @@ public class NotificationTest {
     @Before
     public void setUp() {
         notification = new Notification();
-        notification.setCreated(now);
+        notification.setCreated(now.toDate());
         notification.setId(1);
         notification.setSource("foo", "test");
         notification.setSubject("http://example.org/ro1/");
@@ -50,7 +49,7 @@ public class NotificationTest {
     @Test
     public void testAsFeedEntry() {
         Entry entry = notification.asFeedEntry(URI.create("http://example.org/feeds/feed.xml?id=3"));
-        Assert.assertEquals(now, entry.getCreated());
+        Assert.assertEquals(now.toDate(), entry.getCreated());
         Assert.assertEquals("urn:X-rodl:1", entry.getId());
         Assert.assertEquals(Content.HTML, entry.getSummary().getType());
         Assert.assertEquals("&lt;p&gt;Lorem ipsum&lt;/p&gt;", entry.getSummary().getValue());

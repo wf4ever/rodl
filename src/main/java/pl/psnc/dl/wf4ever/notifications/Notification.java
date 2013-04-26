@@ -163,11 +163,11 @@ public class Notification implements Serializable {
     /**
      * Convert this entry to a {@link Entry}.
      * 
-     * @param sourceBase
-     *            the base of the source link uri
+     * @param feedUri
+     *            the URI of this feed, used for example for resolving relative URIs
      * @return a new instance
      */
-    public Entry asFeedEntry(URI sourceBase) {
+    public Entry asFeedEntry(URI feedUri) {
         Entry resultEntry = new Entry();
         resultEntry.setId("urn:X-rodl:" + id);
         if (title != null) {
@@ -186,7 +186,7 @@ public class Notification implements Serializable {
         List<Link> links = new ArrayList<>();
         if (source != null) {
             Link sourceLink = new Link();
-            sourceLink.setHref(sourceBase != null ? sourceBase.resolve(source).toString() : source.toString());
+            sourceLink.setHref(feedUri != null ? feedUri.resolve(source).toString() : source.toString());
             sourceLink.setRel(DCTerms.source.toString());
             if (sourceName != null) {
                 sourceLink.setTitle(sourceName);
