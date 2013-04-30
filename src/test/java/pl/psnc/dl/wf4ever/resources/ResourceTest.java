@@ -31,11 +31,11 @@ import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.FOAF;
 
 import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.tdb.TDBFactory;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
@@ -204,7 +204,7 @@ public class ResourceTest extends ResourceBase {
                 .header("Authorization", "Bearer " + accessToken).type("text/turtle").put(ClientResponse.class, is);
         assertEquals("Updating evo_info should be protected", HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         response.close();
-        Builder builder = new Builder(null, TDBFactory.createDataset(), false);
+        Builder builder = new Builder(null, DatasetFactory.createMem(), false);
         ResearchObject researchObject = builder.buildResearchObject(ro);
         OntModel manifestModel = ModelFactory.createOntologyModel();
         manifestModel.read(researchObject.getManifestUri().toString());
@@ -229,7 +229,7 @@ public class ResourceTest extends ResourceBase {
     @Test
     public void testFulfillCreatorNames() {
         URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
-        Builder builder = new Builder(null, TDBFactory.createDataset(), false);
+        Builder builder = new Builder(null, DatasetFactory.createMem(), false);
         ResearchObject researchObject = builder.buildResearchObject(ro);
         Thing manifest = researchObject.getManifest();
         OntModel manifestModel = ModelFactory.createOntologyModel();

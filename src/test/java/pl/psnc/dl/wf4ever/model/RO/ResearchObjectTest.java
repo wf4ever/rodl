@@ -46,7 +46,6 @@ public class ResearchObjectTest extends BaseTest {
         dataset.addNamedModel(folderResourceMapUri.toString(), model);
         clearDLFileSystem();
         ro = ResearchObject.create(builder, URI.create("http://example.org/ro-test/"));
-        ro = ResearchObject.create(builder, URI.create("http://example.org/ro-test2/"));
     }
 
 

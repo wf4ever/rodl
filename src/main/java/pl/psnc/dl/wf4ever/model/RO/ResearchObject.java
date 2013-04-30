@@ -59,6 +59,7 @@ import pl.psnc.dl.wf4ever.vocabulary.RO;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
@@ -69,7 +70,6 @@ import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.tdb.TDBFactory;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 
 /**
@@ -579,7 +579,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
      */
     public static ResearchObject create(Builder builder, URI researchObjectUri, MemoryZipFile zip)
             throws IOException, BadRequestException {
-        Dataset dataset = TDBFactory.createDataset();
+        Dataset dataset = DatasetFactory.createMem();
         Builder inMemoryBuilder = new Builder(builder.getUser(), dataset, false);
         try (InputStream manifest = zip.getManifestAsInputStream()) {
             if (manifest == null) {

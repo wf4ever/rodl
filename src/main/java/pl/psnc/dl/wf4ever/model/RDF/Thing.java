@@ -43,6 +43,7 @@ import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
@@ -54,7 +55,6 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.tdb.TDB;
-import com.hp.hpl.jena.tdb.TDBFactory;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 
 import de.fuberlin.wiwiss.ng4j.NamedGraphSet;
@@ -297,7 +297,7 @@ public class Thing {
             }
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             if (syntax.supportsContexts()) {
-                Dataset tmpDataset = TDBFactory.createDataset();
+                Dataset tmpDataset = DatasetFactory.createMem();
                 addNamedModelsRecursively(tmpDataset);
 
                 NamedGraphSet ngs = new NamedGraphSetImpl();
