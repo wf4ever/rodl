@@ -903,17 +903,16 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
             Set<ResearchObject> ros = new HashSet<>();
             String queryString;
             if (userMetadata == null || userMetadata.getRole() == Role.PUBLIC) {
-                queryString = String.format("PREFIX ro: <%s> SELECT ?ro WHERE { ?ro a ro:ResearchObject . }",
-                    RO.NAMESPACE);
+                queryString = String.format(
+                    "PREFIX ro: <%s> SELECT ?ro WHERE { GRAPH ?g { ?ro a ro:ResearchObject . } }", RO.NAMESPACE);
             } else {
                 queryString = String
                         .format(
-                            "PREFIX ro: <%s> PREFIX dcterms: <%s> SELECT ?ro WHERE { ?ro a ro:ResearchObject ; dcterms:creator <%s> . }",
+                            "PREFIX ro: <%s> PREFIX dcterms: <%s> SELECT ?ro WHERE { GRAPH ?g { ?ro a ro:ResearchObject ; dcterms:creator <%s> . } }",
                             RO.NAMESPACE, DCTerms.NS, userMetadata.getUri());
             }
             Query query = QueryFactory.create(queryString);
-            QueryExecution qe = QueryExecutionFactory.create(query,
-                builder.getDataset().getNamedModel("urn:x-arq:UnionGraph"));
+            QueryExecution qe = QueryExecutionFactory.create(query, builder.getDataset());
             try {
                 ResultSet results = qe.execSelect();
                 while (results.hasNext()) {

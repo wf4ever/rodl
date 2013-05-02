@@ -104,7 +104,6 @@ public class BaseTest {
         researchObject = builder.buildResearchObject(URI.create(RESEARCH_OBJECT));
         model = FileManager.get().loadModel(MANIFEST_2, MANIFEST_2, "RDF/XML");
         dataset.addNamedModel(MANIFEST_2, model);
-        builder = new Builder(userProfile, dataset, false);
         researchObject2 = builder.buildResearchObject(URI.create(RESEARCH_OBJECT_2));
 
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
