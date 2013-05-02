@@ -194,7 +194,6 @@ public class Notification implements Serializable {
                 sourceLink.setTitle(source);
             }
             links.add(sourceLink);
-
         }
         if (subject != null) {
             Link sourceLink = new Link();
