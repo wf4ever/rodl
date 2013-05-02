@@ -51,7 +51,7 @@ public class ChecksumVerificationJob implements Job {
         if (researchObject != null) {
             Result result = new Result();
             for (AggregatedResource resource : researchObject.getAggregatedResources().values()) {
-                if (resource.isInternal()) {
+                if (resource.isInternal() && resource.getStats() != null) {
                     String checksumStored = resource.getStats().getChecksum();
                     String checksumCalculated;
                     try (InputStream in = resource.getSerialization()) {
