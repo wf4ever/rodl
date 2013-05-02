@@ -13,6 +13,7 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -41,31 +42,38 @@ public class ChecksumVerificationJob implements Job {
     @Override
     public void execute(JobExecutionContext context)
             throws JobExecutionException {
-        URI researchObjectUri = (URI) context.getMergedJobDataMap().get(RESEARCH_OBJECT_URI);
-        if (builder == null) {
-            //FIXME RODL URI should be better
-            UserMetadata userMetadata = new UserMetadata("rodl", "RODL decay monitor", Role.ADMIN, URI.create("rodl"));
-            builder = new Builder(userMetadata);
-        }
-        ResearchObject researchObject = ResearchObject.get(builder, researchObjectUri);
-        if (researchObject != null) {
-            Result result = new Result();
-            for (AggregatedResource resource : researchObject.getAggregatedResources().values()) {
-                if (resource.isInternal() && resource.getStats() != null) {
-                    String checksumStored = resource.getStats().getChecksum();
-                    String checksumCalculated;
-                    try (InputStream in = resource.getSerialization()) {
-                        checksumCalculated = DigestUtils.md5Hex(in);
-                    } catch (IOException e) {
-                        LOGGER.error("Can't calculate checksum for " + resource, e);
-                        continue;
-                    }
-                    if (!checksumCalculated.equalsIgnoreCase(checksumStored)) {
-                        result.getMismatches().add(new Mismatch(resource.getUri(), checksumStored, checksumCalculated));
+        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        try {
+            URI researchObjectUri = (URI) context.getMergedJobDataMap().get(RESEARCH_OBJECT_URI);
+            if (builder == null) {
+                //FIXME RODL URI should be better
+                UserMetadata userMetadata = new UserMetadata("rodl", "RODL decay monitor", Role.ADMIN,
+                        URI.create("rodl"));
+                builder = new Builder(userMetadata);
+            }
+            ResearchObject researchObject = ResearchObject.get(builder, researchObjectUri);
+            if (researchObject != null) {
+                Result result = new Result();
+                for (AggregatedResource resource : researchObject.getAggregatedResources().values()) {
+                    if (resource.isInternal() && resource.getStats() != null) {
+                        String checksumStored = resource.getStats().getChecksum();
+                        String checksumCalculated;
+                        try (InputStream in = resource.getSerialization()) {
+                            checksumCalculated = DigestUtils.md5Hex(in);
+                        } catch (IOException e) {
+                            LOGGER.error("Can't calculate checksum for " + resource, e);
+                            continue;
+                        }
+                        if (!checksumCalculated.equalsIgnoreCase(checksumStored)) {
+                            result.getMismatches().add(
+                                new Mismatch(resource.getUri(), checksumStored, checksumCalculated));
+                        }
                     }
                 }
+                context.setResult(result);
             }
-            context.setResult(result);
+        } finally {
+            HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         }
     }
 
