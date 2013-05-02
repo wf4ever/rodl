@@ -38,7 +38,7 @@ public class CopyOperation implements Operation {
     @Override
     public void execute(JobStatus status)
             throws OperationFailedException {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         try {
             ResearchObject sourceRO = ResearchObject.get(builder, status.getCopyfrom());
             if (sourceRO == null) {

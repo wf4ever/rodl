@@ -169,7 +169,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
         Notification entry = new Notification.Builder(researchObject).title(Title.RESEARCH_OBJECT_CREATED)
                 .summary(Summary.created(researchObject))
-                .source(ApplicationProperties.getContextPath() != null ? ApplicationProperties.getContextPath() : "")
+                .source(ApplicationProperties.getContextPath() != null ? ApplicationProperties.getContextPath() : "/")
                 .sourceName("RODL").build();
         dao.save(entry);
         return researchObject;
@@ -292,7 +292,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
         Notification entry = new Notification.Builder(this).title(Title.RESEARCH_OBJECT_DELETED)
                 .summary(Summary.deleted(this))
-                .source(ApplicationProperties.getContextPath() != null ? ApplicationProperties.getContextPath() : "")
+                .source(ApplicationProperties.getContextPath() != null ? ApplicationProperties.getContextPath() : "/")
                 .sourceName("RODL").build();
         dao.save(entry);
         super.delete();

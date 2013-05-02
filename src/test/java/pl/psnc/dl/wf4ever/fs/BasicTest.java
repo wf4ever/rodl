@@ -67,7 +67,7 @@ public class BasicTest {
     @Before
     public void setUp()
             throws Exception {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         Files.createDirectories(Paths.get(BASE));
     }
 

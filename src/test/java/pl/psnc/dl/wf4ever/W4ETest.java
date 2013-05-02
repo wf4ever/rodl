@@ -58,7 +58,7 @@ public class W4ETest extends JerseyTest {
         } else {
             webResource = resource().path("rodl/");
         }
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         clientId = createClient(clientName);
     }
 

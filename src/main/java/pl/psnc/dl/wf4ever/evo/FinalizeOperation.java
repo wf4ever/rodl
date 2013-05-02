@@ -32,7 +32,7 @@ public class FinalizeOperation implements Operation {
     @Override
     public void execute(JobStatus status)
             throws OperationFailedException {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         try {
             if (status.getTarget() == null) {
                 throw new OperationFailedException("Target research object must be set");

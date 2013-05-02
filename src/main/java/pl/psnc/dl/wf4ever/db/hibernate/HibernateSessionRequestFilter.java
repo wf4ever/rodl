@@ -13,7 +13,6 @@ import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.StaleObjectStateException;
 
-
 /**
  * Copied from https://community.jboss.org/wiki/OpenSessionInView.
  * 
@@ -35,7 +34,7 @@ public class HibernateSessionRequestFilter implements Filter {
 
         try {
             LOGGER.debug("Starting a database transaction");
-            sf.getCurrentSession().beginTransaction();
+            sf.getCurrentSession().getTransaction().begin();
 
             // Call the next filter (continue request processing)
             chain.doFilter(request, response);

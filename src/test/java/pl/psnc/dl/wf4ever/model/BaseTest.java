@@ -106,7 +106,7 @@ public class BaseTest {
         dataset.addNamedModel(MANIFEST_2, model);
         researchObject2 = builder.buildResearchObject(URI.create(RESEARCH_OBJECT_2));
 
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
     }
 
 

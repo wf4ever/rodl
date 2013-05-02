@@ -89,7 +89,7 @@ public class FlowTests {
     @Before
     public void setUp()
             throws Exception {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         dl = new FilesystemDL(BASE);
         dl.createOrUpdateUser(USER.getLogin(), USER_PASSWORD, USER.getName());
         dl = new FilesystemDL(BASE);
@@ -110,7 +110,7 @@ public class FlowTests {
     @After
     public void tearDown()
             throws Exception {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         dl = new FilesystemDL(BASE);
         dl.deleteResearchObject(RO_URI);
         dl = new FilesystemDL(BASE);
@@ -163,7 +163,7 @@ public class FlowTests {
             throws DigitalLibraryException, IOException, NotFoundException, ConflictException, AccessDeniedException {
         createOrUpdateFile(files[0]);
         createOrUpdateFile(files[1]);
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         dl = new FilesystemDL(BASE);
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         getFileContent(files[0]);
@@ -175,7 +175,7 @@ public class FlowTests {
 
     private void checkNoFile(String path)
             throws DigitalLibraryException, IOException {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         try {
             dl.getFileContents(RO_URI, path).close();
             fail("Deleted file doesn't throw IdNotFoundException");
@@ -189,7 +189,7 @@ public class FlowTests {
 
     private void checkFileExists(String path)
             throws DigitalLibraryException, NotFoundException {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         try {
             Assert.assertTrue(dl.fileExists(RO_URI, path));
         } finally {
@@ -200,7 +200,7 @@ public class FlowTests {
 
     private void deleteFile(String path)
             throws DigitalLibraryException, NotFoundException {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         try {
             dl.deleteFile(RO_URI, path);
         } finally {
@@ -211,7 +211,7 @@ public class FlowTests {
 
     private void getZippedFolder(String path)
             throws DigitalLibraryException, IOException, NotFoundException {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         try {
             InputStream zip = dl.getZippedFolder(RO_URI, path);
             assertNotNull(zip);
@@ -224,7 +224,7 @@ public class FlowTests {
 
     private void getFileContent(FileRecord file)
             throws DigitalLibraryException, IOException, NotFoundException, AccessDeniedException {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         try {
             InputStream f = dl.getFileContents(RO_URI, file.path);
             assertNotNull(f);
@@ -238,7 +238,7 @@ public class FlowTests {
 
     private void getZippedVersion()
             throws DigitalLibraryException, NotFoundException {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         try {
             InputStream zip1 = dl.getZippedResearchObject(RO_URI);
             assertNotNull(zip1);
@@ -250,7 +250,7 @@ public class FlowTests {
 
     private void createOrUpdateFile(FileRecord file)
             throws DigitalLibraryException, IOException, NotFoundException, AccessDeniedException {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         try {
             InputStream f = file.open();
             ResourceMetadata r1 = dl.createOrUpdateFile(RO_URI, file.path, f, file.mimeType);
@@ -264,7 +264,7 @@ public class FlowTests {
 
     private void checkCantCreateOrUpdateFile(FileRecord file)
             throws DigitalLibraryException, IOException, NotFoundException {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         InputStream f = file.open();
         try {
             dl.createOrUpdateFile(RO_URI, file.path, f, file.mimeType);
@@ -281,7 +281,7 @@ public class FlowTests {
 
     private void createOrUpdateDirectory(String path)
             throws DigitalLibraryException, IOException, NotFoundException, AccessDeniedException {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         try {
             ResourceMetadata r1 = dl.createOrUpdateFile(RO_URI, path, new ByteArrayInputStream(new byte[0]),
                 "text/plain");

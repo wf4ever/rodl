@@ -42,7 +42,10 @@ public class ChecksumVerificationJob implements Job {
     @Override
     public void execute(JobExecutionContext context)
             throws JobExecutionException {
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        boolean started = !HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive();
+        if (started) {
+            HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
+        }
         try {
             URI researchObjectUri = (URI) context.getMergedJobDataMap().get(RESEARCH_OBJECT_URI);
             if (builder == null) {
@@ -73,7 +76,9 @@ public class ChecksumVerificationJob implements Job {
                 context.setResult(result);
             }
         } finally {
-            HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+            if (started) {
+                HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+            }
         }
     }
 
