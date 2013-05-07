@@ -163,16 +163,6 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         researchObject.manifest = Manifest.create(builder, researchObject.getUri().resolve(MANIFEST_PATH),
             researchObject);
         researchObject.save(EvoType.LIVE);
-
-        //FIXME create an event instead
-        /*
-        AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
-        Notification entry = new Notification.Builder(researchObject).title(Title.RESEARCH_OBJECT_CREATED)
-                .summary(Summary.created(researchObject))
-                .source(ApplicationProperties.getContextPath() != null ? ApplicationProperties.getContextPath() : "")
-                .sourceName("RODL").build();
-        dao.save(entry);
-        */
         ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROCreateEvent(researchObject));
 
         return researchObject;
@@ -291,16 +281,6 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
             LOGGER.debug("As expected. RO folder was empty and was deleted: " + e.getMessage());
         }
         ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new RODeleteEvent(this));
-        //FIXME create an event instead
-        /*
-        AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
-        Notification entry = new Notification.Builder(this).title(Title.RESEARCH_OBJECT_DELETED)
-                .summary(Summary.deleted(this))
-                .source(ApplicationProperties.getContextPath() != null ? ApplicationProperties.getContextPath() : "")
-                .sourceName("RODL").build();
-        dao.save(entry);
-        super.delete();
-        */
     }
 
 
