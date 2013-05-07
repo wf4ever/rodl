@@ -28,6 +28,11 @@ public class AdminResource {
     private static final Logger LOGGER = Logger.getLogger(CopyOperation.class);
 
 
+    /**
+     * Reindex solr data.
+     * 
+     * @return comunicate.
+     */
     @POST
     @Path("solr/reindex/")
     public String solrReindex() {
