@@ -9,7 +9,6 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
-import pl.psnc.dl.wf4ever.eventbus.ROEventBusInjector;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterCreateEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentBeforeCreateEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentBeforeDeleteEvent;
@@ -18,7 +17,6 @@ import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 
-import com.google.common.eventbus.EventBus;
 import com.hp.hpl.jena.query.Dataset;
 
 /**
@@ -69,11 +67,11 @@ public class Resource extends AggregatedResource {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
         Resource resource = builder.buildResource(resourceUri, researchObject, builder.getUser(), DateTime.now());
-        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROComponentBeforeCreateEvent(resource));
+        resource.postEvent(new ROComponentBeforeCreateEvent(resource));
         resource.setProxy(researchObject.addProxy(resource));
         resource.save();
         resource.onCreated();
-        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROComponentAfterCreateEvent(resource));
+        resource.postEvent(new ROComponentAfterCreateEvent(resource));
         return resource;
     }
 
@@ -102,14 +100,14 @@ public class Resource extends AggregatedResource {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
         Resource resource = builder.buildResource(resourceUri, researchObject, builder.getUser(), DateTime.now());
-        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROComponentBeforeCreateEvent(resource));
+        resource.postEvent(new ROComponentBeforeCreateEvent(resource));
         resource.setProxy(researchObject.addProxy(resource));
         resource.save(content, contentType);
         if (researchObject.getAnnotationsByBodyUri().containsKey(resource.getUri())) {
             resource.saveGraphAndSerialize();
         }
         resource.onCreated();
-        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROComponentAfterCreateEvent(resource));
+        resource.postEvent(new ROComponentAfterCreateEvent(resource));
         return resource;
     }
 
@@ -175,7 +173,7 @@ public class Resource extends AggregatedResource {
 
     @Override
     public void delete() {
-        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROComponentBeforeDeleteEvent(this));
+        this.postEvent(new ROComponentBeforeDeleteEvent(this));
         getResearchObject().getResources().remove(uri);
         super.delete();
     }

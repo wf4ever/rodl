@@ -27,6 +27,7 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.eventbus.ROEventBusInjector;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.sparql.RO_RDFXMLWriter;
@@ -38,6 +39,7 @@ import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.eventbus.EventBus;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -854,5 +856,16 @@ public class Thing {
         writer.setBaseURI(getUri());
         writer.write(exportedModel, output, null);
         return;
+    }
+
+
+    /**
+     * Post new event to the default EventBus.
+     * 
+     * @param event
+     *            posted event
+     */
+    public void postEvent(Object event) {
+        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(event);
     }
 }
