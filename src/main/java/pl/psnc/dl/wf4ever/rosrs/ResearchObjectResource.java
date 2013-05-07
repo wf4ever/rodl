@@ -140,7 +140,6 @@ public class ResearchObjectResource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
-        researchObject.deleteIndexAttributes();
         researchObject.delete();
     }
 

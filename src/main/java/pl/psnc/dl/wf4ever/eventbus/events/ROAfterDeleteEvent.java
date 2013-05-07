@@ -8,7 +8,7 @@ import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
  * @author pejot
  * 
  */
-public class RODeleteEvent {
+public class ROAfterDeleteEvent {
 
     /** Event reason/subject. */
     private final ResearchObject researchObject;
@@ -20,7 +20,7 @@ public class RODeleteEvent {
      * @param researchObject
      *            reason/subject.
      */
-    public RODeleteEvent(ResearchObject researchObject) {
+    public ROAfterDeleteEvent(ResearchObject researchObject) {
         this.researchObject = researchObject;
     }
 

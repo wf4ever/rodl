@@ -32,8 +32,10 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.eventbus.ROEventBusInjector;
-import pl.psnc.dl.wf4ever.eventbus.events.ROCreateEvent;
-import pl.psnc.dl.wf4ever.eventbus.events.RODeleteEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROAfterCreateEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROAfterDeleteEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROBeforeCreateEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROBeforeDeleteEvent;
 import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -162,9 +164,9 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         ResearchObject researchObject = builder.buildResearchObject(uri, builder.getUser(), DateTime.now());
         researchObject.manifest = Manifest.create(builder, researchObject.getUri().resolve(MANIFEST_PATH),
             researchObject);
+        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROBeforeCreateEvent(researchObject));
         researchObject.save(EvoType.LIVE);
-        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROCreateEvent(researchObject));
-
+        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROAfterCreateEvent(researchObject));
         return researchObject;
     }
 
@@ -269,6 +271,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
     @Override
     public void delete() {
         //create another collection to avoid concurrent modification
+        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROBeforeDeleteEvent(this));
         Set<AggregatedResource> resourcesToDelete = new HashSet<>(getAggregatedResources().values());
         for (AggregatedResource resource : resourcesToDelete) {
             resource.delete();
@@ -280,7 +283,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
             // good, nothing was left so the folder was deleted
             LOGGER.debug("As expected. RO folder was empty and was deleted: " + e.getMessage());
         }
-        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new RODeleteEvent(this));
+        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROAfterDeleteEvent(this));
     }
 
 

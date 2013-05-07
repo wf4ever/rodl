@@ -2,7 +2,8 @@ package pl.psnc.dl.wf4ever.eventbus.listeners;
 
 import pl.psnc.dl.wf4ever.ApplicationProperties;
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
-import pl.psnc.dl.wf4ever.eventbus.events.ROCreateEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROAfterCreateEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROBeforeCreateEvent;
 import pl.psnc.dl.wf4ever.notifications.Notification;
 import pl.psnc.dl.wf4ever.notifications.Notification.Summary;
 import pl.psnc.dl.wf4ever.notifications.Notification.Title;
@@ -38,11 +39,24 @@ public class ROCreateListener {
      *            processed event
      */
     @Subscribe
-    public void onCreate(ROCreateEvent event) {
+    public void onBeforeCreate(ROBeforeCreateEvent event) {
+        //nth for now
+    }
+
+
+    /**
+     * Subscription method.
+     * 
+     * @param event
+     *            processed event
+     */
+    @Subscribe
+    public void onAfterCreate(ROAfterCreateEvent event) {
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
         Notification entry = new Notification.Builder(event.getResearchObject().getUri())
                 .title(Title.RESEARCH_OBJECT_CREATED).summary(Summary.created(event.getResearchObject())).build();
         entry.setSource(ApplicationProperties.getContextPath(), "RODL");
         dao.save(entry);
+        event.getResearchObject().updateIndexAttributes();
     }
 }

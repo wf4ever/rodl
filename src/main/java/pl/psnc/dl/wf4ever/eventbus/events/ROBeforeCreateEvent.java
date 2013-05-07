@@ -8,7 +8,7 @@ import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
  * @author pejot
  * 
  */
-public class ROCreateEvent {
+public class ROBeforeCreateEvent {
 
     /** Event reason/subject. */
     private final ResearchObject researchObject;
@@ -20,7 +20,7 @@ public class ROCreateEvent {
      * @param researchObject
      *            reason/subject.
      */
-    public ROCreateEvent(ResearchObject researchObject) {
+    public ROBeforeCreateEvent(ResearchObject researchObject) {
         this.researchObject = researchObject;
     }
 
