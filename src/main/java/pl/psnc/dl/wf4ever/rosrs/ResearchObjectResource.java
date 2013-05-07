@@ -229,7 +229,7 @@ public class ResearchObjectResource {
                 rb = rb.cacheControl(cache).tag(resource.getStats().getChecksum())
                         .lastModified(resource.getStats().getLastModified().toDate());
             }
-            researchObject.updateIndexAttributes();
+            //researchObject.updateIndexAttributes();
             return rb.build();
         }
     }
@@ -317,7 +317,6 @@ public class ResearchObjectResource {
                     .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
             response = response.header(Constants.LINK_HEADER, targetHeader);
         }
-        researchObject.updateIndexAttributes();
         return response.build();
     }
 

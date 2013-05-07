@@ -13,6 +13,11 @@ import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.eventbus.ROEventBusInjector;
+import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterCreateEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterUpdateEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROComponentBeforeCreateEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROComponentBeforeUpdateEvent;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
@@ -22,6 +27,7 @@ import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
+import com.google.common.eventbus.EventBus;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -125,9 +131,11 @@ public class Annotation extends AggregatedResource {
         }
         Annotation annotation = builder.buildAnnotation(uri, researchObject, builder.buildThing(bodyUri), targets,
             builder.getUser(), DateTime.now());
+        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROComponentBeforeCreateEvent(annotation));
         annotation.setProxy(researchObject.addProxy(annotation));
         annotation.save();
         annotation.onCreated();
+        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROComponentAfterCreateEvent(annotation));
         return annotation;
     }
 
@@ -150,11 +158,13 @@ public class Annotation extends AggregatedResource {
     public static Annotation create(Builder builder, ResearchObject researchObject, URI uri, InputStream content)
             throws BadRequestException {
         Annotation annotation = assemble(builder, researchObject, uri, content);
+        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROComponentBeforeCreateEvent(annotation));
         annotation.setCreated(DateTime.now());
         annotation.setCreator(builder.getUser());
         annotation.setProxy(researchObject.addProxy(annotation));
         annotation.save();
         annotation.onCreated();
+        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROComponentAfterCreateEvent(annotation));
         return annotation;
     }
 
@@ -345,6 +355,7 @@ public class Annotation extends AggregatedResource {
      */
     public Annotation update(Annotation newAnnotation)
             throws BadRequestException {
+        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROComponentBeforeUpdateEvent(this));
         if (!body.getUri().equals(newAnnotation.getBody().getUri())) {
             if (getResearchObject().getAggregatedResources().containsKey(body.getUri())) {
                 getResearchObject().getAggregatedResources().get(body.getUri()).deleteGraphAndSerialize();
@@ -357,6 +368,7 @@ public class Annotation extends AggregatedResource {
         }
         setAnnotated(newAnnotation.getAnnotated());
         save();
+        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROComponentAfterUpdateEvent(this));
         return this;
     }
 

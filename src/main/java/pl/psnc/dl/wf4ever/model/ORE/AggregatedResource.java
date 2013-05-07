@@ -20,6 +20,9 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.eventbus.ROEventBusInjector;
+import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterDeleteEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROComponentBeforeDeleteEvent;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
@@ -28,6 +31,7 @@ import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectComponentSerializable;
 
+import com.google.common.eventbus.EventBus;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.rdf.model.RDFNode;
@@ -207,6 +211,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
      */
     @Override
     public void delete() {
+        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROComponentBeforeDeleteEvent(this));
         getResearchObject().getManifest().deleteResource(this);
         getResearchObject().getManifest().serialize();
         getResearchObject().getAggregatedResources().remove(uri);
@@ -225,6 +230,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
             entry.delete();
         }
         super.delete();
+        ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROComponentAfterDeleteEvent(this));
     }
 
 
