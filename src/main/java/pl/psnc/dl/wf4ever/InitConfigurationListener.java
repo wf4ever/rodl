@@ -34,6 +34,8 @@ public class InitConfigurationListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         ApplicationProperties.load();
+
+        //listers.load();
         try {
             MonitoringScheduler.getInstance().start();
         } catch (SchedulerException e) {

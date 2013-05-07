@@ -54,7 +54,6 @@ public class SecurityFilter implements ContainerRequestFilter {
                 throw new NotFoundException("User profile not found");
             }
             httpRequest.setAttribute("Builder", new Builder(user));
-
             //TODO in here should go access rights control, based on dLibra for example
             //            if (!request.getMethod().equals("GET") && user.getRole() == UserProfile.Role.PUBLIC) {
             //                throw new AuthenticationException("Only authenticated users can do that.", SecurityFilter.REALM);

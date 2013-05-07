@@ -68,6 +68,7 @@ public class NotificationsTest extends W4ETest {
     public void testNotificationsCreateNoFilters() {
         ro = createRO(accessToken);
         String resultAll = (webResource.path("notifications/").get(String.class));
+        System.out.println(resultAll);
         Assert.assertTrue(resultAll.contains(ro.toString()));
         Assert.assertTrue(resultAll.contains("urn:X-rodl:"));
         Assert.assertTrue(resultAll.contains("Research Object has been created"));
