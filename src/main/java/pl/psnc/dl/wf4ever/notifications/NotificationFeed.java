@@ -1,7 +1,6 @@
 package pl.psnc.dl.wf4ever.notifications;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -10,14 +9,13 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
-import pl.psnc.dl.wf4ever.ApplicationProperties;
-
+import com.sun.syndication.feed.atom.Content;
 import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Feed;
 import com.sun.syndication.feed.atom.Person;
 
 /**
- * Feeds factory.
+ * A notification feed, i.e. an aggregation of individual notifications.
  * 
  * @author pejot
  * @author piotrekhol
@@ -26,6 +24,7 @@ import com.sun.syndication.feed.atom.Person;
 public final class NotificationFeed {
 
     /** Logger. */
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = Logger.getLogger(NotificationFeed.class);
 
 
@@ -58,6 +57,9 @@ public final class NotificationFeed {
     /** Feed ID. */
     private String id;
 
+    /** Feed description. */
+    private String description;
+
     /** Feed title. */
     private String title;
 
@@ -82,6 +84,7 @@ public final class NotificationFeed {
      */
     private NotificationFeed(Builder builder) {
         this.id = builder.id;
+        this.description = builder.description;
         this.title = builder.title;
         this.authorEmail = builder.authorEmail;
         this.authorName = builder.authorName;
@@ -105,31 +108,29 @@ public final class NotificationFeed {
      * 
      * @param feedType
      *            feed type
-     * @param requestedUri
-     *            requested uri
+     * @param feedUri
+     *            the URI of this feed, used for example for resolving relative URIs
      * @return this feed in another format
      */
-    public Feed asFeed(FeedType feedType, URI requestedUri) {
+    public Feed asFeed(FeedType feedType, URI feedUri) {
         Feed feed = new Feed();
         feed.setFeedType(feedType.value);
         feed.setId(id);
+        Content content = new Content();
+        if (description != null) {
+            content.setValue(description);
+            content.setType(Content.TEXT);
+        }
+        feed.setInfo(content);
         feed.setTitle(title);
         feed.setUpdated(updated.toDate());
         Person author = new Person();
         author.setEmail(authorEmail);
         author.setName(authorName);
         feed.setAuthors(Collections.singletonList(author));
-        //just in case
-        URI baseUri = requestedUri;
-        try {
-            baseUri = new URI(requestedUri.getScheme(), requestedUri.getAuthority(),
-                    ApplicationProperties.getContextPath());
-        } catch (URISyntaxException e) {
-            LOGGER.error("Can't build base feed uri from " + requestedUri);
-        }
         List<Entry> entries2 = new ArrayList<>();
         for (Notification entry : this.entries) {
-            entries2.add(entry.asFeedEntry(baseUri));
+            entries2.add(entry.asFeedEntry(feedUri));
         }
         feed.setEntries(entries2);
         return feed;
@@ -147,6 +148,9 @@ public final class NotificationFeed {
         /** Feed ID. */
         private String id;
 
+        /** Feed description. */
+        private String description = Description.DEFAULT.message;
+
         /** Feed title. */
         private String title;
 
@@ -154,7 +158,7 @@ public final class NotificationFeed {
         private String authorEmail = "rodl@wf4ever.org";
 
         /** Administrator name. */
-        private String authorName = "My name is rodl :)";
+        private String authorName = "Research Object Digital Library";
 
         /** Update date. */
         private DateTime updated = DateTime.now();
@@ -248,6 +252,19 @@ public final class NotificationFeed {
             return this;
         }
 
+
+        /**
+         * Feed description.
+         * 
+         * @param description
+         *            Feed description
+         * @return this builder
+         */
+        public Builder description(String description) {
+            this.description = description;
+            return this;
+        }
+
     }
 
 
@@ -289,6 +306,32 @@ public final class NotificationFeed {
             return result;
         }
 
+    }
+
+
+    /**
+     * Commonly used feed descriptions.
+     * 
+     * @author piotrekhol
+     * 
+     */
+    public enum Description {
+        /** The default description. */
+        DEFAULT("This is a notification feed of the Research Object Digital Library.");
+
+        /** The plain text message. */
+        private String message;
+
+
+        /**
+         * Internal constructor.
+         * 
+         * @param message
+         *            The plain text message
+         */
+        Description(String message) {
+            this.message = message;
+        }
     }
 
 }

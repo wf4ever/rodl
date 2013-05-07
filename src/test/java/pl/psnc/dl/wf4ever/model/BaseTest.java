@@ -15,10 +15,10 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.tdb.TDBFactory;
 import com.hp.hpl.jena.util.FileManager;
 
 /**
@@ -89,7 +89,7 @@ public class BaseTest {
     @Before
     public void setUp()
             throws Exception {
-        dataset = TDBFactory.createDataset();
+        dataset = DatasetFactory.createMem();
         Model model;
         model = FileManager.get().loadModel(MANIFEST, MANIFEST, "RDF/XML");
         dataset.addNamedModel(MANIFEST, model);
@@ -104,7 +104,6 @@ public class BaseTest {
         researchObject = builder.buildResearchObject(URI.create(RESEARCH_OBJECT));
         model = FileManager.get().loadModel(MANIFEST_2, MANIFEST_2, "RDF/XML");
         dataset.addNamedModel(MANIFEST_2, model);
-        builder = new Builder(userProfile, dataset, false);
         researchObject2 = builder.buildResearchObject(URI.create(RESEARCH_OBJECT_2));
 
         HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();

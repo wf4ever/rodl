@@ -58,6 +58,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
@@ -68,7 +69,6 @@ import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.tdb.TDBFactory;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 
 /**
@@ -168,8 +168,9 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         /*
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
         Notification entry = new Notification.Builder(researchObject).title(Title.RESEARCH_OBJECT_CREATED)
-                .summary(Summary.created(researchObject)).build();
-        entry.setSource(ApplicationProperties.getContextPath(), "RODL");
+                .summary(Summary.created(researchObject))
+                .source(ApplicationProperties.getContextPath() != null ? ApplicationProperties.getContextPath() : "")
+                .sourceName("RODL").build();
         dao.save(entry);
         */
         ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROCreateEvent(researchObject));
@@ -294,8 +295,9 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         /*
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
         Notification entry = new Notification.Builder(this).title(Title.RESEARCH_OBJECT_DELETED)
-                .summary(Summary.deleted(this)).build();
-        entry.setSource(ApplicationProperties.getContextPath(), "RODL");
+                .summary(Summary.deleted(this))
+                .source(ApplicationProperties.getContextPath() != null ? ApplicationProperties.getContextPath() : "")
+                .sourceName("RODL").build();
         dao.save(entry);
         super.delete();
         */
@@ -584,7 +586,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
      */
     public static ResearchObject create(Builder builder, URI researchObjectUri, MemoryZipFile zip)
             throws IOException, BadRequestException {
-        Dataset dataset = TDBFactory.createDataset();
+        Dataset dataset = DatasetFactory.createMem();
         Builder inMemoryBuilder = new Builder(builder.getUser(), dataset, false);
         try (InputStream manifest = zip.getManifestAsInputStream()) {
             if (manifest == null) {
@@ -908,17 +910,16 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
             Set<ResearchObject> ros = new HashSet<>();
             String queryString;
             if (userMetadata == null || userMetadata.getRole() == Role.PUBLIC) {
-                queryString = String.format("PREFIX ro: <%s> SELECT ?ro WHERE { ?ro a ro:ResearchObject . }",
-                    RO.NAMESPACE);
+                queryString = String.format(
+                    "PREFIX ro: <%s> SELECT ?ro WHERE { GRAPH ?g { ?ro a ro:ResearchObject . } }", RO.NAMESPACE);
             } else {
                 queryString = String
                         .format(
-                            "PREFIX ro: <%s> PREFIX dcterms: <%s> SELECT ?ro WHERE { ?ro a ro:ResearchObject ; dcterms:creator <%s> . }",
+                            "PREFIX ro: <%s> PREFIX dcterms: <%s> SELECT ?ro WHERE { GRAPH ?g { ?ro a ro:ResearchObject ; dcterms:creator <%s> . } }",
                             RO.NAMESPACE, DCTerms.NS, userMetadata.getUri());
             }
             Query query = QueryFactory.create(queryString);
-            QueryExecution qe = QueryExecutionFactory.create(query,
-                builder.getDataset().getNamedModel("urn:x-arq:UnionGraph"));
+            QueryExecution qe = QueryExecutionFactory.create(query, builder.getDataset());
             try {
                 ResultSet results = qe.execSelect();
                 while (results.hasNext()) {

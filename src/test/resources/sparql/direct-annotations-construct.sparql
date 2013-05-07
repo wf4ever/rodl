@@ -12,11 +12,13 @@ PREFIX ore: <http://www.openarchives.org/ore/terms/>
 
 CONSTRUCT  { ?resource ?prop ?value }
 WHERE { 
-	?ann ro:annotatesAggregatedResource ?resource ;
-	       a ro:AggregatedAnnotation ;
-	       ao:body ?graph .
-#	?graph dcterms:creator ?creator .
-#	?creator foaf:name ?author .
+	GRAPH ?main {
+			?ann ro:annotatesAggregatedResource ?resource ;
+			       a ro:AggregatedAnnotation ;
+			       ao:body ?graph .
+		#	?graph dcterms:creator ?creator .
+		#	?creator foaf:name ?author .
+	}
 	GRAPH ?graph {
 		?resource ?prop ?value .
 	}

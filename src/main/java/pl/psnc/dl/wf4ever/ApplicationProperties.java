@@ -30,7 +30,8 @@ public final class ApplicationProperties {
 
     /** admin's access token. */
     private static String adminTokenHash;
-    /** context path. */
+
+    /** context path, may be null for URIs with no path (i.e. http://localhost:8082). */
     private static String contextPath;
 
 

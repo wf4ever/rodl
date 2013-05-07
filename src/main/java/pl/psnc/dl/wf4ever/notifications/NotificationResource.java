@@ -48,7 +48,7 @@ public class NotificationResource {
      * @param from
      *            time - from
      * @param to
-     *            time - to <<<<<<< Upstream, based on my-develop
+     *            time - to
      * @param source
      *            feed field source
      * @param limit
