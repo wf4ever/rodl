@@ -13,7 +13,7 @@ import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.notifications.Notification;
 
 /**
- * Atom Feed entry model.
+ * Atom Feed Entry DAO.
  * 
  * @author pejot
  * 

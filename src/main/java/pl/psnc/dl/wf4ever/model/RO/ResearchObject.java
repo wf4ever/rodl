@@ -27,6 +27,8 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.db.ResearchObjectId;
+import pl.psnc.dl.wf4ever.db.dao.ResearchObjectIdDAO;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -156,6 +158,10 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
      * @return an instance
      */
     public static ResearchObject create(Builder builder, URI uri) {
+        ResearchObjectIdDAO idDAO = new ResearchObjectIdDAO();
+        //replace uri on the first free
+        uri = idDAO.saftySave(new ResearchObjectId(uri)).getId();
+        //because of the line above should never be true;
         if (get(builder, uri) != null) {
             throw new ConflictException("Research Object already exists: " + uri);
         }
@@ -178,7 +184,6 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
     protected void createEvoInfo(EvoType type) {
         try {
             evoInfo = LiveEvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this);
-
             this.evoInfoAnnotation = annotate(evoInfo.getUri(), this);
             this.getManifest().serialize();
         } catch (BadRequestException e) {

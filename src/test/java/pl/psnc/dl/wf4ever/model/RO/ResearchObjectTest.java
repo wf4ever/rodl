@@ -12,7 +12,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.SnapshotBuilder;
@@ -45,6 +44,8 @@ public class ResearchObjectTest extends BaseTest {
             "TURTLE");
         dataset.addNamedModel(folderResourceMapUri.toString(), model);
         clearDLFileSystem();
+        //bacuase annotations bodies have fixed 
+        deleteResearchObjectIds(URI.create("http://example.org/ro-test/"));
         ro = ResearchObject.create(builder, URI.create("http://example.org/ro-test/"));
     }
 
@@ -72,9 +73,12 @@ public class ResearchObjectTest extends BaseTest {
     }
 
 
-    @Test(expected = ConflictException.class)
+    @Test
     public void testCreateDuplication() {
-        ResearchObject.create(builder, ro.getUri());
+        URI duplicateUri = ro.getUri().resolve("duplicatedUri/");
+        ResearchObject duplicated = ResearchObject.create(builder, duplicateUri);
+        duplicated = ResearchObject.create(builder, duplicateUri);
+        Assert.assertTrue(duplicated.getUri().toString().contains("-"));
     }
 
 

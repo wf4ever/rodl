@@ -182,17 +182,19 @@ public class ResourceTest extends ResourceBase {
     public void createConflictedROFromZip()
             throws UniformInterfaceException, ClientHandlerException, IOException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
-        ClientResponse response = webResource.path("ROs").accept("text/turtle")
+        ClientResponse response1 = webResource.path("ROs").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
                 .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(is));
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
-            response.getStatus());
+            response1.getStatus());
         is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
-        response = webResource.path("ROs").accept("text/turtle").header("Authorization", "Bearer " + accessToken)
-                .header("Slug", createdFromZipResourceObject).type("application/zip")
-                .post(ClientResponse.class, IOUtils.toByteArray(is));
-        assertEquals("Research objects with this same name should be conflicted", HttpServletResponse.SC_CONFLICT,
-            response.getStatus());
+        ClientResponse response2 = webResource.path("ROs").accept("text/turtle")
+                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
+                .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(is));
+        Assert.assertFalse(response1.getLocation().toString().equals(response2.getLocation().toString()));
+        //new approach
+        //assertEquals("Research objects with this same name should be conflicted", HttpServletResponse.SC_CONFLICT,
+        //    response1.getStatus());
 
     }
 
