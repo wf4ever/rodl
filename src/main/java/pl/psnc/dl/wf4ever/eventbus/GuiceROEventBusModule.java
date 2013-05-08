@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.eventbus;
 
 import pl.psnc.dl.wf4ever.eventbus.listeners.NotificationsListener;
+import pl.psnc.dl.wf4ever.eventbus.listeners.PreservationListener;
 import pl.psnc.dl.wf4ever.eventbus.listeners.SolrListener;
 
 import com.google.common.eventbus.EventBus;
@@ -20,6 +21,8 @@ public class GuiceROEventBusModule extends AbstractModule {
     private SolrListener solrListener;
     /** Notification listener instance. */
     private NotificationsListener notificationsListener;
+    /** Preservation listener instance. */
+    private PreservationListener preservetionListener;
 
 
     @Override
@@ -30,6 +33,6 @@ public class GuiceROEventBusModule extends AbstractModule {
         bind(EventBus.class).toInstance(eventBus);
         bind(SolrListener.class).toInstance(solrListener);
         bind(NotificationsListener.class).toInstance(notificationsListener);
-
+        bind(PreservationListener.class).toInstance(preservetionListener);
     }
 }
