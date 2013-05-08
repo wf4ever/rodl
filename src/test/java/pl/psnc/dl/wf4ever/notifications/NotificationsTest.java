@@ -67,7 +67,6 @@ public class NotificationsTest extends W4ETest {
     public void testNotificationsCreateNoFilters() {
         ro = createRO(accessToken);
         String resultAll = (webResource.path("notifications/").get(String.class));
-        System.out.println(resultAll);
         Assert.assertTrue(resultAll.contains(ro.toString()));
         Assert.assertTrue(resultAll.contains("urn:X-rodl:"));
         Assert.assertTrue(resultAll.contains("Research Object has been created"));
@@ -93,7 +92,6 @@ public class NotificationsTest extends W4ETest {
     public void testNotificationSource()
             throws IllegalArgumentException, MalformedURLException, FeedException, IOException, URISyntaxException {
         ro = createRO(accessToken);
-        URI expectedUri = ro.resolve("/");
         SyndFeedInput input = new SyndFeedInput();
         SyndFeed feed = input.build(new XmlReader(webResource.path("notifications/").queryParam("ro", ro.toString())
                 .getURI().toURL()));
@@ -102,7 +100,8 @@ public class NotificationsTest extends W4ETest {
             for (Object obLink : entry.getLinks()) {
                 SyndLink link = (SyndLink) obLink;
                 if (link != null && link.getRel().equals(DCTerms.source.toString())) {
-                    Assert.assertEquals(expectedUri.toString(), link.getHref());
+                    //the source is this producer host
+                    Assert.assertTrue(link.getHref().contains(ro.getHost()));
                 }
             }
         }

@@ -27,12 +27,14 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.ApplicationProperties;
-import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
+import pl.psnc.dl.wf4ever.eventbus.events.ROAfterCreateEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROAfterDeleteEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROBeforeCreateEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROBeforeDeleteEvent;
 import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -46,9 +48,6 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.ROEVO.EvoInfo;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.LiveEvoInfo;
-import pl.psnc.dl.wf4ever.notifications.Notification;
-import pl.psnc.dl.wf4ever.notifications.Notification.Summary;
-import pl.psnc.dl.wf4ever.notifications.Notification.Title;
 import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectComponentSerializable;
 import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectSerializable;
 import pl.psnc.dl.wf4ever.searchserver.SearchServer;
@@ -163,15 +162,9 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         ResearchObject researchObject = builder.buildResearchObject(uri, builder.getUser(), DateTime.now());
         researchObject.manifest = Manifest.create(builder, researchObject.getUri().resolve(MANIFEST_PATH),
             researchObject);
+        researchObject.postEvent(new ROBeforeCreateEvent(researchObject));
         researchObject.save(EvoType.LIVE);
-
-        //FIXME create an event instead
-        AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
-        Notification entry = new Notification.Builder(researchObject).title(Title.RESEARCH_OBJECT_CREATED)
-                .summary(Summary.created(researchObject))
-                .source(ApplicationProperties.getContextPath() != null ? ApplicationProperties.getContextPath() : "/")
-                .sourceName("RODL").build();
-        dao.save(entry);
+        researchObject.postEvent(new ROAfterCreateEvent(researchObject));
         return researchObject;
     }
 
@@ -276,6 +269,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
     @Override
     public void delete() {
         //create another collection to avoid concurrent modification
+        this.postEvent(new ROBeforeDeleteEvent(this));
         Set<AggregatedResource> resourcesToDelete = new HashSet<>(getAggregatedResources().values());
         for (AggregatedResource resource : resourcesToDelete) {
             resource.delete();
@@ -287,15 +281,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
             // good, nothing was left so the folder was deleted
             LOGGER.debug("As expected. RO folder was empty and was deleted: " + e.getMessage());
         }
-
-        //FIXME create an event instead
-        AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
-        Notification entry = new Notification.Builder(this).title(Title.RESEARCH_OBJECT_DELETED)
-                .summary(Summary.deleted(this))
-                .source(ApplicationProperties.getContextPath() != null ? ApplicationProperties.getContextPath() : "/")
-                .sourceName("RODL").build();
-        dao.save(entry);
-        super.delete();
+        this.postEvent(new ROAfterDeleteEvent(this));
     }
 
 

@@ -121,7 +121,7 @@ public class Resource {
             CacheControl cache = new CacheControl();
             cache.setMustRevalidate(true);
             ResponseBuilder rb = exists ? Response.ok() : Response.created(resource.getUri());
-            researchObject.updateIndexAttributes();
+            //researchObject.updateIndexAttributes();
             return rb.cacheControl(cache).tag(resource.getStats().getChecksum())
                     .lastModified(resource.getStats().getLastModified().toDate()).build();
         } else if (researchObject.getAnnotationsByBodyUri().containsKey(resourceUri)) {
@@ -138,7 +138,7 @@ public class Resource {
                 rb = rb.cacheControl(cache).tag(resource.getStats().getChecksum())
                         .lastModified(resource.getStats().getLastModified().toDate());
             }
-            researchObject.updateIndexAttributes();
+            //researchObject.updateIndexAttributes();
             return rb.build();
         } else {
             throw new NotFoundException(
@@ -205,7 +205,7 @@ public class Resource {
                     .format(Constants.LINK_HEADER_TEMPLATE, target.toString(), AO.annotatesResource);
             response = response.header(Constants.LINK_HEADER, targetHeader);
         }
-        researchObject.updateIndexAttributes();
+        //researchObject.updateIndexAttributes();
         return response.build();
     }
 
@@ -460,7 +460,7 @@ public class Resource {
             throw new NotFoundException("Resource not found");
         }
         resource.delete();
-        researchObject.updateIndexAttributes();
+        //researchObject.updateIndexAttributes();
         return Response.noContent().build();
     }
 

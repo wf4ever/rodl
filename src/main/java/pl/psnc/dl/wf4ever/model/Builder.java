@@ -34,6 +34,7 @@ import pl.psnc.dl.wf4ever.storage.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.storage.FilesystemDLFactory;
 import pl.psnc.dl.wf4ever.vocabulary.W4E;
 
+import com.google.common.eventbus.EventBus;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.tdb.TDB;
@@ -108,6 +109,19 @@ public class Builder {
         this.user = user;
         this.useTransactions = useTransactions;
         this.digitalLibrary = DEFAULT_DL_FACTORY.getDigitalLibrary();
+    }
+
+
+    /**
+     * Constructor of a builder that uses the default dataset with transactions.
+     * 
+     * @param user
+     *            Authenticated user
+     * @param eventBus
+     *            event bus
+     */
+    public Builder(UserMetadata user, EventBus eventBus) {
+        this(user, TDBFactory.createDataset(TRIPLE_STORE_DIR), true);
     }
 
 
