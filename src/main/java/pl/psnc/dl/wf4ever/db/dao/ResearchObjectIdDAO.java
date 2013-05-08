@@ -36,7 +36,7 @@ public class ResearchObjectIdDAO extends AbstractDAO<ResearchObjectId> {
 
 
     /**
-     * Get all URIs stored.
+     * <<<<<<< HEAD Get all URIs stored.
      * 
      * @return list of stored uris
      */
@@ -47,7 +47,8 @@ public class ResearchObjectIdDAO extends AbstractDAO<ResearchObjectId> {
 
 
     /**
-     * Save new ResearchObjectId instance. Throw an exception in case of duplication.
+     * ======= >>>>>>> 21c1f3376a0c2f969102a9f012e503de1f3e1544 Save new ResearchObjectId instance. Throw an exception
+     * in case of duplication.
      * 
      * @param instance
      *            serialized instance.
