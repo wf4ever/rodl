@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.db.dao;
 
 import java.net.URI;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -31,6 +32,17 @@ public class ResearchObjectIdDAO extends AbstractDAO<ResearchObjectId> {
      */
     public ResearchObjectId findByPrimaryKey(URI id) {
         return super.findByPrimaryKey(ResearchObjectId.class, id.toString());
+    }
+
+
+    /**
+     * Get all URIs stored.
+     * 
+     * @return list of stored uris
+     */
+    public List<ResearchObjectId> all() {
+        return super.findAll(ResearchObjectId.class);
+
     }
 
 
