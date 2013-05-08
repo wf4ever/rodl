@@ -28,7 +28,6 @@
 		<mapping class="pl.psnc.dl.wf4ever.db.UserProfile" />
 		<mapping class="pl.psnc.dl.wf4ever.db.ResourceInfo" />
 		<mapping class="pl.psnc.dl.wf4ever.notifications.Notification" />
-		<mapping class="pl.psnc.dl.wf4ever.db.AtomFeedEntry" />
 		<mapping class="pl.psnc.dl.wf4ever.db.ResearchObjectId" />
 		
 	</session-factory>

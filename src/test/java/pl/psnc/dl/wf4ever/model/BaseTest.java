@@ -106,7 +106,7 @@ public class BaseTest {
         model = FileManager.get().loadModel(MANIFEST_2, MANIFEST_2, "RDF/XML");
         dataset.addNamedModel(MANIFEST_2, model);
         researchObject2 = builder.buildResearchObject(URI.create(RESEARCH_OBJECT_2));
-        HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
     }
 
 
