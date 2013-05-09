@@ -93,6 +93,8 @@ public class ChecksumDetectionIntegrationTest extends W4ETest {
             dao.save(resource);
         }
         HibernateUtil.getSessionFactory().getCurrentSession().flush();
+        //sleep for a second because of WFE-1049
+        Thread.sleep(1000);
         //force monitoring
         webResource.path("admin/monitor/all").header("Authorization", "Bearer " + accessToken).post();
         //now wait for the notification to appear
@@ -100,12 +102,12 @@ public class ChecksumDetectionIntegrationTest extends W4ETest {
         DateTime from = entries.isEmpty() ? null : new DateTime(entries.get(entries.size() - 1).getPublishedDate())
                 .plusSeconds(1);
         while (++seconds < 10) {
-            Thread.sleep(1000);
             feed = getNotifications(from);
             if (!feed.getEntries().isEmpty()) {
                 break;
             }
             System.out.print(".");
+            Thread.sleep(1000);
         }
         if (feed.getEntries().isEmpty()) {
             Assert.fail("No notification for 10s");
