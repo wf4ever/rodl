@@ -40,8 +40,9 @@ public class NotificationsListener {
     public void onAfterROCreate(ROAfterCreateEvent event) {
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
         Notification entry = new Notification.Builder(event.getResearchObject().getUri())
-                .title(Title.RESEARCH_OBJECT_CREATED).summary(Summary.created(event.getResearchObject())).build();
-        entry.setSource(ApplicationProperties.getContextPath(), "RODL");
+                .title(Title.created(event.getResearchObject())).summary(Summary.created(event.getResearchObject()))
+                .source(ApplicationProperties.getContextPath() != null ? ApplicationProperties.getContextPath() : "/")
+                .sourceName("RODL").build();
         dao.save(entry);
     }
 
@@ -55,9 +56,10 @@ public class NotificationsListener {
     @Subscribe
     public void onAfterRODelete(ROAfterDeleteEvent event) {
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
-        Notification entry = new Notification.Builder(event.getResearchObject()).title(Title.RESEARCH_OBJECT_DELETED)
-                .summary(Summary.deleted(event.getResearchObject())).build();
-        entry.setSource(ApplicationProperties.getContextPath(), "RODL");
+        Notification entry = new Notification.Builder(event.getResearchObject())
+                .title(Title.deleted(event.getResearchObject())).summary(Summary.deleted(event.getResearchObject()))
+                .source(ApplicationProperties.getContextPath() != null ? ApplicationProperties.getContextPath() : "/")
+                .sourceName("RODL").build();
         dao.save(entry);
     }
 }
