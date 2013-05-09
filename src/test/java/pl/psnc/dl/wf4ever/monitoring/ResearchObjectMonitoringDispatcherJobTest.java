@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever.monitoring;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +17,7 @@ import org.junit.Test;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.ListenerManager;
 import org.quartz.Scheduler;
 import org.quartz.Trigger;
 
@@ -45,6 +47,7 @@ public class ResearchObjectMonitoringDispatcherJobTest extends BaseTest {
         answer = new ScheduledJobsAnswer();
         Scheduler mockScheduler = mock(Scheduler.class);
         doAnswer(answer).when(mockScheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
+        doReturn(mock(ListenerManager.class)).when(mockScheduler).getListenerManager();
 
         context = mock(JobExecutionContext.class);
         when(context.getScheduler()).thenReturn(mockScheduler);
