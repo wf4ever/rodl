@@ -3,6 +3,10 @@
  */
 package pl.psnc.dl.wf4ever.db.dao;
 
+import java.util.List;
+
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Restrictions;
 import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.db.ResourceInfo;
@@ -64,5 +68,18 @@ public final class ResourceInfoDAO extends AbstractDAO<ResourceInfo> {
      */
     public ResourceInfo findByPath(String path) {
         return findByPrimaryKey(ResourceInfo.class, path);
+    }
+
+
+    /**
+     * Find all resources that have a path ending with the specified sufix.
+     * 
+     * @param sufix
+     *            the sufix, without the trailing %
+     * @return a list of resources that have a matching path
+     */
+    public List<ResourceInfo> findByPathSufix(String sufix) {
+        Criterion criterion = Restrictions.ilike("path", "%" + sufix);
+        return findByCriteria(ResourceInfo.class, criterion);
     }
 }

@@ -402,7 +402,7 @@ public class Notification implements Serializable {
          * @return a title in plain text
          */
         public static String checksumMismatch(ResearchObject researchObject) {
-            return String.format("Research Object %d has become corrupt!", researchObject.getName());
+            return String.format("Research Object %s has become corrupt!", researchObject.getName());
         }
     }
 
