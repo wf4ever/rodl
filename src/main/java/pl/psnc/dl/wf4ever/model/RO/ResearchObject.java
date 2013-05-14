@@ -932,11 +932,16 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
     @Override
     public Map<URI, ResearchObjectComponentSerializable> getSerializables() {
         HashMap<URI, ResearchObjectComponentSerializable> result = new HashMap<>();
+
         for (URI uri : getAggregatedResources().keySet()) {
-            result.put(uri, getAggregatedResources().get(uri));
+            if (getAggregatedResources().get(uri).isInternal()) {
+                result.put(uri, getAggregatedResources().get(uri));
+            }
         }
         for (URI uri : getResourceMaps().keySet()) {
-            result.put(uri, getResourceMaps().get(uri));
+            if (getAggregatedResources().get(uri) != null && getAggregatedResources().get(uri).isInternal()) {
+                result.put(uri, getResourceMaps().get(uri));
+            }
         }
         return result;
     }

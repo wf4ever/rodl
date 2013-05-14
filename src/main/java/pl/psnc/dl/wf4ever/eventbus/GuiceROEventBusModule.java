@@ -30,6 +30,7 @@ public class GuiceROEventBusModule extends AbstractModule {
         eventBus = new EventBus("main-event-bus");
         solrListener = new SolrListener(eventBus);
         notificationsListener = new NotificationsListener(eventBus);
+        preservetionListener = new PreservationListener(eventBus);
         bind(EventBus.class).toInstance(eventBus);
         bind(SolrListener.class).toInstance(solrListener);
         bind(NotificationsListener.class).toInstance(notificationsListener);
