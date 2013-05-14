@@ -5,10 +5,9 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.Properties;
 
-import junit.framework.Assert;
-
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 

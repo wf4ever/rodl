@@ -2,8 +2,7 @@ package pl.psnc.dl.wf4ever.oauth.api;
 
 import javax.ws.rs.core.Response;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

@@ -2,10 +2,9 @@ package pl.psnc.dl.wf4ever.db.dao;
 
 import java.net.URI;
 
-import junit.framework.Assert;
-
 import org.joda.time.DateTime;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 

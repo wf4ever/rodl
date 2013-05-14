@@ -2,9 +2,8 @@ package pl.psnc.dl.wf4ever.model.ORE;
 
 import java.net.URI;
 
-import junit.framework.Assert;
-
 import org.joda.time.DateTime;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
