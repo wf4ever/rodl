@@ -3,9 +3,9 @@
 	<h2>It works!</h2>
 	<p>This is the homepage of the Research Object Digital Library. The
 		main service of RODL is Research Object storage and retrieval service
-		which allows users to store and retrieve Research Objects.
-		Other services include Research Object Evolution management and the
-		User Management Service.</p>
+		which allows users to store and retrieve Research Objects. Other
+		services include Research Object Evolution management and the User
+		Management Service.</p>
 	<p>Useful links:</p>
 	<ol>
 		<li>RO storage and retrieval service: <a href="${it.rosrsuri}">${it.rosrsuri}</a></li>

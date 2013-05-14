@@ -7,8 +7,8 @@
 
 	<session-factory>
 
- 		<!-- Database connection settings -->
-	  	<property name="connection.driver_class">com.mysql.jdbc.Driver</property>
+		<!-- Database connection settings -->
+		<property name="connection.driver_class">com.mysql.jdbc.Driver</property>
 		<property name="connection.url">jdbc:mysql://mysql-zus-2.man.poznan.pl/wf4ever_tests_db</property>
 		<property name="connection.username">wf4ever_tests</property>
 		<property name="connection.password">biQuijiu4Ii=</property>
@@ -37,6 +37,6 @@
 		<mapping class="pl.psnc.dl.wf4ever.db.ResourceInfo" />
 		<mapping class="pl.psnc.dl.wf4ever.notifications.Notification" />
 		<mapping class="pl.psnc.dl.wf4ever.db.ResearchObjectId" />
-		
+
 	</session-factory>
 </hibernate-configuration>
