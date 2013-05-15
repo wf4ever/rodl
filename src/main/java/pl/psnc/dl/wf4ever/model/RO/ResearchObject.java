@@ -263,7 +263,6 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         //TODO check if to create an RO or only serialize the manifest
         builder.getDigitalLibrary().createResearchObject(uri, getManifest().getGraphAsInputStream(RDFFormat.RDFXML),
             ResearchObject.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
-
         createEvoInfo(evoType);
     }
 
@@ -939,7 +938,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
             }
         }
         for (URI uri : getResourceMaps().keySet()) {
-            if (getAggregatedResources().get(uri) != null && getAggregatedResources().get(uri).isInternal()) {
+            if (getResourceMaps().get(uri) != null && getResourceMaps().get(uri).isInternal()) {
                 result.put(uri, getResourceMaps().get(uri));
             }
         }

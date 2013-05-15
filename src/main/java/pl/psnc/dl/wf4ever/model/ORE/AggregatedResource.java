@@ -21,6 +21,7 @@ import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterDeleteEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterUpdateEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentBeforeDeleteEvent;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -423,6 +424,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     public void update(InputStream content, String contentType)
             throws BadRequestException {
         save(content, contentType);
+        postEvent(new ROComponentAfterUpdateEvent(this));
     }
 
 
