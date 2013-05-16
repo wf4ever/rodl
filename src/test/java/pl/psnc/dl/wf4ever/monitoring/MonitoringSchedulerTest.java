@@ -27,7 +27,7 @@ import pl.psnc.dl.wf4ever.model.BaseTest;
 public class MonitoringSchedulerTest extends BaseTest {
 
     /** The cron value provided in quartz.properties. */
-    private static final Object EXPECTED_CRON_SCHEDULE = "0 0/2 8-17 * * ?";
+    private static final Object EXPECTED_CRON_SCHEDULE = "0 0/10 8-17 * * ?";
 
     /** Jobs scheduled in the last call. */
     private ScheduledJobsAnswer answer;
