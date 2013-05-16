@@ -15,7 +15,7 @@ import com.google.inject.AbstractModule;
 public class GuiceROEventBusModule extends AbstractModule {
 
     /** EventBus instance. */
-    private static EventBus eventBus;
+    private EventBus eventBus;
     /** Solr listener instance. */
     private SolrListener solrListener;
     /** Notification listener instance. */
