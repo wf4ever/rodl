@@ -100,6 +100,7 @@ public class PreservationListener {
         } catch (DArceoException | IOException e) {
             LOGGER.error("Can't store in dArceo " + event.getResearchObject().getUri(), e);
         }
+
     }
 
 
