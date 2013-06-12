@@ -7,6 +7,7 @@ import java.net.URI;
 import junit.framework.Assert;
 
 import org.apache.commons.io.IOUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -22,6 +23,7 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.sun.jersey.api.client.ClientResponse;
 
 @Category(IntegrationTest.class)
+@Ignore
 public class PreservationTest extends W4ETest {
 
     int SINGLE_BREAK = 10;
