@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
@@ -424,6 +425,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     public void update(InputStream content, String contentType)
             throws BadRequestException {
         save(content, contentType);
+        IOUtils.toInputStream("s");
         postEvent(new ROComponentAfterUpdateEvent(this));
     }
 

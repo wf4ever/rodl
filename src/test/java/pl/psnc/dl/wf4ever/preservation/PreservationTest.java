@@ -25,7 +25,7 @@ import com.sun.jersey.api.client.ClientResponse;
 public class PreservationTest extends W4ETest {
 
     int SINGLE_BREAK = 10;
-    int MAX_PAUSES_NUMBER = 50;
+    int MAX_PAUSES_NUMBER = 100;
 
 
     @Override
@@ -54,7 +54,7 @@ public class PreservationTest extends W4ETest {
         ResearchObjectSerializable returnedRO = DArceoClient.getInstance().getBlocking(cretedRO);
         int counter = 0;
         while (returnedRO == null) {
-            Thread.sleep(100);
+            Thread.sleep(1000);
             returnedRO = DArceoClient.getInstance().getBlocking(cretedRO);
             if (counter++ >= MAX_PAUSES_NUMBER) {
                 assert false;
@@ -72,6 +72,7 @@ public class PreservationTest extends W4ETest {
         ClientResponse response = addFile(cretedRO, filePath, accessToken);
         int counter = 0;
         while (true) {
+            Thread.sleep(1000);
             ResearchObjectSerializable returnedRO = DArceoClient.getInstance().getBlocking(cretedRO);
             if (returnedRO.getSerializables().containsKey(returnedRO.getUri().resolve(filePath))) {
                 break;
@@ -114,18 +115,22 @@ public class PreservationTest extends W4ETest {
 
 
     @Test
-    public void testUpdateFileAndPReserve()
+    public void testUpdateFileAndPreserve()
             throws DArceoException, IOException, InterruptedException {
         String filePath = "added/file";
         URI cretedRO = createRO(accessToken);
         ClientResponse response = addFile(cretedRO, filePath, accessToken);
+        Thread.sleep(10000);
         response = webResource.uri(cretedRO).path(filePath).header("Authorization", "Bearer " + accessToken)
                 .type("text/plain").put(ClientResponse.class, "lorem ipsum");
+        Thread.sleep(10000);
         response = webResource.uri(cretedRO).path(filePath).header("Authorization", "Bearer " + accessToken)
                 .type("text/plain").put(ClientResponse.class, "new content");
-        int counter = 0;
         Thread.sleep(10000);
+        int counter = 0;
+        Thread.sleep(1000);
         while (true) {
+            Thread.sleep(100);
             ResearchObjectSerializable returnedRO = DArceoClient.getInstance().getBlocking(cretedRO);
             //here is a test.
             if (returnedRO.getSerializables().containsKey(returnedRO.getUri().resolve(filePath))) {
@@ -134,7 +139,6 @@ public class PreservationTest extends W4ETest {
                 if (IOUtils.toString(component.getSerialization()).equals("new content")) {
                     break;
                 }
-
             }
             if (counter++ >= MAX_PAUSES_NUMBER) {
                 assert false;

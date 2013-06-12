@@ -190,7 +190,9 @@ public class FolderResourceMap extends ResourceMap {
 
     @Override
     public void delete() {
+        getResearchObject().getResourceMaps().remove(this.getUri());
         super.delete();
+
     }
 
 

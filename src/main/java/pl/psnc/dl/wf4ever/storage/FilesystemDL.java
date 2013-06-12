@@ -12,6 +12,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -167,7 +168,7 @@ public class FilesystemDL implements DigitalLibrary {
     public boolean fileExists(URI ro, String filePath)
             throws DigitalLibraryException {
         Path path = getPath(ro, filePath);
-        return path.toFile().exists();
+        return Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS);
     }
 
 

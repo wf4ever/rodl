@@ -47,11 +47,13 @@ public class PreservationListener {
      */
     @Subscribe
     public void onAfterROComponentCreate(ROComponentAfterCreateEvent event) {
+
         try {
             DArceoClient.getInstance().update(event.getResearchObjectComponent().getResearchObject());
         } catch (DArceoException | IOException e) {
             LOGGER.error("Can't update dArceo " + event.getResearchObjectComponent().getResearchObject().getUri(), e);
         }
+
     }
 
 

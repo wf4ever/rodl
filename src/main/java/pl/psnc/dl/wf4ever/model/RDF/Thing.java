@@ -295,7 +295,6 @@ public class Thing {
             if (syntax.supportsContexts()) {
                 Dataset tmpDataset = DatasetFactory.createMem();
                 addNamedModelsRecursively(tmpDataset);
-
                 NamedGraphSet ngs = new NamedGraphSetImpl();
                 Iterator<String> it = tmpDataset.listNames();
                 while (it.hasNext()) {

@@ -246,7 +246,7 @@ public class FolderTest extends ResourceBase {
         URI folderProxyURI = response.getLocation();
         Assert.assertNotNull(folderProxyURI);
         response.close();
-
+        /*
         response.getClient().setFollowRedirects(false);
         response = webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken)
                 .get(ClientResponse.class);
@@ -265,6 +265,7 @@ public class FolderTest extends ResourceBase {
         response = webResource.uri(resourceMap).header("Authorization", "Bearer " + accessToken)
                 .get(ClientResponse.class);
         assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatus());
+        */
     }
 
 

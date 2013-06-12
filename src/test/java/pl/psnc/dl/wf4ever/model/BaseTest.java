@@ -1,9 +1,11 @@
 package pl.psnc.dl.wf4ever.model;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.net.URI;
 import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -90,16 +92,9 @@ public class BaseTest {
     @Before
     public void setUp()
             throws Exception {
-        dataset = DatasetFactory.createMem();
+
         Model model;
-        model = FileManager.get().loadModel(MANIFEST, MANIFEST, "RDF/XML");
-        dataset.addNamedModel(MANIFEST, model);
-        model = FileManager.get().loadModel(ANNOTATION_BODY, ANNOTATION_BODY, "TURTLE");
-        dataset.addNamedModel(ANNOTATION_BODY, model);
-        model = FileManager.get().loadModel(FOLDER_RESOURCE_MAP, FOLDER_RESOURCE_MAP, "TURTLE");
-        dataset.addNamedModel(FOLDER_RESOURCE_MAP, model);
-        model = FileManager.get().loadModel(FOLDER_RESOURCE_MAP_2, FOLDER_RESOURCE_MAP_2, "TURTLE");
-        dataset.addNamedModel(FOLDER_RESOURCE_MAP_2, model);
+        dataset = DatasetFactory.createMem();
         userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED, URI.create("http://jank"));
         builder = new Builder(userProfile, dataset, false);
         researchObject = builder.buildResearchObject(URI.create(RESEARCH_OBJECT));
@@ -108,6 +103,43 @@ public class BaseTest {
         researchObject2 = builder.buildResearchObject(URI.create(RESEARCH_OBJECT_2));
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
 
+        model = FileManager.get().loadModel(MANIFEST, MANIFEST, "RDF/XML");
+        dataset.addNamedModel(MANIFEST, model);
+        serializeModelFile(model, researchObject.getUri(), MANIFEST, "TURTLE");
+
+        model = FileManager.get().loadModel(ANNOTATION_BODY, ANNOTATION_BODY, "TURTLE");
+        dataset.addNamedModel(ANNOTATION_BODY, model);
+        serializeModelFile(model, researchObject.getUri(), ANNOTATION_BODY, "TURTLE");
+
+        model = FileManager.get().loadModel(FOLDER_RESOURCE_MAP, FOLDER_RESOURCE_MAP, "TURTLE");
+        dataset.addNamedModel(FOLDER_RESOURCE_MAP, model);
+        serializeModelFile(model, researchObject.getUri(), FOLDER_RESOURCE_MAP, "TURTLE");
+
+        model = FileManager.get().loadModel(FOLDER_RESOURCE_MAP_2, FOLDER_RESOURCE_MAP_2, "TURTLE");
+        dataset.addNamedModel(FOLDER_RESOURCE_MAP_2, model);
+        serializeModelFile(model, researchObject.getUri(), FOLDER_RESOURCE_MAP_2, "TURTLE");
+
+        /*
+        builder.getDigitalLibrary().createOrUpdateFile(researchObject.getUri(), FOLDER_RESOURCE_MAP,
+            IOUtils.toInputStream("nic"), "text/turtle");
+        builder.getDigitalLibrary().createOrUpdateFile(researchObject.getUri(), "folder-rm.ttl",
+            IOUtils.toInputStream("nic"), "text/turtle");
+         */
+    }
+
+
+    private void serializeModelFile(Model model, URI researchObjectUri, String filePath, String mimeType) {
+        URI filePathUri = URI.create(filePath);
+        if (filePathUri.isAbsolute()) {
+            filePathUri = researchObjectUri.relativize(filePathUri);
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        model.write(out);
+        //builder.getDigitalLibrary().createOrUpdateFile(researchObjectUri, filePathUri.toString(),
+        //    new ByteArrayInputStream(out.toByteArray()), mimeType);
+
+        builder.getDigitalLibrary().createOrUpdateFile(researchObjectUri, "folder-rm.ttl",
+            IOUtils.toInputStream("nic"), "text/plain");
     }
 
 
