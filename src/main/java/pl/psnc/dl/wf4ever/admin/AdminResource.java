@@ -8,6 +8,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 
 import org.apache.log4j.Logger;
+import org.quartz.SchedulerException;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.db.ResearchObjectId;
@@ -15,6 +16,7 @@ import pl.psnc.dl.wf4ever.db.dao.ResearchObjectIdDAO;
 import pl.psnc.dl.wf4ever.evo.CopyOperation;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.monitoring.MonitoringScheduler;
 
 /**
  * The admin namespace for protected functions provided via API.
@@ -45,8 +47,23 @@ public class AdminResource {
         for (ResearchObject ro : ResearchObject.getAll(builder, null)) {
             ro.updateIndexAttributes();
         }
-        return "Operation succeed";
+        return "Operation finished successfully";
+    }
 
+
+    /**
+     * Schedule all monitoring jobs now.
+     * 
+     * @return 200 OK
+     * @throws SchedulerException
+     *             if jobs couldn't be scheduled
+     */
+    @POST
+    @Path("monitor/all")
+    public String monitorAll()
+            throws SchedulerException {
+        MonitoringScheduler.getInstance().scheduleAllJobsNow();
+        return "Operation finished successfully";
     }
 
 

@@ -3,8 +3,7 @@ package pl.psnc.dl.wf4ever.db;
 import java.io.IOException;
 import java.net.URI;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;

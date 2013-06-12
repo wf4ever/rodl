@@ -1,7 +1,6 @@
 package pl.psnc.dl.wf4ever.resources;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

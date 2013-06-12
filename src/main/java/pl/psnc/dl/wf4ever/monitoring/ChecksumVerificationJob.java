@@ -13,6 +13,7 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import pl.psnc.dl.wf4ever.ApplicationProperties;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
@@ -51,12 +52,12 @@ public class ChecksumVerificationJob implements Job {
             if (builder == null) {
                 //FIXME RODL URI should be better
                 UserMetadata userMetadata = new UserMetadata("rodl", "RODL decay monitor", Role.ADMIN,
-                        URI.create("rodl"));
+                        URI.create(ApplicationProperties.getContextPath()));
                 builder = new Builder(userMetadata);
             }
             ResearchObject researchObject = ResearchObject.get(builder, researchObjectUri);
             if (researchObject != null) {
-                Result result = new Result();
+                Result result = new Result(researchObject);
                 for (AggregatedResource resource : researchObject.getAggregatedResources().values()) {
                     if (resource.isInternal() && resource.getStats() != null) {
                         String checksumStored = resource.getStats().getChecksum();
@@ -68,12 +69,14 @@ public class ChecksumVerificationJob implements Job {
                             continue;
                         }
                         if (!checksumCalculated.equalsIgnoreCase(checksumStored)) {
-                            result.getMismatches().add(
-                                new Mismatch(resource.getUri(), checksumStored, checksumCalculated));
+                            result.getMismatches()
+                                    .add(
+                                        new Mismatch(resource.getUri(), resource.getPath(), checksumStored,
+                                                checksumCalculated));
                         }
                     }
+                    context.setResult(result);
                 }
-                context.setResult(result);
             }
         } finally {
             if (started) {
@@ -101,8 +104,27 @@ public class ChecksumVerificationJob implements Job {
      */
     class Result {
 
+        /** RO. */
+        private final ResearchObject researchObject;
+
         /** A set of differences in checksums expected and calculated. */
         private final Set<Mismatch> mismatches = new HashSet<>();
+
+
+        /**
+         * Constructor.
+         * 
+         * @param researchObject
+         *            RO
+         */
+        public Result(ResearchObject researchObject) {
+            this.researchObject = researchObject;
+        }
+
+
+        public ResearchObject getResearchObject() {
+            return researchObject;
+        }
 
 
         /**
@@ -128,10 +150,13 @@ public class ChecksumVerificationJob implements Job {
      * @author piotrekhol
      * 
      */
-    class Mismatch {
+    public class Mismatch {
 
         /** Resource URI. */
         private final URI resourceUri;
+
+        /** Resource path relative to RO. */
+        private final String resourcePath;
 
         /** Checksum that was expected. */
         private final String expectedChecksum;
@@ -145,13 +170,16 @@ public class ChecksumVerificationJob implements Job {
          * 
          * @param resourceUri
          *            resource URI
+         * @param resourcePath
+         *            resource path relative to RO
          * @param expectedChecksum
          *            checksum that was expected
          * @param calculatedChecksum
          *            checksum that was calculated
          */
-        public Mismatch(URI resourceUri, String expectedChecksum, String calculatedChecksum) {
+        public Mismatch(URI resourceUri, String resourcePath, String expectedChecksum, String calculatedChecksum) {
             this.resourceUri = resourceUri;
+            this.resourcePath = resourcePath;
             this.expectedChecksum = expectedChecksum;
             this.calculatedChecksum = calculatedChecksum;
         }
@@ -159,6 +187,11 @@ public class ChecksumVerificationJob implements Job {
 
         public URI getResourceUri() {
             return resourceUri;
+        }
+
+
+        public String getResourcePath() {
+            return resourcePath;
         }
 
 

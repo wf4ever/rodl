@@ -3,9 +3,8 @@ package pl.psnc.dl.wf4ever.notifications;
 import java.net.URI;
 import java.util.Collections;
 
-import junit.framework.Assert;
-
 import org.joda.time.DateTime;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -1,8 +1,7 @@
 package pl.psnc.dl.wf4ever.db;
 
-import junit.framework.Assert;
-
 import org.joda.time.DateTime;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class ResourceInfoTest {

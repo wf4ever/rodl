@@ -29,6 +29,6 @@
 		<mapping class="pl.psnc.dl.wf4ever.db.ResourceInfo" />
 		<mapping class="pl.psnc.dl.wf4ever.notifications.Notification" />
 		<mapping class="pl.psnc.dl.wf4ever.db.ResearchObjectId" />
-		
+
 	</session-factory>
 </hibernate-configuration>

@@ -17,10 +17,9 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.Date;
 
-import junit.framework.Assert;
-
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
