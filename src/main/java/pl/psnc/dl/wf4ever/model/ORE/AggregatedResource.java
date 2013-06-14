@@ -361,7 +361,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
      */
     public void deleteGraphAndSerialize() {
         String filePath = getPath();
-        try (InputStream data = getGraphAsInputStream(RDFFormat.RDFXML)) {
+        try (InputStream data = getGraphAsInputStream(RDFFormat.RDFXML, true)) {
             // can only be null if a resource that is an annotation body exists serialized but not in the triple store
             if (data != null) {
                 builder.getDigitalLibrary().createOrUpdateFile(

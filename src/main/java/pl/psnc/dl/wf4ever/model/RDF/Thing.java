@@ -57,6 +57,7 @@ import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.tdb.TDB;
 import com.hp.hpl.jena.vocabulary.DCTerms;
+import com.hp.hpl.jena.vocabulary.RDF;
 
 import de.fuberlin.wiwiss.ng4j.NamedGraphSet;
 import de.fuberlin.wiwiss.ng4j.impl.NamedGraphSetImpl;
@@ -281,11 +282,27 @@ public class Thing {
     /**
      * Return this resource as a named graph in a selected RDF format.
      * 
+     * This method may add additional data, such as user names.
+     * 
      * @param syntax
      *            RDF format
      * @return an input stream or null of no model is found
      */
     public InputStream getGraphAsInputStream(RDFFormat syntax) {
+        return getGraphAsInputStream(syntax, false);
+    }
+
+
+    /**
+     * Return a graph in any RDF format, with or without additional data such as user names.
+     * 
+     * @param syntax
+     *            RDF format
+     * @param raw
+     *            true if no additional data, false if user names should also be added
+     * @return an input stream or null of no model is found
+     */
+    protected InputStream getGraphAsInputStream(RDFFormat syntax, boolean raw) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             if (!dataset.containsNamedModel(uri.toString())) {
@@ -301,12 +318,19 @@ public class Thing {
                     String graphUri = it.next();
                     Model ng4jModel = ModelFactory.createModelForGraph(ngs.createGraph(graphUri));
                     Model tdbModel = tmpDataset.getNamedModel(graphUri);
+                    if (!raw) {
+                        tdbModel = addUserNames(tdbModel);
+                    }
                     List<Statement> statements = tdbModel.listStatements().toList();
                     ng4jModel.add(statements);
                 }
                 ngs.write(out, syntax.getName().toUpperCase(), null);
             } else {
-                dataset.getNamedModel(uri.toString()).write(out, syntax.getName().toUpperCase());
+                Model tdbModel = dataset.getNamedModel(uri.toString());
+                if (!raw) {
+                    tdbModel = addUserNames(tdbModel);
+                }
+                tdbModel.write(out, syntax.getName().toUpperCase());
             }
             return new ByteArrayInputStream(out.toByteArray());
         } finally {
@@ -316,20 +340,10 @@ public class Thing {
 
 
     /**
-     * Return this resource as a named graph in a selected RDF format.
-     * 
-     * @param syntax
-     *            RDF format
-     * @return an rewritten input stream or null of no model is found
-     */
-    public InputStream getGrapsAsPublicInputStream(RDFFormat syntax) {
-        return getGraphAsInputStream(syntax);
-    }
-
-
-    /**
      * Return this resource as a named graph in a selected RDF format. Only triples describing the resources given as
      * parameters will be returned.
+     * 
+     * This method may add additional data, such as user names.
      * 
      * @param syntax
      *            RDF format
@@ -352,6 +366,7 @@ public class Thing {
             if (result.isEmpty()) {
                 return null;
             }
+            result = addUserNames(result);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             result.removeNsPrefix("xml");
@@ -364,8 +379,38 @@ public class Thing {
 
 
     /**
+     * Add user names to all objects of dcterms:creator found. This method returns a new {@link Model} so that the
+     * original model is not affected.
+     * 
+     * @param model
+     *            an RDF model
+     * @return a new Jena {@link Model} with all the triples from the original one plus user names
+     */
+    private Model addUserNames(Model model) {
+        Model model2 = ModelFactory.createDefaultModel();
+        model2.add(model);
+        for (RDFNode author : model2.listObjectsOfProperty(DCTerms.creator).toList()) {
+            if (!author.isURIResource()) {
+                continue;
+            }
+            Resource autorResource = model2.createResource(author.asResource().getURI());
+            autorResource.addProperty(RDF.type, FOAF.Agent);
+            UserProfileDAO dao = new UserProfileDAO();
+            UserProfile profile = dao.findByLogin(autorResource.getURI());
+            if (profile != null && profile.getName() != null) {
+                autorResource.removeAll(FOAF.name);
+                autorResource.addProperty(FOAF.name, model2.createLiteral(profile.getName()));
+            }
+        }
+        return model2;
+    }
+
+
+    /**
      * Return this resource as a named graph in a selected RDF format, with all URIs relativized against this resource's
      * URI. Only RDF/XML and Turtle formats are supported.
+     * 
+     * This method doesn't add any additional data such as user names.
      * 
      * @param filterUri
      *            the URI used to determine which URIs will be relativized. Only URIs with the same host and paths

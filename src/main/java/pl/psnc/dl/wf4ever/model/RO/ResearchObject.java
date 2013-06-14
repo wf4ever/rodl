@@ -261,8 +261,9 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         getManifest().save();
 
         //TODO check if to create an RO or only serialize the manifest
-        builder.getDigitalLibrary().createResearchObject(uri, getManifest().getGraphAsInputStream(RDFFormat.RDFXML),
-            ResearchObject.MANIFEST_PATH, RDFFormat.RDFXML.getDefaultMIMEType());
+        builder.getDigitalLibrary().createResearchObject(uri,
+            getManifest().getGraphAsInputStreamWithRelativeURIs(uri, RDFFormat.RDFXML), ResearchObject.MANIFEST_PATH,
+            RDFFormat.RDFXML.getDefaultMIMEType());
         createEvoInfo(evoType);
     }
 
