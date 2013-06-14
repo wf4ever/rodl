@@ -317,17 +317,7 @@ public class Annotation extends AggregatedResource {
             for (RDFNode targetResource : targetResources) {
                 if (targetResource.isURIResource()) {
                     URI targetUri = URI.create(targetResource.asResource().getURI());
-                    Thing target;
-                    if (researchObject.getResources().containsKey(targetUri)) {
-                        target = researchObject.getResources().get(targetUri);
-                    } else if (researchObject.getProxies().containsKey(targetUri)) {
-                        target = researchObject.getProxies().get(targetUri);
-                    } else if (researchObject.getUri().equals(targetUri)) {
-                        target = researchObject;
-                    } else {
-                        throw new BadRequestException(String.format(
-                            "The annotation target %s is not RO, aggregated resource nor proxy.", targetUri));
-                    }
+                    Thing target = validateTarget(researchObject, targetUri);
                     targets.add(target);
                 } else {
                     throw new BadRequestException("The target is not an URI resource.");
@@ -339,6 +329,36 @@ public class Annotation extends AggregatedResource {
 
         Annotation annotation = builder.buildAnnotation(uri, researchObject, builder.buildThing(bodyUri), targets);
         return annotation;
+    }
+
+
+    /**
+     * Find the resource that is annotated or throw a {@link BadRequestException} if not found or not allowed.
+     * 
+     * @param researchObject
+     *            RO that should contain the target
+     * @param targetUri
+     *            target URI
+     * @return a resource within the RO
+     * @throws BadRequestException
+     *             when the target is not a resource, folder, RO or proxy
+     */
+    public static Thing validateTarget(ResearchObject researchObject, URI targetUri)
+            throws BadRequestException {
+        Thing target;
+        if (researchObject.getResources().containsKey(targetUri)) {
+            target = researchObject.getResources().get(targetUri);
+        } else if (researchObject.getFolders().containsKey(targetUri)) {
+            target = researchObject.getFolders().get(targetUri);
+        } else if (researchObject.getProxies().containsKey(targetUri)) {
+            target = researchObject.getProxies().get(targetUri);
+        } else if (researchObject.getUri().equals(targetUri)) {
+            target = researchObject;
+        } else {
+            throw new BadRequestException(String.format(
+                "The annotation target %s is not RO, aggregated resource nor proxy.", targetUri));
+        }
+        return target;
     }
 
 

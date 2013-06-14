@@ -187,17 +187,7 @@ public class ResearchObjectResource {
         Collection<URI> annotated = HeaderUtils.getLinkHeaders(links).get(AO.annotatesResource.getURI());
         Set<Thing> annotationTargets = new HashSet<>();
         for (URI targetUri : annotated) {
-            Thing target;
-            if (researchObject.getResources().containsKey(targetUri)) {
-                target = researchObject.getResources().get(targetUri);
-            } else if (researchObject.getProxies().containsKey(targetUri)) {
-                target = researchObject.getProxies().get(targetUri);
-            } else if (researchObject.getUri().equals(targetUri)) {
-                target = researchObject;
-            } else {
-                throw new BadRequestException(String.format(
-                    "The annotation target %s is not RO, aggregated resource nor proxy.", targetUri));
-            }
+            Thing target = Annotation.validateTarget(researchObject, targetUri);
             annotationTargets.add(target);
         }
         if (!annotationTargets.isEmpty()) {
