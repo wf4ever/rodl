@@ -18,6 +18,9 @@ import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.query.Syntax;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.tdb.TDB;
+import com.hp.hpl.jena.update.GraphStore;
+import com.hp.hpl.jena.update.GraphStoreFactory;
+import com.hp.hpl.jena.update.UpdateAction;
 
 public class SparqlEngine {
 
@@ -160,4 +163,24 @@ public class SparqlEngine {
         return new QueryResult(new ByteArrayInputStream(out.toByteArray()), outputFormat);
     }
 
+
+    /**
+     * Perform a SPARQL update operation.
+     * 
+     * @param queryS
+     *            the update request
+     */
+    public void executeSparqlUpdate(String queryS) {
+        boolean transactionStarted = builder.beginTransaction(ReadWrite.WRITE);
+        try {
+            if (queryS == null) {
+                throw new NullPointerException("Query cannot be null");
+            }
+            GraphStore graphStore = GraphStoreFactory.create(builder.getDataset());
+            UpdateAction.parseExecute(queryS, graphStore);
+            builder.commitTransaction(transactionStarted);
+        } finally {
+            builder.endTransaction(transactionStarted);
+        }
+    }
 }

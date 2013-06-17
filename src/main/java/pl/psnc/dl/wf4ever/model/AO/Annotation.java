@@ -256,6 +256,7 @@ public class Annotation extends AggregatedResource {
             getResearchObject().getAnnotationsByTarget().get(thing.getUri()).remove(this);
         }
         AggregatedResource resource = getResearchObject().getAggregatedResources().get(getBody().getUri());
+        //FIXME this resource may be an internal resource of another RO, in which case it shouldn't be deleted.
         if (resource != null && resource.isInternal()) {
             resource.deleteGraphAndSerialize();
             //FIXME the resource is still of class AggregatedResource and does not appear in RO collections.

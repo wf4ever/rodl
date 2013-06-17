@@ -219,7 +219,11 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
             // resource may no longer be internal if it is deleted by different classes independently, 
             // or if it's a folder that has just been emptied (i.e. the resource map was deleted), 
             // in which case it was also deleted automatically
-            builder.getDigitalLibrary().deleteFile(getResearchObject().getUri(), getPath());
+            try {
+                builder.getDigitalLibrary().deleteFile(getResearchObject().getUri(), getPath());
+            } catch (Exception e) {
+                LOGGER.error("Can't delete resource " + this + " from DL, will continue with triplestore", e);
+            }
         }
         if (getProxy() != null) {
             try {

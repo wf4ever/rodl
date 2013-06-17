@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.model.ORE;
 import java.io.InputStream;
 import java.net.URI;
 
+import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
@@ -27,6 +28,9 @@ import com.hp.hpl.jena.query.ReadWrite;
  * 
  */
 public abstract class ResourceMap extends Thing implements ResearchObjectComponentSerializable {
+
+    /** logger. */
+    private static final Logger LOGGER = Logger.getLogger(ResourceMap.class);
 
     /** ore:Aggregation described by this resource map. */
     protected Aggregation aggregation;
@@ -81,7 +85,11 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
      */
     @Override
     public void delete() {
-        builder.getDigitalLibrary().deleteFile(getResearchObject().getUri(), getPath());
+        try {
+            builder.getDigitalLibrary().deleteFile(getResearchObject().getUri(), getPath());
+        } catch (Exception e) {
+            LOGGER.error("Can't delete resource map " + this + " from DL, will continue with triplestore", e);
+        }
         super.delete();
     }
 

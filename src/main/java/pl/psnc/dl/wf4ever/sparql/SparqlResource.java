@@ -14,6 +14,8 @@ import javax.ws.rs.core.Response.Status;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
+import pl.psnc.dl.wf4ever.db.UserProfile;
+import pl.psnc.dl.wf4ever.exceptions.ForbiddenException;
 import pl.psnc.dl.wf4ever.model.Builder;
 
 import com.sun.jersey.core.header.ContentDisposition;
@@ -25,7 +27,7 @@ import com.sun.jersey.multipart.FormDataParam;
  * @author Piotr Hołubowicz
  * 
  */
-@Path(("sparql/"))
+@Path("sparql/")
 public class SparqlResource {
 
     /** Resource builder. */
@@ -227,6 +229,30 @@ public class SparqlResource {
                     .fileName("result." + outFormat.getDefaultFileExtension()).build();
             return Response.ok(queryResult.getInputStream()).header("Content-disposition", cd)
                     .type(outFormat.getDefaultMIMEType()).build();
+        } catch (NullPointerException | IllegalArgumentException e) {
+            return Response.status(Status.BAD_REQUEST).type("text/plain").entity(e.getMessage()).build();
+        }
+
+    }
+
+
+    /**
+     * Execute a SPARQL update query.
+     * 
+     * @param query
+     *            the SPARQL query
+     * @return 200 OK or 400 Bad Request
+     */
+    @POST
+    @Path("update")
+    public Response executeSparqlUpdate(String query) {
+        if (builder.getUser().getRole() != UserProfile.Role.ADMIN) {
+            throw new ForbiddenException("Only admin users can perform sparql updates.");
+        }
+        SparqlEngine engine = new SparqlEngine(builder);
+        try {
+            engine.executeSparqlUpdate(query);
+            return Response.ok().build();
         } catch (NullPointerException | IllegalArgumentException e) {
             return Response.status(Status.BAD_REQUEST).type("text/plain").entity(e.getMessage()).build();
         }
