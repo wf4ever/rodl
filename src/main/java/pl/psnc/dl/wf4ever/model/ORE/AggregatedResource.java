@@ -222,12 +222,20 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
             builder.getDigitalLibrary().deleteFile(getResearchObject().getUri(), getPath());
         }
         if (getProxy() != null) {
-            getProxy().delete();
+            try {
+                getProxy().delete();
+            } catch (Exception e) {
+                LOGGER.error("Can't delete proxy " + proxy + ", will continue deleting the resource", e);
+            }
         }
         //create another collection to avoid concurrent modification
         Set<FolderEntry> entriesToDelete = new HashSet<>(getResearchObject().getFolderEntriesByResourceUri().get(uri));
         for (FolderEntry entry : entriesToDelete) {
-            entry.delete();
+            try {
+                entry.delete();
+            } catch (Exception e) {
+                LOGGER.error("Can't delete a folder entry " + entry + ", will continue deleting the resource", e);
+            }
         }
         super.delete();
         this.postEvent(new ROComponentAfterDeleteEvent(this));

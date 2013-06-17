@@ -180,9 +180,17 @@ public class Folder extends Resource implements Aggregation {
         //create another collection to avoid concurrent modification
         Set<FolderEntry> entriesToDelete = new HashSet<>(getFolderEntries().values());
         for (FolderEntry entry : entriesToDelete) {
-            entry.delete();
+            try {
+                entry.delete();
+            } catch (Exception e) {
+                LOGGER.error("Can't delete a folder entry " + entry + ", will continue deleting the folder", e);
+            }
         }
-        getResourceMap().delete();
+        try {
+            getResourceMap().delete();
+        } catch (Exception e) {
+            LOGGER.error("Can't delete the resource map " + getResourceMap() + ", will continue deleting the folder", e);
+        }
         getResearchObject().getFolders().remove(uri);
         super.delete();
     }

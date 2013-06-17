@@ -273,11 +273,15 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
      */
     @Override
     public void delete() {
-        //create another collection to avoid concurrent modification
         this.postEvent(new ROBeforeDeleteEvent(this));
+        //create another collection to avoid concurrent modification
         Set<AggregatedResource> resourcesToDelete = new HashSet<>(getAggregatedResources().values());
         for (AggregatedResource resource : resourcesToDelete) {
-            resource.delete();
+            try {
+                resource.delete();
+            } catch (Exception e) {
+                LOGGER.error("Can't delete resource " + resource + ", will continue deleting the RO.", e);
+            }
         }
         getManifest().delete();
         try {
