@@ -4,8 +4,10 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.quartz.SchedulerException;
@@ -13,7 +15,6 @@ import org.quartz.SchedulerException;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.db.ResearchObjectId;
 import pl.psnc.dl.wf4ever.db.dao.ResearchObjectIdDAO;
-import pl.psnc.dl.wf4ever.evo.CopyOperation;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.monitoring.MonitoringScheduler;
@@ -32,8 +33,7 @@ public class AdminResource {
     private Builder builder;
 
     /** logger. */
-    @SuppressWarnings("unused")
-    private static final Logger LOGGER = Logger.getLogger(CopyOperation.class);
+    private static final Logger LOGGER = Logger.getLogger(AdminResource.class);
 
 
     /**
@@ -64,6 +64,33 @@ public class AdminResource {
             throws SchedulerException {
         MonitoringScheduler.getInstance().scheduleAllJobsNow();
         return "Operation finished successfully";
+    }
+
+
+    /**
+     * Delete research objects. Useful for ROs that have URIs not matching the RO API.
+     * 
+     * @param researchObjects
+     *            a list of RO URIs
+     * @return 200 OK
+     */
+    @POST
+    @Consumes("text/uri-list")
+    @Path("force-delete")
+    public Response forceDeleteROs(String researchObjects) {
+        String[] uris = researchObjects.split("\r\n");
+        StringBuilder sb = new StringBuilder("Successfully deleted the following research objects:\r\n");
+        for (String uri : uris) {
+            try {
+                URI uri2 = new URI(uri);
+                ResearchObject researchObject = ResearchObject.get(builder, uri2);
+                researchObject.delete();
+                sb.append("* " + uri2 + "\r\n");
+            } catch (Exception e) {
+                LOGGER.warn("Can't delete RO " + uri, e);
+            }
+        }
+        return Response.ok(sb.toString()).build();
     }
 
 
