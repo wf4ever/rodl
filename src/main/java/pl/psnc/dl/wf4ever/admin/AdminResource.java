@@ -78,7 +78,7 @@ public class AdminResource {
     @Consumes("text/uri-list")
     @Path("force-delete")
     public Response forceDeleteROs(String researchObjects) {
-        String[] uris = researchObjects.split("\r\n");
+        String[] uris = researchObjects.split("\\s");
         StringBuilder sb = new StringBuilder("Successfully deleted the following research objects:\r\n");
         for (String uri : uris) {
             try {
