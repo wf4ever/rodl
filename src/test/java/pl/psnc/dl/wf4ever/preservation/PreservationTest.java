@@ -1,33 +1,26 @@
 package pl.psnc.dl.wf4ever.preservation;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 
 import junit.framework.Assert;
 
-import org.apache.commons.io.IOUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.W4ETest;
-import pl.psnc.dl.wf4ever.darceo.client.DArceoClient;
 import pl.psnc.dl.wf4ever.darceo.client.DArceoException;
-import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectComponentSerializable;
-import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectSerializable;
+import pl.psnc.dl.wf4ever.db.dao.ResearchObjectPreservationStatusDAO;
 
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.sun.jersey.api.client.ClientResponse;
 
 @Category(IntegrationTest.class)
-@Ignore
 public class PreservationTest extends W4ETest {
 
     int SINGLE_BREAK = 10;
     int MAX_PAUSES_NUMBER = 100;
+    private ResearchObjectPreservationStatusDAO dao = new ResearchObjectPreservationStatusDAO();
 
 
     @Override
@@ -53,16 +46,9 @@ public class PreservationTest extends W4ETest {
     public void testCreateAndPresarve()
             throws DArceoException, IOException, InterruptedException {
         URI cretedRO = createRO(accessToken);
-        ResearchObjectSerializable returnedRO = DArceoClient.getInstance().getBlocking(cretedRO);
-        int counter = 0;
-        while (returnedRO == null) {
-            Thread.sleep(1000);
-            returnedRO = DArceoClient.getInstance().getBlocking(cretedRO);
-            if (counter++ >= MAX_PAUSES_NUMBER) {
-                assert false;
-            }
-        }
-        Assert.assertEquals(cretedRO, returnedRO.getUri());
+        ResearchObjectPreservationStatus preservationStatus = dao.findById(cretedRO.toString());
+        Assert.assertEquals(Status.NEW, preservationStatus.getStatus());
+
     }
 
 
@@ -72,20 +58,11 @@ public class PreservationTest extends W4ETest {
         String filePath = "added/file";
         URI cretedRO = createRO(accessToken);
         ClientResponse response = addFile(cretedRO, filePath, accessToken);
-        int counter = 0;
-        while (true) {
-            Thread.sleep(1000);
-            ResearchObjectSerializable returnedRO = DArceoClient.getInstance().getBlocking(cretedRO);
-            if (returnedRO.getSerializables().containsKey(returnedRO.getUri().resolve(filePath))) {
-                break;
-            }
-            if (counter++ >= MAX_PAUSES_NUMBER) {
-                assert false;
-            }
-        }
+        ResearchObjectPreservationStatus preservationStatus = dao.findById(cretedRO.toString());
+        Assert.assertEquals(Status.NEW, preservationStatus.getStatus());
     }
 
-
+    /*
     @Test
     public void testAnnotateAndPreserve()
             throws InterruptedException, DArceoException, IOException {
@@ -148,4 +125,5 @@ public class PreservationTest extends W4ETest {
 
         }
     }
+    */
 }
