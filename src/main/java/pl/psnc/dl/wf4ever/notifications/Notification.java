@@ -234,6 +234,8 @@ public class Notification implements Serializable {
                     sourceName = ln.getHref();
                 }
                 notification.setSource(ln.getHref(), sourceName);
+            } else if (ln.getRel().equals(ORE.describes.getURI())) {
+                notification.setSubject(ln.getHref());
             }
         }
         notification.setSummary(entry.getDescription().getValue());

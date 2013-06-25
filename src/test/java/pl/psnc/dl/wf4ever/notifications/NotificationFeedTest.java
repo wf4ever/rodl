@@ -51,4 +51,5 @@ public class NotificationFeedTest {
         Assert.assertEquals(1, feed.getEntries().size());
         Assert.assertNotNull(feed.getInfo());
     }
+
 }

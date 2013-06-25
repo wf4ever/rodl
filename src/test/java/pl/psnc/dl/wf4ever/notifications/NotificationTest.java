@@ -1,6 +1,8 @@
 package pl.psnc.dl.wf4ever.notifications;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -12,6 +14,10 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.sun.syndication.feed.atom.Content;
 import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Link;
+import com.sun.syndication.feed.synd.SyndContent;
+import com.sun.syndication.feed.synd.SyndContentImpl;
+import com.sun.syndication.feed.synd.SyndEntry;
+import com.sun.syndication.feed.synd.SyndEntryImpl;
 
 /**
  * Tests of the {@link Notification} class.
@@ -67,5 +73,33 @@ public class NotificationTest {
         Assert.assertNotNull(sourceLink);
         Assert.assertEquals("http://example.org/feeds/foo", sourceLink.getHref());
         Assert.assertEquals(sourceLink.getTitle(), "test");
+    }
+
+
+    @Test
+    public void testFromEntry() {
+        String contentValue = "CONTENT";
+        String title = "Title";
+        URI sourceHref = URI.create("http://www.example.com");
+        String sourceTitle = "EXAMPLE";
+        Date now = DateTime.now().toDate();
+        SyndEntry entry = new SyndEntryImpl();
+        entry.setPublishedDate(now);
+        SyndContent content = new SyndContentImpl();
+        content.setValue(contentValue);
+        entry.setDescription(content);
+        entry.setTitle(title);
+        Link source = new Link();
+        source.setHref(sourceHref.toString());
+        source.setRel(DCTerms.source.getURI());
+        source.setTitle(sourceTitle);
+        entry.setLinks(Collections.singletonList(source));
+        Notification notification = Notification.fromEntry(entry);
+
+        Assert.assertEquals(sourceHref.toString(), notification.getSource());
+        Assert.assertEquals(now, notification.getCreated());
+        Assert.assertEquals(contentValue, notification.getSummary());
+        Assert.assertEquals(title, notification.getTitle());
+
     }
 }
