@@ -76,5 +76,4 @@ public class AtomFeedEntryDAO extends AbstractDAO<Notification> {
     public List<Notification> all() {
         return find(null, null, null, null, null);
     }
-
 }

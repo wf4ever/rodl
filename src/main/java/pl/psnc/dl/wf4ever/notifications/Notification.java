@@ -27,6 +27,7 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.sun.syndication.feed.atom.Content;
 import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Link;
+import com.sun.syndication.feed.synd.SyndEntry;
 
 /**
  * Represents a simple entry of the feed, contains a simple report of the event like update, damage and so on.
@@ -208,6 +209,35 @@ public class Notification implements Serializable {
 
         resultEntry.setOtherLinks(links);
         return resultEntry;
+    }
+
+
+    /**
+     * Generate a notification from given entry.
+     * 
+     * @param entry
+     *            given feed entry
+     * @return notification
+     */
+
+    public static Notification fromEntry(SyndEntry entry) {
+        Notification notification = new Notification();
+        notification.setTitle(entry.getTitle());
+        notification.setCreated(entry.getPublishedDate());
+        for (Object ob : entry.getLinks()) {
+            Link ln = (Link) ob;
+            if (ln.getRel().equals(DCTerms.source.getURI())) {
+                String sourceName;
+                if (ln.getTitle() != null) {
+                    sourceName = ln.getTitle();
+                } else {
+                    sourceName = ln.getHref();
+                }
+                notification.setSource(ln.getHref(), sourceName);
+            }
+        }
+        notification.setSummary(entry.getDescription().getValue());
+        return notification;
     }
 
 
