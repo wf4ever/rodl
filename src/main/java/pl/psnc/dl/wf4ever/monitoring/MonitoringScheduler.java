@@ -5,6 +5,7 @@ import static org.quartz.JobBuilder.newJob;
 import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.quartz.TriggerBuilder.newTrigger;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,12 +13,15 @@ import java.util.Map.Entry;
 import org.apache.log4j.Logger;
 import org.quartz.Job;
 import org.quartz.JobDetail;
+import org.quartz.JobKey;
+import org.quartz.JobListener;
 import org.quartz.ScheduleBuilder;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.impl.matchers.NameMatcher;
 
 /**
  * This class manages the jobs and triggers.
@@ -75,8 +79,9 @@ public final class MonitoringScheduler {
         scheduler = schedulerFactory.getScheduler();
         scheduler.start();
         String[] plugins = scheduler.getContext().getString("plugins").split(",");
-        for (String plugin : plugins) {
-            String pluginClassName = scheduler.getContext().getString(plugin.trim() + ".class");
+        for (String pluginName : plugins) {
+            pluginName = pluginName.trim();
+            String pluginClassName = scheduler.getContext().getString(pluginName + ".class");
             Class<? extends Job> pluginClass;
             try {
                 pluginClass = (Class<? extends Job>) Class.forName(pluginClassName);
@@ -84,12 +89,72 @@ public final class MonitoringScheduler {
                 LOGGER.error("Invalid plugin class", e);
                 continue;
             }
-            String cron = scheduler.getContext().getString(plugin.trim() + ".cron");
-            ScheduleBuilder<? extends Trigger> schedule = cron != null ? cronSchedule(cron)
-                    .withMisfireHandlingInstructionIgnoreMisfires() : simpleSchedule();
+            ScheduleBuilder<? extends Trigger> schedule = createSchedule(pluginName);
             jobClasses.put(pluginClass, schedule);
-            scheduleJob(plugin, pluginClass, schedule);
+            scheduleJob(pluginName, pluginClass, schedule);
+
+            JobListener jobListener = createJobListener(pluginName);
+            if (jobListener != null) {
+                try {
+                    scheduler.getListenerManager().addJobListener(jobListener,
+                        NameMatcher.<JobKey> nameEquals(pluginName));
+                } catch (SchedulerException e) {
+                    LOGGER.error("Can't add the job listener", e);
+                }
+            }
+
         }
+    }
+
+
+    /**
+     * Find the schedule config and create an instance.
+     * 
+     * @param pluginName
+     *            plugin name to use when searching the config
+     * @return a cron schedule or a simple schedule if no config found
+     * @throws SchedulerException
+     *             when it can't get the context
+     */
+    private ScheduleBuilder<? extends Trigger> createSchedule(String pluginName)
+            throws SchedulerException {
+        String cron = scheduler.getContext().getString(pluginName + ".cron");
+        return cron != null ? cronSchedule(cron).withMisfireHandlingInstructionIgnoreMisfires() : simpleSchedule();
+    }
+
+
+    /**
+     * Find the listener config and create an instance.
+     * 
+     * @param pluginName
+     *            plugin name to use when searching the config
+     * @return a job listener or null if can't create
+     * @throws SchedulerException
+     *             when it can't get the context
+     */
+    @SuppressWarnings("unchecked")
+    private JobListener createJobListener(String pluginName)
+            throws SchedulerException {
+        String listenerClassName = scheduler.getContext().getString(pluginName + ".listenerclass");
+        if (listenerClassName == null || listenerClassName.trim().isEmpty()) {
+            return null;
+        }
+        Class<? extends JobListener> listenerClass;
+        try {
+            listenerClass = (Class<? extends JobListener>) Class.forName(listenerClassName);
+        } catch (ClassNotFoundException e) {
+            LOGGER.error("Invalid job listener class", e);
+            return null;
+        }
+        JobListener jobListener;
+        try {
+            jobListener = listenerClass.getConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+                | NoSuchMethodException | SecurityException e) {
+            LOGGER.error("Can't create the job listener", e);
+            return null;
+        }
+        return jobListener;
     }
 
 
@@ -111,7 +176,7 @@ public final class MonitoringScheduler {
      * Schedule a job to run now.
      * 
      * @param id
-     *            job identifier
+     *            job name
      * @param jobClass
      *            job class
      * @throws SchedulerException
@@ -127,7 +192,7 @@ public final class MonitoringScheduler {
      * Schedule a job.
      * 
      * @param id
-     *            job identifier
+     *            job name
      * @param jobClass
      *            job class
      * @param schedule
