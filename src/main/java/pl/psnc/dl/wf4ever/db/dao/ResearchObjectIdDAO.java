@@ -47,8 +47,7 @@ public class ResearchObjectIdDAO extends AbstractDAO<ResearchObjectId> {
 
 
     /**
-     * ======= >>>>>>> 21c1f3376a0c2f969102a9f012e503de1f3e1544 Save new ResearchObjectId instance. Throw an exception
-     * in case of duplication.
+     * Save new ResearchObjectId instance. Throw an exception in case of duplication.
      * 
      * @param instance
      *            serialized instance.
@@ -69,8 +68,8 @@ public class ResearchObjectIdDAO extends AbstractDAO<ResearchObjectId> {
      *            given ResearchObjectID
      * @return the saved instance
      */
-    public ResearchObjectId saftySave(ResearchObjectId instance) {
-        ResearchObjectId firstFree = fistFree(instance);
+    public ResearchObjectId assignId(ResearchObjectId instance) {
+        ResearchObjectId firstFree = firstFree(instance);
         save(firstFree);
         return firstFree;
     }
@@ -83,15 +82,15 @@ public class ResearchObjectIdDAO extends AbstractDAO<ResearchObjectId> {
      *            Research Object instance
      * @return saveable Research Object id.
      */
-    public ResearchObjectId fistFree(ResearchObjectId instance) {
+    public ResearchObjectId firstFree(ResearchObjectId instance) {
         if (findByPrimaryKey(instance.getId()) == null) {
             return new ResearchObjectId(instance.getId());
         }
-        Integer counter = 1;
+        int counter = 1;
         URI searchUri = buildID(instance.getId(), counter);
         while (findByPrimaryKey(searchUri) != null) {
-            searchUri = buildID(instance.getId(), counter);
             counter++;
+            searchUri = buildID(instance.getId(), counter);
         }
         return new ResearchObjectId(searchUri);
 
@@ -108,12 +107,10 @@ public class ResearchObjectIdDAO extends AbstractDAO<ResearchObjectId> {
      * @return next Uri.
      */
     private URI buildID(URI id, Integer counter) {
-        if (id.toString().length() >= 1
-                && id.toString().substring(id.toString().length() - 1, id.toString().length()).equals("/")) {
+        if (id.toString().endsWith("/")) {
             String base = id.toString().substring(0, id.toString().length() - 1);
             return URI.create(base + "-" + counter.toString() + "/");
         }
-
         return URI.create(id.toString() + "-" + counter.toString());
     }
 }

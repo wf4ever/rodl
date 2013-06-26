@@ -160,7 +160,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
     public static ResearchObject create(Builder builder, URI uri) {
         ResearchObjectIdDAO idDAO = new ResearchObjectIdDAO();
         //replace uri on the first free
-        uri = idDAO.saftySave(new ResearchObjectId(uri)).getId();
+        uri = idDAO.assignId(new ResearchObjectId(uri)).getId();
         //because of the line above should never be true;
         if (get(builder, uri) != null) {
             throw new ConflictException("Research Object already exists: " + uri);
