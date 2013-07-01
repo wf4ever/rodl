@@ -28,6 +28,7 @@ import com.sun.syndication.feed.atom.Content;
 import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Link;
 import com.sun.syndication.feed.synd.SyndEntry;
+import com.sun.syndication.feed.synd.SyndLink;
 
 /**
  * Represents a simple entry of the feed, contains a simple report of the event like update, damage and so on.
@@ -225,7 +226,7 @@ public class Notification implements Serializable {
         notification.setTitle(entry.getTitle());
         notification.setCreated(entry.getPublishedDate());
         for (Object ob : entry.getLinks()) {
-            Link ln = (Link) ob;
+            SyndLink ln = (SyndLink) ob;
             if (ln.getRel().equals(DCTerms.source.getURI())) {
                 String sourceName;
                 if (ln.getTitle() != null) {

@@ -10,7 +10,7 @@
   <entry>
     <title>Research Object myexperiment_pack_3107 has been deleted</title>
     <link rel="http://purl.org/dc/terms/source" href="http://sandbox.wf4ever-project.org/rodl" title="RODL" />
-    <link rel="http://www.openarchives.org/ore/terms/describes" href="http://127.0.0.1:8089/rodl/ROs/SimpleRO/" title="Description for" />
+    <link rel="alternate" href="http://127.0.0.1:8089/rodl/ROs/SimpleRO/" title="Description for" />
     <id>urn:X-rodl:4897</id>
     <published>2013-06-13T09:12:36Z</published>
     <summary type="html">&amp;lt;html&amp;gt;&amp;lt;body&amp;gt;&amp;lt;p&amp;gt;A Research Object has been deleted.&amp;lt;/p&amp;gt;&amp;lt;p&amp;gt;The Research Object URI was &amp;lt;em&amp;gt;http://sandbox.wf4ever-project.org/rodl/ROs/myexperiment_pack_3107/&amp;lt;/em&amp;gt;.&amp;lt;/p&amp;gt;&amp;lt;/body&amp;gt;&amp;lt;/html&amp;gt;</summary>
@@ -18,7 +18,7 @@
   <entry>
     <title>Research Object myexperiment_pack_3107 has been created</title>
     <link rel="http://purl.org/dc/terms/source" href="http://sandbox.wf4ever-project.org/rodl" title="RODL" />
-    <link rel="http://www.openarchives.org/ore/terms/describes" href="http://127.0.0.1:8089/rodl/ROs/SimpleRO/" title="Description for" />
+    <link rel="alternate" href="http://127.0.0.1:8089/rodl/ROs/SimpleRO/" title="Description for" />
     <id>urn:X-rodl:4898</id>
     <published>2013-06-13T09:20:50Z</published>
     <summary type="html">&amp;lt;html&amp;gt;&amp;lt;body&amp;gt;&amp;lt;p&amp;gt;A new Research Object has been created.&amp;lt;/p&amp;gt;&amp;lt;p&amp;gt;The Research Object URI is &amp;lt;a href=&amp;quot;http://sandbox.wf4ever-project.org/rodl/ROs/myexperiment_pack_3107/&amp;quot;&amp;gt;http://sandbox.wf4ever-project.org/rodl/ROs/myexperiment_pack_3107/&amp;lt;/a&amp;gt;.&amp;lt;/p&amp;gt;&amp;lt;/body&amp;gt;&amp;lt;/html&amp;gt;</summary>
@@ -26,7 +26,7 @@
   <entry>
     <title>A resource has been added to the Research Object myexperiment_pack_3107</title>
     <link rel="http://purl.org/dc/terms/source" href="http://sandbox.wf4ever-project.org/rodl" title="RODL" />
-    <link rel="http://www.openarchives.org/ore/terms/describes" href="http://127.0.0.1:8089/rodl/ROs/SimpleRO/" title="Description for" />
+    <link rel="alternate" href="http://127.0.0.1:8089/rodl/ROs/SimpleRO/" title="Description for" />
     <id>urn:X-rodl:4899</id>
     <published>2013-06-13T09:21:43Z</published>
     <summary type="html">&amp;lt;html&amp;gt;&amp;lt;body&amp;gt;&amp;lt;p&amp;gt;A resource has been added to the Research Object.&amp;lt;/p&amp;gt;&amp;lt;ul&amp;gt;&amp;lt;li&amp;gt;The Research Object: &amp;lt;a href=&amp;quot;http://sandbox.wf4ever-project.org/rodl/ROs/myexperiment_pack_3107/&amp;quot;&amp;gt;http://sandbox.wf4ever-project.org/rodl/ROs/myexperiment_pack_3107/&amp;lt;/a&amp;gt;.&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;The resource: &amp;lt;a href=&amp;quot;http://www.myexperiment.org/workflows/3107/download/kegg_reactions_scheme_446032.t2flow?version=1&amp;quot;&amp;gt;http://www.myexperiment.org/workflows/3107/download/kegg_reactions_scheme_446032.t2flow?version=1&amp;lt;/a&amp;gt;.&amp;lt;/li&amp;gt;&amp;lt;/ul&amp;gt;&amp;lt;/body&amp;gt;&amp;lt;/html&amp;gt;</summary>

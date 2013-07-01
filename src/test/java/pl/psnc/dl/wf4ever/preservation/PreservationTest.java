@@ -1,10 +1,12 @@
 package pl.psnc.dl.wf4ever.preservation;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 
 import junit.framework.Assert;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -62,7 +64,7 @@ public class PreservationTest extends W4ETest {
         Assert.assertEquals(Status.NEW, preservationStatus.getStatus());
     }
 
-    /*
+
     @Test
     public void testAnnotateAndPreserve()
             throws InterruptedException, DArceoException, IOException {
@@ -71,59 +73,27 @@ public class PreservationTest extends W4ETest {
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationGood.rdf");
         ClientResponse response = addAnnotation(is, cretedRO, annotationBodyPath, accessToken);
         IOUtils.closeQuietly(is);
-        ResearchObjectSerializable returnedRO;
-        int counter = 0;
-        while (true) {
-            returnedRO = DArceoClient.getInstance().getBlocking(cretedRO);
-            if (returnedRO.getSerializables().containsKey(returnedRO.getUri().resolve(annotationBodyPath))) {
-                break;
-            }
-            if (counter++ >= MAX_PAUSES_NUMBER) {
-                assert false;
-            }
-        }
-        is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationGood.rdf");
-        InputStream isA = returnedRO.getSerializables().get(returnedRO.getUri().resolve(annotationBodyPath))
-                .getSerialization();
-        Model m = ModelFactory.createDefaultModel();
-        m.read(is, "");
-        Model mA = ModelFactory.createDefaultModel();
-        mA.read(isA, "");
-        Assert.assertTrue(m.isIsomorphicWith(mA));
+        ResearchObjectPreservationStatus preservationStatus = dao.findById(cretedRO.toString());
+        Assert.assertEquals(Status.NEW, preservationStatus.getStatus());
     }
 
 
     @Test
-    public void testUpdateFileAndPreserve()
+    public void testUpdateSaveAndUpdate()
             throws DArceoException, IOException, InterruptedException {
         String filePath = "added/file";
         URI cretedRO = createRO(accessToken);
         ClientResponse response = addFile(cretedRO, filePath, accessToken);
-        Thread.sleep(10000);
         response = webResource.uri(cretedRO).path(filePath).header("Authorization", "Bearer " + accessToken)
                 .type("text/plain").put(ClientResponse.class, "lorem ipsum");
-        Thread.sleep(10000);
+        ResearchObjectPreservationStatus preservationStatus = dao.findById(cretedRO.toString());
+        preservationStatus.setStatus(Status.UP_TO_DATE);
+        dao.save(preservationStatus);
         response = webResource.uri(cretedRO).path(filePath).header("Authorization", "Bearer " + accessToken)
                 .type("text/plain").put(ClientResponse.class, "new content");
-        Thread.sleep(10000);
-        int counter = 0;
-        Thread.sleep(1000);
-        while (true) {
-            Thread.sleep(100);
-            ResearchObjectSerializable returnedRO = DArceoClient.getInstance().getBlocking(cretedRO);
-            //here is a test.
-            if (returnedRO.getSerializables().containsKey(returnedRO.getUri().resolve(filePath))) {
-                ResearchObjectComponentSerializable component = returnedRO.getSerializables().get(
-                    returnedRO.getUri().resolve(filePath));
-                if (IOUtils.toString(component.getSerialization()).equals("new content")) {
-                    break;
-                }
-            }
-            if (counter++ >= MAX_PAUSES_NUMBER) {
-                assert false;
-            }
+        preservationStatus = dao.findById(cretedRO.toString());
+        Assert.assertEquals(Status.UPDATED, preservationStatus.getStatus());
 
-        }
     }
-    */
+
 }
