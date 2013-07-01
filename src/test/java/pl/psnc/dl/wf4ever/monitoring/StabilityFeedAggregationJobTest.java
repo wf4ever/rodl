@@ -1,16 +1,25 @@
 package pl.psnc.dl.wf4ever.monitoring;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 public class StabilityFeedAggregationJobTest {
 
@@ -20,10 +29,9 @@ public class StabilityFeedAggregationJobTest {
     URI checklistNotificationsUri;
     protected static final String HOST_STRING = "http://127.0.0.1:8089";
 
-
-    /*@Rule
+    @Rule
     public WireMockRule wireMockRule = new WireMockRule(8089);
-    */
+
 
     @Before
     public void setUp()
@@ -41,13 +49,12 @@ public class StabilityFeedAggregationJobTest {
                 .getResourceAsStream("monitoring/stability_service_notification.xml");
         InputStream checklistRefactorNoEntryInput = StabilityFeedAggregationJobTest.class.getClassLoader()
                 .getResourceAsStream("monitoring/stability_service_notification_case_empty.xml");
-        //stabiltyservice
-        /*
+
         stubFor(get(urlMatching((checklistNotificationsUri.toString() + ".*").replace(HOST_STRING, ""))).willReturn(
             aResponse().withStatus(200).withBody(IOUtils.toString(checklistRefactorInput))));
         stubFor(get(urlMatching((checklistNotificationsUri.toString() + ".*empty.*").replace(HOST_STRING, "")))
                 .willReturn(aResponse().withStatus(200).withBody(IOUtils.toString(checklistRefactorNoEntryInput))));
-                */
+
     }
 
 

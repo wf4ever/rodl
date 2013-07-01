@@ -82,6 +82,7 @@ public class StabilityFeedAggregationJob implements Job {
                 HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
             }
         }
+
     }
 
 
