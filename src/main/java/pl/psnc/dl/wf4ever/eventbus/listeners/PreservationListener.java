@@ -70,9 +70,13 @@ public class PreservationListener {
     public void onAfterROComponentDelete(ROComponentAfterDeleteEvent event) {
         URI researchObjectUri = event.getResearchObjectComponent().getResearchObject().getUri();
         ResearchObjectPreservationStatus preservationStatus = dao.findById(researchObjectUri.toString());
-        if (preservationStatus.getStatus() != null && preservationStatus.getStatus() == Status.UP_TO_DATE) {
-            preservationStatus.setStatus(Status.UPDATED);
-            dao.save(preservationStatus);
+        if (preservationStatus != null) {
+            if (preservationStatus.getStatus() != null && preservationStatus.getStatus() == Status.UP_TO_DATE) {
+                preservationStatus.setStatus(Status.UPDATED);
+                dao.save(preservationStatus);
+            }
+        } else {
+            LOGGER.error("Preservation object for " + researchObjectUri.toString() + " doesn't exist");
         }
     }
 
@@ -87,9 +91,13 @@ public class PreservationListener {
     public void onAfterROComponentUpdate(ROComponentAfterUpdateEvent event) {
         URI researchObjectUri = event.getResearchObjectComponent().getResearchObject().getUri();
         ResearchObjectPreservationStatus preservationStatus = dao.findById(researchObjectUri.toString());
-        if (preservationStatus.getStatus() != null && preservationStatus.getStatus() == Status.UP_TO_DATE) {
-            preservationStatus.setStatus(Status.UPDATED);
-            dao.save(preservationStatus);
+        if (preservationStatus != null) {
+            if (preservationStatus.getStatus() != null && preservationStatus.getStatus() == Status.UP_TO_DATE) {
+                preservationStatus.setStatus(Status.UPDATED);
+                dao.save(preservationStatus);
+            }
+        } else {
+            LOGGER.error("Preservation object for " + researchObjectUri.toString() + " doesn't exist");
         }
     }
 
@@ -103,7 +111,12 @@ public class PreservationListener {
     @Subscribe
     public void onAfterROCreate(ROAfterCreateEvent event) {
         URI researchObjectUri = event.getResearchObject().getUri();
-        dao.save(new ResearchObjectPreservationStatus(researchObjectUri, Status.NEW));
+        if (dao.findById(researchObjectUri.toString()) == null) {
+            dao.save(new ResearchObjectPreservationStatus(researchObjectUri, Status.NEW));
+        } else {
+            LOGGER.error("the object " + researchObjectUri.toString()
+                    + " has been already creatded. Can't change the status");
+        }
     }
 
 

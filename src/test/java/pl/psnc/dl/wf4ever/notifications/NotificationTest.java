@@ -18,6 +18,8 @@ import com.sun.syndication.feed.synd.SyndContent;
 import com.sun.syndication.feed.synd.SyndContentImpl;
 import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.feed.synd.SyndEntryImpl;
+import com.sun.syndication.feed.synd.SyndLink;
+import com.sun.syndication.feed.synd.SyndLinkImpl;
 
 /**
  * Tests of the {@link Notification} class.
@@ -89,7 +91,7 @@ public class NotificationTest {
         content.setValue(contentValue);
         entry.setDescription(content);
         entry.setTitle(title);
-        Link source = new Link();
+        SyndLink source = new SyndLinkImpl();
         source.setHref(sourceHref.toString());
         source.setRel(DCTerms.source.getURI());
         source.setTitle(sourceTitle);
