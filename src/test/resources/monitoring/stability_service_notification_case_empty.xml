@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+	<title>Quality changes for "SimpleRO"</title>
+	<subtitle>Changes between 2003-06-13T16:20:02Z and 2006-06-13T16:20:02Z
+	</subtitle>
+	<!-- link to this feed -->
+	<link
+		href="http://example.org/stability_notifications?ro=http%3A%2F%2Fsandbox.wf4ever-project.org%2Frodl%2FROs%2FSimepleRO%2F&from=2003-06-13T16%3A20%3A02Z&to=2006-06-13T16%3A20%3A02Z"
+		rel="self" />
+	<!-- link to RO -->
+	<link href="http://127.0.0.1:8089/rodl/ROs/SimpleRO/" rel="http://www.openarchives.org/ore/terms/describes" />
+	<!-- id is the feed URI -->
+	<id>http://example.org/stability_notifications?ro=http://example.org/rodl/ROs/myGenes/&from=2000-06-13T16:20:02Z&to=2006-06-13T16:20:02Z
+	</id>
+	<updated>2005-06-13T16:20:02Z</updated>
+	<author>
+		<name>Stability Service</name>
+		<email>stability@service.com</email>
+	</author>
+	<!-- each entry is a notification -->
+</feed>

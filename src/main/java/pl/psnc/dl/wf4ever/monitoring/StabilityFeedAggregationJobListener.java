@@ -1,8 +1,6 @@
 package pl.psnc.dl.wf4ever.monitoring;
 
-import java.io.IOException;
 import java.net.URI;
-import java.util.Properties;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -37,20 +35,9 @@ public class StabilityFeedAggregationJobListener extends JobListenerSupport {
 
     /**
      * Constructor.
-     * 
-     * @throws IOException
-     *             thrown when connection properties doesn't exsis
      */
-    public StabilityFeedAggregationJobListener()
-            throws IOException {
+    public StabilityFeedAggregationJobListener() {
         super();
-        Properties properties = new Properties();
-        try {
-            properties.load(getClass().getClassLoader().getResourceAsStream("connection.properties"));
-        } catch (IOException e) {
-            throw new IOException("Configuration couldn't be loaded", e);
-        }
-        checklistNotificationsUri = URI.create(properties.getProperty("checklist_notifications_uri"));
     }
 
 

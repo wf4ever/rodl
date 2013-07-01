@@ -36,6 +36,9 @@ public class ResearchObjectMonitoringDispatcherJob implements Job {
     /** Id of checksum verification job group. */
     static final String CHECKSUM_CHECKING_GROUP_NAME = "checksumIdentification";
 
+    /** Id of checksum verification job group. */
+    static final String STABILITY_GROUP_NAME = "stasbilityIdentification";
+
 
     @Override
     public void execute(JobExecutionContext context)
@@ -48,8 +51,14 @@ public class ResearchObjectMonitoringDispatcherJob implements Job {
         try {
             context.getScheduler().getListenerManager()
                     .addJobListener(newChecksumVerificationJobListener(), jobGroupEquals(CHECKSUM_CHECKING_GROUP_NAME));
-        } catch (SchedulerException e1) {
-            throw new JobExecutionException("Can't add a job listener", e1);
+        } catch (SchedulerException e) {
+            throw new JobExecutionException("Can't add a checksum job listener", e);
+        }
+        try {
+            context.getScheduler().getListenerManager()
+                    .addJobListener(newStabilityFeedAggregationJobListener(), jobGroupEquals(STABILITY_GROUP_NAME));
+        } catch (SchedulerException e) {
+            throw new JobExecutionException("Can't add a stability job listener", e);
         }
         Set<ResearchObject> researchObjects = ResearchObject.getAll(builder, null);
         for (ResearchObject researchObject : researchObjects) {
@@ -62,6 +71,7 @@ public class ResearchObjectMonitoringDispatcherJob implements Job {
             } catch (SchedulerException e) {
                 throw new JobExecutionException(e);
             }
+
         }
     }
 
@@ -84,12 +94,39 @@ public class ResearchObjectMonitoringDispatcherJob implements Job {
 
 
     /**
-     * Create a new listener. Override to change the default behaviour.
+     * Create a new stability verification job. Override to modify.
+     * 
+     * @param researchObject
+     *            a research object that should be verified
+     * @return a new {@link JobDetail} in the group with key CHECKSUM_CHECKING_GROUP_NAME
+     */
+    protected JobDetail newStabilityFeedAggregationJob(ResearchObject researchObject) {
+        JobDataMap jobDataMap = new JobDataMap();
+        jobDataMap.put(StabilityFeedAggregationJob.RESEARCH_OBJECT_URI, researchObject.getUri());
+        JobDetail job = newJob(StabilityFeedAggregationJob.class)
+                .withIdentity("ChecksumIdentification for " + researchObject, STABILITY_GROUP_NAME)
+                .usingJobData(jobDataMap).build();
+        return job;
+    }
+
+
+    /**
+     * Create a new listener for checksum verification checking. Override to change the default behaviour.
      * 
      * @return a new {@link ChecksumVerificationJobListener}
      */
     protected JobListener newChecksumVerificationJobListener() {
         return new ChecksumVerificationJobListener();
+    }
+
+
+    /**
+     * Create a new listener for stability feed aggregation checking. Override to change the default behaviour.
+     * 
+     * @return a new {@link ChecksumVerificationJobListener}
+     */
+    protected JobListener newStabilityFeedAggregationJobListener() {
+        return new StabilityFeedAggregationJobListener();
     }
 
 

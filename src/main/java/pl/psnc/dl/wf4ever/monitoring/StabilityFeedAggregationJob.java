@@ -15,6 +15,7 @@ import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
 
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
+import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.notifications.Notification;
 
 import com.sun.syndication.io.FeedException;
@@ -34,6 +35,9 @@ public class StabilityFeedAggregationJob implements Job {
 
     /** Id of checksum verification job group. */
     static final String CHECKSUM_CHECKING_GROUP_NAME = "stabilityFeedAdgregatrion";
+
+    /** Map key. */
+    static final String RESEARCH_OBJECT_URI = "researchObjectUri";
 
     /** Logger. */
     private static final Logger LOGGER = Logger.getLogger(StabilityFeedAggregationJob.class);
@@ -60,12 +64,23 @@ public class StabilityFeedAggregationJob implements Job {
     @Override
     public void execute(JobExecutionContext context)
             throws JobExecutionException {
-        SyndFeedInput input = new SyndFeedInput();
-        URI requestedUri = createQueryUri(getTheLastFeedDate());
+        boolean started = !HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive();
+        if (started) {
+            HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
+        }
         try {
-            context.setResult(input.build(new XmlReader(requestedUri.toURL())));
-        } catch (IllegalArgumentException | FeedException | IOException e) {
-            LOGGER.error("Can't get the feed " + requestedUri.toString(), e);
+            URI researchObjectUri = (URI) context.getMergedJobDataMap().get(RESEARCH_OBJECT_URI);
+            SyndFeedInput input = new SyndFeedInput();
+            URI requestedUri = createQueryUri(getTheLastFeedDate(researchObjectUri), researchObjectUri);
+            try {
+                context.setResult(input.build(new XmlReader(requestedUri.toURL())));
+            } catch (IllegalArgumentException | FeedException | IOException e) {
+                LOGGER.error("Can't get the feed " + requestedUri.toString(), e);
+            }
+        } finally {
+            if (started) {
+                HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+            }
         }
     }
 
@@ -86,10 +101,14 @@ public class StabilityFeedAggregationJob implements Job {
      * 
      * @param from
      *            query paramter - bottom date range
+     * @param researchObjectUri
+     *            subject
      * @return build uri
      */
-    public URI createQueryUri(Date from) {
+    private URI createQueryUri(Date from, URI researchObjectUri) {
         URI resultUri = checklistNotificationsUri;
+        resultUri = (researchObjectUri != null) ? UriBuilder.fromUri(resultUri)
+                .queryParam("ro", researchObjectUri.toString()).build() : resultUri;
         resultUri = (from != null) ? UriBuilder.fromUri(resultUri).queryParam("from", from.toString()).build()
                 : resultUri;
         return resultUri;
@@ -99,14 +118,16 @@ public class StabilityFeedAggregationJob implements Job {
     /**
      * Get the date of the last stored feed in rodl.
      * 
+     * @param researchObjectUri
+     *            subject
      * @return the oldest date, null if there in no notifications
      */
-    public Date getTheLastFeedDate() {
+    private Date getTheLastFeedDate(URI researchObjectUri) {
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
-        List<Notification> notifications = dao.find(null, null, null, checklistNotificationsUri, 1);
+        List<Notification> notifications = dao.find(researchObjectUri, null, null, checklistNotificationsUri, 1);
         if (notifications == null || notifications.size() != 1) {
             return null;
         }
-        return notifications.get(1).getCreated();
+        return notifications.get(0).getCreated();
     }
 }
