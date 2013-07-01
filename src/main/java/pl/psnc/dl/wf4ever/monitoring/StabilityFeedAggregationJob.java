@@ -31,7 +31,7 @@ import com.sun.syndication.io.XmlReader;
 public class StabilityFeedAggregationJob implements Job {
 
     /** Service Uri. */
-    private URI checklistNotificationsUri;
+    private URI checklistNotificationsUri = null;
 
     /** Id of checksum verification job group. */
     static final String CHECKSUM_CHECKING_GROUP_NAME = "stabilityFeedAdgregatrion";
@@ -54,16 +54,19 @@ public class StabilityFeedAggregationJob implements Job {
         Properties properties = new Properties();
         try {
             properties.load(getClass().getClassLoader().getResourceAsStream("connection.properties"));
+            checklistNotificationsUri = URI.create(properties.getProperty("checklist_notifications_uri"));
         } catch (IOException e) {
-            throw new IOException("Configuration couldn't be loaded", e);
+            throw new IOException("Configuration for stability service couldn't be loaded", e);
         }
-        checklistNotificationsUri = URI.create(properties.getProperty("checklist_notifications_uri"));
     }
 
 
     @Override
     public void execute(JobExecutionContext context)
             throws JobExecutionException {
+        if (checklistNotificationsUri == null) {
+            return;
+        }
         boolean started = !HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive();
         if (started) {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
