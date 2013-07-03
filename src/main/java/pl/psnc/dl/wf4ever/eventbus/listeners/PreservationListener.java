@@ -130,8 +130,10 @@ public class PreservationListener {
     public void onAfterRODelete(ROAfterDeleteEvent event) {
         URI researchObjectUri = event.getResearchObject().getUri();
         ResearchObjectPreservationStatus preservationStatus = dao.findById(researchObjectUri.toString());
-        preservationStatus.setStatus(Status.DELETED);
-        dao.save(preservationStatus);
+        if (preservationStatus != null) {
+            preservationStatus.setStatus(Status.DELETED);
+            dao.save(preservationStatus);
+        }
     }
 
 

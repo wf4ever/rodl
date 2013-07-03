@@ -13,6 +13,7 @@ import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.W4ETest;
 import pl.psnc.dl.wf4ever.darceo.client.DArceoException;
 import pl.psnc.dl.wf4ever.db.dao.ResearchObjectPreservationStatusDAO;
+import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 
 import com.sun.jersey.api.client.ClientResponse;
 
@@ -88,6 +89,8 @@ public class PreservationTest extends W4ETest {
         ResearchObjectPreservationStatus preservationStatus = dao.findById(cretedRO.toString());
         preservationStatus.setStatus(Status.UP_TO_DATE);
         dao.save(preservationStatus);
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         response = webResource.uri(cretedRO).path(filePath).header("Authorization", "Bearer " + accessToken)
                 .type("text/plain").put(ClientResponse.class, "new content");
         preservationStatus = dao.findById(cretedRO.toString());

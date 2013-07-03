@@ -67,7 +67,7 @@ public class MonitoringSchedulerTest extends BaseTest {
         MonitoringScheduler monitoringScheduler = MonitoringScheduler.getInstance();
 
         monitoringScheduler.start();
-        Assert.assertEquals(2, answer.getJobs().size());
+        Assert.assertEquals(1, answer.getJobs().size());
         JobDetail job = answer.getJobs().keySet().iterator().next();
         Assert.assertEquals(ResearchObjectMonitoringDispatcherJob.class, job.getJobClass());
         Trigger trigger = answer.getJobs().get(job);
