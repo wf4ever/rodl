@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever.monitoring;
 
 import java.net.URI;
 
+import org.apache.log4j.Logger;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.listeners.JobListenerSupport;
@@ -24,6 +25,8 @@ public class StabilityFeedAggregationJobListener extends JobListenerSupport {
     AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
     /** Service Uri. */
     URI checklistNotificationsUri;
+    /** Logger. */
+    private static final Logger LOGGER = Logger.getLogger(StabilityFeedAggregationJobListener.class);
 
 
     @Override
@@ -47,7 +50,12 @@ public class StabilityFeedAggregationJobListener extends JobListenerSupport {
         if (feed != null) {
             for (Object ob : feed.getEntries()) {
                 SyndEntry entry = (SyndEntry) ob;
-                dao.save(Notification.fromEntry(entry));
+                Notification notification = Notification.fromEntry(entry);
+                if (notification.getSource() != null && notification.getCreated() != null) {
+                    dao.save(Notification.fromEntry(entry));
+                } else {
+                    LOGGER.debug("Can't create a notification " + notification.getTitle());
+                }
             }
         }
     }

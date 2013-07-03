@@ -4,9 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 
-import junit.framework.Assert;
-
 import org.apache.commons.io.IOUtils;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -93,7 +92,6 @@ public class PreservationTest extends W4ETest {
                 .type("text/plain").put(ClientResponse.class, "new content");
         preservationStatus = dao.findById(cretedRO.toString());
         Assert.assertEquals(Status.UPDATED, preservationStatus.getStatus());
-
     }
 
 }
