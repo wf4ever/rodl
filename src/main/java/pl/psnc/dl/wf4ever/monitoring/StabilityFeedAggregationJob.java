@@ -78,7 +78,7 @@ public class StabilityFeedAggregationJob implements Job {
             try {
                 context.setResult(input.build(new XmlReader(requestedUri.toURL())));
             } catch (IllegalArgumentException | FeedException | IOException e) {
-                LOGGER.error("Can't get the feed " + requestedUri.toString(), e);
+                LOGGER.error("Can't get the feed " + requestedUri.toString());
             }
         } finally {
             if (started) {

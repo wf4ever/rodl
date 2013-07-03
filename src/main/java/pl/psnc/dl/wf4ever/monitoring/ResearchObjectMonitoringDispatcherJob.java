@@ -54,15 +54,19 @@ public class ResearchObjectMonitoringDispatcherJob implements Job {
         } catch (SchedulerException e) {
             throw new JobExecutionException("Can't add a checksum job listener", e);
         }
+
         try {
             context.getScheduler().getListenerManager()
                     .addJobListener(newStabilityFeedAggregationJobListener(), jobGroupEquals(STABILITY_GROUP_NAME));
         } catch (SchedulerException e) {
             throw new JobExecutionException("Can't add a stability job listener", e);
         }
+
         Set<ResearchObject> researchObjects = ResearchObject.getAll(builder, null);
+
         for (ResearchObject researchObject : researchObjects) {
-            Trigger trigger = newTrigger().withIdentity("Trigger for " + researchObject, "triggers")
+            Trigger trigger = newTrigger()
+                    .withIdentity("Trigger for research object: " + researchObject.getUri().toString(), "triggers")
                     .withSchedule(simpleSchedule()).build();
             // in here we can add more jobs
             JobDetail job = newChecksumVerificationJob(researchObject);
@@ -73,6 +77,20 @@ public class ResearchObjectMonitoringDispatcherJob implements Job {
             }
 
         }
+
+        for (ResearchObject researchObject : researchObjects) {
+            Trigger trigger = newTrigger()
+                    .withIdentity("Aggregation trigger for " + researchObject.getUri().toString(), "triggers")
+                    .withSchedule(simpleSchedule()).build();
+            // in here we can add more jobs
+            JobDetail job = newStabilityFeedAggregationJob(researchObject);
+            try {
+                context.getScheduler().scheduleJob(job, trigger);
+            } catch (SchedulerException e) {
+                throw new JobExecutionException(e);
+            }
+        }
+
     }
 
 

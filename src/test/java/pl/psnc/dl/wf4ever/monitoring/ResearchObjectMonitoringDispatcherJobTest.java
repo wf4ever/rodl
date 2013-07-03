@@ -65,7 +65,7 @@ public class ResearchObjectMonitoringDispatcherJobTest extends BaseTest {
         ResearchObjectMonitoringDispatcherJob job = new ResearchObjectMonitoringDispatcherJob();
         job.setBuilder(builder);
         job.execute(context);
-        Assert.assertEquals(2, answer.getJobs().size());
+        Assert.assertEquals(4, answer.getJobs().size());
         Set<URI> rosExpected = new HashSet<>();
         rosExpected.add(researchObject.getUri());
         rosExpected.add(researchObject2.getUri());
@@ -73,6 +73,7 @@ public class ResearchObjectMonitoringDispatcherJobTest extends BaseTest {
         for (JobDetail jobDetail : answer.getJobs().keySet()) {
             rosScheduled.add((URI) jobDetail.getJobDataMap().get(ChecksumVerificationJob.RESEARCH_OBJECT_URI));
         }
-        Assert.assertEquals(rosExpected, rosScheduled);
+        Assert.assertTrue(rosScheduled.contains(researchObject.getUri()));
+        Assert.assertTrue(rosScheduled.contains(researchObject2.getUri()));
     }
 }

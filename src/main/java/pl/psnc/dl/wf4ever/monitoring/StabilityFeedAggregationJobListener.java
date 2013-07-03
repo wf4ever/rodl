@@ -31,8 +31,7 @@ public class StabilityFeedAggregationJobListener extends JobListenerSupport {
 
     @Override
     public String getName() {
-        //TODO
-        return "Checksum verification job listener";
+        return "Stability job listener";
     }
 
 
