@@ -67,11 +67,11 @@ public class ResearchObjectIdDAOTest {
     @Test
     public void testfisrtFree() {
         researchObjectId = new ResearchObjectId(idUri);
-        Assert.assertEquals(idUri, dao.fistFree(researchObjectId).getId());
-        dao.saftySave(researchObjectId);
-        Assert.assertEquals(idUri11, dao.fistFree(researchObjectId).getId());
-        dao.saftySave(researchObjectId);
-        Assert.assertEquals(idUri12, dao.fistFree(researchObjectId).getId());
+        Assert.assertEquals(idUri, dao.firstFree(researchObjectId).getId());
+        dao.assignId(researchObjectId);
+        Assert.assertEquals(idUri11, dao.firstFree(researchObjectId).getId());
+        dao.assignId(researchObjectId);
+        Assert.assertEquals(idUri12, dao.firstFree(researchObjectId).getId());
     }
 
 
@@ -79,9 +79,9 @@ public class ResearchObjectIdDAOTest {
     public void testSaftySave() {
         //not this same instance
         researchObjectId = new ResearchObjectId(idUri);
-        Assert.assertFalse(researchObjectId.equals(dao.fistFree(researchObjectId).getId()));
-        dao.saftySave(researchObjectId);
-        Assert.assertFalse(researchObjectId.equals(dao.fistFree(researchObjectId).getId()));
+        Assert.assertFalse(researchObjectId.equals(dao.firstFree(researchObjectId).getId()));
+        dao.assignId(researchObjectId);
+        Assert.assertFalse(researchObjectId.equals(dao.firstFree(researchObjectId).getId()));
     }
 
 

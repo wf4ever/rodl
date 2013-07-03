@@ -1,5 +1,7 @@
 package pl.psnc.dl.wf4ever.resources;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -13,8 +15,10 @@ import java.util.UUID;
 
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -173,7 +177,6 @@ public class ResourceTest extends ResourceBase {
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
         response.close();
-
     }
 
 
@@ -228,7 +231,7 @@ public class ResourceTest extends ResourceBase {
 
 
     @Test
-    public void testFulfillCreatorNames() {
+    public void testFillCreatorNames() {
         URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
         Builder builder = new Builder(null, DatasetFactory.createMem(), false);
         ResearchObject researchObject = builder.buildResearchObject(ro);
@@ -239,5 +242,47 @@ public class ResourceTest extends ResourceBase {
             Assert.assertNotNull(manifestModel.getProperty(manifestModel.getResource(n.toString()), FOAF.name));
         }
 
+    }
+
+
+    @Test
+    public void shouldReturn410GoneAfterDelete() {
+        URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
+        ClientResponse response = webResource.uri(ro).delete(ClientResponse.class);
+        assertThat(response.getStatus(), equalTo(HttpStatus.SC_NO_CONTENT));
+        response = webResource.uri(ro).get(ClientResponse.class);
+        assertThat(response.getStatus(), equalTo(HttpStatus.SC_GONE));
+    }
+
+
+    @Test
+    public void shouldReturn404NotFoundAfterPurgeDelete() {
+        URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
+        ClientResponse response = webResource.uri(ro).header("Purge", true).delete(ClientResponse.class);
+        assertThat(response.getStatus(), equalTo(HttpStatus.SC_NO_CONTENT));
+        response = webResource.uri(ro).get(ClientResponse.class);
+        assertThat(response.getStatus(), equalTo(HttpStatus.SC_NOT_FOUND));
+    }
+
+
+    @Test
+    public void shouldAllowToPurgeDeleteAfterDelete() {
+        URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
+        ClientResponse response = webResource.uri(ro).delete(ClientResponse.class);
+        assertThat(response.getStatus(), equalTo(HttpStatus.SC_NO_CONTENT));
+        response = webResource.uri(ro).header("Purge", true).delete(ClientResponse.class);
+        assertThat(response.getStatus(), equalTo(HttpStatus.SC_NO_CONTENT));
+        response = webResource.uri(ro).get(ClientResponse.class);
+        assertThat(response.getStatus(), equalTo(HttpStatus.SC_NOT_FOUND));
+    }
+
+
+    @Test
+    public void shouldReturn404NotFoundWhenAskingForHtml() {
+        URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
+        ClientResponse response = webResource.uri(ro).header("Purge", true).delete(ClientResponse.class);
+        assertThat(response.getStatus(), equalTo(HttpStatus.SC_NO_CONTENT));
+        response = webResource.uri(ro).accept(MediaType.TEXT_HTML).get(ClientResponse.class);
+        assertThat(response.getStatus(), equalTo(HttpStatus.SC_NOT_FOUND));
     }
 }

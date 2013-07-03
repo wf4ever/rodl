@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -31,9 +32,12 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
+import pl.psnc.dl.wf4ever.db.ResearchObjectId;
+import pl.psnc.dl.wf4ever.db.dao.ResearchObjectIdDAO;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+import pl.psnc.dl.wf4ever.exceptions.IsDeletedException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
@@ -78,10 +82,22 @@ public class ResearchObjectResource {
      * @param researchObjectId
      *            RO identifier - defined by the user
      * @return 200 OK
+     * @throws IsDeletedException
+     *             when the research object existed but has been deleted
      */
     @GET
     @Produces({ "application/zip", "multipart/related", "*/*" })
-    public Response getZippedRO(@PathParam("ro_id") String researchObjectId) {
+    public Response getZippedRO(@PathParam("ro_id") String researchObjectId)
+            throws IsDeletedException {
+        ResearchObject researchObject = ResearchObject.get(builder, uriInfo.getAbsolutePath());
+        if (researchObject == null) {
+            ResearchObjectIdDAO dao = new ResearchObjectIdDAO();
+            if (dao.findByPrimaryKey(uriInfo.getAbsolutePath()) != null) {
+                throw new IsDeletedException("This research object has been deleted");
+            } else {
+                throw new NotFoundException("This research object does not exist");
+            }
+        }
         return Response.seeOther(getZippedROURI(uriInfo.getBaseUriBuilder(), researchObjectId)).build();
     }
 
@@ -92,11 +108,23 @@ public class ResearchObjectResource {
      * @param researchObjectId
      *            RO id
      * @return 303 See Other
+     * @throws IsDeletedException
+     *             when the research object existed but has been deleted
      */
     @GET
     @Produces({ "application/rdf+xml", "application/x-turtle", "text/turtle", "application/x-trig", "application/trix",
             "text/rdf+n3" })
-    public Response getROMetadata(@PathParam("ro_id") String researchObjectId) {
+    public Response getROMetadata(@PathParam("ro_id") String researchObjectId)
+            throws IsDeletedException {
+        ResearchObject researchObject = ResearchObject.get(builder, uriInfo.getAbsolutePath());
+        if (researchObject == null) {
+            ResearchObjectIdDAO dao = new ResearchObjectIdDAO();
+            if (dao.findByPrimaryKey(uriInfo.getAbsolutePath()) != null) {
+                throw new IsDeletedException("This research object has been deleted");
+            } else {
+                throw new NotFoundException("This research object does not exist");
+            }
+        }
         return Response
                 .seeOther(getROMetadataURI(uriInfo.getBaseUriBuilder(), researchObjectId + "/"))
                 .header(
@@ -114,11 +142,22 @@ public class ResearchObjectResource {
      * @return 303 See Other
      * @throws URISyntaxException
      *             could not construct a valid redirection URI
+     * @throws IsDeletedException
+     *             when the research object existed but has been deleted
      */
     @GET
     @Produces({ MediaType.TEXT_HTML })
     public Response getROHtml(@PathParam("ro_id") String researchObjectId)
-            throws URISyntaxException {
+            throws URISyntaxException, IsDeletedException {
+        ResearchObject researchObject = ResearchObject.get(builder, uriInfo.getAbsolutePath());
+        if (researchObject == null) {
+            ResearchObjectIdDAO dao = new ResearchObjectIdDAO();
+            if (dao.findByPrimaryKey(uriInfo.getAbsolutePath()) != null) {
+                throw new IsDeletedException("This research object has been deleted");
+            } else {
+                throw new NotFoundException("This research object does not exist");
+            }
+        }
         URI uri = getROHtmlURI(uriInfo.getBaseUriBuilder(), researchObjectId);
         return Response.seeOther(uri).build();
     }
@@ -129,18 +168,32 @@ public class ResearchObjectResource {
      * 
      * @param researchObjectId
      *            research object id
+     * @param purge
+     *            force delete of the ID
      * @throws DigitalLibraryException
      *             could not connect to the DL
      */
     @DELETE
-    public void deleteResearchObject(@PathParam("ro_id") String researchObjectId)
+    public void deleteResearchObject(@PathParam("ro_id") String researchObjectId,
+            @DefaultValue("false") @HeaderParam("Purge") boolean purge)
             throws DigitalLibraryException {
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.get(builder, uri);
-        if (researchObject == null) {
-            throw new NotFoundException("Research Object not found");
+        if (researchObject != null) {
+            researchObject.delete();
         }
-        researchObject.delete();
+        if (!purge) {
+            if (researchObject == null) {
+                throw new NotFoundException("Research Object not found");
+            }
+        } else {
+            ResearchObjectIdDAO dao = new ResearchObjectIdDAO();
+            ResearchObjectId id = dao.findByPrimaryKey(uri);
+            if (id == null) {
+                throw new NotFoundException("Research Object ID not found");
+            }
+            dao.delete(id);
+        }
     }
 
 
