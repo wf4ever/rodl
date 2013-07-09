@@ -95,7 +95,7 @@ public class AdminResource {
 
 
     @POST
-    @Path("preservrvetion/id/synchronize")
+    @Path("preservation/id/synchronize")
     public String synchronizeIds() {
         List<URI> storedRosList = new ArrayList<URI>();
         for (ResearchObject ro : ResearchObject.getAll(builder, null)) {
