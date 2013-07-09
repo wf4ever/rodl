@@ -5,9 +5,11 @@ import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.quartz.TriggerBuilder.newTrigger;
 import static org.quartz.impl.matchers.GroupMatcher.jobGroupEquals;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -17,10 +19,12 @@ import org.quartz.JobListener;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 
+import pl.psnc.dl.wf4ever.darceo.client.DArceoException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import se.kb.oai.OAIException;
 
 /**
  * This job gets a list of all research objects and for each them schedules monitoring jobs.
@@ -35,11 +39,18 @@ public class ResearchObjectPreservationDispatcherJob implements Job {
 
     /** Id of checksum verification job group. */
     static final String PRESERVATION_GROUP_NAME = "preservationIdentification";
+    /** Logger. */
+    private static final Logger LOGGER = Logger.getLogger(ResearchObjectPreservationDispatcherJob.class);
 
 
     @Override
     public void execute(JobExecutionContext context)
             throws JobExecutionException {
+        try {
+            Synchronization.dArceo();
+        } catch (DArceoException | IOException | OAIException e) {
+            LOGGER.error("Can't synchronize preservation records with darceo", e);
+        }
         if (builder == null) {
             //FIXME RODL URI should be better
             UserMetadata userMetadata = new UserMetadata("rodl", "RODL decay monitor", Role.ADMIN, URI.create("rodl"));
