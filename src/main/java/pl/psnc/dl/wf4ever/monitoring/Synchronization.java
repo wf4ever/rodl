@@ -60,7 +60,12 @@ public final class Synchronization {
         //initiate truststore and keystore
         DArceoClient.getInstance();
         if (darceoOai == null) {
-            darceoOai = DArceoClient.getInstance().getServiceUri().resolve("../oai-pmh").toString();
+            if (DArceoClient.getInstance().getServiceUri() != null) {
+                darceoOai = DArceoClient.getInstance().getServiceUri().resolve("../oai-pmh").toString();
+            } else {
+                LOGGER.warn("Don't synchronize with dArceo the system was turned off in connection properties file");
+                return;
+            }
         }
         OaiPmhServer server = new OaiPmhServer(darceoOai);
         boolean more = true;
@@ -84,7 +89,7 @@ public final class Synchronization {
         }
         if (builder == null) {
             //FIXME RODL URI should be better
-            UserMetadata userMetadata = new UserMetadata("rodl", "RODL decay monitor", Role.PUBLIC, URI.create("rodl"));
+            UserMetadata userMetadata = new UserMetadata("rodl", "RODL decay monitor", Role.ADMIN, URI.create("rodl"));
             builder = new Builder(userMetadata);
         }
         Set<ResearchObject> tripleStoreROs = ResearchObject.getAll(builder, null);

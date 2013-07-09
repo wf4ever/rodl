@@ -88,9 +88,9 @@ public class ResearchObjectPreservationDispatcherJob implements Job {
      */
     protected JobDetail newPreservationJob(ResearchObject researchObject) {
         JobDataMap jobDataMap = new JobDataMap();
-        jobDataMap.put(ChecksumVerificationJob.RESEARCH_OBJECT_URI, researchObject.getUri());
-        JobDetail job = newJob(ChecksumVerificationJob.class)
-                .withIdentity("ChecksumIdentification for " + researchObject, PRESERVATION_GROUP_NAME)
+        jobDataMap.put(PreservationJob.RESEARCH_OBJECT_URI, researchObject.getUri());
+        JobDetail job = newJob(PreservationJob.class)
+                .withIdentity("Preservation jon for " + researchObject, PRESERVATION_GROUP_NAME)
                 .usingJobData(jobDataMap).build();
         return job;
     }
@@ -102,7 +102,7 @@ public class ResearchObjectPreservationDispatcherJob implements Job {
      * @return a new {@link ChecksumVerificationJobListener}
      */
     protected JobListener newPreservationJobListener() {
-        return new ChecksumVerificationJobListener();
+        return new PreservationJobListener();
     }
 
 
