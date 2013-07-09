@@ -101,10 +101,6 @@ public class AdminResource {
         for (ResearchObject ro : ResearchObject.getAll(builder, null)) {
             storedRosList.add(ro.getUri());
         }
-        //@TODO
-        //for list od dArce 
-        //check if uri is in the list
-        // if it isn't, add.
 
         ResearchObjectIdDAO dao = new ResearchObjectIdDAO();
         for (ResearchObjectId id : dao.all()) {
