@@ -31,7 +31,7 @@ import se.kb.oai.pmh.OaiPmhServer;
 public final class Synchronization {
 
     /** dArceo OAI service uri. */
-    private static String darceo_oai = null;
+    private static String darceoOai = null;
 
     /** ROs builder. */
     private static Builder builder = null;
@@ -59,10 +59,10 @@ public final class Synchronization {
             throws DArceoException, IOException, OAIException {
         //initiate truststore and keystore
         DArceoClient.getInstance();
-        if (darceo_oai == null) {
-            darceo_oai = DArceoClient.getInstance().getServiceUri().resolve("../oai-pmh").toString();
+        if (darceoOai == null) {
+            darceoOai = DArceoClient.getInstance().getServiceUri().resolve("../oai-pmh").toString();
         }
-        OaiPmhServer server = new OaiPmhServer(darceo_oai);
+        OaiPmhServer server = new OaiPmhServer(darceoOai);
         boolean more = true;
         ArrayList<URI> dArceoROsUri = new ArrayList<>();
         IdentifiersList list = server.listIdentifiers("METS");
@@ -121,16 +121,18 @@ public final class Synchronization {
                     if (status == null) {
                         LOGGER.warn("Research Object " + darceoROUri.toString() + "needs to be restored");
                         ResearchObjectPreservationStatus newStatus = new ResearchObjectPreservationStatus(darceoROUri,
-                                Status.lOST);
+                                Status.LOST);
                         statusDao.save(newStatus);
                     } else if (status.getStatus() == null || status.getStatus() != Status.DELETED) {
                         LOGGER.warn("Research Object " + darceoROUri.toString() + "needs to be restored");
-                        status.setStatus(Status.lOST);
+                        status.setStatus(Status.LOST);
                         statusDao.save(status);
                     }
                 }
             }
-
+            for (URI darceoROUri : dArceoROsUri) {
+                DArceoClient.getInstance().delete(darceoROUri);
+            }
         } finally {
             if (started) {
                 HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
@@ -152,10 +154,10 @@ public final class Synchronization {
      */
     public static void dArceo(String serverUri, Builder builder)
             throws DArceoException, IOException, OAIException {
-        if (serverUri == null && darceo_oai == null) {
-            darceo_oai = DArceoClient.getInstance().getServiceUri().resolve("../oai-pmh").toString();
+        if (serverUri == null && darceoOai == null) {
+            darceoOai = DArceoClient.getInstance().getServiceUri().resolve("../oai-pmh").toString();
         } else {
-            darceo_oai = serverUri;
+            darceoOai = serverUri;
         }
         if (builder != null) {
             Synchronization.builder = builder;

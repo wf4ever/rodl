@@ -16,5 +16,5 @@ public enum Status {
     /** Research Object wasn't deleted - the preserverd version is up to date. */
     UP_TO_DATE,
     /** Research Object was lost. Need to be restored from dArceo. */
-    lOST,
+    LOST,
 }

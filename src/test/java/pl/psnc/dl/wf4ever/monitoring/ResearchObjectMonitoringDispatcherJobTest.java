@@ -65,7 +65,7 @@ public class ResearchObjectMonitoringDispatcherJobTest extends BaseTest {
         ResearchObjectMonitoringDispatcherJob job = new ResearchObjectMonitoringDispatcherJob();
         job.setBuilder(builder);
         job.execute(context);
-        Assert.assertEquals(4, answer.getJobs().size());
+        Assert.assertEquals(2, answer.getJobs().size());
         Set<URI> rosExpected = new HashSet<>();
         rosExpected.add(researchObject.getUri());
         rosExpected.add(researchObject2.getUri());

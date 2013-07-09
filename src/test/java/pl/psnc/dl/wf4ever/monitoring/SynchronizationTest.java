@@ -87,7 +87,7 @@ public class SynchronizationTest {
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         Assert.assertNull(preservationDAO.findById(createdOnlyInDArceo.getUri().toString()));
         Synchronization.dArceo();
-        Assert.assertEquals(Status.lOST, preservationDAO.findById(createdOnlyInDArceo.getUri().toString()).getStatus());
+        Assert.assertEquals(Status.LOST, preservationDAO.findById(createdOnlyInDArceo.getUri().toString()).getStatus());
         preservationDAO.delete(preservationDAO.findById(createdOnlyInDArceo.getUri().toString()));
         DArceoClient.getInstance().delete(createdOnlyInDArceo.getUri());
     }
@@ -111,7 +111,7 @@ public class SynchronizationTest {
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         Synchronization.dArceo();
-        Assert.assertEquals(Status.lOST, preservationDAO.findById(createdOnlyInDArceo.getUri().toString()).getStatus());
+        Assert.assertEquals(Status.LOST, preservationDAO.findById(createdOnlyInDArceo.getUri().toString()).getStatus());
         preservationDAO.delete(preservationDAO.findById(createdOnlyInDArceo.getUri().toString()));
         DArceoClient.getInstance().delete(createdOnlyInDArceo.getUri());
     }
