@@ -60,6 +60,7 @@ public class Notification implements Serializable {
     private String sourceName;
 
     /** Entry human-friendly content. */
+    @Column(length = 1024)
     private String summary;
 
     /** Related object (for example Research Object uri). */
