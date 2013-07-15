@@ -54,7 +54,7 @@ public class StabilityFeedAggregationJob implements Job {
         Properties properties = new Properties();
         try {
             properties.load(getClass().getClassLoader().getResourceAsStream("connection.properties"));
-            checklistNotificationsUri = URI.create(properties.getProperty("checklist_notifications_uri"));
+            checklistNotificationsUri = URI.create(properties.getProperty("checklist_service_uri"));
         } catch (IOException e) {
             throw new IOException("Configuration for stability service couldn't be loaded", e);
         }
