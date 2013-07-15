@@ -325,7 +325,8 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     @Override
     public boolean isInternal() {
         String path = getPath();
-        return !path.isEmpty() && builder.getDigitalLibrary().fileExists(getResearchObject().getUri(), path);
+        return path != null && !path.isEmpty()
+                && builder.getDigitalLibrary().fileExists(getResearchObject().getUri(), path);
     }
 
 
