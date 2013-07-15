@@ -31,7 +31,7 @@ import com.sun.syndication.io.XmlReader;
 public class StabilityFeedAggregationJob implements Job {
 
     /** Service Uri. */
-    private static URI checklistNotificationsUri = null;
+    private URI checklistNotificationsUri = null;
 
     /** Map key. */
     static final String RESEARCH_OBJECT_URI = "researchObjectUri";
@@ -39,14 +39,21 @@ public class StabilityFeedAggregationJob implements Job {
     /** Logger. */
     private static final Logger LOGGER = Logger.getLogger(StabilityFeedAggregationJob.class);
 
-    static {
+
+    /**
+     * Default constructor.
+     * 
+     * @throws IOException
+     *             in case properties can't be loaded
+     */
+    public StabilityFeedAggregationJob()
+            throws IOException {
+        Properties properties = new Properties();
         try {
-            Properties properties = new Properties();
-            properties.load(StabilityFeedAggregationJob.class.getClassLoader().getResourceAsStream(
-                "connection.properties"));
-            checklistNotificationsUri = URI.create(properties.getProperty("checklist_service_uri"));
+            properties.load(getClass().getClassLoader().getResourceAsStream("connection.properties"));
+            checklistNotificationsUri = URI.create(properties.getProperty("checklist_service_url"));
         } catch (IOException e) {
-            LOGGER.error("Configuration for stability service couldn't be loaded", e);
+            throw new IOException("Configuration for stability service couldn't be loaded", e);
         }
     }
 

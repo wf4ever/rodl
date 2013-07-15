@@ -6,6 +6,7 @@ import java.net.URI;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -17,6 +18,7 @@ import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 
 import com.sun.jersey.api.client.ClientResponse;
 
+@Ignore
 @Category(IntegrationTest.class)
 public class PreservationTest extends W4ETest {
 
