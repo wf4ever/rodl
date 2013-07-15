@@ -24,7 +24,7 @@ import pl.psnc.dl.wf4ever.preservation.Status;
  * This job calculates checksums for all resources of a research object and compares them with the checksums stored in
  * the database. The result is stored in the context.
  * 
- * @author piotrekhol
+ * @author pejot
  * 
  */
 public class PreservationJob implements Job {

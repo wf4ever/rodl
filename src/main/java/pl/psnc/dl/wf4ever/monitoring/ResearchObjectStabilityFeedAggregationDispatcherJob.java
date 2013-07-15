@@ -34,7 +34,7 @@ public class ResearchObjectStabilityFeedAggregationDispatcherJob implements Job 
     private Builder builder;
 
     /** Id of checksum verification job group. */
-    static final String STABILITY_GROUP_NAME = "stasbilityIdentification";
+    static final String STABILITY_GROUP_NAME = "feedJobIdentification";
 
 
     @Override
@@ -82,7 +82,7 @@ public class ResearchObjectStabilityFeedAggregationDispatcherJob implements Job 
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put(StabilityFeedAggregationJob.RESEARCH_OBJECT_URI, researchObject.getUri());
         JobDetail job = newJob(StabilityFeedAggregationJob.class)
-                .withIdentity("ChecksumIdentification for " + researchObject, STABILITY_GROUP_NAME)
+                .withIdentity("StabilityIdentification for " + researchObject, STABILITY_GROUP_NAME)
                 .usingJobData(jobDataMap).build();
         return job;
     }

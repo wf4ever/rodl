@@ -33,9 +33,6 @@ public class StabilityFeedAggregationJob implements Job {
     /** Service Uri. */
     private URI checklistNotificationsUri = null;
 
-    /** Id of checksum verification job group. */
-    static final String CHECKSUM_CHECKING_GROUP_NAME = "stabilityFeedAdgregatrion";
-
     /** Map key. */
     static final String RESEARCH_OBJECT_URI = "researchObjectUri";
 
