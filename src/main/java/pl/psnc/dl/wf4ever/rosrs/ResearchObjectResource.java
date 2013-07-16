@@ -36,6 +36,7 @@ import pl.psnc.dl.wf4ever.db.ResearchObjectId;
 import pl.psnc.dl.wf4ever.db.dao.ResearchObjectIdDAO;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
+import pl.psnc.dl.wf4ever.eventbus.lazy.LazyEventBusModule;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.exceptions.IsDeletedException;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -177,6 +178,9 @@ public class ResearchObjectResource {
     public void deleteResearchObject(@PathParam("ro_id") String researchObjectId,
             @DefaultValue("false") @HeaderParam("Purge") boolean purge)
             throws DigitalLibraryException {
+        LazyEventBusModule lazyEventBusModule = new LazyEventBusModule();
+        builder.setEventBusModule(lazyEventBusModule);
+
         URI uri = uriInfo.getAbsolutePath();
         ResearchObject researchObject = ResearchObject.get(builder, uri);
         if (researchObject != null) {
@@ -194,6 +198,7 @@ public class ResearchObjectResource {
             }
             dao.delete(id);
         }
+        lazyEventBusModule.commit();
     }
 
 

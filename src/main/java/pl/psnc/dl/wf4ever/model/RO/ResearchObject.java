@@ -616,7 +616,8 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
                     if (body.isSpecialResource()) {
                         continue;
                     }
-                    unpackAndAggregate(researchObject, zip, body.getPath(), mfm.getContentType(body.getPath()));
+                    unpackAndAggregate(researchObject, zip, body.getPath(),
+                        RDFFormat.forFileName(body.getPath(), RDFFormat.RDFXML).getDefaultMIMEType());
                 }
                 researchObject.annotate(annotation.getBody().getUri(), annotation.getAnnotated());
             } catch (Exception e) {

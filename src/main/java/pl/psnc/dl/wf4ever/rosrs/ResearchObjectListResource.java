@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
+import pl.psnc.dl.wf4ever.eventbus.lazy.LazyEventBusModule;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -125,6 +126,9 @@ public class ResearchObjectListResource {
             throw new BadRequestException("Research object ID is null or empty");
         }
 
+        LazyEventBusModule lazyEventBusModule = new LazyEventBusModule();
+        builder.setEventBusModule(lazyEventBusModule);
+
         UUID uuid = UUID.randomUUID();
         File tmpFile = File.createTempFile("tmp_ro", uuid.toString());
         BufferedInputStream inputStream = new BufferedInputStream(zipStream);
@@ -134,6 +138,7 @@ public class ResearchObjectListResource {
         ResearchObject researchObject = ResearchObject.create(builder, roUri, new MemoryZipFile(tmpFile,
                 researchObjectId));
         tmpFile.delete();
+        lazyEventBusModule.commit();
         return Response.created(researchObject.getUri()).build();
     }
 }
