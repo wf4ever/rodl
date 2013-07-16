@@ -33,6 +33,6 @@ public final class ROEventBusInjector {
             guiceROEventBusInjector = Guice.createInjector(new GuiceROEventBusModule());
         }
         return guiceROEventBusInjector;
-
     }
+
 }

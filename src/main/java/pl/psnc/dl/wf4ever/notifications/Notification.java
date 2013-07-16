@@ -240,7 +240,9 @@ public class Notification implements Serializable {
                 notification.setSubject(ln.getHref());
             }
         }
-        notification.setSummary(entry.getDescription().getValue());
+        if (entry.getDescription() != null) {
+            notification.setSummary(entry.getDescription().getValue());
+        }
         return notification;
     }
 

@@ -63,10 +63,12 @@ public class PreservationJob implements Job {
             if (researchObject != null) {
                 switch (status.getStatus()) {
                     case NEW:
-                        DArceoClient.getInstance().post(researchObject);
+                        DArceoClient.getInstance()
+                                .postORUpdateBlocking(DArceoClient.getInstance().post(researchObject));
                         break;
                     case UPDATED:
-                        DArceoClient.getInstance().update(researchObject);
+                        DArceoClient.getInstance().postORUpdateBlocking(
+                            DArceoClient.getInstance().update(researchObject));
                         break;
                     case UP_TO_DATE:
                         break;
