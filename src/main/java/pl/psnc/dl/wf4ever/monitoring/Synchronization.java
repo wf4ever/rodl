@@ -135,9 +135,6 @@ public final class Synchronization {
                     }
                 }
             }
-            for (URI darceoROUri : dArceoROsUri) {
-                DArceoClient.getInstance().delete(darceoROUri);
-            }
         } finally {
             if (started) {
                 HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
