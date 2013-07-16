@@ -30,12 +30,10 @@ import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
-import pl.psnc.dl.wf4ever.eventbus.ROEventBusInjector;
 import pl.psnc.dl.wf4ever.eventbus.events.ROAfterUpdateEvent;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
-import com.google.common.eventbus.EventBus;
 import com.sun.jersey.api.NotFoundException;
 
 /**
@@ -270,7 +268,7 @@ public class UserResource {
             super.run();
             for (ResearchObject ro : roSet) {
                 ro.setCreator(creator);
-                ROEventBusInjector.getInjector().getInstance(EventBus.class).post(new ROAfterUpdateEvent(ro));
+                builder.getEventBusModule().getEventBus().post(new ROAfterUpdateEvent(ro));
             }
         }
     }

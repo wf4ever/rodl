@@ -348,7 +348,8 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
             format = RDFFormat.forFileName(getPath());
         }
         if (format == null) {
-            throw new BadRequestException("Unrecognized RDF format for file: " + filePath);
+            LOGGER.warn("Unrecognized RDF format for file: " + filePath + ", assuming RDF/XML");
+            format = RDFFormat.RDFXML;
         }
         try (InputStream data = builder.getDigitalLibrary().getFileContents(researchObject.getUri(), filePath)) {
             if (data == null) {

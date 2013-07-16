@@ -225,13 +225,11 @@ public class AnnotationTest extends BaseTest {
         InputStream is = getClass().getClassLoader().getResourceAsStream("model/ao/annotation/ann1.rdf");
         Annotation annotation = Annotation.assemble(builder, researchObject,
             researchObject.getUri().resolve("assemble-test"), is);
-        Annotation newAnnotation = new Annotation(userProfile, dataset, false, researchObject,
-                URI.create("new-annotation"));
         Set<Thing> annotated = new HashSet<Thing>();
         annotated.add(builder.buildThing(researchObject.getUri().resolve("a%20workflow.t2flow")));
-        newAnnotation.setAnnotated(annotated);
         Thing newBody = builder.buildThing(URI.create("http://example.org/external"));
-        newAnnotation.setBody(newBody);
+        Annotation newAnnotation = builder.buildAnnotation(URI.create("new-annotation"), researchObject, newBody,
+            annotated);
         annotation.update(newAnnotation);
         Assert.assertEquals(annotation.getBody(), newBody);
         Assert.assertEquals(annotation.getAnnotated(), annotated);

@@ -11,6 +11,8 @@ import org.joda.time.DateTime;
 
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.eventbus.EventBusModule;
+import pl.psnc.dl.wf4ever.eventbus.SimpleEventBusModule;
 import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -62,6 +64,9 @@ public class Builder {
 
     /** A digital library (storage) used for storing content. */
     private final DigitalLibrary digitalLibrary;
+
+    /** Default digital factory library. */
+    private EventBusModule eventBusModule = new SimpleEventBusModule();
 
     /** Use transactions on the Jena dataset. */
     private final boolean useTransactions;
@@ -177,6 +182,16 @@ public class Builder {
             LOGGER.error("Digital Library factory can not be loaded from the properties file", e);
         }
         return null;
+    }
+
+
+    public EventBusModule getEventBusModule() {
+        return eventBusModule;
+    }
+
+
+    public void setEventBusModule(EventBusModule eventBusModule) {
+        this.eventBusModule = eventBusModule;
     }
 
 
