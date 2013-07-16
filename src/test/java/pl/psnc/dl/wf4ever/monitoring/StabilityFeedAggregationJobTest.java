@@ -14,7 +14,6 @@ import java.util.Properties;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -72,7 +71,6 @@ public class StabilityFeedAggregationJobTest {
 
 
     @Test
-    @Ignore
     public void testExecute()
             throws IOException, JobExecutionException, IllegalArgumentException, FeedException {
         boolean started = !HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive();

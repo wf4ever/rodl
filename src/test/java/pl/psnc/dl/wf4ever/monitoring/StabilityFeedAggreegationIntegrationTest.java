@@ -78,7 +78,7 @@ public class StabilityFeedAggreegationIntegrationTest extends W4ETest {
         } catch (IOException e) {
             throw new IOException("Configuration couldn't be loaded", e);
         }
-        checklistNotificationsUri = URI.create(properties.getProperty("checklist_notifications_uri"));
+        checklistNotificationsUri = URI.create(properties.getProperty("checklist_service_url"));
         //http mock
         InputStream checklistRefactorInput = StabilityFeedAggregationJobTest.class.getClassLoader()
                 .getResourceAsStream("monitoring/stability_service_notification.xml");
