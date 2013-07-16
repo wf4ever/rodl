@@ -61,6 +61,13 @@ public class PreservationJob implements Job {
             ResearchObject researchObject = ResearchObject.get(builder, researchObjectUri);
             ResearchObjectPreservationStatus status = dao.findById(researchObjectUri.toString());
             if (researchObject != null) {
+                if (status == null) {
+                    status = new ResearchObjectPreservationStatus(researchObjectUri, Status.NEW);
+                    dao.save(status);
+                } else if (status.getStatus() == null) {
+                    status.setStatus(Status.NEW);
+                    dao.save(status);
+                }
                 switch (status.getStatus()) {
                     case NEW:
                         DArceoClient.getInstance()
