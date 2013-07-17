@@ -61,20 +61,20 @@ public class CopyResource implements JobsContainer {
 
     /** Statuses of finished jobs. */
     @SuppressWarnings("serial")
-    private static Map<UUID, JobStatus> finishedJobs = Collections
-            .synchronizedMap(new LinkedHashMap<UUID, JobStatus>() {
+    private static Map<UUID, CopyJobStatus> finishedJobs = Collections
+            .synchronizedMap(new LinkedHashMap<UUID, CopyJobStatus>() {
 
-                protected boolean removeEldestEntry(Map.Entry<UUID, JobStatus> eldest) {
+                protected boolean removeEldestEntry(Map.Entry<UUID, CopyJobStatus> eldest) {
                     return size() > MAX_JOBS_DONE;
                 };
             });
 
     /** Statuses of finished jobs by target. */
     @SuppressWarnings("serial")
-    private static Map<URI, JobStatus> finishedJobsByTarget = Collections
-            .synchronizedMap(new LinkedHashMap<URI, JobStatus>() {
+    private static Map<URI, CopyJobStatus> finishedJobsByTarget = Collections
+            .synchronizedMap(new LinkedHashMap<URI, CopyJobStatus>() {
 
-                protected boolean removeEldestEntry(Map.Entry<URI, JobStatus> eldest) {
+                protected boolean removeEldestEntry(Map.Entry<URI, CopyJobStatus> eldest) {
                     return size() > MAX_JOBS_DONE;
                 };
             });
@@ -94,7 +94,7 @@ public class CopyResource implements JobsContainer {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createCopyJob(@HeaderParam("Slug") String slug, JobStatus status)
+    public Response createCopyJob(@HeaderParam("Slug") String slug, CopyJobStatus status)
             throws BadRequestException {
         if (status.getCopyfrom() == null) {
             throw new BadRequestException("incorrect or missing \"copyfrom\" attribute");
@@ -144,7 +144,7 @@ public class CopyResource implements JobsContainer {
      */
     @GET
     @Path("{id}")
-    public JobStatus getJob(@PathParam("id") UUID uuid) {
+    public CopyJobStatus getJob(@PathParam("id") UUID uuid) {
         if (jobs.containsKey(uuid)) {
             return jobs.get(uuid).getStatus();
         }
@@ -184,7 +184,7 @@ public class CopyResource implements JobsContainer {
      *            target RO URI
      * @return the job status
      */
-    public static JobStatus getStatusForTarget(URI target) {
+    public static CopyJobStatus getStatusForTarget(URI target) {
         return finishedJobsByTarget.get(target);
     }
 }

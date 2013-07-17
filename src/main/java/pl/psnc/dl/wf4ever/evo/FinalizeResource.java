@@ -57,10 +57,10 @@ public class FinalizeResource implements JobsContainer {
 
     /** Statuses of finished jobs. */
     @SuppressWarnings("serial")
-    private static Map<UUID, JobStatus> finishedJobs = Collections
-            .synchronizedMap(new LinkedHashMap<UUID, JobStatus>() {
+    private static Map<UUID, CopyJobStatus> finishedJobs = Collections
+            .synchronizedMap(new LinkedHashMap<UUID, CopyJobStatus>() {
 
-                protected boolean removeEldestEntry(Map.Entry<UUID, JobStatus> eldest) {
+                protected boolean removeEldestEntry(Map.Entry<UUID, CopyJobStatus> eldest) {
                     return size() > MAX_JOBS_DONE;
                 };
             });
@@ -78,12 +78,12 @@ public class FinalizeResource implements JobsContainer {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createFinalizeJob(JobStatus newStatus)
+    public Response createFinalizeJob(CopyJobStatus newStatus)
             throws BadRequestException {
         if (newStatus.getTarget() == null) {
             throw new BadRequestException("incorrect or missing \"target\" attribute");
         }
-        JobStatus status = CopyResource.getStatusForTarget(newStatus.getTarget());
+        CopyJobStatus status = CopyResource.getStatusForTarget(newStatus.getTarget());
         if (status == null) {
             throw new BadRequestException("Can't find a copy job for this target: " + newStatus.getTarget());
         }
@@ -113,7 +113,7 @@ public class FinalizeResource implements JobsContainer {
      */
     @GET
     @Path("{id}")
-    public JobStatus getJob(@PathParam("id") UUID uuid) {
+    public CopyJobStatus getJob(@PathParam("id") UUID uuid) {
         if (jobs.containsKey(uuid)) {
             return jobs.get(uuid).getStatus();
         }

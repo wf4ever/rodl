@@ -60,7 +60,7 @@ public class EvoTest extends W4ETest {
     }
 
 
-    protected ClientResponse createCopyJob(JobStatus status, String target) {
+    protected ClientResponse createCopyJob(CopyJobStatus status, String target) {
         Builder builder = webResource.path("evo/copy/").header("Authorization", "Bearer " + accessToken);
         if (target != null) {
             builder = builder.header("Slug", target);
@@ -69,23 +69,23 @@ public class EvoTest extends W4ETest {
     }
 
 
-    protected ClientResponse createFinalizeJob(JobStatus status) {
+    protected ClientResponse createFinalizeJob(CopyJobStatus status) {
         return webResource.path("evo/finalize/").header("Authorization", "Bearer " + accessToken)
                 .type(MediaType.APPLICATION_JSON).post(ClientResponse.class, status);
     }
 
 
-    protected JobStatus getFinalizeJobStatus(URI job, JobStatus original) {
-        return webResource.uri(job).header("Authorization", "Bearer " + accessToken).get(JobStatus.class);
+    protected CopyJobStatus getFinalizeJobStatus(URI job, CopyJobStatus original) {
+        return webResource.uri(job).header("Authorization", "Bearer " + accessToken).get(CopyJobStatus.class);
     }
 
 
-    protected JobStatus getRemoteStatus(URI job, int interval)
+    protected CopyJobStatus getRemoteStatus(URI job, int interval)
             throws InterruptedException {
         int cnt = 0;
-        JobStatus remoteStatus;
+        CopyJobStatus remoteStatus;
         do {
-            remoteStatus = webResource.uri(job).header("Authorization", "Bearer " + accessToken).get(JobStatus.class);
+            remoteStatus = webResource.uri(job).header("Authorization", "Bearer " + accessToken).get(CopyJobStatus.class);
             synchronized (this) {
                 wait(1000);
             }

@@ -50,7 +50,7 @@ public class Job extends Thread {
     private Operation[] operations;
 
     /** Current job status. */
-    private JobStatus status;
+    private CopyJobStatus status;
 
 
     /**
@@ -65,7 +65,7 @@ public class Job extends Thread {
      * @param operations
      *            list of operations to perform
      */
-    public Job(UUID jobUUID, JobStatus status, JobsContainer container, Operation... operations) {
+    public Job(UUID jobUUID, CopyJobStatus status, JobsContainer container, Operation... operations) {
         this.uuid = jobUUID;
         this.status = status;
         this.status.setState(State.RUNNING);
@@ -98,7 +98,7 @@ public class Job extends Thread {
     }
 
 
-    public JobStatus getStatus() {
+    public CopyJobStatus getStatus() {
         return status;
     }
 

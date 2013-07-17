@@ -30,7 +30,7 @@ public class FinalizeOperation implements Operation {
 
 
     @Override
-    public void execute(JobStatus status)
+    public void execute(CopyJobStatus status)
             throws OperationFailedException {
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         try {

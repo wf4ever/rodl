@@ -16,7 +16,7 @@ public interface Operation {
      * @throws OperationFailedException
      *             the operation failed gracefully
      */
-    void execute(JobStatus status)
+    void execute(CopyJobStatus status)
             throws OperationFailedException;
 
 }

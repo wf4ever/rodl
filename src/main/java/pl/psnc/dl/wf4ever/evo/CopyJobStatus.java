@@ -14,7 +14,7 @@ import pl.psnc.dl.wf4ever.evo.Job.State;
  * 
  */
 @XmlRootElement
-public class JobStatus {
+public class CopyJobStatus {
 
     /** RO to copy from. */
     private URI copyfrom;
@@ -38,7 +38,7 @@ public class JobStatus {
     /**
      * Default empty constructor.
      */
-    public JobStatus() {
+    public CopyJobStatus() {
 
     }
 
@@ -53,7 +53,7 @@ public class JobStatus {
      * @param finalize
      *            Finalize?
      */
-    public JobStatus(URI copyfrom, EvoType type, boolean finalize) {
+    public CopyJobStatus(URI copyfrom, EvoType type, boolean finalize) {
         setCopyfrom(copyfrom);
         setType(type);
         setFinalize(finalize);
