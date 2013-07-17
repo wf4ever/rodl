@@ -52,7 +52,7 @@ public class LiveEvoInfo extends EvoInfo {
     public static LiveEvoInfo create(Builder builder, URI uri, ResearchObject researchObject) {
         LiveEvoInfo evoInfo = builder.buildLiveEvoInfo(uri, researchObject, builder.getUser(), DateTime.now());
         evoInfo.save();
-        evoInfo.serialize(researchObject.getUri(), RDFFormat.TURTLE);
+        evoInfo.scheduleToSerialize(researchObject.getUri(), RDFFormat.TURTLE);
         researchObject.getAggregatedResources().put(evoInfo.getUri(), evoInfo);
         return evoInfo;
     }

@@ -25,6 +25,9 @@ public class LazySolrListener {
     /** A set of ROs to reindex in the commit() method. */
     private Set<ResearchObjectSerializable> researchObjectsToReindex = new HashSet<>();
 
+    /** A set of ROs to delete from index in the commit() method. */
+    private Set<ResearchObjectSerializable> researchObjectsToDeleteFromIndex = new HashSet<>();
+
 
     /**
      * Constructor.
@@ -93,7 +96,7 @@ public class LazySolrListener {
      */
     @Subscribe
     public void onBeforeRODelete(ROBeforeDeleteEvent event) {
-        researchObjectsToReindex.add(event.getResearchObject());
+        researchObjectsToDeleteFromIndex.add(event.getResearchObject());
     }
 
 
@@ -113,9 +116,14 @@ public class LazySolrListener {
      * Reindex all necessary ROs.
      */
     public void commit() {
+        researchObjectsToReindex.retainAll(researchObjectsToDeleteFromIndex);
         for (ResearchObjectSerializable ro : researchObjectsToReindex) {
             ro.updateIndexAttributes();
         }
         researchObjectsToReindex.clear();
+        for (ResearchObjectSerializable ro : researchObjectsToDeleteFromIndex) {
+            ro.deleteIndexAttributes();
+        }
+        researchObjectsToDeleteFromIndex.clear();
     }
 }

@@ -258,7 +258,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
      */
     public void serialize()
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        serialize(researchObject.getUri(), RDFFormat.forMIMEType(getStats().getMimeType()));
+        scheduleToSerialize(researchObject.getUri(), RDFFormat.forMIMEType(getStats().getMimeType()));
         stats = null;
     }
 

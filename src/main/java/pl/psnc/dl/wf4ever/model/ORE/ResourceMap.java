@@ -142,7 +142,6 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
      * Store to disk in RDF/XML format. The format is constant because resource maps are not submitted by clients and
      * the RODL gets to choose their default format.
      * 
-     * @return resource serialization metadata
      * @throws NotFoundException
      *             could not find the resource in DL
      * @throws DigitalLibraryException
@@ -150,9 +149,9 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
      * @throws AccessDeniedException
      *             access denied when updating data in DL
      */
-    public ResourceMetadata serialize()
+    public void serialize()
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
-        return serialize(getResearchObject().getUri(), RDFFormat.RDFXML);
+        scheduleToSerialize(getResearchObject().getUri(), RDFFormat.RDFXML);
     }
 
 

@@ -2,6 +2,7 @@ package pl.psnc.dl.wf4ever.eventbus;
 
 import pl.psnc.dl.wf4ever.eventbus.listeners.NotificationsListener;
 import pl.psnc.dl.wf4ever.eventbus.listeners.PreservationListener;
+import pl.psnc.dl.wf4ever.eventbus.listeners.SimpleSerializationListener;
 import pl.psnc.dl.wf4ever.eventbus.listeners.SolrListener;
 
 import com.google.common.eventbus.EventBus;
@@ -26,6 +27,7 @@ public class SimpleEventBusModule implements EventBusModule {
         new SolrListener(eventBus);
         new NotificationsListener(eventBus);
         new PreservationListener(eventBus);
+        new SimpleSerializationListener(eventBus);
     }
 
 
