@@ -293,6 +293,18 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
 
 
     /**
+     * Recalculate the serialization stats.
+     * 
+     * @return the new stats
+     */
+    public ResourceMetadata updateStats() {
+        setStats(builder.getDigitalLibrary().updateFileInfo(getResearchObject().getUri(), getPath(),
+            stats.getMimeType()));
+        return stats;
+    }
+
+
+    /**
      * Set the aggregating RO.
      * 
      * @param researchObject
