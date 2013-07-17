@@ -33,6 +33,7 @@ import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.ResourceInfoDAO;
 import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
+import pl.psnc.dl.wf4ever.dl.AccessDeniedException;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
@@ -179,6 +180,18 @@ public class FilesystemDL implements DigitalLibrary {
         try {
             Files.createDirectories(path.getParent());
             Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
+            return updateFileInfo(ro, filePath, mimeType);
+        } catch (IOException e) {
+            throw new DigitalLibraryException(e);
+        }
+    }
+
+
+    @Override
+    public ResourceInfo updateFileInfo(URI ro, String filePath, String mimeType)
+            throws NotFoundException, DigitalLibraryException, AccessDeniedException {
+        try {
+            Path path = getPath(ro, filePath);
             FileInputStream fis = new FileInputStream(path.toFile());
             String md5 = DigestUtils.md5Hex(fis);
 

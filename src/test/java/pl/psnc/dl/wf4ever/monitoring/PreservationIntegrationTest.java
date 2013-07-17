@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.monitoring;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -27,6 +28,8 @@ public class PreservationIntegrationTest extends W4ETest {
 
     /** A sample file name. */
     private String filePath = "foo.txt";
+    /** Logger. */
+    private static final Logger LOGGER = Logger.getLogger(PreservationIntegrationTest.class);
 
 
     @Before
@@ -63,19 +66,19 @@ public class PreservationIntegrationTest extends W4ETest {
      * @throws InterruptedException
      *             interrupted when waiting for the notifications
      * @throws DArceoException
+     *             when it can't connect to dArceo
      */
     @Test
-    @SuppressWarnings("unchecked")
     public final void test()
             throws FeedException, IOException, InterruptedException, DArceoException {
 
-        //force scheduller
+        //force scheduler
         webResource.path("admin/monitor/all").header("Authorization", "Bearer " + accessToken).post();
 
         Properties properties = new Properties();
         properties.load(SynchronizationTest.class.getClassLoader().getResourceAsStream("connection.properties"));
-        if (properties.getProperty("repository_url") == null || properties.getProperty("repository_url").equals("")) {
-            System.out.println("repository url not specified SynchronizationTest skipped");
+        if (properties.getProperty("repository_url") == null || properties.getProperty("repository_url").isEmpty()) {
+            LOGGER.debug("repository url not specified SynchronizationTest skipped");
             return;
         }
 
@@ -88,7 +91,7 @@ public class PreservationIntegrationTest extends W4ETest {
             }
 
         }
-        Assert.assertFalse("Object " + ro + " wasn't appear in dArceo", true);
+        Assert.fail("Object " + ro + " didn't appear in dArceo");
     }
 
 }
