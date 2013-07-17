@@ -514,6 +514,13 @@ public class Notification implements Serializable {
      */
     public static class Summary {
 
+        /**
+         * Add the HTML tags.
+         * 
+         * @param message
+         *            the message that will be put inside body
+         * @return the message with html and body tags
+         */
         private static String wrap(String message) {
             return String.format("<html><body>%s</body></html>", message);
         }
