@@ -63,7 +63,7 @@ public final class Synchronization {
             if (DArceoClient.getInstance().getServiceUri() != null) {
                 darceoOai = DArceoClient.getInstance().getServiceUri().resolve("../oai-pmh").toString();
             } else {
-                LOGGER.warn("Don't synchronize with dArceo the system was turned off in connection properties file");
+                LOGGER.warn("Synchronization with dArceo has been turned off in the connection.properties file.");
                 return;
             }
         }

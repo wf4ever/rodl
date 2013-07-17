@@ -38,8 +38,9 @@ public class StabilityFeedAggreegationIntegrationTest extends W4ETest {
 
     /** A sample file name. */
     private String filePath = "foo.txt";
+    /** A test HTTP mock server. */
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8089);
+    public final WireMockRule WIREMOCK_RULE = new WireMockRule(8089); // No-args constructor defaults to port 8080
     AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
     URI checklistNotificationsUri;
     protected static final String HOST_STRING = "http://127.0.0.1:8089";
