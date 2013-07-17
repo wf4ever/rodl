@@ -36,17 +36,8 @@ public class StabilityFeedAggregationJobListener extends JobListenerSupport {
     }
 
 
-    /**
-     * Constructor.
-     */
-    public StabilityFeedAggregationJobListener() {
-        super();
-    }
-
-
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
-
         boolean started = !HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive();
         if (started) {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
@@ -58,9 +49,12 @@ public class StabilityFeedAggregationJobListener extends JobListenerSupport {
                     SyndEntry entry = (SyndEntry) ob;
                     Notification notification = Notification.fromEntry(entry);
                     if (notification.getSource() != null && notification.getCreated() != null) {
-                        dao.save(Notification.fromEntry(entry));
+                        Notification fromEntry = Notification.fromEntry(entry);
+                        if (!dao.isDuplicated(fromEntry)) {
+                            dao.save(fromEntry);
+                        }
                     } else {
-                        LOGGER.debug("Can't create a notification " + notification.getTitle());
+                        LOGGER.warn("Can't create a notification " + notification.getTitle());
                     }
                 }
             }

@@ -32,6 +32,8 @@ public class StabilityFeedAggregationJob implements Job {
 
     /** Service Uri. */
     private URI checklistNotificationsUri = null;
+    /** Service source (feed paramter). */
+    private URI checklistSourceUri = null;
 
     /** Map key. */
     static final String RESEARCH_OBJECT_URI = "researchObjectUri";
@@ -52,6 +54,7 @@ public class StabilityFeedAggregationJob implements Job {
         try {
             properties.load(getClass().getClassLoader().getResourceAsStream("connection.properties"));
             checklistNotificationsUri = URI.create(properties.getProperty("checklist_service_url"));
+            checklistSourceUri = URI.create(properties.getProperty("checklist_author_source"));
         } catch (IOException e) {
             throw new IOException("Configuration for stability service couldn't be loaded", e);
         }
@@ -82,7 +85,6 @@ public class StabilityFeedAggregationJob implements Job {
                 HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
             }
         }
-
     }
 
 
@@ -112,6 +114,7 @@ public class StabilityFeedAggregationJob implements Job {
                 .queryParam("ro", researchObjectUri.toString()).build() : resultUri;
         resultUri = (from != null) ? UriBuilder.fromUri(resultUri).queryParam("from", from.toString()).build()
                 : resultUri;
+        LOGGER.warn("Created Uri " + resultUri);
         return resultUri;
     }
 
@@ -125,7 +128,7 @@ public class StabilityFeedAggregationJob implements Job {
      */
     private Date getTheLastFeedDate(URI researchObjectUri) {
         AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
-        List<Notification> notifications = dao.find(researchObjectUri, null, null, checklistNotificationsUri, 1);
+        List<Notification> notifications = dao.find(researchObjectUri, null, null, checklistSourceUri, 1);
         if (notifications == null || notifications.size() != 1) {
             return null;
         }

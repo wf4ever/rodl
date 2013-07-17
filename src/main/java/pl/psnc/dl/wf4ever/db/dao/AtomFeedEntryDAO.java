@@ -58,13 +58,28 @@ public class AtomFeedEntryDAO extends AbstractDAO<Notification> {
             criteria.add(Restrictions.le("created", to));
         }
         if (source != null) {
-            criteria.add(Restrictions.eq("subject", source.toString()));
+            criteria.add(Restrictions.eq("source", source.toString()));
         }
         if (limit != null && limit > 0) {
             criteria.setMaxResults(limit);
         }
 
         return criteria.list();
+    }
+
+
+    /**
+     * Check if the given notification already exists to avoid duplications.
+     * 
+     * @param notification
+     *            given notification
+     * @return true if exists, false otherwise.
+     */
+    public boolean isDuplicated(Notification notification) {
+        Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(Notification.class);
+        criteria.add(Restrictions.eq("source", notification.getSource().toString()));
+        criteria.add(Restrictions.eq("sourceId", notification.getSourceId()));
+        return (criteria.list().size() > 0);
     }
 
 

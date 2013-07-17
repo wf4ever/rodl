@@ -23,6 +23,7 @@ import pl.psnc.dl.wf4ever.W4ETest;
 import pl.psnc.dl.wf4ever.darceo.client.DArceoException;
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
+import pl.psnc.dl.wf4ever.notifications.Notification;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.sun.syndication.io.FeedException;
@@ -108,22 +109,25 @@ public class StabilityFeedAggreegationIntegrationTest extends W4ETest {
     public final void test()
             throws FeedException, IOException, InterruptedException, DArceoException {
 
+        AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
+        for (Notification n : dao.find(URI.create("http://127.0.0.1:8089/rodl/ROs/SimpleRO/"), null, null, null, null)) {
+            dao.delete(n);
+        }
+        HibernateUtil.getSessionFactory().getCurrentSession().flush();
         int before = (dao.find(URI.create("http://127.0.0.1:8089/rodl/ROs/SimpleRO/"), null, null, null, null).size());
         //force scheduller
         webResource.path("admin/monitor/all").header("Authorization", "Bearer " + accessToken).post();
         int times = 0;
-        AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
-
-        while (++times < 10) {
+        while (++times < 1000) {
             Thread.sleep(25);
-            HibernateUtil.getSessionFactory().getCurrentSession().flush();
+            HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+            HibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
             int after = (dao.find(URI.create("http://127.0.0.1:8089/rodl/ROs/SimpleRO/"), null, null, null, null)
                     .size());
             if (before < after) {
                 return;
             }
         }
-        Assert.assertFalse("Object " + ro + " wasn't appear in dArceo", true);
+        Assert.assertFalse("The Stability Notification for object " + ro + " wasn't created", true);
     }
-
 }
