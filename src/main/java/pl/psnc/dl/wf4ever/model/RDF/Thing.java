@@ -27,6 +27,7 @@ import pl.psnc.dl.wf4ever.dl.DigitalLibraryException;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.eventbus.events.ScheduleToSerializationEvent;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.sparql.RO_RDFXMLWriter;
@@ -261,7 +262,21 @@ public class Thing {
      *            the object whose URI is the base
      * @param format
      *            in which the resource should be saved
-     * @return resource serialization metadata
+     */
+    public void scheduleToSerialize(URI base, RDFFormat format) {
+        builder.getEventBusModule().getEventBus().post(new ScheduleToSerializationEvent(this, base, format));
+    }
+
+
+    /**
+     * Take out an RDF graph from the triplestore and serialize it in storage (e.g. dLibra) with relative URI
+     * references.
+     * 
+     * @param base
+     *            the object whose URI is the base
+     * @param format
+     *            in which the resource should be saved
+     * @return resource serialization metadata or null if nothing found in the triple store
      * @throws NotFoundException
      *             could not find the resource in DL
      * @throws DigitalLibraryException
@@ -273,6 +288,9 @@ public class Thing {
             throws DigitalLibraryException, NotFoundException, AccessDeniedException {
         String filePath = base.relativize(uri).getPath();
         InputStream dataStream = getGraphAsInputStreamWithRelativeURIs(base, format);
+        if (dataStream == null) {
+            return null;
+        }
         return builder.getDigitalLibrary().createOrUpdateFile(base, filePath, dataStream, format.getDefaultMIMEType());
     }
 

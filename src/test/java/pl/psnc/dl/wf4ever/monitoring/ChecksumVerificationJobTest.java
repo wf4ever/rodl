@@ -55,6 +55,8 @@ public class ChecksumVerificationJobTest extends BaseTest {
             IOUtils.toInputStream("lorem ipsum"));
         Mockito.when(dlMock.getFileInfo(researchObject.getUri(), FILE_PATH)).thenReturn(
             new ResourceInfo(null, null, "80a751fde577028640c419000e33eba6", 0, "MD5", null, null));
+        Mockito.when(dlMock.updateFileInfo(researchObject.getUri(), FILE_PATH, null)).thenReturn(
+            new ResourceInfo(null, null, "663e9f8d61af863dfb207870ee028041", 0, "MD5", null, null));
         Mockito.when(dlMock.fileExists(researchObject.getUri(), FILE_PATH)).thenReturn(true);
 
         JobDataMap jobDataMap = new JobDataMap();

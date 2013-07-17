@@ -4,6 +4,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.listeners.JobListenerSupport;
 
+import pl.psnc.dl.wf4ever.ApplicationProperties;
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Result;
@@ -30,9 +31,12 @@ public class ChecksumVerificationJobListener extends JobListenerSupport {
         Result result = (Result) context.getResult();
         if (result != null && !result.matches()) {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
+            String source = ApplicationProperties.getContextPath() != null ? ApplicationProperties.getContextPath()
+                    : "/";
             Notification notification = new Notification.Builder(result.getResearchObject().getUri())
                     .title(Title.checksumMismatch(result.getResearchObject()))
-                    .summary(Summary.checksumMismatch(result.getResearchObject(), result.getMismatches())).build();
+                    .summary(Summary.checksumMismatch(result.getResearchObject(), result.getMismatches()))
+                    .source(source).sourceName("RODL").build();
             AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
             dao.save(notification);
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();

@@ -61,7 +61,9 @@ public class Resource {
     /** Resource builder. */
     @RequestAttribute("Builder")
     private Builder builder;
+
     /** Logger. */
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = Logger.getLogger(ZippedResearchObjectResource.class);
 
 

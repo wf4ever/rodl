@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.eventbus.lazy;
 
 import pl.psnc.dl.wf4ever.eventbus.EventBusModule;
+import pl.psnc.dl.wf4ever.eventbus.lazy.listeners.LazySerializationListener;
 import pl.psnc.dl.wf4ever.eventbus.lazy.listeners.LazySolrListener;
 import pl.psnc.dl.wf4ever.eventbus.listeners.NotificationsListener;
 import pl.psnc.dl.wf4ever.eventbus.listeners.PreservationListener;
@@ -21,6 +22,9 @@ public class LazyEventBusModule implements EventBusModule {
     /** Lazy Solr listener. */
     private LazySolrListener solrListener;
 
+    /** Lazy serialization listener. */
+    private LazySerializationListener serializationListener;
+
 
     /**
      * Constructor.
@@ -28,6 +32,7 @@ public class LazyEventBusModule implements EventBusModule {
     public LazyEventBusModule() {
         eventBus = new EventBus("main-event-bus");
         solrListener = new LazySolrListener(eventBus);
+        serializationListener = new LazySerializationListener(eventBus);
         new NotificationsListener(eventBus);
         new PreservationListener(eventBus);
     }
@@ -41,6 +46,7 @@ public class LazyEventBusModule implements EventBusModule {
 
     @Override
     public void commit() {
+        serializationListener.commit();
         solrListener.commit();
     }
 }

@@ -115,7 +115,7 @@ public class PreservationListener {
             dao.save(new ResearchObjectPreservationStatus(researchObjectUri, Status.NEW));
         } else {
             LOGGER.error("the object " + researchObjectUri.toString()
-                    + " has been already creatded. Can't change the status");
+                    + " has been already creaded. Can't change the status");
         }
     }
 
