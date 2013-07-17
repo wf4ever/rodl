@@ -1,16 +1,24 @@
 package pl.psnc.dl.wf4ever.monitoring;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 
 import javax.ws.rs.core.UriBuilder;
 
+import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -22,6 +30,7 @@ import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.vocabulary.NotificationService;
 
 import com.damnhandy.uri.template.UriTemplate;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.util.FileManager;
@@ -40,6 +49,10 @@ import com.sun.syndication.io.XmlReader;
 @Category(IntegrationTest.class)
 public class ChecksumDetectionIntegrationTest extends W4ETest {
 
+    /** A test HTTP mock server. */
+    @Rule
+    public final WireMockRule WIREMOCK_RULE = new WireMockRule(8089); // No-args constructor defaults to port 8080
+
     /** A sample file name. */
     private String filePath = "foo.txt";
 
@@ -53,6 +66,11 @@ public class ChecksumDetectionIntegrationTest extends W4ETest {
         accessToken = createAccessToken(userId);
         ro = createRO(accessToken);
         addFile(ro, filePath, accessToken);
+
+        InputStream checklistRefactorNoEntryInput = StabilityFeedAggregationJobTest.class.getClassLoader()
+                .getResourceAsStream("monitoring/stability_service_notification_case_empty.xml");
+        stubFor(get(urlMatching((".*roevaluate.*"))).willReturn(
+            aResponse().withStatus(200).withBody(IOUtils.toString(checklistRefactorNoEntryInput))));
     }
 
 

@@ -40,7 +40,7 @@
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
 			<artifactId>rodl-common</artifactId>
-			<version>1.2.1</version>
+			<version>1.2.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>pl.psnc.dl.wf4ever</groupId>
@@ -201,10 +201,10 @@
 			<version>3.0</version>
 		</dependency>
 		<dependency>
-
 			<groupId>com.github.tomakehurst</groupId>
 			<artifactId>wiremock</artifactId>
 			<version>1.33</version>
+			<scope>test</scope>
 			<classifier>standalone</classifier>
 		</dependency>
 		<dependency>

@@ -73,6 +73,14 @@ public class ChecksumVerificationJob implements Job {
                                     .add(
                                         new Mismatch(resource.getUri(), resource.getPath(), checksumStored,
                                                 checksumCalculated));
+                            // save the new checksum
+                            String checksumStored2 = resource.updateStats().getChecksum();
+                            if (!checksumStored2.equalsIgnoreCase(checksumCalculated)) {
+                                LOGGER.error(String
+                                        .format(
+                                            "The new checksum is still different than the calculated one. Resource = %s, old by DL = %s, calculated = %s, new by DL = %s",
+                                            resource, checksumStored, checksumCalculated, checksumStored2));
+                            }
                         }
                     }
                     context.setResult(result);
