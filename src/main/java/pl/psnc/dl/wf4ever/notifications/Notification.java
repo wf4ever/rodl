@@ -260,11 +260,8 @@ public class Notification implements Serializable {
         if (entry.getDescription() != null) {
             notification.setSummary(entry.getDescription().getValue());
         }
-        try {
-            Entry feedEntry = (Entry) entry;
-            notification.setSourceId(feedEntry.getId());
-        } catch (Exception e) {
-            LOGGER.error("Couldn't cast entry for " + notification.getSubject() + " as a feed format");
+        if (entry.getUri() != null) {
+            notification.setSourceId(entry.getUri());
         }
         return notification;
     }
