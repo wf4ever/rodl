@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.monitoring;
 
+import org.apache.log4j.Logger;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.listeners.JobListenerSupport;
@@ -20,6 +21,10 @@ import pl.psnc.dl.wf4ever.notifications.Notification.Title;
  */
 public class ChecksumVerificationJobListener extends JobListenerSupport {
 
+    /** Logger. */
+    private static final Logger LOGGER = Logger.getLogger(ChecksumVerificationJobListener.class);
+
+
     @Override
     public String getName() {
         return "Checksum verification job listener";
@@ -39,6 +44,7 @@ public class ChecksumVerificationJobListener extends JobListenerSupport {
                     .source(source).sourceName("RODL").build();
             AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
             dao.save(notification);
+            LOGGER.debug("Generated a notification about a checksum mismatch for RO: " + result.getResearchObject());
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         }
     }

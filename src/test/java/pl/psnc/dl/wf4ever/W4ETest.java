@@ -1,21 +1,34 @@
 package pl.psnc.dl.wf4ever;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.UUID;
 
+import javax.ws.rs.core.UriBuilder;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
+import org.joda.time.DateTime;
+import org.joda.time.format.ISODateTimeFormat;
 import org.junit.Assert;
 import org.junit.experimental.categories.Category;
 
-import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
+import pl.psnc.dl.wf4ever.vocabulary.NotificationService;
 
+import com.damnhandy.uri.template.UriTemplate;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.util.FileManager;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
+import com.sun.syndication.feed.synd.SyndFeed;
+import com.sun.syndication.io.FeedException;
+import com.sun.syndication.io.SyndFeedInput;
+import com.sun.syndication.io.XmlReader;
 
 @Category(IntegrationTest.class)
 public class W4ETest extends JerseyTest {
@@ -58,7 +71,6 @@ public class W4ETest extends JerseyTest {
         } else {
             webResource = resource().path("rodl/");
         }
-        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         clientId = createClient(clientName);
     }
 
@@ -67,7 +79,6 @@ public class W4ETest extends JerseyTest {
     public void tearDown()
             throws Exception {
         deleteClient(clientId);
-        HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         super.tearDown();
     }
 
@@ -273,4 +284,36 @@ public class W4ETest extends JerseyTest {
         return webResource.uri(folderUri).header("Authorization", "Bearer " + accessToken)
                 .type("application/vnd.wf4ever.folderentry").post(ClientResponse.class, is);
     }
+
+
+    /**
+     * Get notifications.
+     * 
+     * @param testUri
+     *            RO URI
+     * @param from
+     *            optional start point
+     * @return a feed
+     * @throws FeedException
+     *             can't load the feed
+     * @throws IOException
+     *             can't load the feed
+     */
+    protected SyndFeed getNotifications(URI testUri, DateTime from)
+            throws FeedException, IOException {
+        Model model = FileManager.get().loadModel(webResource.getURI().toString());
+        Resource serviceResource = model.getResource(webResource.getURI().toString());
+        String notificationsUriTemplateString = serviceResource.listProperties(NotificationService.notifications)
+                .next().getObject().asLiteral().getString();
+        UriTemplate uriTemplate = UriTemplate.fromTemplate(notificationsUriTemplateString);
+        uriTemplate = uriTemplate.set("ro", testUri.toString());
+        if (from != null) {
+            uriTemplate = uriTemplate.set("from", ISODateTimeFormat.dateTime().print(from));
+        }
+        URI notificationsUri = UriBuilder.fromUri(uriTemplate.expand()).build();
+        SyndFeedInput input = new SyndFeedInput();
+        SyndFeed feed = input.build(new XmlReader(notificationsUri.toURL()));
+        return feed;
+    }
+
 }

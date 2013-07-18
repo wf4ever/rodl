@@ -156,7 +156,7 @@ public class Builder {
      * @return the dLibra factory if dlibra=true, the filesystem factory otherwise
      */
     private static DigitalLibraryFactory getDLFactory(String filename) {
-        try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(filename)) {
+        try (InputStream is = Builder.class.getClassLoader().getResourceAsStream(filename)) {
             Properties properties = new Properties();
             properties.load(is);
             if ("true".equals(properties.getProperty("dlibra", "false"))) {

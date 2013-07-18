@@ -7,38 +7,30 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.util.List;
+import java.util.Properties;
 
-import javax.ws.rs.core.UriBuilder;
-
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.joda.time.format.ISODateTimeFormat;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
 
 import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.W4ETest;
-import pl.psnc.dl.wf4ever.db.ResourceInfo;
-import pl.psnc.dl.wf4ever.db.dao.ResourceInfoDAO;
-import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
-import pl.psnc.dl.wf4ever.vocabulary.NotificationService;
+import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
+import pl.psnc.dl.wf4ever.storage.FilesystemDLFactory;
 
-import com.damnhandy.uri.template.UriTemplate;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.util.FileManager;
 import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.feed.synd.SyndFeed;
 import com.sun.syndication.io.FeedException;
-import com.sun.syndication.io.SyndFeedInput;
-import com.sun.syndication.io.XmlReader;
 
 /**
  * Check that checksum mismatches are reported as notifications.
@@ -48,6 +40,9 @@ import com.sun.syndication.io.XmlReader;
  */
 @Category(IntegrationTest.class)
 public class ChecksumDetectionIntegrationTest extends W4ETest {
+
+    /** Logger. */
+    private static final Logger LOGGER = Logger.getLogger(ChecksumDetectionIntegrationTest.class);
 
     /** A test HTTP mock server. */
     @Rule
@@ -100,17 +95,14 @@ public class ChecksumDetectionIntegrationTest extends W4ETest {
     public final void test()
             throws FeedException, IOException, InterruptedException {
         //check what is the most recent notification
-        SyndFeed feed = getNotifications(null);
+        SyndFeed feed = getNotifications(ro, null);
         List<SyndEntry> entries = feed.getEntries();
-        //modify the checksums
-        ResourceInfoDAO dao = new ResourceInfoDAO();
-        List<ResourceInfo> resources = dao.findByPathSufix(filePath);
-        for (ResourceInfo resource : resources) {
-            // modify the checksum
-            resource.setChecksum(resource.getChecksum() + "_modified");
-            dao.save(resource);
+        //modify the file
+        String checksum2 = modifyFile(filePath);
+        if (checksum2 == null) {
+            LOGGER.warn("Can't modify a file, skipping the test");
+            return;
         }
-        HibernateUtil.getSessionFactory().getCurrentSession().flush();
         //sleep for a second because of WFE-1049
         Thread.sleep(1000);
         //force monitoring
@@ -120,7 +112,7 @@ public class ChecksumDetectionIntegrationTest extends W4ETest {
         DateTime from = entries.isEmpty() ? null : new DateTime(entries.get(entries.size() - 1).getPublishedDate())
                 .plusSeconds(1);
         while (++seconds < 10) {
-            feed = getNotifications(from);
+            feed = getNotifications(ro, from);
             if (!feed.getEntries().isEmpty()) {
                 break;
             }
@@ -133,41 +125,35 @@ public class ChecksumDetectionIntegrationTest extends W4ETest {
         // verify that the notification is about the checksum mismatch
         SyndEntry entry = (SyndEntry) feed.getEntries().get(feed.getEntries().size() - 1);
         Assert.assertTrue(entry.getTitle(), entry.getTitle().matches("Research Object .+ has become corrupt!"));
-        Assert.assertTrue(
-            entry.getDescription().getValue(),
-            entry.getDescription()
-                    .getValue()
-                    .matches(
-                        ".*File .*" + filePath + ": expected checksum (?<correct>.+)_modified, found \\k<correct>.*"));
+        Assert.assertTrue(entry.getDescription().getValue() + "/" + checksum2, entry.getDescription().getValue()
+                .matches(".*File .*" + filePath + ": expected checksum .+, found " + checksum2 + ".*"));
     }
 
 
     /**
-     * Get notifications.
+     * Create a temporary FilesystemDL, turn off updating the resource stats and modify the file.
      * 
-     * @param from
-     *            optional start point
-     * @return a feed
-     * @throws FeedException
-     *             can't load the feed
+     * @param filePath2
+     *            file path
+     * @return the new file's checksum
      * @throws IOException
-     *             can't load the feed
+     *             when accessing the test files throws it
      */
-    private SyndFeed getNotifications(DateTime from)
-            throws FeedException, IOException {
-        Model model = FileManager.get().loadModel(webResource.getURI().toString());
-        Resource serviceResource = model.getResource(webResource.getURI().toString());
-        String notificationsUriTemplateString = serviceResource.listProperties(NotificationService.notifications)
-                .next().getObject().asLiteral().getString();
-        UriTemplate uriTemplate = UriTemplate.fromTemplate(notificationsUriTemplateString);
-        uriTemplate = uriTemplate.set("ro", ro.toString());
-        if (from != null) {
-            uriTemplate = uriTemplate.set("from", ISODateTimeFormat.dateTime().print(from));
+    private String modifyFile(String filePath2)
+            throws IOException {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("connection.properties")) {
+            Properties properties = new Properties();
+            properties.load(is);
+            if ("true".equals(properties.getProperty("dlibra", "false"))) {
+                return null;
+            }
+            DigitalLibrary dl = Mockito.spy(new FilesystemDLFactory(properties).getDigitalLibrary());
+            // don't update the db
+            Mockito.doReturn(null).when(dl).updateFileInfo(ro, filePath2, "text/plain");
+            String text = "lorem ipsum modified";
+            dl.createOrUpdateFile(ro, filePath2, IOUtils.toInputStream(text), "text/plain");
+            return DigestUtils.md5Hex(IOUtils.toInputStream(text));
         }
-        URI notificationsUri = UriBuilder.fromUri(uriTemplate.expand()).build();
-        SyndFeedInput input = new SyndFeedInput();
-        SyndFeed feed = input.build(new XmlReader(notificationsUri.toURL()));
-        return feed;
     }
 
 }
