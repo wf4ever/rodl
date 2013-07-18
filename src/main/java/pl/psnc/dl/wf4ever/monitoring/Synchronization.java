@@ -70,7 +70,17 @@ public final class Synchronization {
         OaiPmhServer server = new OaiPmhServer(darceoOai);
         boolean more = true;
         ArrayList<URI> dArceoROsUri = new ArrayList<>();
-        IdentifiersList list = server.listIdentifiers("METS");
+        IdentifiersList list;
+        try {
+            list = server.listIdentifiers("METS");
+        } catch (OAIException e) {
+            if (e.getMessage().contains("Connection timed out")) {
+                LOGGER.warn("Can't connect to dArceo, maybe it is blocked from this network.", e);
+                return;
+            } else {
+                throw e;
+            }
+        }
         //generate the list of stored uris
         while (more) {
             for (Header header : list.asList()) {
