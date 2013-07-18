@@ -9,6 +9,9 @@ import java.util.Properties;
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.ISODateTimeFormat;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -112,9 +115,9 @@ public class StabilityFeedAggregationJob implements Job {
         URI resultUri = checklistNotificationsUri;
         resultUri = (researchObjectUri != null) ? UriBuilder.fromUri(resultUri)
                 .queryParam("ro", researchObjectUri.toString()).build() : resultUri;
-        resultUri = (from != null) ? UriBuilder.fromUri(resultUri).queryParam("from", from.toString()).build()
-                : resultUri;
-        LOGGER.warn("Created Uri " + resultUri);
+        resultUri = (from != null) ? UriBuilder.fromUri(resultUri)
+                .queryParam("from", ISODateTimeFormat.dateTime().withZone(DateTimeZone.UTC).print(new DateTime(from)))
+                .build() : resultUri;
         return resultUri;
     }
 
