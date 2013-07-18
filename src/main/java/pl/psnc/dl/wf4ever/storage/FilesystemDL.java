@@ -200,7 +200,6 @@ public class FilesystemDL implements DigitalLibrary {
             ResourceInfo res = dao.create(path.toString(), path.getFileName().toString(), md5, Files.size(path), "MD5",
                 lastModified, mimeType);
             dao.save(res);
-            LOGGER.debug("Saved file stats for: " + filePath);
             return res;
         } catch (IOException e) {
             throw new DigitalLibraryException(e);
