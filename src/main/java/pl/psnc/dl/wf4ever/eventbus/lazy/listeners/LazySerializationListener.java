@@ -1,9 +1,11 @@
 package pl.psnc.dl.wf4ever.eventbus.lazy.listeners;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.eventbus.events.ScheduleToSerializationEvent;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -19,11 +21,73 @@ import com.google.common.eventbus.Subscribe;
  */
 public class LazySerializationListener {
 
+    /**
+     * A mutable serialization request.
+     * 
+     * @author piotrekhol
+     * 
+     */
+    private static class Request {
+
+        /** Resource to serialize. */
+        private final Thing thing;
+
+        /** The object whose URI is the base. */
+        private URI base;
+
+        /** The format in which the resource should be saved. */
+        private RDFFormat format;
+
+
+        /**
+         * Constructor.
+         * 
+         * @param thing
+         *            Resource to serialize
+         * @param base
+         *            The object whose URI is the base
+         * @param format
+         *            The format in which the resource should be saved
+         */
+        public Request(Thing thing, URI base, RDFFormat format) {
+            this.thing = thing;
+            this.base = base;
+            this.format = format;
+        }
+
+
+        public Thing getThing() {
+            return thing;
+        }
+
+
+        public URI getBase() {
+            return base;
+        }
+
+
+        public void setBase(URI base) {
+            this.base = base;
+        }
+
+
+        public RDFFormat getFormat() {
+            return format;
+        }
+
+
+        public void setFormat(RDFFormat format) {
+            this.format = format;
+        }
+
+    }
+
+
     /** Logger. */
     private static final Logger LOGGER = Logger.getLogger(LazySerializationListener.class);
 
     /** Serialization requests. */
-    private Map<Thing, ScheduleToSerializationEvent> requests = new HashMap<>();
+    private Map<Thing, Request> requests = new HashMap<>();
 
 
     /**
@@ -38,27 +102,38 @@ public class LazySerializationListener {
 
 
     /**
-     * Schedule a serialization action. Replace a previous one for the same resource, if existed.
+     * Schedule a serialization action. Merge with a previous one for the same resource, if existed.
      * 
      * @param event
      *            event with request details
      */
     @Subscribe
-    public void onSchedule(ScheduleToSerializationEvent event) {
-        requests.put(event.getThing(), event);
+    public synchronized void onSchedule(ScheduleToSerializationEvent event) {
+        Request previousRequest = requests.get(event.getThing());
+        if (previousRequest == null) {
+            requests.put(event.getThing(), new Request(event.getThing(), event.getBase(), event.getFormat()));
+        } else {
+            if (previousRequest.getBase() == null && event.getBase() != null) {
+                previousRequest.setBase(event.getBase());
+            }
+            if (previousRequest.getFormat() == null && event.getFormat() != null) {
+                previousRequest.setFormat(event.getFormat());
+            }
+        }
     }
 
 
     /**
-     * Reindex all necessary ROs.
+     * Handle all requests - serialize all resources.
      */
-    public void commit() {
-        for (ScheduleToSerializationEvent event : requests.values()) {
+    public synchronized void commit() {
+        for (Request request : requests.values()) {
             try {
-                event.getThing().serialize(event.getBase(), event.getFormat());
+                request.getThing().serialize(request.getBase(), request.getFormat());
             } catch (Exception e) {
-                LOGGER.error("Could not serialize resource " + event.getThing(), e);
+                LOGGER.error("Could not serialize resource " + request.getThing(), e);
             }
         }
+        requests.clear();
     }
 }

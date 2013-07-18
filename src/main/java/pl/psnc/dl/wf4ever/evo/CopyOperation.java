@@ -50,6 +50,7 @@ public class CopyOperation implements Operation {
                 throw new OperationFailedException("Failed to copy RO", e);
             }
         } finally {
+            builder.getEventBusModule().commit();
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         }
 
