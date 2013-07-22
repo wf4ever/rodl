@@ -59,6 +59,7 @@ public class PreservationJob implements Job {
             }
             dao = new ResearchObjectPreservationStatusDAO();
             ResearchObject researchObject = ResearchObject.get(builder, researchObjectUri);
+            LOGGER.debug("Processing " + researchObjectUri.toString() + " in context of dArceo");
             ResearchObjectPreservationStatus status = dao.findById(researchObjectUri.toString());
             if (researchObject != null) {
                 if (status == null) {

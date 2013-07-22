@@ -43,6 +43,12 @@ public class HibernateSessionRequestFilter implements Filter {
             LOGGER.debug("Committing the database transaction");
             sf.getCurrentSession().getTransaction().commit();
 
+            //            sf.getCurrentSession().getTransaction().begin();
+            //            //modify the checksums
+            //            ResourceInfoDAO dao = new ResourceInfoDAO();
+            //            LOGGER.debug("Resource cnt: " + dao.all().size());
+            //            sf.getCurrentSession().getTransaction().commit();
+
         } catch (StaleObjectStateException staleEx) {
             LOGGER.error("This interceptor does not implement optimistic concurrency control!");
             LOGGER.error("Your application will not work until you add compensation actions!");

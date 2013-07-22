@@ -49,6 +49,7 @@ public class FinalizeOperation implements Operation {
         } catch (RodlException e) {
             throw new OperationFailedException("Could not generate evo info", e);
         } finally {
+            builder.getEventBusModule().commit();
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
         }
     }

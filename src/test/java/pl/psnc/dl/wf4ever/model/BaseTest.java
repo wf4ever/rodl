@@ -15,6 +15,7 @@ import pl.psnc.dl.wf4ever.db.dao.ResearchObjectIdDAO;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
+import pl.psnc.dl.wf4ever.eventbus.SimpleEventBusModule;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 import com.hp.hpl.jena.query.Dataset;
@@ -97,6 +98,8 @@ public class BaseTest {
         dataset = DatasetFactory.createMem();
         userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED, URI.create("http://jank"));
         builder = new Builder(userProfile, dataset, false);
+        // don't want to wait until the end of HTTP request to commit.
+        builder.setEventBusModule(new SimpleEventBusModule());
         researchObject = builder.buildResearchObject(URI.create(RESEARCH_OBJECT));
         model = FileManager.get().loadModel(MANIFEST_2, MANIFEST_2, "RDF/XML");
         dataset.addNamedModel(MANIFEST_2, model);

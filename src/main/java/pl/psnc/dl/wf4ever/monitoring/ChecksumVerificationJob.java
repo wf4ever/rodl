@@ -55,6 +55,7 @@ public class ChecksumVerificationJob implements Job {
                         URI.create(ApplicationProperties.getContextPath()));
                 builder = new Builder(userMetadata);
             }
+            LOGGER.debug("Starting to check mismatches for RO: " + researchObjectUri);
             ResearchObject researchObject = ResearchObject.get(builder, researchObjectUri);
             if (researchObject != null) {
                 Result result = new Result(researchObject);
@@ -73,6 +74,7 @@ public class ChecksumVerificationJob implements Job {
                                     .add(
                                         new Mismatch(resource.getUri(), resource.getPath(), checksumStored,
                                                 checksumCalculated));
+                            LOGGER.debug("Detected a mismatch for: " + resource);
                             // save the new checksum
                             String checksumStored2 = resource.updateStats().getChecksum();
                             if (!checksumStored2.equalsIgnoreCase(checksumCalculated)) {
@@ -85,6 +87,8 @@ public class ChecksumVerificationJob implements Job {
                     }
                     context.setResult(result);
                 }
+            } else {
+                LOGGER.debug("Research Object not found");
             }
         } finally {
             if (started) {

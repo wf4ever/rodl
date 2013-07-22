@@ -12,7 +12,7 @@ import org.joda.time.DateTime;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.eventbus.EventBusModule;
-import pl.psnc.dl.wf4ever.eventbus.SimpleEventBusModule;
+import pl.psnc.dl.wf4ever.eventbus.lazy.LazyEventBusModule;
 import pl.psnc.dl.wf4ever.evo.EvoType;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
@@ -36,7 +36,6 @@ import pl.psnc.dl.wf4ever.storage.DigitalLibraryFactory;
 import pl.psnc.dl.wf4ever.storage.FilesystemDLFactory;
 import pl.psnc.dl.wf4ever.vocabulary.W4E;
 
-import com.google.common.eventbus.EventBus;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.tdb.TDB;
@@ -66,7 +65,7 @@ public class Builder {
     private final DigitalLibrary digitalLibrary;
 
     /** Default digital factory library. */
-    private EventBusModule eventBusModule = new SimpleEventBusModule();
+    private EventBusModule eventBusModule = new LazyEventBusModule();
 
     /** Use transactions on the Jena dataset. */
     private final boolean useTransactions;
@@ -122,19 +121,6 @@ public class Builder {
      * 
      * @param user
      *            Authenticated user
-     * @param eventBus
-     *            event bus
-     */
-    public Builder(UserMetadata user, EventBus eventBus) {
-        this(user, TDBFactory.createDataset(TRIPLE_STORE_DIR), true);
-    }
-
-
-    /**
-     * Constructor of a builder that uses the default dataset with transactions.
-     * 
-     * @param user
-     *            Authenticated user
      */
     public Builder(UserMetadata user) {
         this(user, TDBFactory.createDataset(TRIPLE_STORE_DIR), true);
@@ -170,7 +156,7 @@ public class Builder {
      * @return the dLibra factory if dlibra=true, the filesystem factory otherwise
      */
     private static DigitalLibraryFactory getDLFactory(String filename) {
-        try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(filename)) {
+        try (InputStream is = Builder.class.getClassLoader().getResourceAsStream(filename)) {
             Properties properties = new Properties();
             properties.load(is);
             if ("true".equals(properties.getProperty("dlibra", "false"))) {

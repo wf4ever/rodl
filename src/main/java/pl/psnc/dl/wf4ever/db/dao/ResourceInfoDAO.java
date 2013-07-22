@@ -82,4 +82,16 @@ public final class ResourceInfoDAO extends AbstractDAO<ResourceInfo> {
         Criterion criterion = Restrictions.ilike("path", "%" + sufix);
         return findByCriteria(ResourceInfo.class, criterion);
     }
+
+
+    /**
+     * Get all resources stored.
+     * 
+     * @return list of stored resources
+     */
+    public List<ResourceInfo> all() {
+        return super.findAll(ResourceInfo.class);
+
+    }
+
 }
