@@ -3,6 +3,9 @@ package pl.psnc.dl.wf4ever.evo;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.RodlException;
+import pl.psnc.dl.wf4ever.job.JobStatus;
+import pl.psnc.dl.wf4ever.job.Operation;
+import pl.psnc.dl.wf4ever.job.OperationFailedException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
 
@@ -30,19 +33,24 @@ public class FinalizeOperation implements Operation {
 
 
     @Override
-    public void execute(CopyJobStatus status)
+    public void execute(JobStatus status)
             throws OperationFailedException {
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         try {
-            if (status.getTarget() == null) {
+            if (!(status instanceof CopyJobStatus)) {
+                throw new OperationFailedException("Given JobStatus is not a instance of CopyJobStatus");
+            }
+            CopyJobStatus copyJobStatus = (CopyJobStatus) status;
+            if (copyJobStatus.getTarget() == null) {
                 throw new OperationFailedException("Target research object must be set");
             }
-            if (status.getType() == null || status.getType() == EvoType.LIVE) {
+            if (copyJobStatus.getType() == null || copyJobStatus.getType() == EvoType.LIVE) {
                 throw new OperationFailedException("New type must be a snaphot or archive");
             }
-            ImmutableResearchObject immutableResearchObject = ImmutableResearchObject.get(builder, status.getTarget());
+            ImmutableResearchObject immutableResearchObject = ImmutableResearchObject.get(builder,
+                copyJobStatus.getTarget());
             if (immutableResearchObject == null) {
-                throw new NotFoundException("Research Object not found " + status.getTarget());
+                throw new NotFoundException("Research Object not found " + copyJobStatus.getTarget());
             }
             immutableResearchObject.setFinalized(true);
             immutableResearchObject.getEvoInfo().updateHistory();

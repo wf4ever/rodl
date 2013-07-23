@@ -4,6 +4,9 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.RodlException;
+import pl.psnc.dl.wf4ever.job.JobStatus;
+import pl.psnc.dl.wf4ever.job.Operation;
+import pl.psnc.dl.wf4ever.job.OperationFailedException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
@@ -36,16 +39,20 @@ public class CopyOperation implements Operation {
 
 
     @Override
-    public void execute(CopyJobStatus status)
+    public void execute(JobStatus status)
             throws OperationFailedException {
         HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         try {
-            ResearchObject sourceRO = ResearchObject.get(builder, status.getCopyfrom());
+            if (!(status instanceof CopyJobStatus)) {
+                throw new OperationFailedException("Given JobStatus is not a instance of CopyJobStatus");
+            }
+            CopyJobStatus copyJobStatus = (CopyJobStatus) status;
+            ResearchObject sourceRO = ResearchObject.get(builder, copyJobStatus.getCopyfrom());
             if (sourceRO == null) {
                 throw new OperationFailedException("source Research Object does not exist");
             }
             try {
-                ImmutableResearchObject.create(status.getTarget(), sourceRO, builder, status.getType());
+                ImmutableResearchObject.create(copyJobStatus.getTarget(), sourceRO, builder, copyJobStatus.getType());
             } catch (RodlException e) {
                 throw new OperationFailedException("Failed to copy RO", e);
             }

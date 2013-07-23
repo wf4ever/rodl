@@ -21,6 +21,9 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+import pl.psnc.dl.wf4ever.job.Job;
+import pl.psnc.dl.wf4ever.job.JobStatus;
+import pl.psnc.dl.wf4ever.job.JobsContainer;
 import pl.psnc.dl.wf4ever.model.Builder;
 
 import com.sun.jersey.api.NotFoundException;
@@ -57,10 +60,10 @@ public class FinalizeResource implements JobsContainer {
 
     /** Statuses of finished jobs. */
     @SuppressWarnings("serial")
-    private static Map<UUID, CopyJobStatus> finishedJobs = Collections
-            .synchronizedMap(new LinkedHashMap<UUID, CopyJobStatus>() {
+    private static Map<UUID, JobStatus> finishedJobs = Collections
+            .synchronizedMap(new LinkedHashMap<UUID, JobStatus>() {
 
-                protected boolean removeEldestEntry(Map.Entry<UUID, CopyJobStatus> eldest) {
+                protected boolean removeEldestEntry(Map.Entry<UUID, JobStatus> eldest) {
                     return size() > MAX_JOBS_DONE;
                 };
             });
@@ -78,12 +81,12 @@ public class FinalizeResource implements JobsContainer {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createFinalizeJob(CopyJobStatus newStatus)
+    public Response createFinalizeJob(JobStatus newStatus)
             throws BadRequestException {
         if (newStatus.getTarget() == null) {
             throw new BadRequestException("incorrect or missing \"target\" attribute");
         }
-        CopyJobStatus status = CopyResource.getStatusForTarget(newStatus.getTarget());
+        JobStatus status = CopyResource.getStatusForTarget(newStatus.getTarget());
         if (status == null) {
             throw new BadRequestException("Can't find a copy job for this target: " + newStatus.getTarget());
         }
@@ -113,7 +116,7 @@ public class FinalizeResource implements JobsContainer {
      */
     @GET
     @Path("{id}")
-    public CopyJobStatus getJob(@PathParam("id") UUID uuid) {
+    public JobStatus getJob(@PathParam("id") UUID uuid) {
         if (jobs.containsKey(uuid)) {
             return jobs.get(uuid).getStatus();
         }

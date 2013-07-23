@@ -24,6 +24,9 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
+import pl.psnc.dl.wf4ever.job.Job;
+import pl.psnc.dl.wf4ever.job.JobStatus;
+import pl.psnc.dl.wf4ever.job.JobsContainer;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
@@ -61,20 +64,20 @@ public class CopyResource implements JobsContainer {
 
     /** Statuses of finished jobs. */
     @SuppressWarnings("serial")
-    private static Map<UUID, CopyJobStatus> finishedJobs = Collections
-            .synchronizedMap(new LinkedHashMap<UUID, CopyJobStatus>() {
+    private static Map<UUID, JobStatus> finishedJobs = Collections
+            .synchronizedMap(new LinkedHashMap<UUID, JobStatus>() {
 
-                protected boolean removeEldestEntry(Map.Entry<UUID, CopyJobStatus> eldest) {
+                protected boolean removeEldestEntry(Map.Entry<UUID, JobStatus> eldest) {
                     return size() > MAX_JOBS_DONE;
                 };
             });
 
     /** Statuses of finished jobs by target. */
     @SuppressWarnings("serial")
-    private static Map<URI, CopyJobStatus> finishedJobsByTarget = Collections
-            .synchronizedMap(new LinkedHashMap<URI, CopyJobStatus>() {
+    private static Map<URI, JobStatus> finishedJobsByTarget = Collections
+            .synchronizedMap(new LinkedHashMap<URI, JobStatus>() {
 
-                protected boolean removeEldestEntry(Map.Entry<URI, CopyJobStatus> eldest) {
+                protected boolean removeEldestEntry(Map.Entry<URI, JobStatus> eldest) {
                     return size() > MAX_JOBS_DONE;
                 };
             });
@@ -122,7 +125,6 @@ public class CopyResource implements JobsContainer {
         }
         jobs.put(jobUUID, job);
         job.start();
-
         return Response.created(uriInfo.getAbsolutePath().resolve(jobUUID.toString())).entity(job.getStatus()).build();
     }
 
@@ -144,7 +146,7 @@ public class CopyResource implements JobsContainer {
      */
     @GET
     @Path("{id}")
-    public CopyJobStatus getJob(@PathParam("id") UUID uuid) {
+    public JobStatus getJob(@PathParam("id") UUID uuid) {
         if (jobs.containsKey(uuid)) {
             return jobs.get(uuid).getStatus();
         }
@@ -184,7 +186,7 @@ public class CopyResource implements JobsContainer {
      *            target RO URI
      * @return the job status
      */
-    public static CopyJobStatus getStatusForTarget(URI target) {
+    public static JobStatus getStatusForTarget(URI target) {
         return finishedJobsByTarget.get(target);
     }
 }

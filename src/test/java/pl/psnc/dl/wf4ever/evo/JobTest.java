@@ -15,7 +15,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import pl.psnc.dl.wf4ever.IntegrationTest;
-import pl.psnc.dl.wf4ever.evo.Job.State;
+import pl.psnc.dl.wf4ever.job.Job.State;
+import pl.psnc.dl.wf4ever.job.JobStatus;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
@@ -77,11 +78,11 @@ public class JobTest extends EvoTest {
     public final void testJobFinalization()
             throws InterruptedException {
         URI copyJob = createCopyJob(new CopyJobStatus(ro, EvoType.SNAPSHOT, false), null).getLocation();
-        CopyJobStatus status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
-        CopyJobStatus status2 = new CopyJobStatus();
+        JobStatus status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
+        JobStatus status2 = new CopyJobStatus();
         status2.setTarget(status.getTarget());
         URI finalizeJob = createFinalizeJob(status2).getLocation();
-        CopyJobStatus remoteStatus = getRemoteStatus(finalizeJob, WAIT_FOR_FINALIZE);
+        JobStatus remoteStatus = getRemoteStatus(finalizeJob, WAIT_FOR_FINALIZE);
         Assert.assertEquals(State.DONE, remoteStatus.getState());
 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
@@ -107,7 +108,7 @@ public class JobTest extends EvoTest {
     public final void testCopyAndFinalizationJob()
             throws InterruptedException {
         URI copyAndFinalizeJob = createCopyJob(new CopyJobStatus(ro, EvoType.SNAPSHOT, true), null).getLocation();
-        CopyJobStatus remoteStatus = getRemoteStatus(copyAndFinalizeJob, WAIT_FOR_COPY + WAIT_FOR_FINALIZE);
+        JobStatus remoteStatus = getRemoteStatus(copyAndFinalizeJob, WAIT_FOR_COPY + WAIT_FOR_FINALIZE);
         Assert.assertEquals(remoteStatus.toString(), State.DONE, remoteStatus.getState());
         //OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
         //model.read(status.getTarget().toString());
@@ -137,7 +138,7 @@ public class JobTest extends EvoTest {
         addAnnotation(new ByteArrayInputStream(out.toByteArray()), ro, "ann1", accessToken);
 
         URI copyAndFinalizeJob = createCopyJob(new CopyJobStatus(ro, EvoType.SNAPSHOT, true), null).getLocation();
-        CopyJobStatus remoteStatus = getRemoteStatus(copyAndFinalizeJob, WAIT_FOR_COPY + WAIT_FOR_FINALIZE);
+        JobStatus remoteStatus = getRemoteStatus(copyAndFinalizeJob, WAIT_FOR_COPY + WAIT_FOR_FINALIZE);
         Assert.assertEquals(remoteStatus.toString(), State.DONE, remoteStatus.getState());
 
         Model model2 = ModelFactory.createDefaultModel();

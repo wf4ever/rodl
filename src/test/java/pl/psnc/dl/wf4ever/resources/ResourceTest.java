@@ -140,17 +140,19 @@ public class ResourceTest extends ResourceBase {
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws NamingException
+     * @throws InterruptedException
      */
     @Test
-    public void createROFromZip()
-            throws IOException, ClassNotFoundException, NamingException {
+    public void storeROFromZip()
+            throws IOException, ClassNotFoundException, NamingException, InterruptedException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
-        ClientResponse response = webResource.path("ROs").accept("text/turtle")
+        ClientResponse response = webResource.path("ROs/zip/store").accept("text/turtle")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
                 .type("application/zip").post(ClientResponse.class, is);
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
         response.close();
+
     }
 
 

@@ -9,7 +9,8 @@ import org.junit.experimental.categories.Category;
 
 import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.W4ETest;
-import pl.psnc.dl.wf4ever.evo.Job.State;
+import pl.psnc.dl.wf4ever.job.Job.State;
+import pl.psnc.dl.wf4ever.job.JobStatus;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource.Builder;
@@ -60,7 +61,7 @@ public class EvoTest extends W4ETest {
     }
 
 
-    protected ClientResponse createCopyJob(CopyJobStatus status, String target) {
+    protected ClientResponse createCopyJob(JobStatus status, String target) {
         Builder builder = webResource.path("evo/copy/").header("Authorization", "Bearer " + accessToken);
         if (target != null) {
             builder = builder.header("Slug", target);
@@ -69,13 +70,13 @@ public class EvoTest extends W4ETest {
     }
 
 
-    protected ClientResponse createFinalizeJob(CopyJobStatus status) {
+    protected ClientResponse createFinalizeJob(JobStatus status) {
         return webResource.path("evo/finalize/").header("Authorization", "Bearer " + accessToken)
                 .type(MediaType.APPLICATION_JSON).post(ClientResponse.class, status);
     }
 
 
-    protected CopyJobStatus getFinalizeJobStatus(URI job, CopyJobStatus original) {
+    protected CopyJobStatus getFinalizeJobStatus(URI job, JobStatus original) {
         return webResource.uri(job).header("Authorization", "Bearer " + accessToken).get(CopyJobStatus.class);
     }
 
@@ -85,7 +86,8 @@ public class EvoTest extends W4ETest {
         int cnt = 0;
         CopyJobStatus remoteStatus;
         do {
-            remoteStatus = webResource.uri(job).header("Authorization", "Bearer " + accessToken).get(CopyJobStatus.class);
+            remoteStatus = webResource.uri(job).header("Authorization", "Bearer " + accessToken)
+                    .get(CopyJobStatus.class);
             synchronized (this) {
                 wait(1000);
             }

@@ -10,7 +10,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import pl.psnc.dl.wf4ever.IntegrationTest;
-import pl.psnc.dl.wf4ever.evo.Job.State;
+import pl.psnc.dl.wf4ever.job.Job.State;
+import pl.psnc.dl.wf4ever.job.JobStatus;
 
 @Category(IntegrationTest.class)
 public class StoringHistoryTest extends EvoTest {
@@ -54,7 +55,7 @@ public class StoringHistoryTest extends EvoTest {
         String content = webResource.uri(ro).path(modifiedResourceFile)
                 .header("Authorization", "Bearer " + accessToken).get(String.class);
 
-        CopyJobStatus sp2Status = new CopyJobStatus(ro, EvoType.SNAPSHOT, true);
+        JobStatus sp2Status = new CopyJobStatus(ro, EvoType.SNAPSHOT, true);
         copyJob = createCopyJob(sp2Status, null).getLocation();
         sp2Status = getRemoteStatus(copyJob, WAIT_FOR_COPY);
         Assert.assertEquals(State.DONE, sp2Status.getState());
