@@ -16,7 +16,9 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -86,6 +88,7 @@ public class ROFromZipResource implements JobsContainer {
     @POST
     @Path("store/")
     @Consumes("application/zip")
+    @Produces(MediaType.APPLICATION_JSON)
     public Response storeROFromGivenZip(@HeaderParam("Slug") String researchObjectId, InputStream zipStream)
             throws BadRequestException {
         ArrayList<String> missingParamters = new ArrayList<String>();

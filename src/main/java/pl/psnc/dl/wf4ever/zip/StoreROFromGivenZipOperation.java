@@ -68,7 +68,9 @@ public class StoreROFromGivenZipOperation implements Operation {
         }
         URI roUri = uriInfo.getBaseUri().resolve("ROs/").resolve(status.getTarget().toString() + "/");
         try {
-            ResearchObject.create(builder, roUri, new MemoryZipFile(tmpFile, status.getTarget().toString()));
+            ResearchObject created = ResearchObject.create(builder, roUri, new MemoryZipFile(tmpFile, status
+                    .getTarget().toString()));
+            status.setTarget(created.getUri());
         } catch (IOException | BadRequestException e) {
             throw new OperationFailedException("Can't preapre a ro from given zip", e);
         }
