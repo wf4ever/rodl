@@ -5,24 +5,15 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
-import javax.naming.NamingException;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.Test;
@@ -30,8 +21,6 @@ import org.junit.experimental.categories.Category;
 
 import pl.psnc.dl.wf4ever.Constants;
 import pl.psnc.dl.wf4ever.IntegrationTest;
-import pl.psnc.dl.wf4ever.job.Job.State;
-import pl.psnc.dl.wf4ever.job.JobStatus;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -140,110 +129,6 @@ public class ResourceTest extends ResourceBase {
 
 
     @Test
-    public void storeROFromZip()
-            throws IOException, ClassNotFoundException, NamingException, InterruptedException {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
-        ClientResponse response = webResource.path("ROs/zip/store").accept("application/json")
-                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
-                .type("application/zip").post(ClientResponse.class, is);
-        assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
-            response.getStatus());
-        response.close();
-        JobStatus status = getStatus(response.getLocation());
-        Assert.assertEquals(State.DONE, status.getState());
-        response = webResource.uri(status.getTarget()).accept("application/zip")
-                .header("Authorization", "Bearer " + accessToken).get(ClientResponse.class);
-        is = response.getEntity(InputStream.class);
-        File file = File.createTempFile("storeFromZipTests", "zip");
-        FileOutputStream outputStream = new FileOutputStream(file);
-        IOUtils.copy(is, outputStream);
-        is.close();
-        outputStream.close();
-        ZipFile zip = new ZipFile(file);
-        Enumeration<? extends ZipEntry> e = zip.entries();
-        List entries = new ArrayList<String>();
-        while (e.hasMoreElements()) {
-            entries.add(e.nextElement().getName());
-        }
-        Assert.assertTrue(entries.contains("conclusion.pdf"));
-        Assert.assertTrue(entries.contains(".ro/manifest.rdf"));
-        Assert.assertTrue(entries.contains(".ro/evo_info.ttl"));
-        Assert.assertTrue(entries.contains("Hypothesis.txt"));
-        file.delete();
-    }
-
-
-    @Test
-    public void storeWrongROFromZip()
-            throws IOException, ClassNotFoundException, NamingException, InterruptedException {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/wrong.zip");
-        ClientResponse response = webResource.path("ROs/zip/store").accept("application/json")
-                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
-                .type("application/zip").post(ClientResponse.class, is);
-        assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
-            response.getStatus());
-        response.close();
-        JobStatus status = getStatus(response.getLocation());
-        Assert.assertEquals(State.SERVICE_ERROR, status.getState());
-    }
-
-
-    @Test
-    public void createROFromZipWithWhitespaces()
-            throws Exception {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/white_spaces_ro.zip");
-        ClientResponse response = webResource.path("ROs/zip/store").accept("application/json")
-                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
-                .type("application/zip").post(ClientResponse.class, is);
-        assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
-            response.getStatus());
-        response.close();
-        JobStatus status = getStatus(response.getLocation());
-        Assert.assertEquals(State.DONE, status.getState());
-    }
-
-
-    @Test
-    public void createROFromZipWithEvoAnnotation()
-            throws Exception {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/zip_with_evo.zip");
-        ClientResponse response = webResource.path("ROs/zip/store").accept("application/json")
-                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
-                .type("application/zip").post(ClientResponse.class, is);
-        assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
-            response.getStatus());
-        response.close();
-        JobStatus status = getStatus(response.getLocation());
-        Assert.assertEquals(State.DONE, status.getState());
-    }
-
-
-    @Test
-    public void createConflictedROFromZip()
-            throws Exception {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
-        ClientResponse response1 = webResource.path("ROs/zip/store").accept("application/json")
-                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
-                .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(is));
-        assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
-            response1.getStatus());
-        JobStatus status1 = getStatus(response1.getLocation());
-        Assert.assertEquals(State.DONE, status1.getState());
-
-        is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
-        ClientResponse response2 = webResource.path("ROs/zip/store").accept("application/json")
-                .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
-                .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(is));
-
-        JobStatus status2 = getStatus(response2.getLocation());
-        Assert.assertEquals(State.DONE, status2.getState());
-
-        Assert.assertNotEquals(status1.getTarget(), status2.getTarget());
-
-    }
-
-
-    @Test
     public void updateEvoInfo() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("manifest.ttl");
         ClientResponse response = webResource.uri(ro).path("/.ro/evo_info.ttl")
@@ -326,21 +211,6 @@ public class ResourceTest extends ResourceBase {
         assertThat(response.getStatus(), equalTo(HttpStatus.SC_NO_CONTENT));
         response = webResource.uri(ro).accept(MediaType.TEXT_HTML).get(ClientResponse.class);
         assertThat(response.getStatus(), equalTo(HttpStatus.SC_NOT_FOUND));
-    }
-
-
-    private JobStatus getStatus(URI jobUri)
-            throws InterruptedException {
-        int counter = 0;
-        while (counter < maxSeonds) {
-            Thread.sleep(1000);
-            JobStatus status = webResource.uri(jobUri).accept("application/json").get(JobStatus.class);
-            if (status.getState() != State.RUNNING) {
-                return status;
-            }
-        }
-        return null;
-
     }
 
 }

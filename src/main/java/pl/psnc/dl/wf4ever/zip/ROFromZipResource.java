@@ -123,10 +123,51 @@ public class ROFromZipResource implements JobsContainer {
     }
 
 
+    /**
+     * Create a RO and aggregate resources aggregated in zip.
+     * 
+     * @param researchObjectId
+     *            the id (slug) of new RO
+     * @param zipStream
+     *            the given zip
+     * @return classical response
+     * @throws BadRequestException
+     *             the given zip is broken.
+     */
     @POST
     @Path("create/")
     @Consumes("application/zip")
-    public Response createROFromGivenZip(@HeaderParam("Slug") String researchObjectId, InputStream zipStream) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createROFromGivenZip(@HeaderParam("Slug") String researchObjectId, InputStream zipStream)
+            throws BadRequestException {
+        ArrayList<String> missingParamters = new ArrayList<String>();
+        if (zipStream == null) {
+            missingParamters.add("Zip file");
+        }
+        if (researchObjectId == null || researchObjectId.isEmpty()) {
+            missingParamters.add("research object id");
+        }
+        if (!missingParamters.isEmpty()) {
+            String errorMessage = "Missing paramters:";
+            for (String missingParamter : missingParamters) {
+                errorMessage += "\n" + missingParamter;
+            }
+            throw new BadRequestException(errorMessage);
+        }
+        UUID jobUUID = UUID.randomUUID();
+        JobStatus jobStatus = new ROFromZipJobStatus();
+        jobStatus.setTarget(URI.create(researchObjectId));
+        CreateROFromGivenZipOperation operation = new CreateROFromGivenZipOperation(builder, zipStream, uriInfo);
+        Job job = new Job(jobUUID, jobStatus, this, operation);
+        jobs.put(jobUUID, job);
+        job.run();
+        try {
+            Response result = Response.created(uriInfo.getAbsolutePath().resolve(jobUUID.toString()))
+                    .entity(job.getStatus()).build();
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 

@@ -6,7 +6,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URLConnection;
+import java.util.Enumeration;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.ws.rs.core.UriInfo;
 
@@ -18,7 +22,6 @@ import pl.psnc.dl.wf4ever.job.Operation;
 import pl.psnc.dl.wf4ever.job.OperationFailedException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
-import pl.psnc.dl.wf4ever.util.MemoryZipFile;
 
 /**
  * Operation which stores a research object given in a zip format from outside.
@@ -26,7 +29,7 @@ import pl.psnc.dl.wf4ever.util.MemoryZipFile;
  * @author pejot
  * 
  */
-public class StoreROFromGivenZipOperation implements Operation {
+public class CreateROFromGivenZipOperation implements Operation {
 
     /** resource builder. */
     private Builder builder;
@@ -46,7 +49,7 @@ public class StoreROFromGivenZipOperation implements Operation {
      * @param uriInfo
      *            reqest uri info
      */
-    public StoreROFromGivenZipOperation(Builder builder, InputStream zipStream, UriInfo uriInfo) {
+    public CreateROFromGivenZipOperation(Builder builder, InputStream zipStream, UriInfo uriInfo) {
         this.builder = builder;
         this.zipStream = zipStream;
         this.uriInfo = uriInfo;
@@ -63,19 +66,33 @@ public class StoreROFromGivenZipOperation implements Operation {
             FileOutputStream fileOutputStream;
             fileOutputStream = new FileOutputStream(tmpFile);
             IOUtils.copy(inputStream, fileOutputStream);
-            inputStream.close();
             fileOutputStream.close();
+            inputStream.close();
         } catch (IOException e) {
             throw new OperationFailedException("Can copy input streams", e);
         }
         URI roUri = uriInfo.getBaseUri().resolve("ROs/").resolve(status.getTarget().toString() + "/");
+        ResearchObject created = ResearchObject.create(builder, roUri);
         try {
-            ResearchObject created = ResearchObject.create(builder, roUri, new MemoryZipFile(tmpFile, status
-                    .getTarget().toString()));
-            status.setTarget(created.getUri());
+            @SuppressWarnings("resource")
+            ZipFile zip = new ZipFile(tmpFile);
+            Enumeration<? extends ZipEntry> entries = zip.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                if (entry.isDirectory()) {
+                    //what to do here :|
+                    continue;
+                } else {
+                    String contentType = URLConnection.getFileNameMap().getContentTypeFor(entry.getName());
+                    created.aggregate(entry.getName(), zip.getInputStream(entry), contentType);
+                }
+            }
         } catch (IOException | BadRequestException e) {
             throw new OperationFailedException("Can't preapre a ro from given zip", e);
         }
+
+        status.setTarget(created.getUri());
+
         tmpFile.delete();
     }
 }
