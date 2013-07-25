@@ -6,12 +6,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URLConnection;
 import java.util.Enumeration;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.io.IOUtils;
@@ -83,8 +83,12 @@ public class CreateROFromGivenZipOperation implements Operation {
                     //what to do here :|
                     continue;
                 } else {
-                    String contentType = URLConnection.getFileNameMap().getContentTypeFor(entry.getName());
-                    created.aggregate(entry.getName(), zip.getInputStream(entry), contentType);
+                    MimetypesFileTypeMap mfm = new MimetypesFileTypeMap();
+                    try (InputStream mimeTypesIs = ResearchObject.class.getClassLoader().getResourceAsStream(
+                        "mime.types")) {
+                        mfm = new MimetypesFileTypeMap(mimeTypesIs);
+                    }
+                    created.aggregate(entry.getName(), zip.getInputStream(entry), mfm.getContentType(entry.getName()));
                 }
             }
         } catch (IOException | BadRequestException e) {
