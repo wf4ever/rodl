@@ -5,12 +5,18 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletResponse;
@@ -145,6 +151,25 @@ public class ResourceTest extends ResourceBase {
         response.close();
         JobStatus status = getStatus(response.getLocation());
         Assert.assertEquals(State.DONE, status.getState());
+        response = webResource.uri(status.getTarget()).accept("application/zip")
+                .header("Authorization", "Bearer " + accessToken).get(ClientResponse.class);
+        is = response.getEntity(InputStream.class);
+        File file = File.createTempFile("storeFromZipTests", "zip");
+        FileOutputStream outputStream = new FileOutputStream(file);
+        IOUtils.copy(is, outputStream);
+        is.close();
+        outputStream.close();
+        ZipFile zip = new ZipFile(file);
+        Enumeration<? extends ZipEntry> e = zip.entries();
+        List entries = new ArrayList<String>();
+        while (e.hasMoreElements()) {
+            entries.add(e.nextElement().getName());
+        }
+        Assert.assertTrue(entries.contains("conclusion.pdf"));
+        Assert.assertTrue(entries.contains(".ro/manifest.rdf"));
+        Assert.assertTrue(entries.contains(".ro/evo_info.ttl"));
+        Assert.assertTrue(entries.contains("Hypothesis.txt"));
+        file.delete();
     }
 
 
