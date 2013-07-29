@@ -107,13 +107,13 @@ public final class Synchronization {
                 if (!dArceoROsUri.contains(rodlRO.getUri())) {
                     ResearchObjectPreservationStatus status = statusDao.findById(rodlRO.getUri().toString());
                     if (status == null) {
-                        LOGGER.warn("Status of " + rodlRO.getUri().toString()
+                        LOGGER.debug("Status of " + rodlRO.getUri().toString()
                                 + "is missing. Created as NEW to synchronize with dArceo");
                         ResearchObjectPreservationStatus newStatus = new ResearchObjectPreservationStatus(
                                 rodlRO.getUri(), Status.NEW);
                         statusDao.save(newStatus);
                     } else if (status.getStatus() == null || status.getStatus() != Status.NEW) {
-                        LOGGER.warn("Status of " + rodlRO.getUri().toString()
+                        LOGGER.debug("Status of " + rodlRO.getUri().toString()
                                 + "isn'corrected. Created as NEW to synchronize with dArceo");
                         status.setStatus(Status.NEW);
                         statusDao.save(status);
@@ -124,12 +124,12 @@ public final class Synchronization {
                 if (ResearchObject.get(builder, darceoROUri) == null) {
                     ResearchObjectPreservationStatus status = statusDao.findById(darceoROUri.toString());
                     if (status == null) {
-                        LOGGER.warn("Research Object " + darceoROUri.toString() + "needs to be restored");
+                        LOGGER.debug("Research Object " + darceoROUri.toString() + "needs to be restored");
                         ResearchObjectPreservationStatus newStatus = new ResearchObjectPreservationStatus(darceoROUri,
                                 Status.LOST);
                         statusDao.save(newStatus);
                     } else if (status.getStatus() == null || status.getStatus() != Status.DELETED) {
-                        LOGGER.warn("Research Object " + darceoROUri.toString() + "needs to be restored");
+                        LOGGER.debug("Research Object " + darceoROUri.toString() + "needs to be restored");
                         status.setStatus(Status.LOST);
                         statusDao.save(status);
                     }

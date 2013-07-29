@@ -154,11 +154,12 @@ public class FolderTest extends BaseTest {
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testCreateFolderNullInputStream()
             throws BadRequestException {
         folderBuilder.createROAggregated(builder, researchObject, folderUri);
-        Folder.create(builder, researchObject, folderUri, null);
+        Folder f = Folder.create(builder, researchObject, folderUri, null);
+        Assert.assertNotNull(f);
     }
 
 

@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import pl.psnc.dl.wf4ever.darceo.client.DArceoClient;
@@ -56,6 +57,7 @@ public class SynchronizationTest {
     }
 
 
+    @Ignore
     @Test
     public void testDarceoSynchronization()
             throws DArceoException, IOException, OAIException {

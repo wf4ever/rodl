@@ -39,7 +39,7 @@ import com.sun.jersey.api.NotFoundException;
  * @author piotrhol
  * 
  */
-@Path("ROs/zip/")
+@Path("zip/")
 public class ROFromZipResource implements JobsContainer {
 
     /** logger. */
@@ -86,7 +86,7 @@ public class ROFromZipResource implements JobsContainer {
      *             the ZIP content is not a valid RO
      */
     @POST
-    @Path("store/")
+    @Path("upload")
     @Consumes("application/zip")
     @Produces(MediaType.APPLICATION_JSON)
     public Response storeROFromGivenZip(@HeaderParam("Slug") String researchObjectId, InputStream zipStream)
@@ -135,7 +135,7 @@ public class ROFromZipResource implements JobsContainer {
      *             the given zip is broken.
      */
     @POST
-    @Path("create/")
+    @Path("create")
     @Consumes("application/zip")
     @Produces(MediaType.APPLICATION_JSON)
     public Response createROFromGivenZip(@HeaderParam("Slug") String researchObjectId, InputStream zipStream)

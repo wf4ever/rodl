@@ -406,6 +406,19 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
 
 
     /**
+     * Create and aggregate an empty folder instance.
+     * 
+     * @param folderUri
+     *            a folderUri
+     * @return an empty folder
+     */
+    public Folder aggregateFolder(URI folderUri) {
+        Folder folder = Folder.create(builder, this, folderUri);
+        return folder;
+    }
+
+
+    /**
      * Aggregate a copy of a folder. The aggregated resources will be relativized against the original RO URI and
      * resolved against this RO URI.
      * 

@@ -1,9 +1,15 @@
 package pl.psnc.dl.wf4ever.rosrs;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Set;
+import java.util.UUID;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -13,6 +19,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
@@ -20,6 +27,7 @@ import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.util.MemoryZipFile;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -93,5 +101,39 @@ public class ResearchObjectListResource {
         ContentDisposition cd = ContentDisposition.type("attachment").fileName(ResearchObject.MANIFEST_PATH).build();
         return Response.created(researchObject.getUri()).entity(manifest).header("Content-disposition", cd)
                 .type(format.getDefaultMIMEType()).build();
+    }
+
+
+    /**
+     * Create a new RO based on a ZIP sent in the request.
+     * 
+     * @param researchObjectId
+     *            slug header
+     * @param zipStream
+     *            ZIP input stream
+     * @return 201 Created
+     * @throws BadRequestException
+     *             the ZIP content is not a valid RO
+     * @throws IOException
+     *             error when unzipping
+     */
+    @POST
+    @Consumes("application/zip")
+    public Response createResearchObjectFromZip(@HeaderParam("Slug") String researchObjectId, InputStream zipStream)
+            throws BadRequestException, IOException {
+        if (researchObjectId == null || researchObjectId.isEmpty()) {
+            throw new BadRequestException("Research object ID is null or empty");
+        }
+
+        UUID uuid = UUID.randomUUID();
+        File tmpFile = File.createTempFile("tmp_ro", uuid.toString());
+        BufferedInputStream inputStream = new BufferedInputStream(zipStream);
+        FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
+        IOUtils.copy(inputStream, fileOutputStream);
+        URI roUri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
+        ResearchObject researchObject = ResearchObject.create(builder, roUri, new MemoryZipFile(tmpFile,
+                researchObjectId));
+        tmpFile.delete();
+        return Response.created(researchObject.getUri()).build();
     }
 }

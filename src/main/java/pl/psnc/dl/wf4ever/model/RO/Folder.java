@@ -314,7 +314,15 @@ public class Folder extends Resource implements Aggregation {
         if (researchObject.isUriUsed(uri)) {
             throw new ConflictException("Resource already exists: " + uri);
         }
-        Folder folder = assemble(builder, researchObject, uri, content);
+        Folder folder;
+        if (content != null) {
+            folder = assemble(builder, researchObject, uri, content);
+        } else {
+            folder = builder.buildFolder(uri, researchObject, builder.getUser(), DateTime.now(), null);
+            folder.resourceMap = FolderResourceMap.create(builder, folder, folder.getResourceMapUri());
+
+        }
+
         folder.setCreated(DateTime.now());
         folder.setCreator(builder.getUser());
         folder.setProxy(researchObject.addProxy(folder));
@@ -330,6 +338,27 @@ public class Folder extends Resource implements Aggregation {
         folder.getResourceMap().serialize();
         folder.onCreated();
         return folder;
+    }
+
+
+    /**
+     * Create and save an empty folder.
+     * 
+     * @param builder
+     *            model instance builder
+     * @param researchObject
+     *            research object aggregating the folder
+     * @param uri
+     *            folder URI
+     * @return an empty folder instance
+     */
+    public static Folder create(Builder builder, ResearchObject researchObject, URI uri) {
+        try {
+            return create(builder, researchObject, uri, null);
+        } catch (BadRequestException e) {
+            LOGGER.warn("Can't create an empty folder " + uri.toString(), e);
+        }
+        return null;
     }
 
 
@@ -385,6 +414,23 @@ public class Folder extends Resource implements Aggregation {
     public FolderEntry createFolderEntry(InputStream content)
             throws BadRequestException {
         FolderEntry entry = FolderEntry.assemble(builder, this, content);
+        return addFolderEntry(entry);
+    }
+
+
+    /**
+     * Create folder entry for given AggregatedResource.
+     * 
+     * @param aggregatedResource
+     *            Aggregated Resource.
+     * 
+     * @return created folder entry.
+     */
+    public FolderEntry createFolderEntry(AggregatedResource aggregatedResource) {
+        String pathLastPart = UUID.randomUUID().toString();
+        URI entryUri = this.getUri().resolve("entries/" + pathLastPart);
+        FolderEntry entry = builder.buildFolderEntry(entryUri, aggregatedResource, this, pathLastPart);
+
         return addFolderEntry(entry);
     }
 

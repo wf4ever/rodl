@@ -22,7 +22,9 @@ import pl.psnc.dl.wf4ever.evo.EvoInfoResource;
 import pl.psnc.dl.wf4ever.evo.FinalizeResource;
 import pl.psnc.dl.wf4ever.notifications.NotificationResource;
 import pl.psnc.dl.wf4ever.vocabulary.NotificationService;
+import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dl.wf4ever.vocabulary.ROEVOService;
+import pl.psnc.dl.wf4ever.zip.ROFromZipResource;
 
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -87,6 +89,10 @@ public class RootResource {
         service.addProperty(ROEVOService.copy, copyTpl);
         service.addProperty(ROEVOService.finalize, finalizeTpl);
         service.addProperty(ROEVOService.info, infoTpl);
+
+        URI zipUri = uriInfo.getAbsolutePathBuilder().path(ROFromZipResource.class).build();
+        service.addProperty(RO.createFromZip, zipUri.resolve("create").toString());
+        service.addProperty(RO.uploadAZip, zipUri.resolve("upload").toString());
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         model.write(out, format.getName().toUpperCase(), null);

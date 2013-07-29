@@ -83,7 +83,7 @@ public class ZipTest extends W4ETest {
     public void storeROFromZip()
             throws IOException, ClassNotFoundException, NamingException, InterruptedException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
-        ClientResponse response = webResource.path("ROs/zip/store").accept("application/json")
+        ClientResponse response = webResource.path("zip/upload").accept("application/json")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
                 .type("application/zip").post(ClientResponse.class, is);
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
@@ -117,7 +117,7 @@ public class ZipTest extends W4ETest {
     public void storeWrongROFromZip()
             throws IOException, ClassNotFoundException, NamingException, InterruptedException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/wrong.zip");
-        ClientResponse response = webResource.path("ROs/zip/store").accept("application/json")
+        ClientResponse response = webResource.path("zip/upload").accept("application/json")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
                 .type("application/zip").post(ClientResponse.class, is);
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
@@ -132,7 +132,7 @@ public class ZipTest extends W4ETest {
     public void createROFromZipWithWhitespaces()
             throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/white_spaces_ro.zip");
-        ClientResponse response = webResource.path("ROs/zip/store").accept("application/json")
+        ClientResponse response = webResource.path("zip/upload").accept("application/json")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
                 .type("application/zip").post(ClientResponse.class, is);
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
@@ -147,7 +147,7 @@ public class ZipTest extends W4ETest {
     public void createROFromZipWithEvoAnnotation()
             throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/zip_with_evo.zip");
-        ClientResponse response = webResource.path("ROs/zip/store").accept("application/json")
+        ClientResponse response = webResource.path("zip/upload").accept("application/json")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
                 .type("application/zip").post(ClientResponse.class, is);
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
@@ -162,7 +162,7 @@ public class ZipTest extends W4ETest {
     public void createConflictedROFromZip()
             throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
-        ClientResponse response1 = webResource.path("ROs/zip/store").accept("application/json")
+        ClientResponse response1 = webResource.path("zip/upload").accept("application/json")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
                 .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(is));
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
@@ -171,7 +171,7 @@ public class ZipTest extends W4ETest {
         Assert.assertEquals(State.DONE, status1.getState());
 
         is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
-        ClientResponse response2 = webResource.path("ROs/zip/store").accept("application/json")
+        ClientResponse response2 = webResource.path("zip/upload").accept("application/json")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
                 .type("application/zip").post(ClientResponse.class, IOUtils.toByteArray(is));
 
@@ -185,7 +185,7 @@ public class ZipTest extends W4ETest {
     public void createROFromGivenZip()
             throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/aggregatedNoFolder.zip");
-        ClientResponse response = webResource.path("ROs/zip/create").accept("application/json")
+        ClientResponse response = webResource.path("zip/create").accept("application/json")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
                 .type("application/zip").post(ClientResponse.class, is);
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
@@ -221,7 +221,7 @@ public class ZipTest extends W4ETest {
     public void createROFromGivenZipWithFolders()
             throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/aggregatedWithFolder.zip");
-        ClientResponse response = webResource.path("ROs/zip/create").accept("application/json")
+        ClientResponse response = webResource.path("zip/create").accept("application/json")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
                 .type("application/zip").post(ClientResponse.class, is);
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
@@ -242,13 +242,18 @@ public class ZipTest extends W4ETest {
         Enumeration<? extends ZipEntry> e = zip.entries();
         List entries = new ArrayList<String>();
         while (e.hasMoreElements()) {
-            entries.add(e.nextElement().getName());
+            String name = e.nextElement().getName();
+            System.out.println(name);
+            entries.add(name);
         }
         Assert.assertTrue(entries.contains("1.txt"));
         Assert.assertTrue(entries.contains("2.txt"));
         Assert.assertTrue(entries.contains("3.txt"));
         Assert.assertTrue(entries.contains(".ro/manifest.rdf"));
         Assert.assertTrue(entries.contains(".ro/evo_info.ttl"));
+        Assert.assertTrue(entries.contains("innerFolder/innerFolder.rdf"));
+        Assert.assertTrue(entries.contains("innerFolder/5.txt"));
+        Assert.assertTrue(entries.contains("innerFolder/4.txt"));
         file.delete();
     }
 
