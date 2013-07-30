@@ -26,6 +26,7 @@ import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.W4ETest;
 import pl.psnc.dl.wf4ever.job.Job.State;
 import pl.psnc.dl.wf4ever.job.JobStatus;
+import pl.psnc.dl.wf4ever.zip.ROFromZipJobStatus;
 
 import com.sun.jersey.api.client.ClientResponse;
 
@@ -33,7 +34,7 @@ import com.sun.jersey.api.client.ClientResponse;
 public class ZipTest extends W4ETest {
 
     protected String createdFromZipResourceObject = UUID.randomUUID().toString();
-    protected Integer maxSeonds = 100;
+    protected Integer maxSeonds = 300;
 
 
     @Override
@@ -88,8 +89,8 @@ public class ZipTest extends W4ETest {
                 .type("application/zip").post(ClientResponse.class, is);
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
-        response.close();
         JobStatus status = getStatus(response.getLocation());
+        response.close();
         Assert.assertEquals(State.DONE, status.getState());
         response = webResource.uri(status.getTarget()).accept("application/zip")
                 .header("Authorization", "Bearer " + accessToken).get(ClientResponse.class);
@@ -101,7 +102,7 @@ public class ZipTest extends W4ETest {
         outputStream.close();
         ZipFile zip = new ZipFile(file);
         Enumeration<? extends ZipEntry> e = zip.entries();
-        List entries = new ArrayList<String>();
+        ArrayList<String> entries = new ArrayList<String>();
         while (e.hasMoreElements()) {
             entries.add(e.nextElement().getName());
         }
@@ -204,7 +205,7 @@ public class ZipTest extends W4ETest {
         outputStream.close();
         ZipFile zip = new ZipFile(file);
         Enumeration<? extends ZipEntry> e = zip.entries();
-        List entries = new ArrayList<String>();
+        ArrayList<String> entries = new ArrayList<String>();
         while (e.hasMoreElements()) {
             entries.add(e.nextElement().getName());
         }
@@ -242,9 +243,7 @@ public class ZipTest extends W4ETest {
         Enumeration<? extends ZipEntry> e = zip.entries();
         List entries = new ArrayList<String>();
         while (e.hasMoreElements()) {
-            String name = e.nextElement().getName();
-            System.out.println(name);
-            entries.add(name);
+            entries.add(e.nextElement().getName());
         }
         Assert.assertTrue(entries.contains("1.txt"));
         Assert.assertTrue(entries.contains("2.txt"));
@@ -273,10 +272,20 @@ public class ZipTest extends W4ETest {
         int counter = 0;
         while (counter < maxSeonds) {
             Thread.sleep(1000);
-            JobStatus status = webResource.uri(jobUri).accept("application/json").get(JobStatus.class);
+            ROFromZipJobStatus status = webResource.uri(jobUri).accept("application/json")
+                    .get(ROFromZipJobStatus.class);
             if (status.getState() != State.RUNNING) {
+                if (status.getReason() != null) {
+                    System.out.println("***************");
+                    System.out.println("***************");
+                    System.out.println(status.getReason());
+                    System.out.println("***************");
+                    System.out.println("***************");
+                }
                 return status;
+
             }
+            counter++;
         }
         return null;
 

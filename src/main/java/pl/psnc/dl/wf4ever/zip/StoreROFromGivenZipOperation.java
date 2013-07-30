@@ -1,17 +1,12 @@
 package pl.psnc.dl.wf4ever.zip;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.util.UUID;
 
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.io.IOUtils;
-
+import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.job.JobStatus;
 import pl.psnc.dl.wf4ever.job.Operation;
@@ -31,7 +26,7 @@ public class StoreROFromGivenZipOperation implements Operation {
     /** resource builder. */
     private Builder builder;
     /** zip input stream. */
-    InputStream zipStream;
+    File zipFile;
     /** request uri info. */
     UriInfo uriInfo;
 
@@ -41,14 +36,14 @@ public class StoreROFromGivenZipOperation implements Operation {
      * 
      * @param builder
      *            model instance builder
-     * @param zipStream
-     *            zip input stream
+     * @param zipFile
+     *            processed zip file
      * @param uriInfo
-     *            reqest uri info
+     *            request uri info
      */
-    public StoreROFromGivenZipOperation(Builder builder, InputStream zipStream, UriInfo uriInfo) {
+    public StoreROFromGivenZipOperation(Builder builder, File zipFile, UriInfo uriInfo) {
         this.builder = builder;
-        this.zipStream = zipStream;
+        this.zipFile = zipFile;
         this.uriInfo = uriInfo;
     }
 
@@ -56,26 +51,31 @@ public class StoreROFromGivenZipOperation implements Operation {
     @Override
     public void execute(JobStatus status)
             throws OperationFailedException {
-        File tmpFile;
-        try {
-            tmpFile = File.createTempFile("tmp_ro", UUID.randomUUID().toString());
-            BufferedInputStream inputStream = new BufferedInputStream(zipStream);
-            FileOutputStream fileOutputStream;
-            fileOutputStream = new FileOutputStream(tmpFile);
-            IOUtils.copy(inputStream, fileOutputStream);
-            inputStream.close();
-            fileOutputStream.close();
-        } catch (IOException e) {
-            throw new OperationFailedException("Can copy input streams", e);
+        if (zipFile == null) {
+            throw new OperationFailedException("Givem zip file is empty or null");
         }
-        URI roUri = uriInfo.getBaseUri().resolve("ROs/").resolve(status.getTarget().toString() + "/");
-        try {
-            ResearchObject created = ResearchObject.create(builder, roUri, new MemoryZipFile(tmpFile, status
-                    .getTarget().toString()));
-            status.setTarget(created.getUri());
-        } catch (IOException | BadRequestException e) {
-            throw new OperationFailedException("Can't preapre a ro from given zip", e);
+        ROFromZipJobStatus roFromZipJobStatus;
+        boolean started = !HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive();
+        if (started) {
+            HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         }
-        tmpFile.delete();
+        try {
+            roFromZipJobStatus = (ROFromZipJobStatus) status;
+            URI roUri = uriInfo.getBaseUri().resolve("ROs/").resolve(roFromZipJobStatus.getTarget().toString() + "/");
+            try {
+                ResearchObject created = ResearchObject.create(builder, roUri, new MemoryZipFile(zipFile,
+                        roFromZipJobStatus.getTarget().toString()), roFromZipJobStatus);
+                roFromZipJobStatus.setProcessedResources(roFromZipJobStatus.getSubmittedResources());
+                roFromZipJobStatus.setTarget(created.getUri());
+            } catch (IOException | BadRequestException e) {
+                throw new OperationFailedException("Can't preapre a ro from given zip", e);
+            }
+        } finally {
+            builder.getEventBusModule().commit();
+            if (started) {
+                HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+            }
+            zipFile.delete();
+        }
     }
 }

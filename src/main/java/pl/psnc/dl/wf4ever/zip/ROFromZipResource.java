@@ -1,5 +1,9 @@
 package pl.psnc.dl.wf4ever.zip;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
@@ -22,6 +26,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
@@ -106,12 +111,16 @@ public class ROFromZipResource implements JobsContainer {
             throw new BadRequestException(errorMessage);
         }
         UUID jobUUID = UUID.randomUUID();
-        JobStatus jobStatus = new ROFromZipJobStatus();
+        ROFromZipJobStatus jobStatus = new ROFromZipJobStatus();
+        jobStatus.setProcessedResources(0);
+        jobStatus.setSubmittedResources(0);
         jobStatus.setTarget(URI.create(researchObjectId));
-        StoreROFromGivenZipOperation operation = new StoreROFromGivenZipOperation(builder, zipStream, uriInfo);
+        //copy input stream
+        File tmpFile = createTmpZip(zipStream);
+        StoreROFromGivenZipOperation operation = new StoreROFromGivenZipOperation(builder, tmpFile, uriInfo);
         Job job = new Job(jobUUID, jobStatus, this, operation);
         jobs.put(jobUUID, job);
-        job.run();
+        job.start();
         try {
             Response result = Response.created(uriInfo.getAbsolutePath().resolve(jobUUID.toString()))
                     .entity(job.getStatus()).build();
@@ -155,12 +164,16 @@ public class ROFromZipResource implements JobsContainer {
             throw new BadRequestException(errorMessage);
         }
         UUID jobUUID = UUID.randomUUID();
-        JobStatus jobStatus = new ROFromZipJobStatus();
+        ROFromZipJobStatus jobStatus = new ROFromZipJobStatus();
         jobStatus.setTarget(URI.create(researchObjectId));
-        CreateROFromGivenZipOperation operation = new CreateROFromGivenZipOperation(builder, zipStream, uriInfo);
+        jobStatus.setProcessedResources(0);
+        jobStatus.setSubmittedResources(0);
+        //copy input stream 
+        File tmpFile = createTmpZip(zipStream);
+        CreateROFromGivenZipOperation operation = new CreateROFromGivenZipOperation(builder, tmpFile, uriInfo);
         Job job = new Job(jobUUID, jobStatus, this, operation);
         jobs.put(jobUUID, job);
-        job.run();
+        job.start();
         try {
             Response result = Response.created(uriInfo.getAbsolutePath().resolve(jobUUID.toString()))
                     .entity(job.getStatus()).build();
@@ -181,12 +194,12 @@ public class ROFromZipResource implements JobsContainer {
      */
     @GET
     @Path("{id}")
-    public JobStatus getJob(@PathParam("id") UUID uuid) {
+    public ROFromZipJobStatus getJob(@PathParam("id") UUID uuid) {
         if (jobs.containsKey(uuid)) {
-            return jobs.get(uuid).getStatus();
+            return (ROFromZipJobStatus) jobs.get(uuid).getStatus();
         }
         if (finishedJobs.containsKey(uuid)) {
-            return finishedJobs.get(uuid);
+            return (ROFromZipJobStatus) finishedJobs.get(uuid);
         }
         throw new NotFoundException("Job not found: " + uuid);
     }
@@ -242,4 +255,27 @@ public class ROFromZipResource implements JobsContainer {
         jobs.remove(job.getUUID());
     }
 
+
+    /**
+     * Create an tmp file from a zip given in a request.
+     * 
+     * @param is
+     *            processed zip as a request input stream
+     * @return zip written in a tmp file
+     */
+    private File createTmpZip(InputStream is) {
+        try {
+            File tmpFile = File.createTempFile("tmp_ro", UUID.randomUUID().toString());
+            BufferedInputStream inputStream = new BufferedInputStream(is);
+            FileOutputStream fileOutputStream;
+            fileOutputStream = new FileOutputStream(tmpFile);
+            IOUtils.copy(inputStream, fileOutputStream);
+            inputStream.close();
+            fileOutputStream.close();
+            return tmpFile;
+        } catch (IOException e) {
+            LOGGER.error("Can't process given zip input stream");
+        }
+        return null;
+    }
 }

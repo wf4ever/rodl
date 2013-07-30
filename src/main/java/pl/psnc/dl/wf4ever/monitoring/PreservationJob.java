@@ -45,8 +45,8 @@ public class PreservationJob implements Job {
     @Override
     public void execute(JobExecutionContext context)
             throws JobExecutionException {
-        boolean started = !HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive();
         URI researchObjectUri = (URI) context.getMergedJobDataMap().get(RESEARCH_OBJECT_URI);
+        boolean started = !HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive();
         if (started) {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         }

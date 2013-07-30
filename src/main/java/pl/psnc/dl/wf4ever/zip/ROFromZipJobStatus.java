@@ -11,10 +11,37 @@ import pl.psnc.dl.wf4ever.job.JobStatus;
  * 
  */
 @XmlRootElement
-class ROFromZipJobStatus extends JobStatus {
+public class ROFromZipJobStatus extends JobStatus {
+
+    /** Number of resources which were submitted. */
+    protected Integer submittedResources;
+
+    /** Number of resources which were already processed. */
+    protected Integer processedResources;
+
 
     /** Constructor. */
     public ROFromZipJobStatus() {
         super();
+    }
+
+
+    public Integer getSubmittedResources() {
+        return submittedResources;
+    }
+
+
+    public void setSubmittedResources(Integer submittedResources) {
+        this.submittedResources = submittedResources;
+    }
+
+
+    public Integer getProcessedResources() {
+        return processedResources;
+    }
+
+
+    public void setProcessedResources(Integer processedResource) {
+        this.processedResources = processedResource;
     }
 }

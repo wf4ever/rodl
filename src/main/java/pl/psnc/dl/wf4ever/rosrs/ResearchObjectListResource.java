@@ -28,6 +28,7 @@ import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.util.MemoryZipFile;
+import pl.psnc.dl.wf4ever.zip.ROFromZipJobStatus;
 
 import com.sun.jersey.core.header.ContentDisposition;
 
@@ -132,7 +133,7 @@ public class ResearchObjectListResource {
         IOUtils.copy(inputStream, fileOutputStream);
         URI roUri = uriInfo.getAbsolutePathBuilder().path(researchObjectId).path("/").build();
         ResearchObject researchObject = ResearchObject.create(builder, roUri, new MemoryZipFile(tmpFile,
-                researchObjectId));
+                researchObjectId), new ROFromZipJobStatus());
         tmpFile.delete();
         return Response.created(researchObject.getUri()).build();
     }

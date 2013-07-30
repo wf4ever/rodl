@@ -56,6 +56,7 @@ import pl.psnc.dl.wf4ever.searchserver.SearchServer;
 import pl.psnc.dl.wf4ever.searchserver.solr.SolrSearchServer;
 import pl.psnc.dl.wf4ever.util.MemoryZipFile;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
+import pl.psnc.dl.wf4ever.zip.ROFromZipJobStatus;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -582,14 +583,18 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
      *            the new research object
      * @param zip
      *            the ZIP file
+     * @param status
+     *            the status of proceeded operation
      * @return HTTP response (created in case of success, 404 in case of error)
      * @throws IOException
      *             error creating the temporary file
      * @throws BadRequestException
      *             the ZIP contains an invalid RO
      */
-    public static ResearchObject create(Builder builder, URI researchObjectUri, MemoryZipFile zip)
+    public static ResearchObject create(Builder builder, URI researchObjectUri, MemoryZipFile zip,
+            ROFromZipJobStatus status)
             throws IOException, BadRequestException {
+        status.setProcessedResources(0);
         Dataset dataset = DatasetFactory.createMem();
         Builder inMemoryBuilder = new Builder(builder.getUser(), dataset, false);
         try (InputStream manifest = zip.getManifestAsInputStream()) {
@@ -607,6 +612,30 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         try (InputStream mimeTypesIs = ResearchObject.class.getClassLoader().getResourceAsStream("mime.types")) {
             mfm = new MimetypesFileTypeMap(mimeTypesIs);
         }
+
+        int submittedresources = 0;
+        for (Resource resource : inMemoryResearchObject.getResources().values()) {
+            if (resource.isSpecialResource()) {
+                continue;
+            } else {
+                submittedresources++;
+            }
+        }
+        for (Annotation annotation : inMemoryResearchObject.getAnnotations().values()) {
+            try {
+                if (inMemoryResearchObject.getAggregatedResources().containsKey(annotation.getBody().getUri())) {
+                    AggregatedResource body = inMemoryResearchObject.getAggregatedResources().get(
+                        annotation.getBody().getUri());
+                    if (body.isSpecialResource()) {
+                        continue;
+                    }
+                    submittedresources++;
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error when aggregating annotations", e);
+            }
+        }
+        status.setSubmittedResources(submittedresources);
         for (Resource resource : inMemoryResearchObject.getResources().values()) {
             if (resource.isSpecialResource()) {
                 continue;
@@ -616,6 +645,9 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
                     unpackAndAggregate(researchObject, zip, resource.getPath(), mfm.getContentType(resource.getPath()));
                 } else {
                     researchObject.aggregate(resource.getUri());
+                }
+                if (status.getProcessedResources() < status.getSubmittedResources()) {
+                    status.setProcessedResources(status.getProcessedResources() + 1);
                 }
             } catch (Exception e) {
                 LOGGER.error("Error when aggregating resources", e);
@@ -633,6 +665,9 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
                         RDFFormat.forFileName(body.getPath(), RDFFormat.RDFXML).getDefaultMIMEType());
                 }
                 researchObject.annotate(annotation.getBody().getUri(), annotation.getAnnotated());
+                if (status.getProcessedResources() < status.getSubmittedResources()) {
+                    status.setProcessedResources(status.getProcessedResources() + 1);
+                }
             } catch (Exception e) {
                 LOGGER.error("Error when aggregating annotations", e);
             }
