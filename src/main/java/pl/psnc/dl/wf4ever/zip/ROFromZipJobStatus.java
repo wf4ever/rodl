@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.zip;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import pl.psnc.dl.wf4ever.job.JobStatus;
@@ -26,6 +27,7 @@ public class ROFromZipJobStatus extends JobStatus {
     }
 
 
+    @XmlElement(name = "submitted_resources")
     public Integer getSubmittedResources() {
         return submittedResources;
     }
@@ -36,6 +38,7 @@ public class ROFromZipJobStatus extends JobStatus {
     }
 
 
+    @XmlElement(name = "processed_resources")
     public Integer getProcessedResources() {
         return processedResources;
     }
