@@ -194,7 +194,7 @@ public class ZipTest extends W4ETest {
         response.close();
         JobStatus status = getStatus(response.getLocation());
         Assert.assertEquals(State.DONE, status.getState());
-        /*
+
         response = webResource.uri(status.getTarget()).accept("application/zip")
                 .header("Authorization", "Bearer " + accessToken).get(ClientResponse.class);
         is = response.getEntity(InputStream.class);
@@ -215,7 +215,7 @@ public class ZipTest extends W4ETest {
         Assert.assertTrue(entries.contains(".ro/manifest.rdf"));
         Assert.assertTrue(entries.contains(".ro/evo_info.ttl"));
         file.delete();
-        */
+
     }
 
 

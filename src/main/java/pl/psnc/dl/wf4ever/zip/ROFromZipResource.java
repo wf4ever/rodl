@@ -121,14 +121,10 @@ public class ROFromZipResource implements JobsContainer {
         Job job = new Job(jobUUID, jobStatus, this, operation);
         jobs.put(jobUUID, job);
         job.start();
-        try {
-            Response result = Response.created(uriInfo.getAbsolutePath().resolve(jobUUID.toString()))
-                    .entity(job.getStatus()).build();
-            return result;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+        Response result = Response.created(uriInfo.getAbsolutePath().resolve(jobUUID.toString()))
+                .entity(job.getStatus()).build();
+        return result;
+
     }
 
 
