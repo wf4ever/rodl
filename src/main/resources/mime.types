@@ -17,3 +17,9 @@ application/trix trix
 
 # The TriG file format.
 application/x-trig trig
+
+# The t2flow workflow
+application/vnd.taverna.t2flow+xml t2flow
+
+# Workflow bundle (Scufl2)
+application/vnd.taverna.scufl2.workflow-bundle wfbundle
