@@ -116,7 +116,7 @@ public class LazySolrListener {
      * Reindex all necessary ROs.
      */
     public void commit() {
-        researchObjectsToReindex.retainAll(researchObjectsToDeleteFromIndex);
+        researchObjectsToReindex.removeAll(researchObjectsToDeleteFromIndex);
         for (ResearchObjectSerializable ro : researchObjectsToReindex) {
             ro.updateIndexAttributes();
         }
