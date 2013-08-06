@@ -7,6 +7,8 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.db.ResearchObjectId;
+import pl.psnc.dl.wf4ever.db.dao.ResearchObjectIdDAO;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.evo.EvoType;
@@ -34,7 +36,7 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
 
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(ImmutableResearchObject.class);
-
+    /** Evo info annotation. */
     private ImmutableEvoInfo evoInfo;
 
 
@@ -72,6 +74,8 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
      */
     public static ImmutableResearchObject create(URI uri, ResearchObject researchObject, Builder builder,
             EvoType evoType) {
+        ResearchObjectIdDAO idDAO = new ResearchObjectIdDAO();
+        uri = idDAO.assignId(new ResearchObjectId(uri)).getId();
         if (ResearchObject.get(builder, uri) != null) {
             throw new ConflictException("Research Object already exists: " + uri);
         }
@@ -201,7 +205,6 @@ public class ImmutableResearchObject extends ResearchObject implements Comparabl
     public void createEvoInfo(EvoType evoType) {
         try {
             evoInfo = ImmutableEvoInfo.create(builder, getFixedEvolutionAnnotationBodyUri(), this, evoType);
-
             this.evoInfoAnnotation = annotate(evoInfo.getUri(), this);
             this.getManifest().serialize();
         } catch (BadRequestException e) {

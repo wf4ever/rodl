@@ -52,7 +52,9 @@ public class CopyOperation implements Operation {
                 throw new OperationFailedException("source Research Object does not exist");
             }
             try {
-                ImmutableResearchObject.create(copyJobStatus.getTarget(), sourceRO, builder, copyJobStatus.getType());
+                ImmutableResearchObject created = ImmutableResearchObject.create(copyJobStatus.getTarget(), sourceRO,
+                    builder, copyJobStatus.getType());
+                status.setTarget(created.getUri());
             } catch (RodlException e) {
                 throw new OperationFailedException("Failed to copy RO", e);
             }

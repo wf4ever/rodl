@@ -23,6 +23,8 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
+import pl.psnc.dl.wf4ever.db.ResearchObjectId;
+import pl.psnc.dl.wf4ever.db.dao.ResearchObjectIdDAO;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.job.Job;
 import pl.psnc.dl.wf4ever.job.JobStatus;
@@ -106,15 +108,15 @@ public class CopyResource implements JobsContainer {
             throw new BadRequestException("incorrect or missing \"type\" attribute");
         }
         String id = slug != null ? slug : UUID.randomUUID().toString();
-
         status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + id + "/"));
         int i = 1;
         while (ResearchObject.get(builder, status.getTarget()) != null) {
             status.setTarget(uriInfo.getAbsolutePath().resolve("../../ROs/" + id + "-" + (i++) + "/"));
         }
-
         CopyOperation copy = new CopyOperation(builder);
-
+        ResearchObjectIdDAO idDAO = new ResearchObjectIdDAO();
+        ResearchObjectId firstFree = idDAO.firstFree(new ResearchObjectId(status.getTarget()));
+        status.setTarget(firstFree.getId());
         UUID jobUUID = UUID.randomUUID();
         Job job;
         if (!status.isFinalize()) {
