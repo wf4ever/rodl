@@ -29,6 +29,7 @@ import pl.psnc.dl.wf4ever.job.JobStatus;
 import pl.psnc.dl.wf4ever.zip.ROFromZipJobStatus;
 
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource.Builder;
 
 @Category(IntegrationTest.class)
 public class ZipTest extends W4ETest {
@@ -84,9 +85,10 @@ public class ZipTest extends W4ETest {
     public void storeROFromZip()
             throws IOException, ClassNotFoundException, NamingException, InterruptedException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/ro1.zip");
-        ClientResponse response = webResource.path("zip/upload").accept("application/json")
+        Builder wr = webResource.path("zip/upload").accept("application/json")
                 .header("Authorization", "Bearer " + accessToken).header("Slug", createdFromZipResourceObject)
-                .type("application/zip").post(ClientResponse.class, is);
+                .type("application/zip");
+        ClientResponse response = wr.post(ClientResponse.class, is);
         assertEquals("Research object should be created correctly", HttpServletResponse.SC_CREATED,
             response.getStatus());
         JobStatus status = getStatus(response.getLocation());

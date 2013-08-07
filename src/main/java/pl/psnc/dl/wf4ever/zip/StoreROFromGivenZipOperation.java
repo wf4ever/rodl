@@ -61,7 +61,7 @@ public class StoreROFromGivenZipOperation implements Operation {
         }
         try {
             roFromZipJobStatus = (ROFromZipJobStatus) status;
-            URI roUri = uriInfo.getBaseUri().resolve("ROs/").resolve(roFromZipJobStatus.getTarget().toString() + "/");
+            URI roUri = roFromZipJobStatus.getTarget();
             try {
                 ResearchObject created = ResearchObject.create(builder, roUri, new MemoryZipFile(zipFile,
                         roFromZipJobStatus.getTarget().toString()), roFromZipJobStatus);

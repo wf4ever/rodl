@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -30,6 +29,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
+import pl.psnc.dl.wf4ever.db.ResearchObjectId;
+import pl.psnc.dl.wf4ever.db.dao.ResearchObjectIdDAO;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.job.Job;
 import pl.psnc.dl.wf4ever.job.JobStatus;
@@ -111,10 +112,13 @@ public class ROFromZipResource implements JobsContainer {
             throw new BadRequestException(errorMessage);
         }
         UUID jobUUID = UUID.randomUUID();
+        ResearchObjectIdDAO idDAO = new ResearchObjectIdDAO();
+        ResearchObjectId uri = idDAO.firstFree(new ResearchObjectId(uriInfo.getAbsolutePath().resolve("ROs/")
+                .resolve(researchObjectId + "/")));
         ROFromZipJobStatus jobStatus = new ROFromZipJobStatus();
         jobStatus.setProcessedResources(0);
         jobStatus.setSubmittedResources(0);
-        jobStatus.setTarget(URI.create(researchObjectId));
+        jobStatus.setTarget(uri.getId());
         //copy input stream
         File tmpFile = createTmpZip(zipStream);
         StoreROFromGivenZipOperation operation = new StoreROFromGivenZipOperation(builder, tmpFile, uriInfo);
@@ -142,7 +146,7 @@ public class ROFromZipResource implements JobsContainer {
     @POST
     @Path("create")
     @Consumes("application/zip")
-    @Produces(MediaType.APPLICATION_JSON)
+    //@Produces(MediaType.APPLICATION_JSON)
     public Response createROFromGivenZip(@HeaderParam("Slug") String researchObjectId, InputStream zipStream)
             throws BadRequestException {
         ArrayList<String> missingParamters = new ArrayList<String>();
@@ -160,8 +164,11 @@ public class ROFromZipResource implements JobsContainer {
             throw new BadRequestException(errorMessage);
         }
         UUID jobUUID = UUID.randomUUID();
+        ResearchObjectIdDAO idDAO = new ResearchObjectIdDAO();
+        ResearchObjectId uri = idDAO.firstFree(new ResearchObjectId(uriInfo.getAbsolutePath().resolve("ROs/")
+                .resolve(researchObjectId + "/")));
         ROFromZipJobStatus jobStatus = new ROFromZipJobStatus();
-        jobStatus.setTarget(URI.create(researchObjectId));
+        jobStatus.setTarget(uri.getId());
         jobStatus.setProcessedResources(0);
         jobStatus.setSubmittedResources(0);
         //copy input stream 
