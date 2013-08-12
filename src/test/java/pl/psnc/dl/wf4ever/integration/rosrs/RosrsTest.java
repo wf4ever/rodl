@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.resources;
+package pl.psnc.dl.wf4ever.integration.rosrs;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -13,66 +13,32 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import pl.psnc.dl.wf4ever.IntegrationTest;
-import pl.psnc.dl.wf4ever.W4ETest;
+import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
+import pl.psnc.dl.wf4ever.integration.IntegrationTest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.sun.jersey.test.framework.WebAppDescriptor;
 
 @Category(IntegrationTest.class)
-public class ResourceBase extends W4ETest {
-
-    protected List<String> linkHeadersR = new ArrayList<>();
+public class RosrsTest extends AbstractIntegrationTest {
 
     /** logger. */
-    private static final Logger LOGGER = Logger.getLogger(ResourceBase.class);
+    private static final Logger LOGGER = Logger.getLogger(RosrsTest.class);
 
+    /** Sample RO created before every test. */
+    protected URI ro;
 
-    public ResourceBase() {
-        super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
-        createLinkHeaders();
-    }
-
-
-    @Override
-    protected void finalize()
-            throws Throwable {
-        super.finalize();
-    }
+    /** Sample RO created before every test. */
+    protected URI ro2;
 
 
     @Override
     public void setUp()
             throws Exception {
         super.setUp();
-        createUserWithAnswer(userIdSafe, username).close();
-        accessToken = createAccessToken(userId);
-        ro = createRO(accessToken);
-        ro2 = createRO(accessToken);
-    }
-
-
-    @Override
-    public void tearDown()
-            throws Exception {
-        deleteROs();
-        deleteAccessToken(accessToken);
-        deleteUser(userIdSafe);
-        super.tearDown();
-    }
-
-
-    /*
-     * helpers
-     */
-    private void createLinkHeaders() {
-        linkHeadersR.clear();
-        linkHeadersR.add("<" + resource().getURI() + "ROs/r/.ro/manifest.rdf>; rel=bookmark");
-        linkHeadersR.add("<" + resource().getURI() + "zippedROs/r/>; rel=bookmark");
-        linkHeadersR.add("<http://sandbox.wf4ever-project.org/portal/ro?ro=" + resource().getURI()
-                + "ROs/r/>; rel=bookmark");
+        ro = createRO();
+        ro2 = createRO();
     }
 
 

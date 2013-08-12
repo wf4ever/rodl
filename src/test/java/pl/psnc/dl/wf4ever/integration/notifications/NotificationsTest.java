@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.notifications;
+package pl.psnc.dl.wf4ever.integration.notifications;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -10,8 +10,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import pl.psnc.dl.wf4ever.IntegrationTest;
-import pl.psnc.dl.wf4ever.W4ETest;
+import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
+import pl.psnc.dl.wf4ever.integration.IntegrationTest;
 
 import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.sun.syndication.feed.synd.SyndEntry;
@@ -22,34 +22,22 @@ import com.sun.syndication.io.SyndFeedInput;
 import com.sun.syndication.io.XmlReader;
 
 @Category(IntegrationTest.class)
-public class NotificationsTest extends W4ETest {
+public class NotificationsTest extends AbstractIntegrationTest {
 
     @Override
     public void setUp()
             throws Exception {
         super.setUp();
-        createUserWithAnswer(userIdSafe, username).close();
-        accessToken = createAccessToken(userId);
         //TODO get the resource path from service description
-        webResource.path("notifications/").header("Authorization", "Bearer " + adminCreds).delete(String.class);
-    }
-
-
-    @Override
-    public void tearDown()
-            throws Exception {
-        deleteROs();
-        deleteAccessToken(accessToken);
-        deleteUser(userIdSafe);
-        super.tearDown();
+        //        webResource.path("notifications/").header("Authorization", "Bearer " + adminCreds).delete(String.class);
     }
 
 
     @Test
     public void testDelete() {
-        ro = createRO(accessToken);
+        URI ro = createRO();
         String before = (webResource.path("notifications/").get(String.class));
-        webResource.path("notifications/").header("Authorization", "Bearer " + adminCreds).delete(String.class);
+        webResource.path("notifications/").header("Authorization", "Bearer " + accessToken).delete(String.class);
         String after = (webResource.path("notifications/").get(String.class));
         Assert.assertTrue(before.contains("entry"));
         Assert.assertFalse(after.contains("entry"));
@@ -64,7 +52,7 @@ public class NotificationsTest extends W4ETest {
 
     @Test
     public void testNotificationsCreateNoFilters() {
-        ro = createRO(accessToken);
+        URI ro = createRO();
         String resultAll = (webResource.path("notifications/").get(String.class));
         Assert.assertTrue(resultAll.contains(ro.toString()));
         Assert.assertTrue(resultAll.contains("urn:X-rodl:"));
@@ -79,8 +67,8 @@ public class NotificationsTest extends W4ETest {
 
     @Test
     public void testNotificationsFilterRO() {
-        ro = createRO(accessToken);
-        ro2 = createRO(accessToken);
+        URI ro = createRO();
+        URI ro2 = createRO();
         String resultAll = (webResource.path("notifications/").queryParam("ro", ro.toString()).get(String.class));
         Assert.assertTrue(resultAll.contains("Notifications for " + ro.toString()));
         Assert.assertFalse(resultAll.contains("Notifications for " + ro2.toString()));
@@ -90,7 +78,7 @@ public class NotificationsTest extends W4ETest {
     @Test
     public void testNotificationSource()
             throws IllegalArgumentException, MalformedURLException, FeedException, IOException, URISyntaxException {
-        ro = createRO(accessToken);
+        URI ro = createRO();
         SyndFeedInput input = new SyndFeedInput();
         SyndFeed feed = input.build(new XmlReader(webResource.path("notifications/").queryParam("ro", ro.toString())
                 .getURI().toURL()));
@@ -112,13 +100,13 @@ public class NotificationsTest extends W4ETest {
             throws InterruptedException {
         DateTime start = DateTime.now();
         Thread.sleep(2000);
-        ro = createRO(accessToken);
+        URI ro = createRO();
         Thread.sleep(2000);
         DateTime middle = DateTime.now();
         Thread.sleep(2000);
-        ro2 = createRO(accessToken);
+        URI ro2 = createRO();
         Thread.sleep(2000);
-        URI ro3 = createRO(accessToken);
+        URI ro3 = createRO();
         Thread.sleep(2000);
         DateTime end = DateTime.now();
 
@@ -157,8 +145,8 @@ public class NotificationsTest extends W4ETest {
 
     @Test
     public void testNotificationsLimit() {
-        ro = createRO(accessToken);
-        ro2 = createRO(accessToken);
+        URI ro = createRO();
+        URI ro2 = createRO();
         String resultAll = (webResource.path("notifications/").queryParam("limit", "1").get(String.class));
         //only one entry
         Assert.assertEquals(2, resultAll.split("<entry>").length);

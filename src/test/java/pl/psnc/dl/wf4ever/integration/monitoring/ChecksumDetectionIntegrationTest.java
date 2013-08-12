@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.monitoring;
+package pl.psnc.dl.wf4ever.integration.monitoring;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -7,6 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.List;
 import java.util.Properties;
 
@@ -14,7 +15,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -22,9 +22,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
-import pl.psnc.dl.wf4ever.IntegrationTest;
-import pl.psnc.dl.wf4ever.W4ETest;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
+import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
+import pl.psnc.dl.wf4ever.integration.IntegrationTest;
+import pl.psnc.dl.wf4ever.monitoring.StabilityFeedAggregationJobTest;
 import pl.psnc.dl.wf4ever.storage.FilesystemDLFactory;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -39,7 +40,7 @@ import com.sun.syndication.io.FeedException;
  * 
  */
 @Category(IntegrationTest.class)
-public class ChecksumDetectionIntegrationTest extends W4ETest {
+public class ChecksumDetectionIntegrationTest extends AbstractIntegrationTest {
 
     /** Logger. */
     private static final Logger LOGGER = Logger.getLogger(ChecksumDetectionIntegrationTest.class);
@@ -51,32 +52,21 @@ public class ChecksumDetectionIntegrationTest extends W4ETest {
     /** A sample file name. */
     private String filePath = "foo.txt";
 
+    private URI ro;
+
 
     @Before
     @Override
     public void setUp()
             throws Exception {
         super.setUp();
-        createUserWithAnswer(userIdSafe, username).close();
-        accessToken = createAccessToken(userId);
-        ro = createRO(accessToken);
-        addFile(ro, filePath, accessToken);
+        ro = createRO();
+        addLoremIpsumFile(ro, filePath);
 
         InputStream checklistRefactorNoEntryInput = StabilityFeedAggregationJobTest.class.getClassLoader()
                 .getResourceAsStream("monitoring/stability_service_notification_case_empty.xml");
         stubFor(get(urlMatching((".*roevaluate.*"))).willReturn(
             aResponse().withStatus(200).withBody(IOUtils.toString(checklistRefactorNoEntryInput))));
-    }
-
-
-    @After
-    @Override
-    public void tearDown()
-            throws Exception {
-        deleteROs();
-        deleteAccessToken(accessToken);
-        deleteUser(userIdSafe);
-        super.tearDown();
     }
 
 

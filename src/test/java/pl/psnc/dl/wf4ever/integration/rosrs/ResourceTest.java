@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.resources;
+package pl.psnc.dl.wf4ever.integration.rosrs;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -24,8 +24,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import pl.psnc.dl.wf4ever.Constants;
-import pl.psnc.dl.wf4ever.IntegrationTest;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
+import pl.psnc.dl.wf4ever.integration.IntegrationTest;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -45,24 +45,10 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
 @Category(IntegrationTest.class)
-public class ResourceTest extends ResourceBase {
+public class ResourceTest extends RosrsTest {
 
     protected String createdFromZipResourceObject = UUID.randomUUID().toString();
     protected Integer maxSeonds = 100;
-
-
-    @Override
-    public void setUp()
-            throws Exception {
-        super.setUp();
-    }
-
-
-    @Override
-    public void tearDown()
-            throws Exception {
-        super.tearDown();
-    }
 
 
     @Test
@@ -75,7 +61,7 @@ public class ResourceTest extends ResourceBase {
 
     @Test
     public void testGetROWithWhitespaces() {
-        URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
+        URI ro = createRO();
         String list = webResource.path("ROs").header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue(list.contains(ro.toString()));
     }
@@ -166,7 +152,7 @@ public class ResourceTest extends ResourceBase {
 
     @Test
     public void testFillCreatorNames() {
-        URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
+        URI ro = createRO();
         Builder builder = new Builder(null, DatasetFactory.createMem(), false);
         ResearchObject researchObject = builder.buildResearchObject(ro);
         Thing manifest = researchObject.getManifest();
@@ -181,7 +167,7 @@ public class ResourceTest extends ResourceBase {
 
     @Test
     public void shouldReturn410GoneAfterDelete() {
-        URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
+        URI ro = createRO();
         ClientResponse response = webResource.uri(ro).delete(ClientResponse.class);
         assertThat(response.getStatus(), equalTo(HttpStatus.SC_NO_CONTENT));
         response = webResource.uri(ro).get(ClientResponse.class);
@@ -191,7 +177,7 @@ public class ResourceTest extends ResourceBase {
 
     @Test
     public void shouldReturn404NotFoundAfterPurgeDelete() {
-        URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
+        URI ro = createRO();
         ClientResponse response = webResource.uri(ro).header("Purge", true).delete(ClientResponse.class);
         assertThat(response.getStatus(), equalTo(HttpStatus.SC_NO_CONTENT));
         response = webResource.uri(ro).get(ClientResponse.class);
@@ -201,7 +187,7 @@ public class ResourceTest extends ResourceBase {
 
     @Test
     public void shouldAllowToPurgeDeleteAfterDelete() {
-        URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
+        URI ro = createRO();
         ClientResponse response = webResource.uri(ro).delete(ClientResponse.class);
         assertThat(response.getStatus(), equalTo(HttpStatus.SC_NO_CONTENT));
         response = webResource.uri(ro).header("Purge", true).delete(ClientResponse.class);
@@ -213,7 +199,7 @@ public class ResourceTest extends ResourceBase {
 
     @Test
     public void shouldReturn404NotFoundWhenAskingForHtml() {
-        URI ro = createRO("ro " + UUID.randomUUID().toString(), accessToken);
+        URI ro = createRO();
         ClientResponse response = webResource.uri(ro).header("Purge", true).delete(ClientResponse.class);
         assertThat(response.getStatus(), equalTo(HttpStatus.SC_NO_CONTENT));
         response = webResource.uri(ro).accept(MediaType.TEXT_HTML).get(ClientResponse.class);

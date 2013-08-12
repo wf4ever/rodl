@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.resources;
+package pl.psnc.dl.wf4ever.integration.rosrs;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -10,6 +10,7 @@ import java.util.Date;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.EntityTag;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
 import org.joda.time.DateTime;
 import org.junit.Assert;
@@ -18,7 +19,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.IntegrationTest;
+import pl.psnc.dl.wf4ever.integration.IntegrationTest;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
@@ -31,7 +32,7 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.sun.jersey.api.client.ClientResponse;
 
 @Category(IntegrationTest.class)
-public class FileTest extends ResourceBase {
+public class FileTest extends RosrsTest {
 
     private final String filePath = "foo/bar ra.txt";
     private final String filePathEncoded = "foo/bar%20ra.txt";
@@ -41,20 +42,6 @@ public class FileTest extends ResourceBase {
             + "   </ore:Proxy>\n" + " </rdf:RDF>";
 
 
-    @Override
-    public void setUp()
-            throws Exception {
-        super.setUp();
-    }
-
-
-    @Override
-    public void tearDown()
-            throws Exception {
-        super.tearDown();
-    }
-
-
     @Test
     public void testAddAndGetFile() {
         ClientResponse response = webResource.uri(ro).path(filePath).header("Authorization", "Bearer " + accessToken)
@@ -62,7 +49,7 @@ public class FileTest extends ResourceBase {
         response.close();
 
         DateTime addFileTime = new DateTime();
-        response = addFile(ro, filePath, accessToken);
+        response = addLoremIpsumFile(ro, filePath);
         assertEquals(HttpStatus.SC_CREATED, response.getStatus());
         assertNotNull(response.getLastModified());
         //        assertTrue(!new DateTime(response.getLastModified()).isBefore(addFileTime));
@@ -103,7 +90,7 @@ public class FileTest extends ResourceBase {
     @Test
     public void testAddAndGetRDFFile() {
         DateTime addRdfFileTime = new DateTime();
-        ClientResponse response = addRDFFile(ro, rdfFileBody, rdfFilePath, accessToken);
+        ClientResponse response = addFile(ro, rdfFilePath, IOUtils.toInputStream(rdfFileBody), "application/rdf+xml");
         assertEquals("RDF file should be created correctly via post method", HttpServletResponse.SC_CREATED,
             response.getStatus());
         response.close();
@@ -140,7 +127,7 @@ public class FileTest extends ResourceBase {
 
     @Test
     public void deleteFile() {
-        addFile(ro, filePath, accessToken);
+        addLoremIpsumFile(ro, filePath);
         ClientResponse response = webResource.uri(ro).path(filePath).header("Authorization", "Bearer " + accessToken)
                 .delete(ClientResponse.class);
         assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
@@ -150,7 +137,7 @@ public class FileTest extends ResourceBase {
 
     @Test
     public void deleteRDFFile() {
-        ClientResponse response = addRDFFile(ro, rdfFileBody, rdfFilePath, accessToken);
+        ClientResponse response = addFile(ro, rdfFilePath, IOUtils.toInputStream(rdfFileBody), "application/rdf+xml");
         URI rdfProxy = response.getLocation();
         response = webResource.uri(rdfProxy).header("Authorization", "Bearer " + accessToken)
                 .type(RDFFormat.RDFXML.getDefaultMIMEType()).delete(ClientResponse.class);

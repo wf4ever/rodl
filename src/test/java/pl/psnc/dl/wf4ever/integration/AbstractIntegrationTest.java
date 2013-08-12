@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever;
+package pl.psnc.dl.wf4ever.integration;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,12 +8,10 @@ import java.util.UUID;
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpStatus;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
-import org.junit.Assert;
-import org.junit.experimental.categories.Category;
 
 import pl.psnc.dl.wf4ever.vocabulary.NotificationService;
 
@@ -30,33 +28,33 @@ import com.sun.syndication.io.FeedException;
 import com.sun.syndication.io.SyndFeedInput;
 import com.sun.syndication.io.XmlReader;
 
-@Category(IntegrationTest.class)
-public class W4ETest extends JerseyTest {
+public abstract class AbstractIntegrationTest extends JerseyTest {
 
     protected WebResource webResource;
+
+    /** admin credentials. */
+    //FIXME this shouldn't be hardcoded
     protected final String adminCreds = StringUtils.trim(Base64.encodeBase64String("wfadmin:wfadmin!!!".getBytes()));
-    protected final String clientName = "ROSRS testing app written in Ruby";
+
+    /** client name used when registering a client. */
+    public static final String CLIENT_NAME = "ROSRS testing app written in Ruby";
+
+    /** redirection URI used when registering the client. */
+    public static final String CLIENT_REDIRECTION_URI = "OOB"; // will not be used
+
+    /** A sample access token generated before every test. */
     protected String accessToken;
-    protected String accessToken2;
-    protected final String clientRedirectionURI = "OOB"; // will not be used
+
+    /** A sample client ID generated before every test. */
     protected String clientId;
-    protected URI ro;
-    protected URI ro2;
-    protected final String userId2 = "http://" + UUID.randomUUID().toString();
+
+    /** A sample user ID generated before every test. */
     protected final String userId = "http://" + UUID.randomUUID().toString();
-    protected final String userIdSafe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId.getBytes()));
-    protected final String userId2Safe = StringUtils.trim(Base64.encodeBase64URLSafeString(userId2.getBytes()));
-    protected final String username = "John Doe";
-    protected final String username2 = "May Gray";
+
     protected static final String PROJECT_PATH = System.getProperty("user.dir");
 
 
-    public W4ETest() {
-        super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
-    }
-
-
-    public W4ETest(WebAppDescriptor webAppDescriptor) {
+    public AbstractIntegrationTest() {
         super(new WebAppDescriptor.Builder("pl.psnc.dl.wf4ever").build());
     }
 
@@ -71,58 +69,67 @@ public class W4ETest extends JerseyTest {
         } else {
             webResource = resource().path("rodl/");
         }
-        clientId = createClient(clientName);
+        ClientResponse response = createClient(CLIENT_NAME);
+        clientId = response.getLocation().resolve(".").relativize(response.getLocation()).toString();
+        response = createUser(userId, "test user");
+        response = createAccessToken(clientId, userId);
+        accessToken = response.getLocation().resolve(".").relativize(response.getLocation()).toString();
     }
 
 
     @Override
     public void tearDown()
             throws Exception {
-        deleteClient(clientId);
         super.tearDown();
     }
 
 
-    protected String createClient(String clientName) {
-        ClientResponse response = webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
-                .post(ClientResponse.class, clientName + "\r\n" + clientRedirectionURI);
-        Assert.assertEquals(HttpStatus.SC_CREATED, response.getStatus());
-        String clientId = response.getLocation().resolve(".").relativize(response.getLocation()).toString();
-        response.close();
-        return clientId;
+    /**
+     * Create an OAuth client.
+     * 
+     * @param clientName
+     *            nice name
+     * @return server response
+     */
+    private ClientResponse createClient(String clientName) {
+        return webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
+                .post(ClientResponse.class, clientName + "\r\n" + CLIENT_REDIRECTION_URI);
     }
 
 
-    protected ClientResponse createUserWithAnswer(String userId, String username) {
-        return webResource.path("users/" + userId).header("Authorization", "Bearer " + adminCreds)
+    /**
+     * Create an OAuth user.
+     * 
+     * @param userId
+     *            id
+     * @param username
+     *            nice name
+     * @return server response
+     */
+    private ClientResponse createUser(String userId, String username) {
+        String userIdEncoded = StringUtils.trim(Base64.encodeBase64URLSafeString(userId.getBytes()));
+        return webResource.path("users/" + userIdEncoded).header("Authorization", "Bearer " + adminCreds)
                 .put(ClientResponse.class, username);
     }
 
 
-    protected void createUser(String userId, String username) {
-        webResource.path("users/" + userId).header("Authorization", "Bearer " + adminCreds)
-                .put(ClientResponse.class, username).close();
-
-    }
-
-
-    protected String createAccessToken(String userId) {
-        ClientResponse response = webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
+    /**
+     * Create an access token.
+     * 
+     * @param clientId
+     *            client id
+     * @param userId
+     *            user id
+     * @return server response
+     */
+    private ClientResponse createAccessToken(String clientId, String userId) {
+        return webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, clientId + "\r\n" + userId);
-        Assert.assertEquals(HttpStatus.SC_CREATED, response.getStatus());
-        String accessToken = response.getLocation().resolve(".").relativize(response.getLocation()).toString();
-        response.close();
-        return accessToken;
     }
 
 
-    protected URI createRO(String accessToken) {
+    protected URI createRO() {
         String uuid = UUID.randomUUID().toString();
-        return createRO(uuid, accessToken);
-    }
-
-
-    protected URI createRO(String uuid, String accessToken) {
         ClientResponse response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken)
                 .header("Slug", uuid).post(ClientResponse.class);
         URI ro = response.getLocation();
@@ -131,9 +138,14 @@ public class W4ETest extends JerseyTest {
     }
 
 
-    protected ClientResponse addFile(URI roURI, String filePath, String accessToken) {
+    protected ClientResponse addFile(URI roURI, String filePath, InputStream is, String mimeType) {
         return webResource.uri(roURI).header("Slug", filePath).header("Authorization", "Bearer " + accessToken)
-                .type("text/plain").post(ClientResponse.class, "lorem ipsum");
+                .type(mimeType).post(ClientResponse.class, is);
+    }
+
+
+    protected ClientResponse addLoremIpsumFile(URI roURI, String filePath) {
+        return addFile(roURI, filePath, IOUtils.toInputStream("lorem ipsum"), "text/plain");
     }
 
 
@@ -144,11 +156,9 @@ public class W4ETest extends JerseyTest {
      *            RO URI
      * @param resourceUri
      *            resource URI
-     * @param accessToken
-     *            access token
      * @return server response
      */
-    protected ClientResponse addFile(URI roURI, URI resourceUri, String accessToken) {
+    protected ClientResponse addFile(URI roURI, URI resourceUri) {
         return webResource
                 .uri(roURI)
                 .header("Authorization", "Bearer " + accessToken)
@@ -162,48 +172,14 @@ public class W4ETest extends JerseyTest {
     }
 
 
-    protected ClientResponse updateFile(URI reURI, String accessToken) {
-        return webResource.uri(reURI).header("Authorization", "Bearer " + accessToken).type("text/plain")
-                .put(ClientResponse.class, "modification");
+    protected ClientResponse updateFile(URI uri, InputStream is, String mimeType) {
+        return webResource.uri(uri).header("Authorization", "Bearer " + accessToken).type(mimeType)
+                .put(ClientResponse.class, is);
     }
 
 
-    protected ClientResponse removeFile(URI roURI, String filePath, String accessToken) {
-        return webResource.uri(roURI).path(filePath).header("Authorization", "Bearer " + accessToken)
-                .delete(ClientResponse.class);
-    }
-
-
-    protected ClientResponse addRDFFile(URI roURI, String body, String rdfFilePath, String accessToken) {
-        return webResource.uri(ro).header("Authorization", "Bearer " + accessToken).type("application/rdf+xml")
-                .header("Slug", rdfFilePath).post(ClientResponse.class, body);
-    }
-
-
-    protected void deleteAccessToken(String accessToken) {
-        webResource.path("accesstokens/" + accessToken).header("Authorization", "Bearer " + adminCreds).delete();
-    }
-
-
-    protected void deleteUser(String userIdSafe) {
-        webResource.path("users/" + userIdSafe).header("Authorization", "Bearer " + adminCreds)
-                .delete(ClientResponse.class).close();
-    }
-
-
-    protected void deleteClient(String clientId) {
-        webResource.path("clients/" + clientId).header("Authorization", "Bearer " + adminCreds).delete();
-    }
-
-
-    protected void deleteROs() {
-        String list = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken).get(String.class);
-        if (!list.isEmpty()) {
-            String[] ros = list.trim().split("\r\n");
-            for (String ro : ros) {
-                webResource.uri(URI.create(ro)).header("Authorization", "Bearer " + accessToken).delete();
-            }
-        }
+    protected ClientResponse delete(URI uri) {
+        return webResource.uri(uri).header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
     }
 
 
@@ -216,11 +192,9 @@ public class W4ETest extends JerseyTest {
      *            RO URI
      * @param annotationBodyPath
      *            path of the annotation body
-     * @param accessToken
-     *            access token
      * @return response from the server
      */
-    protected ClientResponse addAnnotation(InputStream is, URI roURI, String annotationBodyPath, String accessToken) {
+    protected ClientResponse addAnnotation(URI roURI, String annotationBodyPath, InputStream is) {
         return webResource
                 .uri(roURI)
                 .header("Slug", annotationBodyPath)
@@ -240,11 +214,9 @@ public class W4ETest extends JerseyTest {
      *            annotation description
      * @param roURI
      *            RO URI
-     * @param accessToken
-     *            access token
      * @return response from the server
      */
-    protected ClientResponse addAnnotation(InputStream is, URI roURI, String accessToken) {
+    protected ClientResponse addAnnotation(URI roURI, InputStream is) {
         return webResource.uri(roURI).header("Authorization", "Bearer " + accessToken)
                 .type("application/vnd.wf4ever.annotation").post(ClientResponse.class, is);
     }
@@ -259,11 +231,9 @@ public class W4ETest extends JerseyTest {
      *            RO URI
      * @param folderPath
      *            folder path
-     * @param accessToken
-     *            RODL access token
      * @return response from server
      */
-    protected ClientResponse addFolder(InputStream is, URI roURI, String folderPath, String accessToken) {
+    protected ClientResponse addFolder(URI roURI, String folderPath, InputStream is) {
         return webResource.uri(roURI).header("Slug", folderPath).header("Authorization", "Bearer " + accessToken)
                 .type("application/vnd.wf4ever.folder").post(ClientResponse.class, is);
     }
@@ -276,11 +246,9 @@ public class W4ETest extends JerseyTest {
      *            request entity
      * @param folderUri
      *            URI of the folder to which the entry will be added
-     * @param accessToken
-     *            RODL access token
      * @return response from server
      */
-    protected ClientResponse addFolderEntry(InputStream is, URI folderUri, String accessToken) {
+    protected ClientResponse addFolderEntry(URI folderUri, InputStream is) {
         return webResource.uri(folderUri).header("Authorization", "Bearer " + accessToken)
                 .type("application/vnd.wf4ever.folderentry").post(ClientResponse.class, is);
     }

@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.resources;
+package pl.psnc.dl.wf4ever.integration.rosrs;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -14,7 +14,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import pl.psnc.dl.wf4ever.IntegrationTest;
+import pl.psnc.dl.wf4ever.integration.IntegrationTest;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
@@ -30,7 +30,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
 @Category(IntegrationTest.class)
-public class AnnotationTest extends ResourceBase {
+public class AnnotationTest extends RosrsTest {
 
     /** An annotation body path. */
     private final String annotationBodyPath = ".ro/ann1.ttl";
@@ -39,27 +39,13 @@ public class AnnotationTest extends ResourceBase {
     private final String annotationBodyURIRDF = ".ro/ann1.rdf";
 
 
-    @Override
-    public void setUp()
-            throws Exception {
-        super.setUp();
-    }
-
-
-    @Override
-    public void tearDown()
-            throws Exception {
-        super.tearDown();
-    }
-
-
     /**
      * Test you can add the annotation body.
      */
     @Test
     public void addAnnotationBody() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        ClientResponse response = addAnnotation(is, ro, annotationBodyPath, accessToken);
+        ClientResponse response = addAnnotation(ro, annotationBodyPath, is);
         IOUtils.closeQuietly(is);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
@@ -89,7 +75,7 @@ public class AnnotationTest extends ResourceBase {
     @Test
     public void getAnnotationBody() {
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        ClientResponse response = addAnnotation(is, ro, annotationBodyPath, accessToken);
+        ClientResponse response = addAnnotation(ro, annotationBodyPath, is);
         IOUtils.closeQuietly(is);
         assertEquals(HttpStatus.SC_CREATED, response.getStatus());
         response.close();
@@ -115,7 +101,7 @@ public class AnnotationTest extends ResourceBase {
     public void getAnnotationBodyWithContentNegotiation()
             throws UniformInterfaceException, ClientHandlerException, IOException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        addAnnotation(is, ro, annotationBodyPath, accessToken).close();
+        addAnnotation(ro, annotationBodyPath, is).close();
         IOUtils.closeQuietly(is);
         ClientResponse response = webResource.uri(ro).path(annotationBodyURIRDF).queryParam("original", "ann1.ttl")
                 .header("Authorization", "Bearer " + accessToken).get(ClientResponse.class);
@@ -139,7 +125,7 @@ public class AnnotationTest extends ResourceBase {
     public void deleteAnnotationBody()
             throws IOException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        addAnnotation(is, ro, annotationBodyPath, accessToken);
+        addAnnotation(ro, annotationBodyPath, is);
         ClientResponse response = webResource.uri(ro).path(annotationBodyPath)
                 .header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
         is.close();
@@ -158,7 +144,7 @@ public class AnnotationTest extends ResourceBase {
     public void deleteAnnotationBodyWithContentNegotiation()
             throws IOException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBody.ttl");
-        addAnnotation(is, ro, annotationBodyPath, accessToken);
+        addAnnotation(ro, annotationBodyPath, is);
         ClientResponse response = webResource.uri(ro).path(annotationBodyURIRDF).queryParam("original", "ann1.ttl")
                 .header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
         is.close();
@@ -176,9 +162,9 @@ public class AnnotationTest extends ResourceBase {
     @Test
     public void addAnnotation()
             throws IOException {
-        addFile(ro, "file1.txt", accessToken);
+        addLoremIpsumFile(ro, "file1.txt");
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationGood.rdf");
-        ClientResponse response = addAnnotation(is, ro, accessToken);
+        ClientResponse response = addAnnotation(ro, is);
         is.close();
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
@@ -202,9 +188,9 @@ public class AnnotationTest extends ResourceBase {
     @Test
     public void addAnnotationWithAnIncorrectTarget()
             throws IOException {
-        addFile(ro, "file1.txt", accessToken);
+        addLoremIpsumFile(ro, "file1.txt");
         InputStream is = getClass().getClassLoader().getResourceAsStream("rdfStructure/mess-ro/.ro/annotationBad.rdf");
-        ClientResponse response = addAnnotation(is, ro, accessToken);
+        ClientResponse response = addAnnotation(ro, is);
         is.close();
         assertEquals(HttpServletResponse.SC_BAD_REQUEST, response.getStatus());
         response.close();

@@ -1,11 +1,11 @@
-package pl.psnc.dl.wf4ever.resources;
+package pl.psnc.dl.wf4ever.integration.rosrs;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import pl.psnc.dl.wf4ever.IntegrationTest;
-import pl.psnc.dl.wf4ever.W4ETest;
+import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
+import pl.psnc.dl.wf4ever.integration.IntegrationTest;
 import pl.psnc.dl.wf4ever.vocabulary.NotificationService;
 import pl.psnc.dl.wf4ever.vocabulary.ROEVOService;
 
@@ -15,7 +15,7 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 
 @Category(IntegrationTest.class)
-public class RootResourceTest extends W4ETest {
+public class RootResourceTest extends AbstractIntegrationTest {
 
     @Test
     public void testNotificationServiceDescription() {
