@@ -196,7 +196,6 @@ public class ZipTest extends W4ETest {
         response.close();
         JobStatus status = getStatus(response.getLocation());
         Assert.assertEquals(State.DONE, status.getState());
-
         response = webResource.uri(status.getTarget()).accept("application/zip")
                 .header("Authorization", "Bearer " + accessToken).get(ClientResponse.class);
         is = response.getEntity(InputStream.class);
@@ -279,11 +278,7 @@ public class ZipTest extends W4ETest {
                     .get(ROFromZipJobStatus.class);
             if (status.getState() != State.RUNNING) {
                 if (status.getReason() != null) {
-                    System.out.println("***************");
-                    System.out.println("***************");
                     System.out.println(status.getReason());
-                    System.out.println("***************");
-                    System.out.println("***************");
                 }
                 return status;
 

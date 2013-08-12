@@ -78,7 +78,7 @@ public class CreateROFromGivenZipOperation implements Operation {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
         }
         try {
-            URI roUri = uriInfo.getBaseUri().resolve("ROs/").resolve(status.getTarget().toString() + "/");
+            URI roUri = uriInfo.getBaseUri().resolve("ROs/").resolve(status.getTarget().toString());
             ResearchObject created = ResearchObject.create(builder, roUri);
             try {
                 Map<String, Folder> createdFolders = new HashMap<>();

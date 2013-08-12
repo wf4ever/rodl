@@ -165,8 +165,13 @@ public class ROFromZipResource implements JobsContainer {
         }
         UUID jobUUID = UUID.randomUUID();
         ResearchObjectIdDAO idDAO = new ResearchObjectIdDAO();
-        ResearchObjectId uri = idDAO.firstFree(new ResearchObjectId(uriInfo.getAbsolutePath().resolve("/ROs/")
-                .resolve(researchObjectId + "/")));
+        ResearchObjectId uri;
+        if (!researchObjectId.endsWith("/")) {
+            researchObjectId += "/";
+        }
+        uri = idDAO
+                .firstFree(new ResearchObjectId(uriInfo.getAbsolutePath().resolve("/ROs/").resolve(researchObjectId)));
+
         ROFromZipJobStatus jobStatus = new ROFromZipJobStatus();
         jobStatus.setTarget(uri.getId());
         jobStatus.setProcessedResources(0);
