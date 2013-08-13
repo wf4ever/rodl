@@ -173,8 +173,14 @@ public abstract class AbstractIntegrationTest extends JerseyTest {
 
 
     protected ClientResponse updateFile(URI uri, InputStream is, String mimeType) {
-        return webResource.uri(uri).header("Authorization", "Bearer " + accessToken).type(mimeType)
+        ClientResponse response = webResource.uri(uri).header("Authorization", "Bearer " + accessToken).type(mimeType)
                 .put(ClientResponse.class, is);
+        // follow redirects doesn't work for PUT
+        while (response.getStatus() >= 300 && response.getStatus() < 400) {
+            response = webResource.uri(response.getLocation()).header("Authorization", "Bearer " + accessToken)
+                    .type(mimeType).put(ClientResponse.class, is);
+        }
+        return response;
     }
 
 

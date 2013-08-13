@@ -154,10 +154,10 @@ public class Resource {
      * 
      * @param proxy
      *            the proxy
-     * @return 307 with a redirection to the proxied resource
+     * @return 303 with a redirection to the proxied resource
      */
     private Response updateProxy(Proxy proxy) {
-        return Response.status(Status.TEMPORARY_REDIRECT).location(proxy.getProxyFor().getUri()).build();
+        return Response.seeOther(proxy.getProxyFor().getUri()).build();
     }
 
 
@@ -477,7 +477,7 @@ public class Resource {
     private Response deleteProxy(Proxy proxy) {
         AggregatedResource resource = proxy.getProxyFor();
         if (resource.isInternal()) {
-            return Response.status(Status.TEMPORARY_REDIRECT).location(resource.getUri()).build();
+            return Response.seeOther(resource.getUri()).build();
         } else {
             resource.delete();
             return Response.noContent().build();
