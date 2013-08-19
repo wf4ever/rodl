@@ -539,15 +539,17 @@ public class Thing {
      * @return true if a new transaction has been started, false otherwise
      */
     protected boolean beginTransaction(ReadWrite mode) {
-        boolean started = false;
-        if (useTransactions && dataset.supportsTransactions() && !dataset.isInTransaction()) {
-            dataset.begin(mode);
-            started = true;
+        synchronized (dataset) {
+            boolean started = false;
+            if (useTransactions && dataset.supportsTransactions() && !dataset.isInTransaction()) {
+                dataset.begin(mode);
+                started = true;
+            }
+            if (mode == ReadWrite.WRITE || dataset.containsNamedModel(uri.toString())) {
+                model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, dataset.getNamedModel(uri.toString()));
+            }
+            return started;
         }
-        if (mode == ReadWrite.WRITE || dataset.containsNamedModel(uri.toString())) {
-            model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, dataset.getNamedModel(uri.toString()));
-        }
-        return started;
     }
 
 
@@ -559,8 +561,10 @@ public class Thing {
      *            a convenience parameter to specify if the transaction should be committed
      */
     protected void commitTransaction(boolean wasStarted) {
-        if (useTransactions && dataset.supportsTransactions() && wasStarted) {
-            dataset.commit();
+        synchronized (dataset) {
+            if (useTransactions && dataset.supportsTransactions() && wasStarted) {
+                dataset.commit();
+            }
         }
     }
 
@@ -573,12 +577,14 @@ public class Thing {
      *            a convenience parameter to specify if the transaction should be ended
      */
     protected void endTransaction(boolean wasStarted) {
-        if (useTransactions && dataset.supportsTransactions() && wasStarted) {
-            if (model != null) {
-                TDB.sync(model);
-                model = null;
+        synchronized (dataset) {
+            if (useTransactions && dataset.supportsTransactions() && wasStarted) {
+                if (model != null) {
+                    TDB.sync(model);
+                    model = null;
+                }
+                dataset.end();
             }
-            dataset.end();
         }
     }
 
@@ -591,8 +597,10 @@ public class Thing {
      *            a convenience parameter to specify if the transaction should be aborted
      */
     protected void abortTransaction(boolean wasStarted) {
-        if (useTransactions && dataset.supportsTransactions() && wasStarted) {
-            dataset.abort();
+        synchronized (dataset) {
+            if (useTransactions && dataset.supportsTransactions() && wasStarted) {
+                dataset.abort();
+            }
         }
     }
 
