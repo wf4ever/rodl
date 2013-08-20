@@ -8,7 +8,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -154,28 +153,6 @@ public class CopyResource implements JobsContainer {
         }
         if (finishedJobs.containsKey(uuid)) {
             return finishedJobs.get(uuid);
-        }
-        throw new NotFoundException("Job not found: " + uuid);
-    }
-
-
-    /**
-     * Abort the job.
-     * 
-     * @param uuid
-     *            job id
-     */
-    @DELETE
-    @Path("{id}")
-    public void abortJob(@PathParam("id") UUID uuid) {
-        if (jobs.containsKey(uuid)) {
-            jobs.get(uuid).abort();
-            jobs.remove(uuid);
-        }
-        if (finishedJobs.containsKey(uuid)) {
-            URI target = finishedJobs.get(uuid).getTarget();
-            finishedJobs.remove(uuid);
-            finishedJobsByTarget.remove(target);
         }
         throw new NotFoundException("Job not found: " + uuid);
     }
