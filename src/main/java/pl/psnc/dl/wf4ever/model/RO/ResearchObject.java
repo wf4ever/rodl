@@ -587,7 +587,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
      *            the status of proceeded operation
      * @return HTTP response (created in case of success, 404 in case of error)
      * @throws IOException
-     *             error creating the temporary file
+     *             error creating the temporary filez
      * @throws BadRequestException
      *             the ZIP contains an invalid RO
      */

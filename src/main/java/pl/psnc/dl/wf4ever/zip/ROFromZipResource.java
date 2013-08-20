@@ -13,7 +13,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -121,7 +120,8 @@ public class ROFromZipResource implements JobsContainer {
         jobStatus.setTarget(uri.getId());
         //copy input stream
         File tmpFile = createTmpZip(zipStream);
-        StoreROFromGivenZipOperation operation = new StoreROFromGivenZipOperation(builder, tmpFile, uriInfo);
+        StoreROFromGivenZipOperation operation = new StoreROFromGivenZipOperation(new Builder(builder.getUser()),
+                tmpFile, uriInfo);
         Job job = new Job(jobUUID, jobStatus, this, operation);
         jobs.put(jobUUID, job);
         job.start();
@@ -203,26 +203,6 @@ public class ROFromZipResource implements JobsContainer {
         }
         if (finishedJobs.containsKey(uuid)) {
             return (ROFromZipJobStatus) finishedJobs.get(uuid);
-        }
-        throw new NotFoundException("Job not found: " + uuid);
-    }
-
-
-    /**
-     * Abort the job.
-     * 
-     * @param uuid
-     *            job id
-     */
-    @DELETE
-    @Path("{id}")
-    public void abortJob(@PathParam("id") UUID uuid) {
-        if (jobs.containsKey(uuid)) {
-            jobs.get(uuid).abort();
-            jobs.remove(uuid);
-        }
-        if (finishedJobs.containsKey(uuid)) {
-            finishedJobs.remove(uuid);
         }
         throw new NotFoundException("Job not found: " + uuid);
     }
