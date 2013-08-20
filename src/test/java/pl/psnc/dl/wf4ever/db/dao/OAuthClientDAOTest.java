@@ -4,10 +4,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.db.OAuthClient;
-import pl.psnc.dl.wf4ever.model.BaseTest;
 
-public class OAuthClientDAOTest extends BaseTest {
+public class OAuthClientDAOTest extends AbstractUnitTest {
 
     OAuthClientDAO dao;
 

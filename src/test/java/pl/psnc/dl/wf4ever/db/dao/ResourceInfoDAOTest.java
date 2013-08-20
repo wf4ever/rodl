@@ -5,10 +5,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.db.ResourceInfo;
-import pl.psnc.dl.wf4ever.model.BaseTest;
 
-public class ResourceInfoDAOTest extends BaseTest {
+public class ResourceInfoDAOTest extends AbstractUnitTest {
 
     String path = "path";
     String name = "name";

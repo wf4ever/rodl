@@ -8,12 +8,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
-import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 
-public class FolderEntryTest extends BaseTest {
+public class FolderEntryTest extends AbstractUnitTest {
 
     private URI folderEntryUri;
     private FolderBuilder folderBuilder;

@@ -8,11 +8,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import pl.psnc.dl.wf4ever.model.BaseTest;
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.notifications.Notification;
 
-public class AtomFeedEntryDAOTest extends BaseTest {
+public class AtomFeedEntryDAOTest extends AbstractUnitTest {
 
     ResearchObject ro;
     URI roUri = URI.create("http://www.example.com/ROs/atomFeedTest");

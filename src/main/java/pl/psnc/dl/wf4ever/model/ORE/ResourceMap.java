@@ -117,6 +117,59 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
 
 
     /**
+     * Save a nested aggregation as both ore:AggregatedResource and ore:Aggregation.
+     * 
+     * @param nestedAggregation
+     *            a nested aggregation
+     */
+    public void saveNestedAggregation(Aggregation nestedAggregation) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            Individual ro = model.getIndividual(aggregation.getUri().toString());
+            if (ro == null) {
+                throw new IncorrectModelException("Aggregation not found: " + aggregation.getUri());
+            }
+            Individual resourceR = model
+                    .createIndividual(nestedAggregation.getUri().toString(), ORE.AggregatedResource);
+            resourceR.addRDFType(ORE.Aggregation);
+            model.add(ro, ORE.aggregates, resourceR);
+            Individual manifestR = model.createIndividual(nestedAggregation.getResourceMap().getUri().toString(),
+                ORE.ResourceMap);
+            model.add(resourceR, ORE.isDescribedBy, manifestR);
+
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    /**
+     * Save that this aggregation is aggregated by another.
+     * 
+     * @param parentAggregation
+     *            the parent aggregation
+     */
+    public void saveIsNestedInAggregation(Aggregation parentAggregation) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            Individual ro = model.getIndividual(aggregation.getUri().toString());
+            if (ro == null) {
+                throw new IncorrectModelException("Aggregation not found: " + aggregation.getUri());
+            }
+            Individual parentR = model.createIndividual(parentAggregation.getUri().toString(), ORE.Aggregation);
+            model.add(ro, ORE.isAggregatedBy, parentR);
+            Individual parentManifestR = model.createIndividual(parentAggregation.getResourceMap().getUri().toString(),
+                ORE.ResourceMap);
+            model.add(parentR, ORE.isDescribedBy, parentManifestR);
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    /**
      * Add a new proxy and save it.
      * 
      * @param proxy

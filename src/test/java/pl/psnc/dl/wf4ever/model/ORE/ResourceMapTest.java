@@ -8,7 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.model.BaseTest;
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
@@ -18,7 +18,7 @@ import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.hp.hpl.jena.vocabulary.RDF;
 
-public class ResourceMapTest extends BaseTest {
+public class ResourceMapTest extends AbstractUnitTest {
 
     private URI resourceMapUri;
     private ResourceMap resourceMap;

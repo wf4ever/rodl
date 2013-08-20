@@ -11,7 +11,7 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import pl.psnc.dl.wf4ever.model.BaseTest;
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.searchserver.SearchServer;
 
@@ -19,7 +19,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 @Ignore
-public class SolrSearchServerTest extends BaseTest {
+public class SolrSearchServerTest extends AbstractUnitTest {
 
     private static final String CONNECTION_PROPERTIES = "connection.properties";
 

@@ -9,13 +9,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.db.AccessToken;
 import pl.psnc.dl.wf4ever.db.OAuthClient;
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
-import pl.psnc.dl.wf4ever.model.BaseTest;
 
-public class UserProfileDAOTest extends BaseTest {
+public class UserProfileDAOTest extends AbstractUnitTest {
 
     UserProfileDAO dao;
     UserProfile profile;

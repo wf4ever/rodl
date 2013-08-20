@@ -279,6 +279,7 @@ public class Manifest extends ResourceMap {
      * @return a set of resources (not loaded)
      */
     public Map<URI, Resource> extractResources() {
+        ResourceFactory resourceFactory = new ResourceFactory(builder);
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             Map<URI, Resource> resources2 = new HashMap<>();
@@ -312,7 +313,7 @@ public class Manifest extends ResourceMap {
                     RDFNode createdNode = solution.get("created");
                     DateTime resCreated = createdNode != null && createdNode.isLiteral() ? DateTime.parse(createdNode
                             .asLiteral().getString()) : null;
-                    Resource resource = builder.buildResource(rUri, getResearchObject(), profile, resCreated);
+                    Resource resource = resourceFactory.buildResource(rUri, getResearchObject(), profile, resCreated);
                     if (pUri != null) {
                         resource.setProxy(builder.buildProxy(pUri, resource, getResearchObject()));
                     }
@@ -471,6 +472,63 @@ public class Manifest extends ResourceMap {
     }
 
 
+    /**
+     * Identify if this RO has alternative URIs, i.e. an RO bundle.
+     * 
+     * @param mimeType
+     *            MIME type of the alternative format
+     * @return the URI of the bundle or null
+     */
+    public URI extractAlternativeFormat(String mimeType) {
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            String queryString = String
+                    .format(
+                        "PREFIX dcterms: <%s> SELECT ?format WHERE { <%s> dcterms:hasFormat ?format . ?format dcterms:format \"%s\" . }",
+                        DCTerms.NS, aggregation.getUri().toString(), mimeType);
+
+            Query query = QueryFactory.create(queryString);
+            QueryExecution qe = QueryExecutionFactory.create(query, model);
+            try {
+                ResultSet results = qe.execSelect();
+                if (results.hasNext()) {
+                    QuerySolution solution = results.next();
+                    RDFNode r = solution.get("format");
+                    return URI.create(r.asResource().getURI());
+                } else {
+                    return null;
+                }
+            } finally {
+                qe.close();
+            }
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    /**
+     * Save an alternative format of this RO.
+     * 
+     * @param formatUri
+     *            URI of the alternative representation
+     * @param mimeType
+     *            MIME type of the alternative representation
+     */
+    public void saveAlternativeFormat(URI formatUri, String mimeType) {
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            Individual aggregationR = model.getIndividual(aggregation.getUri().toString());
+            com.hp.hpl.jena.rdf.model.Resource formatR = model.createResource(formatUri.toString());
+            aggregationR.addProperty(DCTerms.hasFormat, formatR);
+            formatR.addProperty(DCTerms.format, model.createLiteral(mimeType));
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
     @Override
     public ResearchObject getResearchObject() {
         return (ResearchObject) aggregation;
@@ -502,4 +560,48 @@ public class Manifest extends ResourceMap {
             endTransaction(transactionStarted);
         }
     }
+
+
+    /**
+     * Save a nested RO as both ore:AggregatedResource and ro:ResearchObject, with links to the manifest.
+     * 
+     * @param nestedResearchObject
+     *            a nested RO
+     */
+    public void saveNestedResearchObject(ResearchObject nestedResearchObject) {
+        super.saveNestedAggregation(nestedResearchObject);
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            Individual aggregation = model.getIndividual(nestedResearchObject.getUri().toString());
+            aggregation.addRDFType(RO.ResearchObject);
+            aggregation.addRDFType(RO.Resource);
+            Individual manifestR = model.getIndividual(nestedResearchObject.getResourceMap().getUri().toString());
+            manifestR.addRDFType(RO.Manifest);
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
+
+    /**
+     * Save that this RO is aggregated by another.
+     * 
+     * @param parentResearchObject
+     *            aggregating RO
+     */
+    public void saveIsNestedInResearchObject(ResearchObject parentResearchObject) {
+        super.saveIsNestedInAggregation(parentResearchObject);
+        boolean transactionStarted = beginTransaction(ReadWrite.WRITE);
+        try {
+            Individual aggregation = model.getIndividual(parentResearchObject.getUri().toString());
+            aggregation.addRDFType(RO.ResearchObject);
+            Individual manifestR = model.getIndividual(parentResearchObject.getResourceMap().getUri().toString());
+            manifestR.addRDFType(RO.Manifest);
+            commitTransaction(transactionStarted);
+        } finally {
+            endTransaction(transactionStarted);
+        }
+    }
+
 }

@@ -20,7 +20,7 @@ import org.quartz.ListenerManager;
 import org.quartz.Scheduler;
 import org.quartz.Trigger;
 
-import pl.psnc.dl.wf4ever.model.BaseTest;
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 
 /**
  * Test that the dispatcher job schedules new jobs for all ROs.
@@ -28,7 +28,7 @@ import pl.psnc.dl.wf4ever.model.BaseTest;
  * @author piotrekhol
  * 
  */
-public class ResearchObjectPreservationDispatcherJobTest extends BaseTest {
+public class ResearchObjectPreservationDispatcherJobTest extends AbstractUnitTest {
 
     /** Context with that returns a mock scheduler. */
     private JobExecutionContext context;

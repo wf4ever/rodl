@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.model;
+package pl.psnc.dl.wf4ever;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -9,13 +9,13 @@ import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 
 import pl.psnc.dl.wf4ever.db.dao.ResearchObjectIdDAO;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.eventbus.SimpleEventBusModule;
+import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 import com.hp.hpl.jena.query.Dataset;
@@ -29,7 +29,7 @@ import com.hp.hpl.jena.util.FileManager;
  * Base test class for model package.
  * 
  */
-public class BaseTest {
+public abstract class AbstractUnitTest {
 
     /** Temporary in-memory dataset. */
     protected Dataset dataset;
@@ -74,18 +74,6 @@ public class BaseTest {
 
 
     /**
-     * Prepare filesystem DL.
-     * 
-     * @throws Exception
-     *             when something unexpected happens, declared for subclasses
-     */
-    @BeforeClass
-    public static void setUpBeforeClass()
-            throws Exception {
-    }
-
-
-    /**
      * Create the dataset, load the RDF files.
      * 
      * @throws Exception
@@ -93,7 +81,6 @@ public class BaseTest {
     @Before
     public void setUp()
             throws Exception {
-
         Model model;
         dataset = DatasetFactory.createMem();
         userProfile = new UserMetadata("jank", "Jan Kowalski", Role.AUTHENTICATED, URI.create("http://jank"));
@@ -121,23 +108,16 @@ public class BaseTest {
         model = FileManager.get().loadModel(FOLDER_RESOURCE_MAP_2, FOLDER_RESOURCE_MAP_2, "TURTLE");
         dataset.addNamedModel(FOLDER_RESOURCE_MAP_2, model);
         serializeModelFile(model, researchObject.getUri(), FOLDER_RESOURCE_MAP_2, "TURTLE");
-
-        /*
-        builder.getDigitalLibrary().createOrUpdateFile(researchObject.getUri(), FOLDER_RESOURCE_MAP,
-            IOUtils.toInputStream("nic"), "text/turtle");
-        builder.getDigitalLibrary().createOrUpdateFile(researchObject.getUri(), "folder-rm.ttl",
-            IOUtils.toInputStream("nic"), "text/turtle");
-         */
     }
 
 
-    private void serializeModelFile(Model model, URI researchObjectUri, String filePath, String mimeType) {
+    private void serializeModelFile(Model model, URI researchObjectUri, String filePath, String lang) {
         URI filePathUri = URI.create(filePath);
         if (filePathUri.isAbsolute()) {
             filePathUri = researchObjectUri.relativize(filePathUri);
         }
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        model.write(out);
+        model.write(out, lang);
         //builder.getDigitalLibrary().createOrUpdateFile(researchObjectUri, filePathUri.toString(),
         //    new ByteArrayInputStream(out.toByteArray()), mimeType);
 
