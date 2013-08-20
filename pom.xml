@@ -359,7 +359,7 @@
 	</reporting>
 	<scm>
 		<developerConnection>scm:git:git@github.com:wf4ever/rodl.git</developerConnection>
-		<tag>rodl-8.1.1</tag>
+		<tag>rodl-8.1.13</tag>
 	</scm>
 	<repositories>
 		<repository>
