@@ -28,7 +28,9 @@ import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Resource;
 import com.sun.jersey.api.client.ClientResponse;
 
 /**
@@ -143,5 +145,34 @@ public class RoBundleTest extends RosrsTest {
         ClientResponse response = webResource.uri(ro).accept("application/vnd.wf4ever.robundle+zip")
                 .get(ClientResponse.class);
         Assert.assertEquals(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE, response.getStatus());
+    }
+
+
+    /**
+     * Test that absolute URIs in annotations are resolved against the data bundle.
+     * 
+     * @throws IOException
+     *             when there is a communication problem
+     */
+    @Test
+    public void shouldResolveAbsoluteURIs()
+            throws IOException {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(testDatabundlePath)) {
+            ClientResponse response = addFile(ro, "bundle.zip", is, RoBundle.MIME_TYPE);
+            Assert.assertEquals(response.getEntity(String.class), HttpStatus.SC_CREATED, response.getStatus());
+        }
+
+        URI nestedRO = findNestedROUri();
+        Model nestedModel = ModelFactory.createDefaultModel();
+        try (InputStream in = webResource.uri(nestedRO.resolve(".ro/annotations/workflow.link.ttl"))
+                .accept("application/rdf+xml").get(InputStream.class)) {
+            nestedModel.read(in, null);
+        }
+        nestedModel.write(System.out, "TURTLE");
+        Resource s = nestedModel
+                .createResource("http://ns.taverna.org.uk/2010/workflowBundle/e2b20c03-a538-4797-8768-45dbba022644/workflow/MusicClassificationExperiment/");
+        Property p = nestedModel.createProperty("http://purl.org/wf4ever/wfdesc#hasWorkflowDefinition");
+        RDFNode o = nestedModel.createResource(nestedRO.resolve("workflow.wfbundle").toString());
+        Assert.assertTrue(nestedModel.contains(s, p, o));
     }
 }

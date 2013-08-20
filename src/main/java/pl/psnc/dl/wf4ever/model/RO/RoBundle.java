@@ -1,5 +1,7 @@
 package pl.psnc.dl.wf4ever.model.RO;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -18,6 +20,7 @@ import java.util.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.db.ResourceInfo;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
@@ -28,6 +31,9 @@ import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.sparql.RO_RDFXMLWriter;
+import pl.psnc.dl.wf4ever.sparql.RO_TurtleWriter;
+import pl.psnc.dl.wf4ever.sparql.ResearchObjectRelativeWriter;
 import pl.psnc.dl.wf4ever.util.MimeTypeUtil;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
@@ -45,6 +51,7 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.ResIterator;
 
@@ -119,6 +126,62 @@ public class RoBundle extends Resource {
         @Override
         public ResourceMetadata getStats() {
             return new ResourceInfo(getPath(), getName(), null, 0, null, null, MimeTypeUtil.getContentType(getPath()));
+        }
+
+    }
+
+
+    /**
+     * A resource taken from the RO bundle, which is parsed as an RDF graph before returning the input stream.
+     * 
+     * @author piotrekhol
+     * 
+     */
+    private class BundleRDFResource extends BundleResource {
+
+        /**
+         * Constructor.
+         * 
+         * @param builder
+         *            model builder that will be used
+         * @param uri
+         *            resource URI
+         * @param bundleResearchObject
+         *            abstract RO aggregating this resource
+         * @param creator
+         *            resource creator
+         * @param created
+         *            resource created date
+         * @param zipFile
+         *            ZIP archive that may have the contents of this resource
+         */
+        public BundleRDFResource(Builder builder, URI uri, ResearchObject bundleResearchObject, UserMetadata creator,
+                DateTime created, ZipFile zipFile) {
+            super(builder, uri, bundleResearchObject, creator, created, zipFile);
+        }
+
+
+        @Override
+        public InputStream getSerialization() {
+            Model model = ModelFactory.createDefaultModel();
+            RDFFormat syntax = RDFFormat.forFileName(getName(), RDFFormat.RDFXML);
+            model.read(super.getSerialization(), researchObject.getUri().toString(), syntax.getName().toUpperCase());
+            ResearchObjectRelativeWriter writer;
+            if (syntax != RDFFormat.RDFXML && syntax != RDFFormat.TURTLE) {
+                throw new IllegalArgumentException("Format " + syntax + " is not supported");
+            } else if (syntax == RDFFormat.RDFXML) {
+                writer = new RO_RDFXMLWriter();
+            } else {
+                writer = new RO_TurtleWriter();
+            }
+            writer.setResearchObjectURI(researchObject.getUri());
+            writer.setBaseURI(researchObject.getUri().resolve(uri));
+            // URI validation in Jena 2.10.0 doesn't allow relative URIs
+            writer.setProperty("allowBadURIs", true);
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            writer.write(model, out, "");
+            return new ByteArrayInputStream(out.toByteArray());
         }
 
     }
@@ -477,7 +540,7 @@ public class RoBundle extends Resource {
                 }
                 // the target may be some BundleResource so let's make the URI relative if possible
                 URI bUri = bundleResearchObject.getUri().relativize(URI.create(bodyR.asResource().getURI()));
-                Resource body = new BundleResource(builder, bUri, bundleResearchObject, null, null, zipFile);
+                Resource body = new BundleRDFResource(builder, bUri, bundleResearchObject, null, null, zipFile);
                 if (!targetR.isURIResource()) {
                     LOGGER.warn("Annotation target " + bodyR + " is not a URI resource, annotation " + annotationR
                             + " will be ignored");
