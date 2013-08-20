@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.monitoring;
+package pl.psnc.dl.wf4ever.integration.monitoring;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -12,16 +12,16 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import pl.psnc.dl.wf4ever.IntegrationTest;
-import pl.psnc.dl.wf4ever.W4ETest;
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
+import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
+import pl.psnc.dl.wf4ever.integration.IntegrationTest;
+import pl.psnc.dl.wf4ever.monitoring.StabilityFeedAggregationJobTest;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.sun.syndication.io.FeedException;
@@ -33,7 +33,7 @@ import com.sun.syndication.io.FeedException;
  * 
  */
 @Category(IntegrationTest.class)
-public class StabilityFeedAggreegationIntegrationTest extends W4ETest {
+public class StabilityFeedAggreegationIntegrationTest extends AbstractIntegrationTest {
 
     /** A sample file name. */
     private String filePath = "foo.txt";
@@ -42,6 +42,7 @@ public class StabilityFeedAggreegationIntegrationTest extends W4ETest {
     public final WireMockRule WIREMOCK_RULE = new WireMockRule(8089); // No-args constructor defaults to port 8080
     AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
     URI checklistNotificationsUri;
+    private URI ro;
     protected static final String HOST_STRING = "http://127.0.0.1:8089";
 
 
@@ -50,23 +51,9 @@ public class StabilityFeedAggreegationIntegrationTest extends W4ETest {
     public void setUp()
             throws Exception {
         super.setUp();
-        createUserWithAnswer(userIdSafe, username).close();
-        accessToken = createAccessToken(userId);
-        deleteROs();
-        ro = createRO(accessToken);
-        addFile(ro, filePath, accessToken);
+        ro = createRO();
+        addLoremIpsumFile(ro, filePath);
         setUpMockito();
-    }
-
-
-    @After
-    @Override
-    public void tearDown()
-            throws Exception {
-        deleteROs();
-        deleteAccessToken(accessToken);
-        deleteUser(userIdSafe);
-        super.tearDown();
     }
 
 

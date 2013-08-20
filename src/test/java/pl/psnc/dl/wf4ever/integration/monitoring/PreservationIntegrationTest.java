@@ -1,19 +1,20 @@
-package pl.psnc.dl.wf4ever.monitoring;
+package pl.psnc.dl.wf4ever.integration.monitoring;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import pl.psnc.dl.wf4ever.IntegrationTest;
-import pl.psnc.dl.wf4ever.W4ETest;
 import pl.psnc.dl.wf4ever.darceo.client.DArceoClient;
 import pl.psnc.dl.wf4ever.darceo.client.DArceoException;
+import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
+import pl.psnc.dl.wf4ever.integration.IntegrationTest;
+import pl.psnc.dl.wf4ever.monitoring.SynchronizationTest;
 
 import com.sun.syndication.io.FeedException;
 
@@ -24,10 +25,11 @@ import com.sun.syndication.io.FeedException;
  * 
  */
 @Category(IntegrationTest.class)
-public class PreservationIntegrationTest extends W4ETest {
+public class PreservationIntegrationTest extends AbstractIntegrationTest {
 
     /** A sample file name. */
     private String filePath = "foo.txt";
+    private URI ro;
     /** Logger. */
     private static final Logger LOGGER = Logger.getLogger(PreservationIntegrationTest.class);
 
@@ -37,22 +39,8 @@ public class PreservationIntegrationTest extends W4ETest {
     public void setUp()
             throws Exception {
         super.setUp();
-        createUserWithAnswer(userIdSafe, username).close();
-        accessToken = createAccessToken(userId);
-        deleteROs();
-        ro = createRO(accessToken);
-        addFile(ro, filePath, accessToken);
-    }
-
-
-    @After
-    @Override
-    public void tearDown()
-            throws Exception {
-        deleteROs();
-        deleteAccessToken(accessToken);
-        deleteUser(userIdSafe);
-        super.tearDown();
+        ro = createRO();
+        addLoremIpsumFile(ro, filePath);
     }
 
 

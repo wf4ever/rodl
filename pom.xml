@@ -262,7 +262,7 @@
 					<includes>
 						<include>**/*.class</include>
 					</includes>
-					<excludedGroups>pl.psnc.dl.wf4ever.IntegrationTest</excludedGroups>
+					<excludedGroups>pl.psnc.dl.wf4ever.integration.IntegrationTest</excludedGroups>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -277,7 +277,7 @@
 					</dependency>
 				</dependencies>
 				<configuration>
-					<groups>pl.psnc.dl.wf4ever.IntegrationTest</groups>
+					<groups>pl.psnc.dl.wf4ever.integration.IntegrationTest</groups>
 				</configuration>
 				<executions>
 					<execution>

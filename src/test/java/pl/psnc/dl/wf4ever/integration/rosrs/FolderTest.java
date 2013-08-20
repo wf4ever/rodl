@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.resources;
+package pl.psnc.dl.wf4ever.integration.rosrs;
 
 import static org.junit.Assert.assertEquals;
 
@@ -16,7 +16,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import pl.psnc.dl.wf4ever.IntegrationTest;
+import pl.psnc.dl.wf4ever.integration.IntegrationTest;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
@@ -37,7 +37,7 @@ import com.sun.jersey.api.client.ClientResponse;
  * 
  */
 @Category(IntegrationTest.class)
-public class FolderTest extends ResourceBase {
+public class FolderTest extends RosrsTest {
 
     /** folder path. */
     private final String folderPath = "myfolder/";
@@ -64,31 +64,17 @@ public class FolderTest extends ResourceBase {
     private final URI f4 = URI.create("https://sandbox/rodl/ROs/ro1/file2.txt");
 
 
-    @Override
-    public void setUp()
-            throws Exception {
-        super.setUp();
-    }
-
-
-    @Override
-    public void tearDown()
-            throws Exception {
-        super.tearDown();
-    }
-
-
     /**
      * Test for creating a new folder.
      */
     @Test
     public void testAddFolder() {
-        addFile(ro, f1, accessToken).close();
-        addFile(ro, f2, accessToken).close();
-        addFile(ro, f3, accessToken).close();
+        addFile(ro, f1).close();
+        addFile(ro, f2).close();
+        addFile(ro, f3).close();
 
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
-        ClientResponse response = addFolder(is, ro, folderPath, accessToken);
+        ClientResponse response = addFolder(ro, folderPath, is);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         Set<URI> expected = new HashSet<>(Arrays.asList(f1, f2, f3));
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
@@ -101,7 +87,7 @@ public class FolderTest extends ResourceBase {
         webResource.uri(folderProxyURI).header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
 
         is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
-        response = addFolder(is, ro, folderWithSpacesPath, accessToken);
+        response = addFolder(ro, folderWithSpacesPath, is);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         model.removeAll();
         model.read(response.getEntityInputStream(), null);
@@ -119,12 +105,12 @@ public class FolderTest extends ResourceBase {
      */
     @Test
     public void testGetFolder() {
-        addFile(ro, f1, accessToken).close();
-        addFile(ro, f2, accessToken).close();
-        addFile(ro, f3, accessToken).close();
+        addFile(ro, f1).close();
+        addFile(ro, f2).close();
+        addFile(ro, f3).close();
 
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
-        ClientResponse response = addFolder(is, ro, folderPath, accessToken);
+        ClientResponse response = addFolder(ro, folderPath, is);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         URI folderProxyURI = response.getLocation();
         Assert.assertNotNull(folderProxyURI);
@@ -148,15 +134,15 @@ public class FolderTest extends ResourceBase {
      */
     @Test
     public void testAddFolderEntry() {
-        addFile(ro, f1, accessToken).close();
-        addFile(ro, f2, accessToken).close();
-        addFile(ro, f3, accessToken).close();
-        addFile(ro, f4, accessToken).close();
+        addFile(ro, f1).close();
+        addFile(ro, f2).close();
+        addFile(ro, f3).close();
+        addFile(ro, f4).close();
 
-        addFile(ro, filePath, accessToken);
+        addLoremIpsumFile(ro, filePath);
 
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
-        ClientResponse response = addFolder(is, ro, folderPath, accessToken);
+        ClientResponse response = addFolder(ro, folderPath, is);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         URI folderProxyURI = response.getLocation();
         Assert.assertNotNull(folderProxyURI);
@@ -165,7 +151,7 @@ public class FolderTest extends ResourceBase {
 
         URI folderURI = links.get("http://www.openarchives.org/ore/terms/proxyFor").iterator().next();
         is = getClass().getClassLoader().getResourceAsStream("singleFiles/folderEntry.rdf");
-        response = addFolderEntry(is, folderURI, accessToken);
+        response = addFolderEntry(folderURI, is);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         links = getLinkHeaders(response.getHeaders().get("Link"));
         Assert.assertEquals(URI.create("https://sandbox/rodl/ROs/ro1/file2.txt"),
@@ -192,14 +178,14 @@ public class FolderTest extends ResourceBase {
      */
     @Test
     public void testDeleteFolderEntry() {
-        addFile(ro, f1, accessToken).close();
-        addFile(ro, f2, accessToken).close();
-        addFile(ro, f3, accessToken).close();
+        addFile(ro, f1).close();
+        addFile(ro, f2).close();
+        addFile(ro, f3).close();
 
-        addFile(ro, filePath, accessToken);
+        addLoremIpsumFile(ro, filePath);
 
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
-        ClientResponse response = addFolder(is, ro, folderPath, accessToken);
+        ClientResponse response = addFolder(ro, folderPath, is);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         URI folderProxyURI = response.getLocation();
         Assert.assertNotNull(folderProxyURI);
@@ -235,12 +221,12 @@ public class FolderTest extends ResourceBase {
      */
     @Test
     public void testDeleteFolder() {
-        addFile(ro, f1, accessToken).close();
-        addFile(ro, f2, accessToken).close();
-        addFile(ro, f3, accessToken).close();
+        addFile(ro, f1).close();
+        addFile(ro, f2).close();
+        addFile(ro, f3).close();
 
         InputStream is = getClass().getClassLoader().getResourceAsStream("singleFiles/folder.rdf");
-        ClientResponse response = addFolder(is, ro, folderPath, accessToken);
+        ClientResponse response = addFolder(ro, folderPath, is);
         assertEquals(HttpServletResponse.SC_CREATED, response.getStatus());
         URI folderProxyURI = response.getLocation();
         Assert.assertNotNull(folderProxyURI);

@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.resources;
+package pl.psnc.dl.wf4ever.integration.rosrs;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,8 +22,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import pl.psnc.dl.wf4ever.IntegrationTest;
-import pl.psnc.dl.wf4ever.W4ETest;
+import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
+import pl.psnc.dl.wf4ever.integration.IntegrationTest;
 import pl.psnc.dl.wf4ever.job.Job.State;
 import pl.psnc.dl.wf4ever.job.JobStatus;
 import pl.psnc.dl.wf4ever.zip.ROFromZipJobStatus;
@@ -32,30 +32,18 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource.Builder;
 
 @Category(IntegrationTest.class)
-public class ZipTest extends W4ETest {
+public class ZipTest extends AbstractIntegrationTest {
 
     protected String createdFromZipResourceObject = UUID.randomUUID().toString();
     protected Integer maxSeonds = 300;
+    private URI ro;
 
 
     @Override
     public void setUp()
             throws Exception {
         super.setUp();
-        createUserWithAnswer(userIdSafe, username).close();
-        accessToken = createAccessToken(userId);
-        ro = createRO(accessToken);
-        ro2 = createRO(accessToken);
-    }
-
-
-    @Override
-    public void tearDown()
-            throws Exception {
-        deleteROs();
-        deleteAccessToken(accessToken);
-        deleteUser(userIdSafe);
-        super.tearDown();
+        ro = createRO();
     }
 
 
@@ -102,17 +90,18 @@ public class ZipTest extends W4ETest {
         IOUtils.copy(is, outputStream);
         is.close();
         outputStream.close();
-        ZipFile zip = new ZipFile(file);
-        Enumeration<? extends ZipEntry> e = zip.entries();
-        ArrayList<String> entries = new ArrayList<String>();
-        while (e.hasMoreElements()) {
-            entries.add(e.nextElement().getName());
+        try (ZipFile zip = new ZipFile(file)) {
+            Enumeration<? extends ZipEntry> e = zip.entries();
+            ArrayList<String> entries = new ArrayList<String>();
+            while (e.hasMoreElements()) {
+                entries.add(e.nextElement().getName());
+            }
+            Assert.assertTrue(entries.contains("conclusion.pdf"));
+            Assert.assertTrue(entries.contains(".ro/manifest.rdf"));
+            Assert.assertTrue(entries.contains(".ro/evo_info.ttl"));
+            Assert.assertTrue(entries.contains("Hypothesis.txt"));
+            file.delete();
         }
-        Assert.assertTrue(entries.contains("conclusion.pdf"));
-        Assert.assertTrue(entries.contains(".ro/manifest.rdf"));
-        Assert.assertTrue(entries.contains(".ro/evo_info.ttl"));
-        Assert.assertTrue(entries.contains("Hypothesis.txt"));
-        file.delete();
     }
 
 
@@ -204,19 +193,19 @@ public class ZipTest extends W4ETest {
         IOUtils.copy(is, outputStream);
         is.close();
         outputStream.close();
-        ZipFile zip = new ZipFile(file);
-        Enumeration<? extends ZipEntry> e = zip.entries();
-        ArrayList<String> entries = new ArrayList<String>();
-        while (e.hasMoreElements()) {
-            entries.add(e.nextElement().getName());
+        try (ZipFile zip = new ZipFile(file)) {
+            Enumeration<? extends ZipEntry> e = zip.entries();
+            ArrayList<String> entries = new ArrayList<String>();
+            while (e.hasMoreElements()) {
+                entries.add(e.nextElement().getName());
+            }
+            Assert.assertTrue(entries.contains("1.txt"));
+            Assert.assertTrue(entries.contains("2.txt"));
+            Assert.assertTrue(entries.contains("3.txt"));
+            Assert.assertTrue(entries.contains(".ro/manifest.rdf"));
+            Assert.assertTrue(entries.contains(".ro/evo_info.ttl"));
+            file.delete();
         }
-        Assert.assertTrue(entries.contains("1.txt"));
-        Assert.assertTrue(entries.contains("2.txt"));
-        Assert.assertTrue(entries.contains("3.txt"));
-        Assert.assertTrue(entries.contains(".ro/manifest.rdf"));
-        Assert.assertTrue(entries.contains(".ro/evo_info.ttl"));
-        file.delete();
-
     }
 
 
@@ -241,21 +230,22 @@ public class ZipTest extends W4ETest {
         IOUtils.copy(is, outputStream);
         is.close();
         outputStream.close();
-        ZipFile zip = new ZipFile(file);
-        Enumeration<? extends ZipEntry> e = zip.entries();
-        List entries = new ArrayList<String>();
-        while (e.hasMoreElements()) {
-            entries.add(e.nextElement().getName());
+        try (ZipFile zip = new ZipFile(file)) {
+            Enumeration<? extends ZipEntry> e = zip.entries();
+            List<String> entries = new ArrayList<>();
+            while (e.hasMoreElements()) {
+                entries.add(e.nextElement().getName());
+            }
+            Assert.assertTrue(entries.contains("1.txt"));
+            Assert.assertTrue(entries.contains("2.txt"));
+            Assert.assertTrue(entries.contains("3.txt"));
+            Assert.assertTrue(entries.contains(".ro/manifest.rdf"));
+            Assert.assertTrue(entries.contains(".ro/evo_info.ttl"));
+            Assert.assertTrue(entries.contains("innerFolder/innerFolder.rdf"));
+            Assert.assertTrue(entries.contains("innerFolder/5.txt"));
+            Assert.assertTrue(entries.contains("innerFolder/4.txt"));
+            file.delete();
         }
-        Assert.assertTrue(entries.contains("1.txt"));
-        Assert.assertTrue(entries.contains("2.txt"));
-        Assert.assertTrue(entries.contains("3.txt"));
-        Assert.assertTrue(entries.contains(".ro/manifest.rdf"));
-        Assert.assertTrue(entries.contains(".ro/evo_info.ttl"));
-        Assert.assertTrue(entries.contains("innerFolder/innerFolder.rdf"));
-        Assert.assertTrue(entries.contains("innerFolder/5.txt"));
-        Assert.assertTrue(entries.contains("innerFolder/4.txt"));
-        file.delete();
     }
 
 

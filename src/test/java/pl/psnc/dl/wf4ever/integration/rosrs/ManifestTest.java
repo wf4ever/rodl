@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.resources;
+package pl.psnc.dl.wf4ever.integration.rosrs;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -9,16 +9,17 @@ import java.net.URI;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import pl.psnc.dl.wf4ever.IntegrationTest;
+import pl.psnc.dl.wf4ever.integration.IntegrationTest;
 
 import com.sun.jersey.api.client.ClientResponse;
 
 @Category(IntegrationTest.class)
-public class ManifestTest extends ResourceBase {
+public class ManifestTest extends RosrsTest {
 
     private final String filePath = "foo/bar ra.txt";
     private final String filePathEncoded = "foo/bar%20ra.txt";
@@ -27,21 +28,6 @@ public class ManifestTest extends ResourceBase {
             + "   xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" >\n" + "   <ore:Proxy>\n"
             + "   </ore:Proxy>\n" + " </rdf:RDF>";
     private URI rdfProxy;
-
-
-    @Override
-    public void setUp()
-            throws Exception {
-        super.setUp();
-        //add file and rdf file
-    }
-
-
-    @Override
-    public void tearDown()
-            throws Exception {
-        super.tearDown();
-    }
 
 
     @Test
@@ -56,8 +42,8 @@ public class ManifestTest extends ResourceBase {
 
     @Test
     public void getManifest() {
-        addFile(ro, filePath, accessToken);
-        rdfProxy = addRDFFile(ro, rdfFileBody, rdfFilePath, accessToken).getLocation();
+        addLoremIpsumFile(ro, filePath);
+        rdfProxy = addFile(ro, rdfFilePath, IOUtils.toInputStream(rdfFileBody), "application/rdf+xml").getLocation();
         String manifest = webResource.uri(ro).path("/.ro/manifest.rdf")
                 .header("Authorization", "Bearer " + accessToken).get(String.class);
         assertTrue("Manifest should contain user id", manifest.contains(userId));
@@ -102,8 +88,8 @@ public class ManifestTest extends ResourceBase {
     public void getManifestWithAnnotationBody() {
         //TODO
         //How to handle TriG ?!?!?!
-        addFile(ro, filePath, accessToken);
-        rdfProxy = addRDFFile(ro, rdfFileBody, rdfFilePath, accessToken).getLocation();
+        addLoremIpsumFile(ro, filePath);
+        rdfProxy = addFile(ro, rdfFilePath, IOUtils.toInputStream(rdfFileBody), "application/rdf+xml").getLocation();
         String manifest = webResource.uri(ro).path("/.ro/manifest.rdf")
                 .header("Authorization", "Bearer " + accessToken).accept("application/x-turtle").get(String.class);
         assertTrue("Manifest should contain user id", manifest.contains(userId));

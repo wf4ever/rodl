@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.resources;
+package pl.psnc.dl.wf4ever.integration.search;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,13 +11,13 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import pl.psnc.dl.wf4ever.W4ETest;
+import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.searchserver.SearchServer;
 import pl.psnc.dl.wf4ever.searchserver.solr.SolrSearchServer;
 
 @Ignore
-public class SearchServerTest extends W4ETest {
+public class SearchServerTest extends AbstractIntegrationTest {
 
     protected String urlConnectionString;
     protected static final String CONNECTION_PROPERTIES_FILENAME = "connection.properties";
@@ -30,8 +30,6 @@ public class SearchServerTest extends W4ETest {
             throws Exception {
         super.setUp();
         SolrSearchServer.get().clearIndex();
-        createUser(userIdSafe, username);
-        accessToken = createAccessToken(userId);
         try (InputStream is = Thing.class.getClassLoader().getResourceAsStream(CONNECTION_PROPERTIES_FILENAME)) {
             Properties props = new Properties();
             props.load(is);
@@ -47,8 +45,6 @@ public class SearchServerTest extends W4ETest {
     public void tearDown()
             throws Exception {
         SolrSearchServer.get().clearIndex();
-        deleteAccessToken(accessToken);
-        deleteUser(userIdSafe);
         super.tearDown();
     }
 
@@ -56,8 +52,8 @@ public class SearchServerTest extends W4ETest {
     @Test
     public void testUpdateIndexAttributes()
             throws IOException, SolrServerException {
-        URI ro1uri = createRO(accessToken);
-        URI ro2uri = createRO(accessToken);
+        URI ro1uri = createRO();
+        URI ro2uri = createRO();
         SearchServer searchServer = SolrSearchServer.get();
         QueryResponse response = searchServer.query("*:*");
         Assert.assertEquals(2, response.getResults().size());
@@ -67,22 +63,33 @@ public class SearchServerTest extends W4ETest {
 
     @Test
     public void testSearchByAnnotation() {
-        URI searchRO = createRO("search-ro/", accessToken);
+        URI searchRO = createRO();
         InputStream is = getClass().getClassLoader().getResourceAsStream("resources/searchROAnnotationBody.ttl");
-        URI annotationUri = addAnnotation(is, searchRO, accessToken).getLocation();
+        URI annotationUri = addAnnotation(searchRO, is).getLocation();
     }
 
 
     @Test
     public void testDeleteIndexAttributes()
             throws SolrServerException {
-        URI ro1uri = createRO(accessToken);
+        URI ro1uri = createRO();
         SearchServer searchServer = SolrSearchServer.get();
         QueryResponse response = searchServer.query("*:*");
         Assert.assertEquals(1, response.getResults().size());
         deleteROs();
         response = searchServer.query("*:*");
         Assert.assertEquals(0, response.getResults().size());
+    }
+
+
+    protected void deleteROs() {
+        String list = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken).get(String.class);
+        if (!list.isEmpty()) {
+            String[] ros = list.trim().split("\r\n");
+            for (String ro : ros) {
+                webResource.uri(URI.create(ro)).header("Authorization", "Bearer " + accessToken).delete();
+            }
+        }
     }
 
 }

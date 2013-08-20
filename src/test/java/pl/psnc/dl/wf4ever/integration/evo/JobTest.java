@@ -1,4 +1,4 @@
-package pl.psnc.dl.wf4ever.evo;
+package pl.psnc.dl.wf4ever.integration.evo;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,7 +14,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import pl.psnc.dl.wf4ever.IntegrationTest;
+import pl.psnc.dl.wf4ever.evo.CopyJobStatus;
+import pl.psnc.dl.wf4ever.evo.EvoType;
+import pl.psnc.dl.wf4ever.integration.IntegrationTest;
 import pl.psnc.dl.wf4ever.job.Job.State;
 import pl.psnc.dl.wf4ever.job.JobStatus;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
@@ -32,21 +34,7 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.sun.jersey.api.client.ClientResponse;
 
 @Category(IntegrationTest.class)
-public class JobTest extends EvoTest {
-
-    @Override
-    public void setUp()
-            throws Exception {
-        super.setUp();
-    }
-
-
-    @Override
-    public void tearDown()
-            throws Exception {
-        super.tearDown();
-    }
-
+public class JobTest extends AbstractEvoTest {
 
     @Test
     public final void testCopyJobCreation()
@@ -135,7 +123,7 @@ public class JobTest extends EvoTest {
         model1.add(manifestR, DCTerms.isFormatOf, fileR);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         model1.write(out, "TURTLE");
-        addAnnotation(new ByteArrayInputStream(out.toByteArray()), ro, "ann1", accessToken);
+        addAnnotation(ro, "ann1", new ByteArrayInputStream(out.toByteArray()));
 
         URI copyAndFinalizeJob = createCopyJob(new CopyJobStatus(ro, EvoType.SNAPSHOT, true), null).getLocation();
         JobStatus remoteStatus = getRemoteStatus(copyAndFinalizeJob, WAIT_FOR_COPY + WAIT_FOR_FINALIZE);
