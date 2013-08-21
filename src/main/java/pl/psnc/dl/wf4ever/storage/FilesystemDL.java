@@ -239,11 +239,11 @@ public class FilesystemDL implements DigitalLibrary {
             if (res != null) {
                 dao.delete(res);
             } else {
-                LOGGER.warn("Resource info not found in database: " + filePath);
+                LOGGER.warn("Resource info not found in database: " + path);
             }
             HibernateUtil.getSessionFactory().getCurrentSession().flush();
         } catch (NoSuchFileException e) {
-            throw new NotFoundException("File doesn't exist: " + filePath, e);
+            throw new NotFoundException("File doesn't exist: " + path, e);
         } catch (IOException e) {
             throw new DigitalLibraryException(e);
         }

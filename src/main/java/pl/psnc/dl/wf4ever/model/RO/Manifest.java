@@ -1,9 +1,12 @@
 package pl.psnc.dl.wf4ever.model.RO;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -526,6 +529,39 @@ public class Manifest extends ResourceMap {
         } finally {
             endTransaction(transactionStarted);
         }
+    }
+
+
+    /**
+     * Identify all Research Objects that aggregate this RO.
+     * 
+     * @return a collection of URIs, possibly empty.
+     */
+    public Collection<URI> extractAggregatingROUris() {
+        Set<URI> uris = new HashSet<>();
+        boolean transactionStarted = beginTransaction(ReadWrite.READ);
+        try {
+            String queryString = String
+                    .format(
+                        "PREFIX ore: <%s> PREFIX ro: <%s> SELECT ?parent WHERE { ?parent a ro:ResearchObject; ore:aggregates <%s> . }",
+                        ORE.NAMESPACE, RO.NAMESPACE, aggregation.getUri().toString());
+
+            Query query = QueryFactory.create(queryString);
+            QueryExecution qe = QueryExecutionFactory.create(query, model);
+            try {
+                ResultSet results = qe.execSelect();
+                while (results.hasNext()) {
+                    QuerySolution solution = results.next();
+                    RDFNode r = solution.get("parent");
+                    uris.add(URI.create(r.asResource().getURI()));
+                }
+            } finally {
+                qe.close();
+            }
+        } finally {
+            endTransaction(transactionStarted);
+        }
+        return uris;
     }
 
 

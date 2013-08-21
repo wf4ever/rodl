@@ -159,6 +159,7 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
             }
             Individual parentR = model.createIndividual(parentAggregation.getUri().toString(), ORE.Aggregation);
             model.add(ro, ORE.isAggregatedBy, parentR);
+            model.add(parentR, ORE.aggregates, ro);
             Individual parentManifestR = model.createIndividual(parentAggregation.getResourceMap().getUri().toString(),
                 ORE.ResourceMap);
             model.add(parentR, ORE.isDescribedBy, parentManifestR);

@@ -93,7 +93,9 @@ public class RoBundleTest extends RosrsTest {
         QueryExecution qe = QueryExecutionFactory.create(query, parentModel);
         try {
             ResultSet results = qe.execSelect();
-            Assert.assertTrue(results.hasNext());
+            if (!results.hasNext()) {
+                return null;
+            }
             QuerySolution solution = results.next();
             RDFNode nestedROR = solution.get("?nestedRO");
             return URI.create(nestedROR.asResource().getURI());

@@ -136,6 +136,9 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
     /** Optional URI of this research object bundled as an RO bundle. */
     protected URI bundleUri;
 
+    /** URI of the RO that aggregates this RO, if it is nested. */
+    protected Collection<URI> aggregatingROUris;
+
 
     /**
      * Constructor.
@@ -370,7 +373,16 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         if (getBundleUri() != null) {
             // The bundle may be stored inside the parent RO. The path may then start with ../[parentRO]/.
             Path bundlePath = Paths.get(uri.getPath()).relativize(Paths.get(getBundleUri().getPath()));
+            // delete the bundled file
             builder.getDigitalLibrary().deleteFile(uri, bundlePath.toString());
+            // delete the references in the manifest
+            for (URI parentUri : getAggregatingROUris()) {
+                ResearchObject parent = ResearchObject.get(builder, parentUri);
+                // if the parent RO is being deleted, it may have already deleted the references to this RO
+                if (parent.getAggregatedResources().containsKey(uri)) {
+                    ((RoBundle) parent.getAggregatedResources().get(uri)).delete(false);
+                }
+            }
         }
         getManifest().delete();
         try {
@@ -1123,6 +1135,19 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         // The bundle may be stored inside the parent RO. The path may then start with ../[parentRO]/.
         Path bundlePath = Paths.get(uri.getPath()).relativize(Paths.get(bundleUri2.getPath()));
         return builder.getDigitalLibrary().getFileContents(uri, bundlePath.toString());
+    }
+
+
+    /**
+     * Return the URI of the RO bundle if exists.
+     * 
+     * @return the URI of this RO's bundle or null if doesn't exist
+     */
+    public Collection<URI> getAggregatingROUris() {
+        if (aggregatingROUris == null) {
+            aggregatingROUris = getManifest().extractAggregatingROUris();
+        }
+        return aggregatingROUris;
     }
 
 }

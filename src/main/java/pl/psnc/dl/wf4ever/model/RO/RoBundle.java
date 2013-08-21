@@ -644,9 +644,21 @@ public class RoBundle extends Resource {
 
     @Override
     public void delete() {
-        super.delete();
-        ResearchObject nestedRO = ResearchObject.get(builder, uri);
-        nestedRO.delete();
+        delete(true);
     }
 
+
+    /**
+     * Delete the RO bundle.
+     * 
+     * @param deleteNestedRO
+     *            should the related nested RO be deleted as well
+     */
+    public void delete(boolean deleteNestedRO) {
+        super.delete();
+        if (deleteNestedRO) {
+            ResearchObject nestedRO = ResearchObject.get(builder, uri);
+            nestedRO.delete();
+        }
+    }
 }
