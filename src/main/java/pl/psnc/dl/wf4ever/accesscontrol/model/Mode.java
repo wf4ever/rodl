@@ -1,6 +1,9 @@
 package pl.psnc.dl.wf4ever.accesscontrol.model;
 
-import java.net.URI;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Mode model produced and consumed by Resource Mode API.
@@ -8,32 +11,37 @@ import java.net.URI;
  * @author pejot
  * 
  */
+@XmlRootElement
+@Entity
 public class Mode {
 
     /** Unique id. */
-    private URI id;
+    private String id;
     /** Research Object uri. */
-    private URI roUri;
+    private String roUri;
     /** Research Object access mode. */
     private pl.psnc.dl.wf4ever.accesscontrol.dicts.Mode mode;
 
 
-    public URI getId() {
+    @Id
+    @XmlElement(name = "uri")
+    public String getId() {
         return id;
     }
 
 
-    public void setId(URI id) {
+    public void setId(String id) {
         this.id = id;
     }
 
 
-    public URI getRoUri() {
+    public String getRoUri() {
         return roUri;
     }
 
 
-    public void setRoUri(URI roUri) {
+    @XmlElement(name = "ro")
+    public void setRoUri(String roUri) {
         this.roUri = roUri;
     }
 
