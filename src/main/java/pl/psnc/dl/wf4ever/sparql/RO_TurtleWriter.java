@@ -34,7 +34,6 @@ public class RO_TurtleWriter extends N3JenaWriterPP implements ResearchObjectRel
         }
         URI resourceURI = URI.create(uri).normalize();
         if (resourceURI.toString().startsWith(researchObjectURI.toString())) {
-            log.debug("Base URI: " + baseURI + " resource URI: " + resourceURI);
             Path localPath = Paths.get(baseURI.resolve(".").getPath()).relativize(Paths.get(resourceURI.getPath()));
             String path = localPath.toString();
             try {

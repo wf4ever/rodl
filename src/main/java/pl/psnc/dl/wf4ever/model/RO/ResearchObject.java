@@ -367,6 +367,11 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
                 LOGGER.error("Can't delete resource " + resource + ", will continue deleting the RO.", e);
             }
         }
+        if (getBundleUri() != null) {
+            // The bundle may be stored inside the parent RO. The path may then start with ../[parentRO]/.
+            Path bundlePath = Paths.get(uri.getPath()).relativize(Paths.get(getBundleUri().getPath()));
+            builder.getDigitalLibrary().deleteFile(uri, bundlePath.toString());
+        }
         getManifest().delete();
         try {
             builder.getDigitalLibrary().deleteResearchObject(uri);

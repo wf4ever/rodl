@@ -285,6 +285,10 @@ public class RoBundle extends Resource {
         createLinks(nestedResearchObject);
         copyAnnotations(nestedResearchObject, researchObject);
         this.uri = nestedResearchObject.getUri();
+        // save the MIME type of nested RO to the MIME type of the bundle
+        // it's necessary for the parent RO to know that it's a bundle
+        // the path is "" because we talk about the RO itself
+        builder.getDigitalLibrary().updateFileInfo(uri, "", contentType);
     }
 
 
@@ -636,4 +640,13 @@ public class RoBundle extends Resource {
         }
         return new HashSet<>(folders.values());
     }
+
+
+    @Override
+    public void delete() {
+        super.delete();
+        ResearchObject nestedRO = ResearchObject.get(builder, uri);
+        nestedRO.delete();
+    }
+
 }

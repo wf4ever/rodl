@@ -175,4 +175,45 @@ public class RoBundleTest extends RosrsTest {
         RDFNode o = nestedModel.createResource(nestedRO.resolve("workflow.wfbundle").toString());
         Assert.assertTrue(nestedModel.contains(s, p, o));
     }
+
+
+    /**
+     * Test that the bundle is deaggregated from the parent RO after deleting.
+     * 
+     * @throws IOException
+     *             when there is a communication problem
+     */
+    @Test
+    public void shouldDeleteBundleFromParent()
+            throws IOException {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(testDatabundlePath)) {
+            ClientResponse response = addFile(ro, "bundle.zip", is, RoBundle.MIME_TYPE);
+            Assert.assertEquals(response.getEntity(String.class), HttpStatus.SC_CREATED, response.getStatus());
+        }
+
+        URI nestedRO = findNestedROUri();
+        webResource.uri(nestedRO).delete();
+        Assert.assertNull(findNestedROUri());
+    }
+
+
+    /**
+     * Test that the bundle is deleted when the parent RO is deleted.
+     * 
+     * @throws IOException
+     *             when there is a communication problem
+     */
+    @Test
+    public void shouldDeleteBundleWhenParentIsDeleted()
+            throws IOException {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(testDatabundlePath)) {
+            ClientResponse response = addFile(ro, "bundle.zip", is, RoBundle.MIME_TYPE);
+            Assert.assertEquals(response.getEntity(String.class), HttpStatus.SC_CREATED, response.getStatus());
+        }
+
+        URI nestedRO = findNestedROUri();
+        webResource.uri(ro).delete();
+        ClientResponse response = webResource.uri(nestedRO).get(ClientResponse.class);
+        Assert.assertEquals(HttpStatus.SC_GONE, response.getStatus());
+    }
 }
