@@ -18,7 +18,6 @@ import com.google.common.collect.Multimap;
  * @author pejot
  * 
  */
-@SuppressWarnings("serial")
 public class SolrMockServer implements SearchServer {
 
     @Override

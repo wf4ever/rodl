@@ -1,8 +1,14 @@
 package pl.psnc.dl.wf4ever.accesscontrol.model;
 
-import java.net.URI;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import pl.psnc.dl.wf4ever.accesscontrol.dicts.Role;
+import pl.psnc.dl.wf4ever.db.UserProfile;
 
 /**
  * Data produced/received by permission API.
@@ -10,45 +16,53 @@ import pl.psnc.dl.wf4ever.accesscontrol.dicts.Role;
  * @author pejot
  * 
  */
+@Entity
+@XmlRootElement
 public class Permission {
 
     /** Unique id. */
-    private URI id;
+    private String id;
     /** Research Object uri. */
-    private URI roUri;
-    /** User id (open id uri). */
-    private URI userId;
+    private String roUri;
+    /** User id (openid uri). */
+    private UserProfile user;
     /** User role. */
     private Role role;
 
 
-    public URI getId() {
+    @Id
+    @XmlElement(name = "uri")
+    public String getId() {
         return id;
     }
 
 
-    public void setId(URI id) {
+    public void setId(String id) {
         this.id = id;
     }
 
 
-    public URI getRoUri() {
+    @XmlElement(name = "ro")
+    public String getRoUri() {
         return roUri;
     }
 
 
-    public void setRoUri(URI roUri) {
+    public void setRoUri(String roUri) {
         this.roUri = roUri;
     }
 
 
-    public URI getUserId() {
-        return userId;
+    @XmlElement(name = "user")
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    public UserProfile getUserId() {
+        return user;
     }
 
 
-    public void setUserId(URI userId) {
-        this.userId = userId;
+    public void setUserId(UserProfile user) {
+        this.user = user;
     }
 
 

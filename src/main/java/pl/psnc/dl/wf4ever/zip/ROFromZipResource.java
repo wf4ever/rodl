@@ -48,7 +48,6 @@ import com.sun.jersey.api.NotFoundException;
 public class ROFromZipResource implements JobsContainer {
 
     /** logger. */
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = Logger.getLogger(ROFromZipResource.class);
 
     /** URI info. */
