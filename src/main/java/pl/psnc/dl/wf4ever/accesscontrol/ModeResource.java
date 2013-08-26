@@ -1,5 +1,7 @@
 package pl.psnc.dl.wf4ever.accesscontrol;
 
+import java.util.List;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -13,8 +15,11 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.accesscontrol.model.Mode;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
-import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
+
+import com.sun.jersey.api.client.WebResource.Builder;
 
 /**
  * API for setting Research Object access mode.
@@ -23,7 +28,7 @@ import pl.psnc.dl.wf4ever.model.Builder;
  * 
  */
 @Path("accesscontrol/modes/")
-public class ModeResource {
+public class ModeResource extends AbstractIntegrationTest {
 
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(ModeResource.class);
@@ -39,7 +44,7 @@ public class ModeResource {
 
     @POST
     @Consumes("application/json")
-    public Response setMode() {
+    public Response setMode(List<Mode> modes) {
         return null;
     }
 
