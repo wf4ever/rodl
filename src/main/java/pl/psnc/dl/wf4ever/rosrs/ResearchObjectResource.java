@@ -64,9 +64,6 @@ public class ResearchObjectResource {
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(ResearchObjectResource.class);
 
-    /** An application that displays the HTML version of a workflow. */
-    private static final URI RO_HTML_PORTAL = URI.create("http://sandbox.wf4ever-project.org/portal/ro");
-
     /** URI info. */
     @Context
     UriInfo uriInfo;
@@ -74,6 +71,9 @@ public class ResearchObjectResource {
     /** Resource builder. */
     @RequestAttribute("Builder")
     private Builder builder;
+
+    /** An application that displays the HTML version of a workflow. */
+    private static final URI RO_HTML_PORTAL = URI.create("http://sandbox.wf4ever-project.org/portal/ro");
 
 
     /**
