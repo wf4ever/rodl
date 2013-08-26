@@ -54,7 +54,6 @@ public class PermissionDAOTest extends BaseTest {
 
     @Test
     public void testCRUD() {
-        PermissionDAO dao = new PermissionDAO();
         dao.save(permission);
         permission = dao.findById(permission.getId());
         Assert.assertNotNull(permission);
