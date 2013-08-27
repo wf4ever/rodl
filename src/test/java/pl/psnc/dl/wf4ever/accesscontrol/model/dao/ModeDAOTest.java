@@ -21,8 +21,7 @@ public class ModeDAOTest extends BaseTest {
             throws Exception {
         super.setUp();
         mode = new Mode();
-        mode.setId(id);
-        mode.setRoUri(roUri);
+        mode.setRo(roUri);
         mode.setMode(pl.psnc.dl.wf4ever.accesscontrol.dicts.Mode.PRIVATE);
     }
 
@@ -33,6 +32,15 @@ public class ModeDAOTest extends BaseTest {
         Assert.assertNotNull(dao.findById(mode.getId()));
         dao.delete(mode);
         Assert.assertNull(dao.findById(mode.getId()));
+    }
+
+
+    @Test
+    public void testGetModeByRO() {
+        dao.save(mode);
+        Assert.assertNotNull(dao.findByResearchObject(mode.getRo()));
+        dao.delete(mode);
+        Assert.assertNull(dao.findByResearchObject(mode.getRo()));
     }
 
 }

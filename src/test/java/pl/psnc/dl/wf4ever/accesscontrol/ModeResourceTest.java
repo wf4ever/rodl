@@ -1,8 +1,5 @@
 package pl.psnc.dl.wf4ever.accesscontrol;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.ws.rs.core.MediaType;
 
 import org.junit.Before;
@@ -36,11 +33,21 @@ public class ModeResourceTest extends AbstractIntegrationTest {
 
 
     @Test
+    public void testIfModeIsSetOnceTheROisCreated() {
+
+    }
+
+
+    @Test
+    public void testIfModeIsDeletefOnceTheROisDeleted() {
+
+    }
+
+
+    @Test
     public void testSinglePost() {
         Builder builder = webResource.path("evo/copy/").header("Authorization", "Bearer " + accessToken);
         Mode mode = new Mode();
-        List<Mode> modes = new ArrayList<Mode>();
-        modes.add(mode);
-        ClientResponse response = builder.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, modes);
+        ClientResponse response = builder.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, mode);
     }
 }

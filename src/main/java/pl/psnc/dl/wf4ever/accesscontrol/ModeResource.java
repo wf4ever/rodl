@@ -1,6 +1,6 @@
 package pl.psnc.dl.wf4ever.accesscontrol;
 
-import java.util.List;
+import java.net.URI;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -32,7 +32,6 @@ public class ModeResource extends AbstractIntegrationTest {
 
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(ModeResource.class);
-
     /** URI info. */
     @Context
     UriInfo uriInfo;
@@ -44,22 +43,22 @@ public class ModeResource extends AbstractIntegrationTest {
 
     @POST
     @Consumes("application/json")
-    public Response setMode(List<Mode> modes) {
-        return null;
+    public Response setMode(Mode mode) {
+        return Response.created(URI.create("uri")).build();
     }
 
 
     @Path("{mode_id}/")
     @Produces("application/json")
     @GET
-    public Response getMoge(@PathParam("mode_id") String mode_id) {
+    public Response getMode(@PathParam("mode_id") String mode_id) {
         return null;
     }
 
 
     @Produces("application/json")
     @GET
-    public Response getMoges(@QueryParam("ro") String ro) {
+    public Response getModes(@QueryParam("ro") String ro) {
         return null;
     }
 

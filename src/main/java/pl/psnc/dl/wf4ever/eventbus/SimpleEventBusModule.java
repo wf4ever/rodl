@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.eventbus;
 
+import pl.psnc.dl.wf4ever.eventbus.listeners.ModesListener;
 import pl.psnc.dl.wf4ever.eventbus.listeners.NotificationsListener;
 import pl.psnc.dl.wf4ever.eventbus.listeners.PreservationListener;
 import pl.psnc.dl.wf4ever.eventbus.listeners.SimpleSerializationListener;
@@ -28,6 +29,8 @@ public class SimpleEventBusModule implements EventBusModule {
         new NotificationsListener(eventBus);
         new PreservationListener(eventBus);
         new SimpleSerializationListener(eventBus);
+        new ModesListener(eventBus);
+
     }
 
 

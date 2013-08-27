@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.accesscontrol.model.dao;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.exception.ConstraintViolationException;
@@ -37,10 +38,9 @@ public class PermissionDAOTest extends BaseTest {
                 userUri);
         userProfileDAO.save(profile);
         permission = new Permission();
-        permission.setId(id);
-        permission.setRoUri(roUri);
+        permission.setRo(roUri);
         permission.setRole(Role.EDITOR);
-        permission.setUserId(profile);
+        permission.setUser(profile);
     }
 
 
@@ -60,12 +60,25 @@ public class PermissionDAOTest extends BaseTest {
         dao.delete(permission);
         permission = dao.findById(permission.getId());
         Assert.assertNull(permission);
+
+    }
+
+
+    @Test
+    public void tesPermissionByRo() {
+        dao.save(permission);
+        List<Permission> permissions = dao.findByResearchObject(roUri);
+        Assert.assertEquals(1, permissions.size());
+        dao.delete(permission);
+        permissions = dao.findByResearchObject(roUri);
+        Assert.assertEquals(0, permissions.size());
+
     }
 
 
     @Test
     public void testUserProfileForeignKeyBehaviour() {
-        permission.setUserId(null);
+        permission.setUser(null);
         dao.save(permission);
         try {
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
