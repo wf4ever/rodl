@@ -14,6 +14,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.accesscontrol.model.Permission;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.model.Builder;
 
@@ -40,7 +41,7 @@ public class PermissionResource {
 
     @POST
     @Consumes("application/json")
-    public Response addPermissions() {
+    public Response addPermissions(Permission permission) {
         return null;
     }
 
