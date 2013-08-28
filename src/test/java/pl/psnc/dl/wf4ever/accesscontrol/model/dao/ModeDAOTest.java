@@ -1,18 +1,20 @@
 package pl.psnc.dl.wf4ever.accesscontrol.model.dao;
 
+import java.util.UUID;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import pl.psnc.dl.wf4ever.accesscontrol.model.Mode;
+import pl.psnc.dl.wf4ever.accesscontrol.model.AccessMode;
 import pl.psnc.dl.wf4ever.model.BaseTest;
 
 public class ModeDAOTest extends BaseTest {
 
     String id = "http://www.example.com/accesscontrol/modes/1";
-    String roUri = "http://www.example.com/ROs/1/";
+    String roUri = "http://www.example.com/ROs/" + UUID.randomUUID().toString() + "/";
     ModeDAO dao = new ModeDAO();
-    Mode mode;
+    AccessMode mode;
 
 
     @Before
@@ -20,7 +22,7 @@ public class ModeDAOTest extends BaseTest {
     public void setUp()
             throws Exception {
         super.setUp();
-        mode = new Mode();
+        mode = new AccessMode();
         mode.setRo(roUri);
         mode.setMode(pl.psnc.dl.wf4ever.accesscontrol.dicts.Mode.PRIVATE);
     }

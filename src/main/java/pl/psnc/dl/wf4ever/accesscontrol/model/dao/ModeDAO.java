@@ -5,7 +5,7 @@ import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import pl.psnc.dl.wf4ever.accesscontrol.model.Mode;
+import pl.psnc.dl.wf4ever.accesscontrol.model.AccessMode;
 import pl.psnc.dl.wf4ever.db.dao.AbstractDAO;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 
@@ -15,7 +15,7 @@ import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
  * @author pejot
  * 
  */
-public final class ModeDAO extends AbstractDAO<Mode> {
+public final class ModeDAO extends AbstractDAO<AccessMode> {
 
     /** id. */
     private static final long serialVersionUID = -4468344863067565271L;
@@ -28,8 +28,8 @@ public final class ModeDAO extends AbstractDAO<Mode> {
      *            uri (id)
      * @return client or null
      */
-    public Mode findById(Integer id) {
-        return findByPrimaryKey(Mode.class, id);
+    public AccessMode findById(Integer id) {
+        return findByPrimaryKey(AccessMode.class, id);
     }
 
 
@@ -40,10 +40,10 @@ public final class ModeDAO extends AbstractDAO<Mode> {
      *            Research Object.
      * @return Access Control mode, null in case mode doesn't exists
      */
-    public Mode findByResearchObject(String ro) {
-        Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(Mode.class);
+    public AccessMode findByResearchObject(String ro) {
+        Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(AccessMode.class);
         criteria.add(Restrictions.eq("ro", ro));
-        List<Mode> result = criteria.list();
+        List<AccessMode> result = criteria.list();
         if (result.size() == 1) {
             return result.get(0);
         }
