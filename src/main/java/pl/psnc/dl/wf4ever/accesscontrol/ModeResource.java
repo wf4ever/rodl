@@ -7,7 +7,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
@@ -16,10 +15,10 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.accesscontrol.model.Mode;
+import pl.psnc.dl.wf4ever.accesscontrol.model.dao.ModeDAO;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
-
-import com.sun.jersey.api.client.WebResource.Builder;
+import pl.psnc.dl.wf4ever.model.Builder;
 
 /**
  * API for setting Research Object access mode.
@@ -40,6 +39,9 @@ public class ModeResource extends AbstractIntegrationTest {
     @RequestAttribute("Builder")
     private Builder builder;
 
+    /** Access Mode dao. */
+    private ModeDAO dao = new ModeDAO();
+
 
     @POST
     @Consumes("application/json")
@@ -48,18 +50,16 @@ public class ModeResource extends AbstractIntegrationTest {
     }
 
 
-    @Path("{mode_id}/")
-    @Produces("application/json")
     @GET
-    public Response getMode(@PathParam("mode_id") String mode_id) {
-        return null;
+    @Path("{mode_id}/")
+    public Mode getModeById(@PathParam("mode_id") String mode_id) {
+        return dao.findById(Integer.valueOf(mode_id));
     }
 
 
-    @Produces("application/json")
     @GET
-    public Response getModes(@QueryParam("ro") String ro) {
-        return null;
+    public Mode getModeByRo(@QueryParam("ro") String ro) {
+        return dao.findByResearchObject(ro);
     }
 
 }

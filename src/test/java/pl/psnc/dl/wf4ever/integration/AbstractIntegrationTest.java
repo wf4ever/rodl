@@ -185,7 +185,12 @@ public abstract class AbstractIntegrationTest extends JerseyTest {
 
 
     protected ClientResponse delete(URI uri) {
-        return webResource.uri(uri).header("Authorization", "Bearer " + accessToken).delete(ClientResponse.class);
+        return delete(uri, accessToken);
+    }
+
+
+    protected ClientResponse delete(URI uri, String creds) {
+        return webResource.uri(uri).header("Authorization", "Bearer " + creds).delete(ClientResponse.class);
     }
 
 

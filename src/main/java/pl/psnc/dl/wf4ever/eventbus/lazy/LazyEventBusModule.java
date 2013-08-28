@@ -3,6 +3,7 @@ package pl.psnc.dl.wf4ever.eventbus.lazy;
 import pl.psnc.dl.wf4ever.eventbus.EventBusModule;
 import pl.psnc.dl.wf4ever.eventbus.lazy.listeners.LazySerializationListener;
 import pl.psnc.dl.wf4ever.eventbus.lazy.listeners.LazySolrListener;
+import pl.psnc.dl.wf4ever.eventbus.listeners.ModesListener;
 import pl.psnc.dl.wf4ever.eventbus.listeners.NotificationsListener;
 import pl.psnc.dl.wf4ever.eventbus.listeners.PreservationListener;
 
@@ -35,6 +36,7 @@ public class LazyEventBusModule implements EventBusModule {
         serializationListener = new LazySerializationListener(eventBus);
         new NotificationsListener(eventBus);
         new PreservationListener(eventBus);
+        new ModesListener(eventBus);
     }
 
 
