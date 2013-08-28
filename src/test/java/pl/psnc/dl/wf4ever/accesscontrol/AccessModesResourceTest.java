@@ -5,11 +5,12 @@ import java.net.URI;
 import javax.ws.rs.core.MediaType;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import pl.psnc.dl.wf4ever.accesscontrol.model.Mode;
+import pl.psnc.dl.wf4ever.accesscontrol.model.AccessMode;
 import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
 import pl.psnc.dl.wf4ever.integration.IntegrationTest;
 
@@ -17,7 +18,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource.Builder;
 
 @Category(IntegrationTest.class)
-public class ModesResourceTest extends AbstractIntegrationTest {
+public class AccessModesResourceTest extends AbstractIntegrationTest {
 
     @Override
     @Before
@@ -36,37 +37,23 @@ public class ModesResourceTest extends AbstractIntegrationTest {
 
 
     @Test
-    public void testIfModeIsSetOnceTheROisCreated() {
+    public void testIfModeIsSetOnceTheROisCreatedAndDeletedWithRO() {
         URI createdRO = createRO();
-        Mode mode = webResource.path("accesscontrol/modes/").queryParam("ro", createdRO.toString())
-                .header("Authorization", "Bearer " + adminCreds).get(Mode.class);
-
-        System.out.println("*******************");
-        System.out.println("*******************");
-        System.out.println("*******************");
-        System.out.println("*******************");
-        System.out.println(mode.getMode());
-        System.out.println(mode.getId());
-        System.out.println(mode.getRo());
-        System.out.println("*******************");
-        System.out.println("*******************");
-        System.out.println("*******************");
-        System.out.println("*******************");
+        AccessMode mode = webResource.path("accesscontrol/modes/").queryParam("ro", createdRO.toString())
+                .header("Authorization", "Bearer " + adminCreds).get(AccessMode.class);
+        Assert.assertEquals(createdRO.toString(), mode.getRo());
         delete(createdRO, adminCreds);
-
-    }
-
-
-    @Test
-    public void testIfModeIsDeletefOnceTheROisDeleted() {
-
+        ClientResponse response = webResource.path("accesscontrol/modes/").queryParam("ro", createdRO.toString())
+                .header("Authorization", "Bearer " + adminCreds).get(ClientResponse.class);
+        //no content :)
+        Assert.assertEquals(response.getStatus(), 204);
     }
 
 
     @Test
     public void testSinglePost() {
         Builder builder = webResource.path("accesscontrol/modes/").header("Authorization", "Bearer " + accessToken);
-        Mode mode = new Mode();
+        AccessMode mode = new AccessMode();
         ClientResponse response = builder.type(MediaType.APPLICATION_JSON).post(ClientResponse.class, mode);
     }
 }

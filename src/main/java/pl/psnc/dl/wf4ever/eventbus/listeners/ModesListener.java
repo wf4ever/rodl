@@ -4,7 +4,7 @@ import java.net.URI;
 
 import org.apache.log4j.Logger;
 
-import pl.psnc.dl.wf4ever.accesscontrol.model.Mode;
+import pl.psnc.dl.wf4ever.accesscontrol.model.AccessMode;
 import pl.psnc.dl.wf4ever.accesscontrol.model.dao.ModeDAO;
 import pl.psnc.dl.wf4ever.eventbus.events.ROAfterCreateEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROAfterDeleteEvent;
@@ -52,7 +52,7 @@ public class ModesListener {
             //@TODO this is an error. Think how to handle it.
             LOGGER.error("The Research Object " + roUri.toString() + " has already defined mode");
         } else {
-            Mode mode = new Mode();
+            AccessMode mode = new AccessMode();
             mode.setMode(pl.psnc.dl.wf4ever.accesscontrol.dicts.Mode.PUBLIC);
             mode.setRo(roUri.toString());
             dao.save(mode);
@@ -69,7 +69,7 @@ public class ModesListener {
     @Subscribe
     public void onAfterRODelete(ROAfterDeleteEvent event) {
         URI roUri = event.getResearchObject().getUri();
-        Mode mode = dao.findByResearchObject(roUri.toString());
+        AccessMode mode = dao.findByResearchObject(roUri.toString());
         if (mode != null) {
             dao.delete(mode);
             //@TODO this is an error. Think how to handle it.

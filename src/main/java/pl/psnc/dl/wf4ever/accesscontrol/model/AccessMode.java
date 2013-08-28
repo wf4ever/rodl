@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "modes")
 @XmlRootElement(name = "mode")
-public class Mode {
+public class AccessMode {
 
     /** Unique id. */
     private Integer id;
