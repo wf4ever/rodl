@@ -425,6 +425,10 @@ public class ResearchObjectResource {
         if (path == null) {
             path = UUID.randomUUID().toString();
         }
+        // folder URIs without the trailing / result in unexpected ZIP downloads, see WFE-1244.
+        if (!path.endsWith("/")) {
+            path = path + "/";
+        }
         URI folderUri = uriInfo.getAbsolutePathBuilder().path(path).build();
         Folder folder = researchObject.aggregateFolder(folderUri, content);
 
