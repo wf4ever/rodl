@@ -72,7 +72,7 @@ public class UsersTest extends AbstractIntegrationTest {
     }
 
 
-    private ClientResponse createUser(String userId, String username) {
+    protected ClientResponse createUser(String userId, String username) {
         String userIdEncoded = StringUtils.trim(Base64.encodeBase64URLSafeString(userId.getBytes()));
         return webResource.path("users/" + userIdEncoded).header("Authorization", "Bearer " + adminCreds)
                 .put(ClientResponse.class, username);

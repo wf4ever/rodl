@@ -39,6 +39,7 @@ public class AccessModesResourceTest extends AbstractIntegrationTest {
         URI createdRO = createRO();
         AccessMode mode = webResource.path("accesscontrol/modes/").queryParam("ro", createdRO.toString())
                 .header("Authorization", "Bearer " + adminCreds).get(AccessMode.class);
+
         Assert.assertEquals(createdRO.toString(), mode.getRo());
         Assert.assertEquals(Mode.PUBLIC, mode.getMode());
         mode.setMode(Mode.PRIVATE);

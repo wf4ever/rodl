@@ -77,6 +77,18 @@ public class PermissionDAOTest extends BaseTest {
 
 
     @Test
+    public void testFindByUserAndRo() {
+        dao.save(permission);
+        List<Permission> permissions = dao.findByUserROAndPermission(permission.getUser(), permission.getRo(),
+            permission.getRole());
+        Assert.assertEquals(1, permissions.size());
+        permissions = dao.findByUserROAndPermission(permission.getUser(), permission.getRo() + "worng-uri",
+            permission.getRole());
+        dao.delete(permission);
+    }
+
+
+    @Test
     public void testUserProfileForeignKeyBehaviour() {
         permission.setUser(null);
         dao.save(permission);

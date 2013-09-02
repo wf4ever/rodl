@@ -5,7 +5,9 @@ import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import pl.psnc.dl.wf4ever.accesscontrol.dicts.Role;
 import pl.psnc.dl.wf4ever.accesscontrol.model.Permission;
+import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.AbstractDAO;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 
@@ -45,6 +47,24 @@ public final class PermissionDAO extends AbstractDAO<Permission> {
         criteria.add(Restrictions.eq("ro", ro));
         return criteria.list();
 
+    }
+
+
+    /**
+     * Find Permissions by user and research object uri.
+     * 
+     * @param user
+     *            user profile
+     * @param ro
+     *            research object uri
+     * @return list of granted permissions.
+     */
+    public List<Permission> findByUserROAndPermission(UserProfile user, String ro, Role role) {
+        Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(Permission.class);
+        criteria.add(Restrictions.eq("ro", ro));
+        criteria.add(Restrictions.eq("user", user));
+        criteria.add(Restrictions.eq("role", role));
+        return criteria.list();
     }
 
 }

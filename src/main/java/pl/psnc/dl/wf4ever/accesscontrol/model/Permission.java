@@ -55,7 +55,7 @@ public class Permission {
 
 
     @XmlElement(name = "ro", required = true)
-    @Column(name = "ro", unique = true)
+    @Column(name = "ro")
     public String getRo() {
         return roUri;
     }
@@ -69,7 +69,6 @@ public class Permission {
     @ManyToOne
     @JoinColumn(nullable = false)
     @XmlTransient
-    @XmlElement(required = true)
     public UserProfile getUser() {
         return user;
     }
@@ -85,7 +84,7 @@ public class Permission {
      * 
      * @return user id
      */
-    @XmlElement(name = "user")
+    @XmlElement(name = "user", required = true)
     @Transient
     public String getUserLogin() {
         if (user != null) {
