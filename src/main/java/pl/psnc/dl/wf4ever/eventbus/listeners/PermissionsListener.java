@@ -62,6 +62,7 @@ public class PermissionsListener {
                 permission.setUser(userProfileDAO.findByLogin(event.getResearchObject().getCreator().getLogin()));
                 permission.setRo(roUri.toString());
                 permission.setRole(pl.psnc.dl.wf4ever.accesscontrol.dicts.Role.OWNER);
+                dao.save(permission);
             } else {
                 //@TODO this is an error. Think how to handle it.
                 LOGGER.error("The Research Object " + roUri.toString()

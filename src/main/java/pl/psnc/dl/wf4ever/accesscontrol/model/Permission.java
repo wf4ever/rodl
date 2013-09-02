@@ -13,9 +13,11 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import pl.psnc.dl.wf4ever.accesscontrol.dicts.Role;
 import pl.psnc.dl.wf4ever.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 
 /**
  * Data produced/received by permission API.
@@ -64,9 +66,9 @@ public class Permission {
     }
 
 
-    @XmlElement(name = "user")
     @ManyToOne
     @JoinColumn(nullable = false)
+    @XmlTransient
     public UserProfile getUser() {
         return user;
     }
@@ -74,6 +76,33 @@ public class Permission {
 
     public void setUser(UserProfile user) {
         this.user = user;
+    }
+
+
+    /**
+     * JSON user field getter.
+     * 
+     * @return user id
+     */
+    @XmlElement(name = "user")
+    @Transient
+    public String getUserLogin() {
+        if (user != null) {
+            return user.getLogin();
+        }
+        return null;
+    }
+
+
+    /**
+     * JSON user field setter.
+     * 
+     * @param user
+     *            user profile
+     */
+    public void setUserLogin(String user) {
+        UserProfileDAO userProfileDAO = new UserProfileDAO();
+        this.user = userProfileDAO.findByLogin(user);
     }
 
 
