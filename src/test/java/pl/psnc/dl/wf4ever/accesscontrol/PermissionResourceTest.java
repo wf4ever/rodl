@@ -40,7 +40,6 @@ public class PermissionResourceTest extends AbstractIntegrationTest {
                 .queryParam("ro", createdRO.toString()).header("Authorization", "Bearer " + adminCreds)
                 .accept(MediaType.APPLICATION_JSON).get(Permission[].class);
         delete(createdRO, adminCreds);
-
         permissions = webResource.path("accesscontrol/permissions/").queryParam("ro", createdRO.toString())
                 .header("Authorization", "Bearer " + adminCreds).accept(MediaType.APPLICATION_JSON)
                 .get(Permission[].class);

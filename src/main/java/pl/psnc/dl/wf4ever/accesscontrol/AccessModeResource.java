@@ -1,7 +1,5 @@
 package pl.psnc.dl.wf4ever.accesscontrol;
 
-import java.net.URI;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -46,22 +44,41 @@ public class AccessModeResource extends AbstractIntegrationTest {
 
 
     @POST
-    @Consumes("application/json")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response setMode(AccessMode mode) {
-        return Response.created(URI.create("uri")).build();
+        AccessMode storedMode = dao.findByResearchObject(mode.getRo());
+        if (storedMode == null) {
+            LOGGER.error("Mode for " + mode.getRo() + " Couldn't be found");
+            storedMode = new AccessMode();
+            storedMode.setRo(mode.getRo());
+        }
+        storedMode.setMode(mode.getMode());
+        dao.save(storedMode);
+        storedMode.setUri(uriInfo.getRequestUri().resolve(storedMode.getId().toString()));
+        return Response.created(uriInfo.getRequestUri().resolve(storedMode.getId().toString())).entity(storedMode)
+                .build();
     }
 
 
     @GET
     @Path("{mode_id}/")
     public AccessMode getModeById(@PathParam("mode_id") String mode_id) {
-        return dao.findById(Integer.valueOf(mode_id));
+        AccessMode result = dao.findById(Integer.valueOf(mode_id));
+        if (result != null) {
+            result.setUri(uriInfo.getRequestUri().resolve(result.getId().toString()));
+        }
+        return result;
     }
 
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public AccessMode getModeByRo(@QueryParam("ro") String ro) {
-        return dao.findByResearchObject(ro);
+        AccessMode result = dao.findByResearchObject(ro);
+        if (result != null) {
+            result.setUri(uriInfo.getRequestUri().resolve(result.getId().toString()));
+        }
+        return result;
     }
 }
