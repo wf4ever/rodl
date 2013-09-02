@@ -59,7 +59,11 @@ public class PermissionResource {
     @Produces("application/json")
     @GET
     public Permission getPermission(@PathParam("permission_id") String permission_id) {
-        return dao.findById(Integer.getInteger(permission_id));
+        Permission result = dao.findById(Integer.getInteger(permission_id));
+        if (result != null) {
+            result.setUri(uriInfo.getRequestUri().resolve(result.getId().toString()));
+        }
+        return result;
     }
 
 
@@ -86,6 +90,7 @@ public class PermissionResource {
         Permission[] permissionArray = new Permission[result.size()];
         for (int i = 0; i < result.size(); i++) {
             permissionArray[i] = result.get(i);
+            permissionArray[i].setUri(uriInfo.getRequestUri().resolve(permissionArray[i].getId().toString()));
         }
         return permissionArray;
 

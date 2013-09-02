@@ -47,7 +47,7 @@ public class AccessMode {
     }
 
 
-    @XmlElement(name = "ro")
+    @XmlElement(name = "ro", required = true)
     @Column(name = "ro", unique = true)
     public String getRo() {
         return roUri;
@@ -59,6 +59,7 @@ public class AccessMode {
     }
 
 
+    @XmlElement(required = true)
     public pl.psnc.dl.wf4ever.accesscontrol.dicts.Mode getMode() {
         return mode;
     }
