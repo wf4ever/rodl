@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import pl.psnc.dl.wf4ever.accesscontrol.model.Permission;
 import pl.psnc.dl.wf4ever.accesscontrol.model.dao.PermissionDAO;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
+import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.model.Builder;
 
 import com.hp.hpl.jena.shared.NotFoundException;
@@ -49,14 +50,21 @@ public class PermissionResource {
 
 
     @POST
-    @Consumes("application/json")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response addPermissions(Permission permission) {
-        return null;
+        if (dao.findByUserROAndPermission(permission.getUser(), permission.getRo(), permission.getRole()).size() > 0) {
+            throw new ConflictException("The permission was already given");
+        }
+        dao.save(permission);
+        permission.setUri(uriInfo.getRequestUri().resolve(""));
+        return Response.created(uriInfo.getRequestUri().resolve("")).type(MediaType.APPLICATION_JSON)
+                .entity(permission).build();
     }
 
 
     @Path("{permission_id}/")
-    @Produces("application/json")
+    @Produces(MediaType.APPLICATION_JSON)
     @GET
     public Permission getPermission(@PathParam("permission_id") String permission_id) {
         Permission result = dao.findById(Integer.getInteger(permission_id));
@@ -68,7 +76,7 @@ public class PermissionResource {
 
 
     @Path("{permission_id}/")
-    @Produces("application/json")
+    @Produces(MediaType.APPLICATION_JSON)
     @DELETE
     public Response deletePermission(@PathParam("permission_id") String permission_id) {
         Permission permission = dao.findById(Integer.getInteger(permission_id));

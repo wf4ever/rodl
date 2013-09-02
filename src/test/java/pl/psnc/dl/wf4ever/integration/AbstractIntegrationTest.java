@@ -91,7 +91,7 @@ public abstract class AbstractIntegrationTest extends JerseyTest {
      *            nice name
      * @return server response
      */
-    private ClientResponse createClient(String clientName) {
+    protected ClientResponse createClient(String clientName) {
         return webResource.path("clients/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, clientName + "\r\n" + CLIENT_REDIRECTION_URI);
     }
@@ -106,7 +106,7 @@ public abstract class AbstractIntegrationTest extends JerseyTest {
      *            nice name
      * @return server response
      */
-    private ClientResponse createUser(String userId, String username) {
+    protected ClientResponse createUser(String userId, String username) {
         String userIdEncoded = StringUtils.trim(Base64.encodeBase64URLSafeString(userId.getBytes()));
         return webResource.path("users/" + userIdEncoded).header("Authorization", "Bearer " + adminCreds)
                 .put(ClientResponse.class, username);
@@ -122,7 +122,7 @@ public abstract class AbstractIntegrationTest extends JerseyTest {
      *            user id
      * @return server response
      */
-    private ClientResponse createAccessToken(String clientId, String userId) {
+    protected ClientResponse createAccessToken(String clientId, String userId) {
         return webResource.path("accesstokens/").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class, clientId + "\r\n" + userId);
     }
