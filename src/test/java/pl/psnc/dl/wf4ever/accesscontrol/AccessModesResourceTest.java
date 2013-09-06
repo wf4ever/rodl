@@ -47,10 +47,14 @@ public class AccessModesResourceTest extends AbstractIntegrationTest {
         ClientResponse res = webResource.uri(mode.getUri().resolve("")).entity(mode).type("application/json")
                 .accept("application/json").post(ClientResponse.class);
 
-        mode = webResource.uri(res.getLocation()).header("Authorization", "Bearer " + adminCreds)
-                .accept("application/json").get(AccessMode.class);
-        Assert.assertEquals(res.getLocation(), mode.getUri());
+        mode = res.getEntity(AccessMode.class);
         Assert.assertEquals(Mode.PRIVATE, mode.getMode());
+
+        AccessMode mode2 = webResource.uri(res.getLocation()).header("Authorization", "Bearer " + adminCreds)
+                .accept("application/json").get(AccessMode.class);
+
+        Assert.assertEquals(res.getLocation(), mode2.getUri());
+        Assert.assertEquals(Mode.PRIVATE, mode2.getMode());
 
         delete(createdRO, adminCreds);
         ClientResponse response = webResource.path("accesscontrol/modes/").queryParam("ro", createdRO.toString())

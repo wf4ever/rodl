@@ -91,8 +91,8 @@ public class PermissionDAOTest extends BaseTest {
     @Test
     public void testUserProfileForeignKeyBehaviour() {
         permission.setUser(null);
-        dao.save(permission);
         try {
+            dao.save(permission);
             HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
             Assert.fail("expected ConstraintViolationException");
         } catch (ConstraintViolationException e) {
