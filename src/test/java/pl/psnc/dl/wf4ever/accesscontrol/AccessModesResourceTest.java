@@ -10,13 +10,12 @@ import org.junit.experimental.categories.Category;
 
 import pl.psnc.dl.wf4ever.accesscontrol.dicts.Mode;
 import pl.psnc.dl.wf4ever.accesscontrol.model.AccessMode;
-import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
 import pl.psnc.dl.wf4ever.integration.IntegrationTest;
 
 import com.sun.jersey.api.client.ClientResponse;
 
 @Category(IntegrationTest.class)
-public class AccessModesResourceTest extends AbstractIntegrationTest {
+public class AccessModesResourceTest extends AccessControlTest {
 
     @Override
     @Before
@@ -44,8 +43,7 @@ public class AccessModesResourceTest extends AbstractIntegrationTest {
         Assert.assertEquals(Mode.PUBLIC, mode.getMode());
         mode.setMode(Mode.PRIVATE);
 
-        ClientResponse res = webResource.uri(mode.getUri().resolve("")).entity(mode).type("application/json")
-                .accept("application/json").post(ClientResponse.class);
+        ClientResponse res = changeMode(mode.getUri(), mode.getMode());
 
         mode = res.getEntity(AccessMode.class);
         Assert.assertEquals(Mode.PRIVATE, mode.getMode());
@@ -62,4 +60,25 @@ public class AccessModesResourceTest extends AbstractIntegrationTest {
         //no content :)
         Assert.assertEquals(response.getStatus(), 204);
     }
+
+
+    public void testAuthorCanChangeROMode() {
+        URI createdRO = createRO(accessToken);
+    }
+
+
+    public void testPublicROshouldBevisibleForEveryone() {
+        URI createdRO = createRO(accessToken);
+    }
+
+
+    public void testPrivateROshouldBeVisibleForReaderdWritersAndAuthors() {
+        URI createdRO = createRO(accessToken);
+    }
+
+
+    public void testPrivateROshouldBeinvisibleForPeopleWithNoPermission() {
+        URI createdRO = createRO(accessToken);
+    }
+
 }
