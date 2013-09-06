@@ -17,7 +17,6 @@ import org.apache.log4j.Logger;
 import pl.psnc.dl.wf4ever.accesscontrol.model.AccessMode;
 import pl.psnc.dl.wf4ever.accesscontrol.model.dao.ModeDAO;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
-import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
 import pl.psnc.dl.wf4ever.model.Builder;
 
 /**
@@ -27,7 +26,7 @@ import pl.psnc.dl.wf4ever.model.Builder;
  * 
  */
 @Path("accesscontrol/modes/")
-public class AccessModeResource extends AbstractIntegrationTest {
+public class AccessModeResource {
 
     /** logger. */
     private static final Logger LOGGER = Logger.getLogger(AccessModeResource.class);

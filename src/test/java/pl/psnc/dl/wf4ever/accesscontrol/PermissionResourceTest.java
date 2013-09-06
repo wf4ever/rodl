@@ -46,7 +46,8 @@ public class PermissionResourceTest extends AbstractIntegrationTest {
 
 
     @Test
-    public void testIfPermissionIsSetOnceTheROisCreatedAndDeletedWithRO() {
+    public void testIfPermissionIsSetOnceTheROisCreatedAndDeletedWithRO()
+            throws InterruptedException {
         URI createdRO = createRO();
         Permission[] permissions = webResource.path("accesscontrol/permissions/")
                 .queryParam("ro", createdRO.toString()).header("Authorization", "Bearer " + adminCreds)
@@ -62,9 +63,13 @@ public class PermissionResourceTest extends AbstractIntegrationTest {
                 .type("application/json").accept("application/json").header("Authorization", "Bearer " + adminCreds)
                 .post(ClientResponse.class);
         Permission serverPermission = response.getEntity(Permission.class);
-        Assert.assertEquals(201, response.getStatus());
-        Assert.assertEquals(permissions.length, 2);
         Assert.assertEquals(response.getLocation(), serverPermission.getUri());
+        Assert.assertEquals(201, response.getStatus());
+
+        permissions = webResource.path("accesscontrol/permissions/").queryParam("ro", createdRO.toString())
+                .header("Authorization", "Bearer " + adminCreds).accept(MediaType.APPLICATION_JSON)
+                .get(Permission[].class);
+        Assert.assertEquals(2, permissions.length);
 
         //conflict
         response = webResource.path("accesscontrol/permissions/").entity(handPermission)
@@ -72,6 +77,7 @@ public class PermissionResourceTest extends AbstractIntegrationTest {
                 .header("Authorization", "Bearer " + adminCreds).post(ClientResponse.class);
         Assert.assertEquals(409, response.getStatus());
         delete(createdRO, adminCreds);
+
         permissions = webResource.path("accesscontrol/permissions/").queryParam("ro", createdRO.toString())
                 .header("Authorization", "Bearer " + adminCreds).accept(MediaType.APPLICATION_JSON)
                 .get(Permission[].class);
