@@ -129,8 +129,13 @@ public abstract class AbstractIntegrationTest extends JerseyTest {
 
 
     protected URI createRO() {
+        return createRO(accessToken);
+    }
+
+
+    protected URI createRO(String token) {
         String uuid = UUID.randomUUID().toString();
-        ClientResponse response = webResource.path("ROs/").header("Authorization", "Bearer " + accessToken)
+        ClientResponse response = webResource.path("ROs/").header("Authorization", "Bearer " + token)
                 .header("Slug", uuid).post(ClientResponse.class);
         URI ro = response.getLocation();
         response.close();
