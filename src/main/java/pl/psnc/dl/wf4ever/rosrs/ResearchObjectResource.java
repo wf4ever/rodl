@@ -260,8 +260,21 @@ public class ResearchObjectResource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
+        Collection<URI> annotated = HeaderUtils.getLinkHeaders(links).get(AO.annotatesResource.getURI());
+        Set<Thing> annotationTargets = new HashSet<>();
+        for (URI targetUri : annotated) {
+            Thing target = Annotation.validateTarget(researchObject, targetUri);
+            annotationTargets.add(target);
+        }
         if (path == null) {
-            path = UUID.randomUUID().toString();
+            if (!annotationTargets.isEmpty()) {
+                // this should be an RDF file
+                RDFFormat syntax = contentType != null ? RDFFormat.forMIMEType(contentType, RDFFormat.RDFXML)
+                        : RDFFormat.RDFXML;
+                path = UUID.randomUUID().toString() + "." + syntax.getDefaultFileExtension();
+            } else {
+                path = UUID.randomUUID().toString();
+            }
         }
         URI resourceUri = uriInfo.getAbsolutePathBuilder().path(path).build();
         if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
@@ -269,12 +282,6 @@ public class ResearchObjectResource {
         }
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("This URI is already used.");
-        }
-        Collection<URI> annotated = HeaderUtils.getLinkHeaders(links).get(AO.annotatesResource.getURI());
-        Set<Thing> annotationTargets = new HashSet<>();
-        for (URI targetUri : annotated) {
-            Thing target = Annotation.validateTarget(researchObject, targetUri);
-            annotationTargets.add(target);
         }
         if (!annotationTargets.isEmpty()) {
             pl.psnc.dl.wf4ever.model.RO.Resource roResource = researchObject.aggregate(path, content, contentType);
