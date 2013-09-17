@@ -247,7 +247,7 @@ public abstract class ResourceMap extends Thing implements ResearchObjectCompone
 
     @Override
     public InputStream getPublicGraphAsInputStream(RDFFormat syntax) {
-        return getGraphAsInputStream(syntax);
+        return getGraphAsInputStream(syntax, aggregation.getUri());
     }
 
 }

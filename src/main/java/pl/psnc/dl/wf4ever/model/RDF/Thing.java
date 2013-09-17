@@ -31,6 +31,7 @@ import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.eventbus.events.ScheduleToSerializationEvent;
 import pl.psnc.dl.wf4ever.exceptions.IncorrectModelException;
 import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.model.DefaultPrefixMapping;
 import pl.psnc.dl.wf4ever.sparql.RO_RDFXMLWriter;
 import pl.psnc.dl.wf4ever.sparql.RO_TurtleWriter;
 import pl.psnc.dl.wf4ever.sparql.ResearchObjectRelativeWriter;
@@ -303,7 +304,39 @@ public class Thing {
      * @return an input stream or null of no model is found
      */
     public InputStream getGraphAsInputStream(RDFFormat syntax) {
-        return getGraphAsInputStream(syntax, false);
+        return getGraphAsInputStream(syntax, false, null);
+    }
+
+
+    /**
+     * Return this resource as a named graph in a selected RDF format.
+     * 
+     * This method may add additional data, such as user names.
+     * 
+     * @param syntax
+     *            RDF format
+     * @param baseUri
+     *            base URI that MAY be used to reduce the size of the RDF file
+     * @return an input stream or null of no model is found
+     */
+    public InputStream getGraphAsInputStream(RDFFormat syntax, URI baseUri) {
+        return getGraphAsInputStream(syntax, false, baseUri);
+    }
+
+
+    /**
+     * Return this resource as a named graph in a selected RDF format.
+     * 
+     * This method may add additional data, such as user names.
+     * 
+     * @param syntax
+     *            RDF format
+     * @param raw
+     *            true if no additional data, false if user names should also be added
+     * @return an input stream or null of no model is found
+     */
+    public InputStream getGraphAsInputStream(RDFFormat syntax, boolean raw) {
+        return getGraphAsInputStream(syntax, raw, null);
     }
 
 
@@ -314,9 +347,11 @@ public class Thing {
      *            RDF format
      * @param raw
      *            true if no additional data, false if user names should also be added
+     * @param baseUri
+     *            base URI that MAY be used to reduce the size of the RDF file
      * @return an input stream or null of no model is found
      */
-    protected InputStream getGraphAsInputStream(RDFFormat syntax, boolean raw) {
+    protected InputStream getGraphAsInputStream(RDFFormat syntax, boolean raw, URI baseUri) {
         boolean transactionStarted = beginTransaction(ReadWrite.READ);
         try {
             if (!dataset.containsNamedModel(uri.toString())) {
@@ -332,7 +367,12 @@ public class Thing {
                 if (!raw) {
                     tdbModel = addUserNames(tdbModel);
                 }
-                tdbModel.write(out, syntax.getName().toUpperCase());
+                if (syntax.equals(RDFFormat.TURTLE) && baseUri != null) {
+                    // do it only for Turtle because for RDF/XML it would make the whole graph relative
+                    tdbModel.write(out, syntax.getName().toUpperCase(), baseUri.toString());
+                } else {
+                    tdbModel.write(out, syntax.getName().toUpperCase());
+                }
             }
             return new ByteArrayInputStream(out.toByteArray());
         } finally {
@@ -391,6 +431,7 @@ public class Thing {
     private Model addUserNames(Model model) {
         Model model2 = ModelFactory.createDefaultModel();
         model2.add(model);
+        model2.setNsPrefixes(DefaultPrefixMapping.get());
         for (RDFNode author : model2.listObjectsOfProperty(DCTerms.creator).toList()) {
             if (!author.isURIResource()) {
                 continue;
@@ -535,6 +576,17 @@ public class Thing {
             }
             if (mode == ReadWrite.WRITE || dataset.containsNamedModel(uri.toString())) {
                 model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, dataset.getNamedModel(uri.toString()));
+                if (mode == ReadWrite.WRITE) {
+                    model.setNsPrefixes(DefaultPrefixMapping.get());
+                } else if (model.getNsURIPrefix("http://purl.org/wf4ever/ro#") == null) {
+                    // the model misses the prefixes
+                    dataset.end();
+                    dataset.begin(ReadWrite.WRITE);
+                    model.setNsPrefixes(DefaultPrefixMapping.get());
+                    dataset.commit();
+                    dataset.end();
+                    dataset.begin(mode);
+                }
             }
             return started;
         }

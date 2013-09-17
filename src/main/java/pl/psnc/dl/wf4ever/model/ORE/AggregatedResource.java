@@ -529,6 +529,6 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
 
     @Override
     public InputStream getPublicGraphAsInputStream(RDFFormat syntax) {
-        return getGraphAsInputStream(syntax);
+        return getGraphAsInputStream(syntax, researchObject.getUri());
     }
 }
