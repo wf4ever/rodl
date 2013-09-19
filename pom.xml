@@ -29,9 +29,8 @@
 	</developers>
 	<properties>
 		<jersey.version>1.15</jersey.version>
-		<!-- We must use 2.10.2-SNAPSHOT until 2.10.2 is released due to JENA-505 and JENA-509 -->
-		<jena.version>2.10.2-SNAPSHOT</jena.version>
-		<tdb.version>0.10.2-SNAPSHOT</tdb.version>
+		<jena.version>2.11.0</jena.version>
+		<tdb.version>1.0.0</tdb.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
@@ -400,16 +399,6 @@
 			</snapshots>
 			<id>dlibra-snapshots</id>
 			<url>http://maven.man.poznan.pl/repository/dlibra-libs-snapshots-public/</url>
-		</repository>
-		<repository>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<id>apache-snapshots</id>
-			<url>https://repository.apache.org/content/repositories/snapshots/</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>
