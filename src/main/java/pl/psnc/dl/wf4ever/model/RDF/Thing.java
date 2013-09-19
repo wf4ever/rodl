@@ -578,7 +578,7 @@ public class Thing {
                 model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, dataset.getNamedModel(uri.toString()));
                 if (mode == ReadWrite.WRITE) {
                     model.setNsPrefixes(DefaultPrefixMapping.get());
-                } else if (model.getNsURIPrefix("http://purl.org/wf4ever/ro#") == null) {
+                } else if (model.getNsURIPrefix("http://purl.org/wf4ever/ro#") == null && started) {
                     // the model misses the prefixes
                     dataset.end();
                     dataset.begin(ReadWrite.WRITE);
