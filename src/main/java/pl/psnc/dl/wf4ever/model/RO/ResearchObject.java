@@ -371,17 +371,21 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
             }
         }
         if (getBundleUri() != null) {
-            // The bundle may be stored inside the parent RO. The path may then start with ../[parentRO]/.
-            Path bundlePath = Paths.get(uri.getPath()).relativize(Paths.get(getBundleUri().getPath()));
-            // delete the bundled file
-            builder.getDigitalLibrary().deleteFile(uri, bundlePath.toString());
-            // delete the references in the manifest
-            for (URI parentUri : getAggregatingROUris()) {
-                ResearchObject parent = ResearchObject.get(builder, parentUri);
-                // if the parent RO is being deleted, it may have already deleted the references to this RO
-                if (parent.getAggregatedResources().containsKey(uri)) {
-                    ((RoBundle) parent.getAggregatedResources().get(uri)).delete(false);
+            try {
+                // The bundle may be stored inside the parent RO. The path may then start with ../[parentRO]/.
+                Path bundlePath = Paths.get(uri.getPath()).relativize(Paths.get(getBundleUri().getPath()));
+                // delete the bundled file
+                builder.getDigitalLibrary().deleteFile(uri, bundlePath.toString());
+                // delete the references in the manifest
+                for (URI parentUri : getAggregatingROUris()) {
+                    ResearchObject parent = ResearchObject.get(builder, parentUri);
+                    // if the parent RO is being deleted, it may have already deleted the references to this RO
+                    if (parent.getAggregatedResources().containsKey(uri)) {
+                        ((RoBundle) parent.getAggregatedResources().get(uri)).delete(false);
+                    }
                 }
+            } catch (Exception e) {
+                LOGGER.error("Failed to delete the bundled version of the RO " + this, e);
             }
         }
         getManifest().delete();
