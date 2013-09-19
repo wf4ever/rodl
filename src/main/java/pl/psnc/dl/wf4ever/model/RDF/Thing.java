@@ -582,10 +582,14 @@ public class Thing {
                     // the model misses the prefixes
                     dataset.end();
                     dataset.begin(ReadWrite.WRITE);
+                    model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM,
+                        dataset.getNamedModel(uri.toString()));
                     model.setNsPrefixes(DefaultPrefixMapping.get());
                     dataset.commit();
                     dataset.end();
                     dataset.begin(mode);
+                    model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM,
+                        dataset.getNamedModel(uri.toString()));
                 }
             }
             return started;
