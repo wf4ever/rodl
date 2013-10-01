@@ -21,7 +21,7 @@ Research Object website: http://www.researchobject.org/
 
 A detailed information about the APIs implemented by RODL is available at:
 
-*De Roure, D., Hotubowicz, P., Page, P., Palma, R. 2013. D1.3v2 Wf4Ever Architecture – Phase II. Wf4Ever project Deliverable. Available at*
+*De Roure, D., Hotubowicz, P., Page, P., Palma, R. 2013. D1.3v2 Wf4Ever Architecture – Phase II. Wf4Ever project Deliverable. Available at http://repo.wf4ever-project.org/publication/46*
 
 Also available online at: http://www.wf4ever-project.org/wiki/display/docs/Wf4Ever+service+APIs
 
