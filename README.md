@@ -26,6 +26,8 @@ A detailed information about the APIs implemented by RODL is available at:
 
 Also available online at: http://www.wf4ever-project.org/wiki/display/docs/Wf4Ever+service+APIs
 
+Roadmap and release plan: http://www.wf4ever-project.org/wiki/display/docs/RODL+and+RO+Portal+roadmap+and+release+plan
+
 Installation
 ============
 
