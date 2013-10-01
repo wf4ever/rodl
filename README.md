@@ -7,6 +7,7 @@ This is the Research Object Digital Library. The main services provided by the s
 are the  Research Object Storage and Retrieval Service (ROSRS), which allows users to 
 store and retrieve Research Objects, and the Research Object Evolution Service, which 
 allows users to create snapshots and releases of their Research Objects.
+A live instance of this service is running at http://sandbox.wf4ever-project.org/rodl.
 
 Documentation
 =============
