@@ -11,12 +11,14 @@ allows users to create snapshots and releases of their Research Objects.
 Documentation
 =============
 
+The key RODL paper for citation purposes is:
+Palma, R., Corcho, O., Hotubowicz, P., Pérez, S., Page, K., and Mazurek, C. 2013. Digital libraries for the preservation of research methods and associated artifacts. In Proceedings of the 1st International Workshop on Digital Preservation of Research Methods and Artifacts (DPRMA '13). ACM, New York, NY, USA, 8-15. DOI=10.1145/2499583.2499589 http://doi.acm.org/10.1145/2499583.2499589
+
 Brief project documentation: http://wf4ever-project.org/wiki/display/docs/Research+Objects+Digital+Library+%28including+the+ROSRS%29.
 
-The RO API specification: http://wf4ever-project.org/wiki/display/docs/RO+API+6.
-
-The RO Evolution API specification: http://wf4ever-project.org/wiki/display/docs/RO+evolution+API.
-
+A detailed information about the APIs implemented by RODL is available at:
+De Roure, D., Hotubowicz, P., Page, P., Palma, R. 2013. D1.3v2 Wf4Ever Architecture – Phase II. Wf4Ever project Deliverable. Available at
+Also available online at: http://www.wf4ever-project.org/wiki/display/docs/Wf4Ever+service+APIs
 
 Installation
 ============
@@ -74,3 +76,8 @@ Authors
 Raúl Palma, Piotr Hołubowicz, Filip Wiśniewski
 
 Poznań Supercomputing and Networking Center, http://www.psnc.pl
+
+Support
+=======
+If you have problems or questions related to this software, please create an issue at Jira (https://jira.man.poznan.pl/jira/browse/WFE) 
+and/or contact RODL support email (rpalma@man.poznan.pl).
