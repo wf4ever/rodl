@@ -88,4 +88,4 @@ Poznań Supercomputing and Networking Center, http://www.psnc.pl
 Support
 =======
 If you have problems or questions related to this software, please create an issue at Jira (https://jira.man.poznan.pl/jira/browse/WFE) 
-and/or contact RODL support email (rpalma@man.poznan.pl).
+and/or contact RODL support email (rodl-support@psnc.pl).
