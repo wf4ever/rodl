@@ -1,23 +1,14 @@
 package pl.psnc.dl.wf4ever.accesscontrol.model;
 
-import java.net.URI;
+import java.util.UUID;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
-import pl.psnc.dl.wf4ever.accesscontrol.dicts.Role;
-import pl.psnc.dl.wf4ever.db.UserProfile;
-import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Data produced/received by permission API.
@@ -28,102 +19,27 @@ import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 @Entity
 @Table(name = "permission_links")
 @XmlRootElement(name = "permission_link")
-public class PermissionLink {
+public class PermissionLink extends Permission {
 
     /** Unique id. */
-    private int id;
-    /** Research Object uri. */
-    private String roUri;
-    /** Object location. */
-    private URI uri;
-    /** User id (openid uri). */
-    private UserProfile user;
-    /** User role. */
-    private Role role;
+    String uuid;
 
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Integer getId() {
-        return id;
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @Column(name = "uuid", unique = true)
+    public String getUuid() {
+        return uuid;
     }
 
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
 
-    @XmlElement(name = "ro", required = true)
-    @Column(name = "ro")
-    public String getRo() {
-        return roUri;
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid.toString();
     }
 
-
-    public void setRo(String roUri) {
-        this.roUri = roUri;
-    }
-
-
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    @XmlTransient
-    public UserProfile getUser() {
-        return user;
-    }
-
-
-    public void setUser(UserProfile user) {
-        this.user = user;
-    }
-
-
-    /**
-     * JSON user field getter.
-     * 
-     * @return user id
-     */
-    @XmlElement(name = "user", required = true)
-    @Transient
-    public String getUserLogin() {
-        if (user != null) {
-            return user.getLogin();
-        }
-        return null;
-    }
-
-
-    /**
-     * JSON user field setter.
-     * 
-     * @param user
-     *            user profile
-     */
-    public void setUserLogin(String user) {
-        UserProfileDAO userProfileDAO = new UserProfileDAO();
-        this.user = userProfileDAO.findByLogin(user);
-    }
-
-
-    @XmlElement(required = true)
-    public Role getRole() {
-        return role;
-    }
-
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-
-    @Transient
-    public URI getUri() {
-        return uri;
-    }
-
-
-    public void setUri(URI uri) {
-        this.uri = uri;
-    }
 }

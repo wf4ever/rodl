@@ -26,12 +26,12 @@ public final class PermissionLinkDAO extends AbstractDAO<PermissionLink> {
     /**
      * Find permission link by id.
      * 
-     * @param id
+     * @param integer
      *            uri (id)
      * @return client or null
      */
-    public PermissionLink findById(Integer id) {
-        return findByPrimaryKey(PermissionLink.class, id);
+    public PermissionLink findById(Integer integer) {
+        return findByPrimaryKey(PermissionLink.class, integer);
     }
 
 
