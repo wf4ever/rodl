@@ -32,7 +32,7 @@ public class PermissionLinkDAOTest extends AbstractUnitTest {
     public void setUp()
             throws Exception {
         super.setUp();
-        id = "http://www.example.com/accesscontrol/permissions/" + UUID.randomUUID().toString();
+        id = "http://www.example.com/accesscontrol/permissionlinks/" + UUID.randomUUID().toString();
         userUri = URI.create("http://testuser.myopenid.com/" + UUID.randomUUID().toString());
         profile = new UserProfile(userUri.toString(), "name", pl.psnc.dl.wf4ever.dl.UserMetadata.Role.AUTHENTICATED,
                 userUri);
@@ -55,6 +55,7 @@ public class PermissionLinkDAOTest extends AbstractUnitTest {
     @Test
     public void testCRUD() {
         dao.save(permission);
+        Assert.assertNotNull(permission.getUuid());
         permission = dao.findById(permission.getId());
         Assert.assertNotNull(permission);
         dao.delete(permission);

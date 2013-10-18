@@ -83,24 +83,4 @@ public class PermissionResourceTest extends AccessControlTest {
                 .header("Authorization", "Bearer " + accessToken2).get(ClientResponse.class);
     }
 
-
-    public void testWriterAndAuthorShouldBeAbleToModifyRO() {
-        URI createdRO = createRO(accessToken);
-    }
-
-
-    public void testReaderAndNoPermissionUserShouldNOTBeableToModifyRO() {
-        URI createdRO = createRO(accessToken);
-    }
-
-
-    public void testAuthorShouldBeAbleToGrantPermissions() {
-        URI createdRO = createRO(accessToken);
-    }
-
-
-    public void testNotAuthorsShouldNotBeAbleToGrantPermissions() {
-        URI createdRO = createRO(accessToken);
-    }
-
 }

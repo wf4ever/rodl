@@ -6,7 +6,9 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.accesscontrol.model.Permission;
+import pl.psnc.dl.wf4ever.accesscontrol.model.PermissionLink;
 import pl.psnc.dl.wf4ever.accesscontrol.model.dao.PermissionDAO;
+import pl.psnc.dl.wf4ever.accesscontrol.model.dao.PermissionLinkDAO;
 import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.eventbus.events.ROAfterCreateEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROAfterDeleteEvent;
@@ -89,6 +91,14 @@ public class PermissionsListener {
             //@TODO this is an error. Think how to handle it.
         } else {
             LOGGER.error("The Research Object " + roUri.toString() + " doesn't have any permissions");
+        }
+        //remove also permission links
+        PermissionLinkDAO linkDao = new PermissionLinkDAO();
+        List<PermissionLink> permissionsLinks = linkDao.findByResearchObject(roUri.toString());
+        if (permissionsLinks != null) {
+            for (PermissionLink p : permissionsLinks) {
+                linkDao.delete(p);
+            }
         }
     }
 }

@@ -11,6 +11,7 @@ import pl.psnc.dl.wf4ever.accesscontrol.dicts.Mode;
 import pl.psnc.dl.wf4ever.accesscontrol.dicts.Role;
 import pl.psnc.dl.wf4ever.accesscontrol.model.AccessMode;
 import pl.psnc.dl.wf4ever.accesscontrol.model.Permission;
+import pl.psnc.dl.wf4ever.accesscontrol.model.PermissionLink;
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
 import pl.psnc.dl.wf4ever.integration.IntegrationTest;
@@ -52,12 +53,29 @@ public class AccessControlTest extends AbstractIntegrationTest {
     }
 
 
+    protected ClientResponse grantPermissionLink(URI ro, Role role, UserProfile user) {
+        return grantPermissionLink(adminCreds, ro, role, user);
+    }
+
+
     protected ClientResponse grantPermission(String creds, URI ro, Role role, UserProfile user) {
         Permission handPermission = new Permission();
         handPermission.setRo(ro.toString());
         handPermission.setRole(role);
         handPermission.setUser(user);
         ClientResponse response = webResource.path("accesscontrol/permissions/").entity(handPermission)
+                .type("application/json").accept("application/json").header("Authorization", "Bearer " + creds)
+                .post(ClientResponse.class);
+        return response;
+    }
+
+
+    protected ClientResponse grantPermissionLink(String creds, URI ro, Role role, UserProfile user) {
+        PermissionLink handPermission = new PermissionLink();
+        handPermission.setRo(ro.toString());
+        handPermission.setRole(role);
+        handPermission.setUser(user);
+        ClientResponse response = webResource.path("accesscontrol/permissionlinks/").entity(handPermission)
                 .type("application/json").accept("application/json").header("Authorization", "Bearer " + creds)
                 .post(ClientResponse.class);
         return response;
