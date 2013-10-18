@@ -44,7 +44,8 @@
 		<mapping class="pl.psnc.dl.wf4ever.preservation.ResearchObjectPreservationStatus" />
 		<mapping class="pl.psnc.dl.wf4ever.accesscontrol.model.AccessMode" />
 		<mapping class="pl.psnc.dl.wf4ever.accesscontrol.model.Permission" />
-
+		<mapping class="pl.psnc.dl.wf4ever.accesscontrol.model.PermissionLink" />
+		
 	</session-factory>
 <<<<<<< HEAD
 </hibernate-configuration> -->

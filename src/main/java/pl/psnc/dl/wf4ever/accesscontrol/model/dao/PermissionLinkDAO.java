@@ -6,7 +6,6 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import pl.psnc.dl.wf4ever.accesscontrol.dicts.Role;
-import pl.psnc.dl.wf4ever.accesscontrol.model.Permission;
 import pl.psnc.dl.wf4ever.accesscontrol.model.PermissionLink;
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.AbstractDAO;
@@ -45,7 +44,7 @@ public final class PermissionLinkDAO extends AbstractDAO<PermissionLink> {
      */
     @SuppressWarnings("unchecked")
     public List<PermissionLink> findByResearchObject(String ro) {
-        Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(Permission.class);
+        Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(PermissionLink.class);
         criteria.add(Restrictions.eq("ro", ro));
         return criteria.list();
 
@@ -63,7 +62,7 @@ public final class PermissionLinkDAO extends AbstractDAO<PermissionLink> {
      */
     @SuppressWarnings("unchecked")
     public List<PermissionLink> findByUserROAndPermission(UserProfile user, String ro, Role role) {
-        Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(Permission.class);
+        Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(PermissionLink.class);
         criteria.add(Restrictions.eq("ro", ro));
         criteria.add(Restrictions.eq("user", user));
         criteria.add(Restrictions.eq("role", role));
