@@ -10,14 +10,14 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.accesscontrol.dicts.Role;
 import pl.psnc.dl.wf4ever.accesscontrol.model.Permission;
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
-import pl.psnc.dl.wf4ever.model.BaseTest;
 
-public class PermissionDAOTest extends BaseTest {
+public class PermissionDAOTest extends AbstractUnitTest {
 
     String id;
     String roUri = "http://www.example.com/ROs/1/";
