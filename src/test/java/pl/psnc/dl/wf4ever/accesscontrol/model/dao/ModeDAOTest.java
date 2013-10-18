@@ -6,10 +6,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.accesscontrol.model.AccessMode;
-import pl.psnc.dl.wf4ever.model.BaseTest;
 
-public class ModeDAOTest extends BaseTest {
+public class ModeDAOTest extends AbstractUnitTest {
 
     String id = "http://www.example.com/accesscontrol/modes/1";
     String roUri = "http://www.example.com/ROs/" + UUID.randomUUID().toString() + "/";
