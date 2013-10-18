@@ -27,6 +27,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.http.HttpStatus;
 import org.apache.log4j.Logger;
 import org.openrdf.rio.RDFFormat;
 
@@ -44,6 +45,7 @@ import pl.psnc.dl.wf4ever.model.ORE.Proxy;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.model.RO.RoBundle;
 import pl.psnc.dl.wf4ever.util.HeaderUtils;
 import pl.psnc.dl.wf4ever.vocabulary.AO;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
@@ -99,6 +101,37 @@ public class ResearchObjectResource {
             }
         }
         return Response.seeOther(getZippedROURI(uriInfo.getBaseUriBuilder(), researchObjectId)).build();
+    }
+
+
+    /**
+     * Returns this RO as an RO bundle.
+     * 
+     * @param researchObjectId
+     *            RO identifier - defined by the user
+     * @return 200 OK
+     * @throws IsDeletedException
+     *             when the research object existed but has been deleted
+     */
+    @GET
+    @Produces(RoBundle.MIME_TYPE)
+    public Response getROBundle(@PathParam("ro_id") String researchObjectId)
+            throws IsDeletedException {
+        ResearchObject researchObject = ResearchObject.get(builder, uriInfo.getAbsolutePath());
+        if (researchObject == null) {
+            ResearchObjectIdDAO dao = new ResearchObjectIdDAO();
+            if (dao.findByPrimaryKey(uriInfo.getAbsolutePath()) != null) {
+                throw new IsDeletedException("This research object has been deleted");
+            } else {
+                throw new NotFoundException("This research object does not exist");
+            }
+        }
+        URI bundleUri = researchObject.getBundleUri();
+        if (bundleUri == null) {
+            return Response.status(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE)
+                    .entity("This Research Object is not available as an RO Bundle.").build();
+        }
+        return Response.ok(researchObject.getBundle(), RoBundle.MIME_TYPE).build();
     }
 
 
@@ -227,8 +260,21 @@ public class ResearchObjectResource {
         if (researchObject == null) {
             throw new NotFoundException("Research Object not found");
         }
+        Collection<URI> annotated = HeaderUtils.getLinkHeaders(links).get(AO.annotatesResource.getURI());
+        Set<Thing> annotationTargets = new HashSet<>();
+        for (URI targetUri : annotated) {
+            Thing target = Annotation.validateTarget(researchObject, targetUri);
+            annotationTargets.add(target);
+        }
         if (path == null) {
-            path = UUID.randomUUID().toString();
+            if (!annotationTargets.isEmpty()) {
+                // this should be an RDF file
+                RDFFormat syntax = contentType != null ? RDFFormat.forMIMEType(contentType, RDFFormat.RDFXML)
+                        : RDFFormat.RDFXML;
+                path = UUID.randomUUID().toString() + "." + syntax.getDefaultFileExtension();
+            } else {
+                path = UUID.randomUUID().toString();
+            }
         }
         URI resourceUri = uriInfo.getAbsolutePathBuilder().path(path).build();
         if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
@@ -236,12 +282,6 @@ public class ResearchObjectResource {
         }
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("This URI is already used.");
-        }
-        Collection<URI> annotated = HeaderUtils.getLinkHeaders(links).get(AO.annotatesResource.getURI());
-        Set<Thing> annotationTargets = new HashSet<>();
-        for (URI targetUri : annotated) {
-            Thing target = Annotation.validateTarget(researchObject, targetUri);
-            annotationTargets.add(target);
         }
         if (!annotationTargets.isEmpty()) {
             pl.psnc.dl.wf4ever.model.RO.Resource roResource = researchObject.aggregate(path, content, contentType);
@@ -392,6 +432,10 @@ public class ResearchObjectResource {
         if (path == null) {
             path = UUID.randomUUID().toString();
         }
+        // folder URIs without the trailing / result in unexpected ZIP downloads, see WFE-1244.
+        if (!path.endsWith("/")) {
+            path = path + "/";
+        }
         URI folderUri = uriInfo.getAbsolutePathBuilder().path(path).build();
         Folder folder = researchObject.aggregateFolder(folderUri, content);
 
@@ -399,7 +443,6 @@ public class ResearchObjectResource {
         Model folderDesc = ModelFactory.createDefaultModel();
         folderDesc.read(folder.getResourceMap().getGraphAsInputStream(syntax), null);
         folderDesc.read(researchObject.getManifest().getGraphAsInputStream(syntax, folder, folder.getProxy()), null);
-        folderDesc.read(folder.getProxy().getGraphAsInputStream(syntax), null);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         folderDesc.write(out);
 

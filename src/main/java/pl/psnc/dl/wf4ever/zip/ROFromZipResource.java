@@ -95,6 +95,7 @@ public class ROFromZipResource implements JobsContainer {
     @Produces(MediaType.APPLICATION_JSON)
     public Response storeROFromGivenZip(@HeaderParam("Slug") String researchObjectId, InputStream zipStream)
             throws BadRequestException {
+        String givenId = researchObjectId;
         ArrayList<String> missingParamters = new ArrayList<String>();
         if (zipStream == null) {
             missingParamters.add("Zip file");
@@ -120,7 +121,7 @@ public class ROFromZipResource implements JobsContainer {
         //copy input stream
         File tmpFile = createTmpZip(zipStream);
         StoreROFromGivenZipOperation operation = new StoreROFromGivenZipOperation(new Builder(builder.getUser()),
-                tmpFile, uriInfo);
+                tmpFile, uriInfo, givenId);
         Job job = new Job(jobUUID, jobStatus, this, operation);
         jobs.put(jobUUID, job);
         job.start();

@@ -12,9 +12,9 @@ import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.db.ResourceInfo;
 import pl.psnc.dl.wf4ever.dl.DigitalLibrary;
-import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Mismatch;
 
@@ -24,7 +24,7 @@ import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Mismatch;
  * @author piotrekhol
  * 
  */
-public class ChecksumVerificationJobTest extends BaseTest {
+public class ChecksumVerificationJobTest extends AbstractUnitTest {
 
     /** The only file that the mock DL will handle. */
     private static final String FILE_PATH = "a workflow.t2flow";

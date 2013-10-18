@@ -8,8 +8,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
-import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
@@ -19,7 +19,7 @@ import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.util.FileManager;
 import com.hp.hpl.jena.vocabulary.RDF;
 
-public class FolderResourceMapTest extends BaseTest {
+public class FolderResourceMapTest extends AbstractUnitTest {
 
     private URI folderResourceMapUri;
     private FolderBuilder folderBuilder;

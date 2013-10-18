@@ -11,15 +11,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
-import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.SnapshotBuilder;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
-public class AggregatedResourceTest extends BaseTest {
+public class AggregatedResourceTest extends AbstractUnitTest {
 
     private URI aggregatedResourceUri;
 

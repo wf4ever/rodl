@@ -9,6 +9,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata.Role;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
@@ -29,7 +30,7 @@ import pl.psnc.dl.wf4ever.model.ROEVO.ImmutableResearchObject;
  * @author pejot
  * 
  */
-public class BuilderTest extends BaseTest {
+public class BuilderTest extends AbstractUnitTest {
 
     URI exampleUri = URI.create("http://www.example.com/exampleUri/");
     DateTime now;

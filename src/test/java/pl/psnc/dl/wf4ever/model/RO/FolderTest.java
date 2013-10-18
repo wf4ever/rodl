@@ -10,16 +10,16 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
-import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.SnapshotBuilder;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
-public class FolderTest extends BaseTest {
+public class FolderTest extends AbstractUnitTest {
 
     private String folderName = "folder";
     private FolderBuilder folderBuilder;

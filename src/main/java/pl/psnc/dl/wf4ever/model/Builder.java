@@ -25,6 +25,7 @@ import pl.psnc.dl.wf4ever.model.RO.FolderResourceMap;
 import pl.psnc.dl.wf4ever.model.RO.Manifest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
+import pl.psnc.dl.wf4ever.model.RO.RoBundle;
 import pl.psnc.dl.wf4ever.model.ROEVO.Change;
 import pl.psnc.dl.wf4ever.model.ROEVO.Change.ChangeType;
 import pl.psnc.dl.wf4ever.model.ROEVO.ChangeSpecification;
@@ -490,6 +491,28 @@ public class Builder {
      */
     public Resource buildResource(URI uri, ResearchObject researchObject, UserMetadata creator, DateTime created) {
         Resource resource = new Resource(user, dataset, useTransactions, researchObject, uri);
+        resource.setCreator(creator);
+        resource.setCreated(created);
+        resource.setBuilder(this);
+        return resource;
+    }
+
+
+    /**
+     * Build a new RO bundle, a specification of ro:Resource.
+     * 
+     * @param uri
+     *            resource URI
+     * @param researchObject
+     *            research object aggregating the resource
+     * @param creator
+     *            author
+     * @param created
+     *            creation date
+     * @return a new resource
+     */
+    public Resource buildRoBundle(URI uri, ResearchObject researchObject, UserMetadata creator, DateTime created) {
+        RoBundle resource = new RoBundle(user, dataset, useTransactions, researchObject, uri);
         resource.setCreator(creator);
         resource.setCreated(created);
         resource.setBuilder(this);

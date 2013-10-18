@@ -17,7 +17,7 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 
-import pl.psnc.dl.wf4ever.model.BaseTest;
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 
 /**
  * Test the cron scheduler.
@@ -27,7 +27,7 @@ import pl.psnc.dl.wf4ever.model.BaseTest;
  */
 //unstable configuration
 @Ignore
-public class MonitoringSchedulerTest extends BaseTest {
+public class MonitoringSchedulerTest extends AbstractUnitTest {
 
     /** The cron value provided in quartz.properties. */
     private static final Object EXPECTED_CRON_SCHEDULE = "0 0/10 8-17 * * ?";

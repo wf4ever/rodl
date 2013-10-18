@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
@@ -27,6 +26,7 @@ import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.RO.Folder;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
+import pl.psnc.dl.wf4ever.util.MimeTypeUtil;
 
 /**
  * Operation which stores a research object given in a zip format from outside.
@@ -44,8 +44,6 @@ public class CreateROFromGivenZipOperation implements Operation {
     File zipFile;
     /** request uri info. */
     UriInfo uriInfo;
-    /** Mimetypes map. */
-    MimetypesFileTypeMap mfm;
 
 
     /**
@@ -62,7 +60,6 @@ public class CreateROFromGivenZipOperation implements Operation {
         this.builder = builder;
         this.zipFile = zipFile;
         this.uriInfo = uriInfo;
-        this.mfm = new MimetypesFileTypeMap();
     }
 
 
@@ -135,7 +132,7 @@ public class CreateROFromGivenZipOperation implements Operation {
             LOGGER.debug("Skipping " + name + ".\n");
         } else {
             LOGGER.debug("Adding " + name + "... ");
-            String contentType = mfm.getContentType(name);
+            String contentType = MimeTypeUtil.getContentType(name);
             Resource resource = ro.aggregate(name, inputStream, contentType);
             boolean parentExisted = false;
             while (path.getParent() != null && !parentExisted) {

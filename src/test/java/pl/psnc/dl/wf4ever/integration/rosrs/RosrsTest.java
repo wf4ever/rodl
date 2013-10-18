@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.integration.rosrs;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.integration.AbstractIntegrationTest;
 import pl.psnc.dl.wf4ever.integration.IntegrationTest;
@@ -148,13 +150,9 @@ public class RosrsTest extends AbstractIntegrationTest {
     }
 
 
-    protected String getManifest(ResearchObject ro) {
-        return webResource.uri(ro.getManifestUri()).header("Authorization", "Bearer " + accessToken).get(String.class);
+    protected InputStream getManifest(URI ro, RDFFormat format) {
+        return webResource.uri(ro).header("Authorization", "Bearer " + accessToken).accept(format.getDefaultMIMEType())
+                .get(InputStream.class);
     }
 
-
-    protected String getResourceToString(ResearchObject ro, String resourceRelativePath) {
-        return webResource.uri(ro.getUri()).path(resourceRelativePath).header("Authorization", "Bearer " + accessToken)
-                .get(String.class);
-    }
 }

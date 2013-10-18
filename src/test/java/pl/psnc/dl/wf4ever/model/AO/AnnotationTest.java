@@ -10,9 +10,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
-import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
 import pl.psnc.dl.wf4ever.model.SnapshotBuilder;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -23,7 +23,7 @@ import pl.psnc.dl.wf4ever.model.RDF.Thing;
  * @author pejot
  * 
  */
-public class AnnotationTest extends BaseTest {
+public class AnnotationTest extends AbstractUnitTest {
 
     @Override
     @Before

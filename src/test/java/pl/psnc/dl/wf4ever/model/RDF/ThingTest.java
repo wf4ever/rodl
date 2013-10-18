@@ -1,29 +1,34 @@
 package pl.psnc.dl.wf4ever.model.RDF;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+
 import java.io.InputStream;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.joda.time.DateTime;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
-import pl.psnc.dl.wf4ever.model.BaseTest;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
 import com.google.common.collect.Multimap;
-import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.query.Dataset;
+import com.hp.hpl.jena.query.DatasetFactory;
+import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.vocabulary.DCTerms;
-
-import de.fuberlin.wiwiss.ng4j.NamedGraphSet;
-import de.fuberlin.wiwiss.ng4j.Quad;
-import de.fuberlin.wiwiss.ng4j.impl.NamedGraphSetImpl;
 
 /**
  * Test Class for RDF.Thing model.
@@ -31,15 +36,7 @@ import de.fuberlin.wiwiss.ng4j.impl.NamedGraphSetImpl;
  * @author pejot
  * 
  */
-public class ThingTest extends BaseTest {
-
-    @Override
-    @Before
-    public void setUp()
-            throws Exception {
-        super.setUp();
-    }
-
+public class ThingTest extends AbstractUnitTest {
 
     /**
      * Test that the resources under control of RODL are properly detected.
@@ -206,16 +203,24 @@ public class ThingTest extends BaseTest {
     @Test
     public void testGetGraphAsInputStreamWithNamedGraphs() {
         Thing thing = builder.buildThing(URI.create(MANIFEST));
-        NamedGraphSet graphset = new NamedGraphSetImpl();
-        graphset.read(thing.getGraphAsInputStream(RDFFormat.TRIG), "TRIG", null);
-
-        Quad sampleAgg = new Quad(Node.createURI(MANIFEST), Node.createURI(RESEARCH_OBJECT),
-                Node.createURI(ORE.aggregates.getURI()), Node.createURI(RESOURCE1));
-        Assert.assertTrue("Contains a sample aggregation", graphset.containsQuad(sampleAgg));
-
-        Quad sampleAnn = new Quad(Node.createURI(ANNOTATION_BODY), Node.createURI(RESOURCE1),
-                Node.createURI(DCTerms.license.getURI()), Node.createLiteral("GPL"));
-        Assert.assertTrue("Contains a sample annotation", graphset.containsQuad(sampleAnn));
+        Dataset dataset = DatasetFactory.createMem();
+        RDFDataMgr.read(dataset, thing.getGraphAsInputStream(RDFFormat.TRIG), Lang.TRIG);
+        Set<String> graphNames = new HashSet<>();
+        Iterator<String> it = dataset.listNames();
+        while (it.hasNext()) {
+            graphNames.add(it.next());
+        }
+        assertThat(graphNames, hasItem(MANIFEST));
+        assertThat(graphNames, hasItem(ANNOTATION_BODY));
+        Model m = dataset.getDefaultModel();
+        Assert.assertTrue(
+            "Contains a sample aggregation",
+            dataset.getNamedModel(MANIFEST).contains(m.createResource(RESEARCH_OBJECT), ORE.aggregates,
+                m.createResource(RESOURCE1)));
+        Assert.assertTrue(
+            "Contains a sample aggregation",
+            dataset.getNamedModel(ANNOTATION_BODY).contains(m.createResource(RESOURCE1), DCTerms.license,
+                m.createLiteral("GPL")));
     }
 
 
@@ -225,15 +230,16 @@ public class ThingTest extends BaseTest {
     @Test
     public void testGetGraphAsInputStreamWithRelativeURIs() {
         Thing thing = builder.buildThing(URI.create(ANNOTATION_BODY));
+        String base = "app://base/1/";
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM);
-        model.read(thing.getGraphAsInputStreamWithRelativeURIs(URI.create(RESEARCH_OBJECT), RDFFormat.RDFXML), "",
+        model.read(thing.getGraphAsInputStreamWithRelativeURIs(URI.create(RESEARCH_OBJECT), RDFFormat.RDFXML), base,
             "RDF/XML");
-        //FIXME this does not work correctly, for some reason ".." is stripped when reading the model
-        verifyTriple(model, /* "../a_workflow.t2flow" */"a%20workflow.t2flow",
+        verifyTriple(model, /* "../a_workflow.t2flow" */"app://base/a%20workflow.t2flow",
             URI.create("http://purl.org/dc/terms/title"), "A test");
-        verifyTriple(model, URI.create("a%20workflow.t2flow"), URI.create(DCTerms.license.getURI()), "GPL");
+        verifyTriple(model, /* "../a_workflow.t2flow" */"app://base/a%20workflow.t2flow",
+            URI.create(DCTerms.license.getURI()), "GPL");
         verifyTriple(model, URI.create(RESOURCE2), URI.create(DCTerms.description.getURI()), "Something interesting");
-        verifyTriple(model, /* "../a_workflow.t2flow#somePartOfIt" */"a%20workflow.t2flow#somePartOfIt",
+        verifyTriple(model, /* "../a_workflow.t2flow#somePartOfIt" */"app://base/a%20workflow.t2flow#somePartOfIt",
             URI.create(DCTerms.description.getURI()), "The key part");
     }
 

@@ -192,14 +192,22 @@ public class FilesystemDL implements DigitalLibrary {
             throws NotFoundException, DigitalLibraryException, AccessDeniedException {
         try {
             Path path = getPath(ro, filePath);
-            FileInputStream fis = new FileInputStream(path.toFile());
-            String md5 = DigestUtils.md5Hex(fis);
+            BasicFileAttributes attributes = Files.readAttributes(path, BasicFileAttributes.class);
+            String md5;
+            if (attributes.isRegularFile()) {
+                FileInputStream fis = new FileInputStream(path.toFile());
+                md5 = DigestUtils.md5Hex(fis);
+            } else {
+                LOGGER.warn(path.toString() + " is not a regular file, the checksum will not be calculated.");
+                md5 = null;
+            }
 
-            DateTime lastModified = new DateTime(Files.getLastModifiedTime(path).toMillis());
+            DateTime lastModified = new DateTime(attributes.lastModifiedTime().toMillis());
             ResourceInfoDAO dao = new ResourceInfoDAO();
-            ResourceInfo res = dao.create(path.toString(), path.getFileName().toString(), md5, Files.size(path), "MD5",
-                lastModified, mimeType);
+            ResourceInfo res = dao.create(path.toString(), path.getFileName().toString(), md5, attributes.size(),
+                "MD5", lastModified, mimeType);
             dao.save(res);
+            LOGGER.debug("Saved stats for resource " + path.toString());
             return res;
         } catch (IOException e) {
             throw new DigitalLibraryException(e);
@@ -211,6 +219,7 @@ public class FilesystemDL implements DigitalLibrary {
     public ResourceInfo getFileInfo(URI ro, String filePath) {
         Path path = getPath(ro, filePath);
         ResourceInfoDAO dao = new ResourceInfoDAO();
+        LOGGER.debug("Searching stats for " + path.toString());
         return dao.findByPath(path.toString());
     }
 
@@ -230,11 +239,11 @@ public class FilesystemDL implements DigitalLibrary {
             if (res != null) {
                 dao.delete(res);
             } else {
-                LOGGER.warn("Resource info not found in database: " + filePath);
+                LOGGER.warn("Resource info not found in database: " + path);
             }
             HibernateUtil.getSessionFactory().getCurrentSession().flush();
         } catch (NoSuchFileException e) {
-            throw new NotFoundException("File doesn't exist: " + filePath, e);
+            throw new NotFoundException("File doesn't exist: " + path, e);
         } catch (IOException e) {
             throw new DigitalLibraryException(e);
         }
@@ -393,7 +402,7 @@ public class FilesystemDL implements DigitalLibrary {
         if (resourcePath != null) {
             path = path.resolve(resourcePath);
         }
-        return path;
+        return path.normalize();
     }
 
 }

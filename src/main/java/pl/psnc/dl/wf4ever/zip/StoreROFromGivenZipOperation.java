@@ -29,6 +29,8 @@ public class StoreROFromGivenZipOperation implements Operation {
     File zipFile;
     /** request uri info. */
     UriInfo uriInfo;
+    /** The zip name. */
+    String zipName;
 
 
     /**
@@ -39,12 +41,16 @@ public class StoreROFromGivenZipOperation implements Operation {
      * @param zipFile
      *            processed zip file
      * @param uriInfo
-     *            request uri info
+     *            request uri infoz
+     * @param zipName
+     *            name of the given zip. Used when content of the research object isn't located on the top of the zip
+     *            but in the folder
      */
-    public StoreROFromGivenZipOperation(Builder builder, File zipFile, UriInfo uriInfo) {
+    public StoreROFromGivenZipOperation(Builder builder, File zipFile, UriInfo uriInfo, String zipName) {
         this.builder = builder;
         this.zipFile = zipFile;
         this.uriInfo = uriInfo;
+        this.zipName = zipName;
     }
 
 
@@ -63,8 +69,8 @@ public class StoreROFromGivenZipOperation implements Operation {
             roFromZipJobStatus = (ROFromZipJobStatus) status;
             URI roUri = roFromZipJobStatus.getTarget();
             try {
-                ResearchObject created = ResearchObject.create(builder, roUri, new MemoryZipFile(zipFile,
-                        roFromZipJobStatus.getTarget().toString()), roFromZipJobStatus);
+                ResearchObject created = ResearchObject.create(builder, roUri, new MemoryZipFile(zipFile, zipName),
+                    roFromZipJobStatus);
                 roFromZipJobStatus.setProcessedResources(roFromZipJobStatus.getSubmittedResources());
                 roFromZipJobStatus.setTarget(created.getUri());
             } catch (IOException | BadRequestException e) {

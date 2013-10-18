@@ -3,6 +3,8 @@ package pl.psnc.dl.wf4ever.model.ORE;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -319,12 +321,24 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
     }
 
 
+    @Override
     public String getPath() {
-        return getResearchObject().getUri().relativize(uri).getPath();
+        if (!uri.isAbsolute() || uri.getPath().isEmpty()) {
+            return uri.getPath();
+        }
+        // the line below can return relative parent paths such as ../foo
+        Path path = Paths.get(getResearchObject().getUri().getPath()).relativize(Paths.get(uri.getPath()));
+        String pathString = path.toString();
+        // Paths class removes the terminating /
+        if (uri.getPath().endsWith("/")) {
+            pathString = pathString + "/";
+        }
+        return pathString;
     }
 
 
     public String getRawPath() {
+        //FIXME this is different from getPath, probably should be removed
         return getResearchObject().getUri().relativize(uri).getRawPath();
     }
 
@@ -429,8 +443,7 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
      */
     public void save(InputStream content, String contentType)
             throws BadRequestException {
-        String path = researchObject.getUri().relativize(uri).getPath();
-        setStats(builder.getDigitalLibrary().createOrUpdateFile(researchObject.getUri(), path, content,
+        setStats(builder.getDigitalLibrary().createOrUpdateFile(researchObject.getUri(), getPath(), content,
             contentType != null ? contentType : "text/plain"));
         if (isNamedGraph()) {
             saveGraphAndSerialize();
@@ -516,6 +529,6 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
 
     @Override
     public InputStream getPublicGraphAsInputStream(RDFFormat syntax) {
-        return getGraphAsInputStream(syntax);
+        return getGraphAsInputStream(syntax, researchObject.getUri());
     }
 }

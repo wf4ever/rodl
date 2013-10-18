@@ -10,8 +10,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -19,7 +22,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.io.IOUtils;
@@ -55,6 +57,7 @@ import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectSerializable;
 import pl.psnc.dl.wf4ever.searchserver.SearchServer;
 import pl.psnc.dl.wf4ever.searchserver.solr.SolrSearchServer;
 import pl.psnc.dl.wf4ever.util.MemoryZipFile;
+import pl.psnc.dl.wf4ever.util.MimeTypeUtil;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dl.wf4ever.zip.ROFromZipJobStatus;
 
@@ -130,6 +133,12 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
     /** The annotation for the evolution information. */
     protected Annotation evoInfoAnnotation;
 
+    /** Optional URI of this research object bundled as an RO bundle. */
+    protected URI bundleUri;
+
+    /** URI of the RO that aggregates this RO, if it is nested. */
+    protected Collection<URI> aggregatingROUris;
+
 
     /**
      * Constructor.
@@ -172,6 +181,83 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         researchObject.postEvent(new ROBeforeCreateEvent(researchObject));
         researchObject.save(EvoType.LIVE);
         researchObject.postEvent(new ROAfterCreateEvent(researchObject));
+        return researchObject;
+    }
+
+
+    /**
+     * Create a research object with the given resources, annotations and folders. The resources, annotations and
+     * folders are not used directly but only their parameters are used as base.
+     * 
+     * @param builder
+     *            model builder
+     * @param uri
+     *            RO URI
+     * @param resources2
+     *            resources to use as base
+     * @param annotations2
+     *            annotations to use as base
+     * @param folders2
+     *            folders to use as base
+     * @return the new research object
+     * @throws BadRequestException
+     *             when provided parameters are incorrect
+     */
+    public static ResearchObject create(Builder builder, URI uri, Collection<? extends Resource> resources2,
+            Collection<? extends Annotation> annotations2, Collection<? extends Folder> folders2)
+            throws BadRequestException {
+        ResearchObject researchObject = create(builder, uri);
+        for (Resource resource : resources2) {
+            if (resource.isInternal()) {
+                Resource resource2 = researchObject.aggregate(resource.getPath(), resource.getSerialization(), resource
+                        .getStats().getMimeType());
+                LOGGER.debug("Aggregated an internal resource " + resource2);
+            } else {
+                Resource resource2 = researchObject.aggregate(resource.getUri());
+                LOGGER.debug("Aggregated an external resource " + resource2);
+            }
+        }
+        for (Annotation annotation : annotations2) {
+            try {
+                Set<Thing> targets = new HashSet<>();
+                for (Thing target : annotation.getAnnotated()) {
+                    targets.add(Annotation.validateTarget(researchObject,
+                        researchObject.getUri().resolve(target.getUri())));
+                }
+                if (annotation.getBody() instanceof AggregatedResource
+                        && ((AggregatedResource) annotation.getBody()).isInternal()) {
+                    AggregatedResource body = (AggregatedResource) annotation.getBody();
+                    try {
+                        Resource body2 = researchObject.aggregate(body.getPath(), body.getSerialization(), body
+                                .getStats().getMimeType());
+                        LOGGER.debug("Aggregated an internal annotation body " + body2);
+                    } catch (ConflictException e) {
+                        LOGGER.debug("The internal annotation body has already been aggregated " + body.getPath());
+                    }
+                } else {
+                    // external annotation bodies are not aggregated
+                    LOGGER.debug("Identified an external annotation body " + annotation.getBody());
+                }
+                Annotation annotation2 = researchObject.annotate(
+                    researchObject.getUri().resolve(annotation.getBody().getUri()), targets);
+                LOGGER.debug("Aggregated an annotation with body " + annotation2.getBody().getUri());
+            } catch (BadRequestException e) {
+                LOGGER.warn("Annotation " + annotation.getUri() + " will be ignored, reason: " + e.getMessage());
+            }
+        }
+        for (Folder folder : folders2) {
+            Folder folder2 = researchObject.aggregateFolder(researchObject.getUri().resolve(folder.getPath()));
+            for (FolderEntry entry : folder.getFolderEntries().values()) {
+                URI resourceUri = researchObject.getUri().resolve(entry.getProxyFor().getUri());
+                AggregatedResource resource = researchObject.getResources().get(resourceUri);
+                if (resource == null) {
+                    LOGGER.warn("Resource for entry not found: " + resourceUri);
+                    continue;
+                }
+                folder2.createFolderEntry(resource);
+                LOGGER.debug("Created an entry for " + resource.getUri() + " in " + folder2.getUri());
+            }
+        }
         return researchObject;
     }
 
@@ -282,6 +368,24 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
                 resource.delete();
             } catch (Exception e) {
                 LOGGER.error("Can't delete resource " + resource + ", will continue deleting the RO.", e);
+            }
+        }
+        if (getBundleUri() != null) {
+            try {
+                // The bundle may be stored inside the parent RO. The path may then start with ../[parentRO]/.
+                Path bundlePath = Paths.get(uri.getPath()).relativize(Paths.get(getBundleUri().getPath()));
+                // delete the bundled file
+                builder.getDigitalLibrary().deleteFile(uri, bundlePath.toString());
+                // delete the references in the manifest
+                for (URI parentUri : getAggregatingROUris()) {
+                    ResearchObject parent = ResearchObject.get(builder, parentUri);
+                    // if the parent RO is being deleted, it may have already deleted the references to this RO
+                    if (parent.getAggregatedResources().containsKey(uri)) {
+                        ((RoBundle) parent.getAggregatedResources().get(uri)).delete(false);
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.error("Failed to delete the bundled version of the RO " + this, e);
             }
         }
         getManifest().delete();
@@ -608,11 +712,6 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         ResearchObject inMemoryResearchObject = inMemoryBuilder.buildResearchObject(researchObjectUri);
         ResearchObject researchObject = create(builder, researchObjectUri);
 
-        MimetypesFileTypeMap mfm = new MimetypesFileTypeMap();
-        try (InputStream mimeTypesIs = ResearchObject.class.getClassLoader().getResourceAsStream("mime.types")) {
-            mfm = new MimetypesFileTypeMap(mimeTypesIs);
-        }
-
         int submittedresources = 0;
         for (Resource resource : inMemoryResearchObject.getResources().values()) {
             if (resource.isSpecialResource()) {
@@ -642,7 +741,8 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
             }
             try {
                 if (zip.containsEntry(resource.getPath())) {
-                    unpackAndAggregate(researchObject, zip, resource.getPath(), mfm.getContentType(resource.getPath()));
+                    unpackAndAggregate(researchObject, zip, resource.getPath(),
+                        MimeTypeUtil.getContentType(resource.getPath()));
                 } else {
                     researchObject.aggregate(resource.getUri());
                 }
@@ -999,4 +1099,59 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         }
         return result;
     }
+
+
+    /**
+     * Return the URI of the RO bundle if exists.
+     * 
+     * @return the URI of this RO's bundle or null if doesn't exist
+     */
+    public URI getBundleUri() {
+        if (bundleUri == null) {
+            bundleUri = getManifest().extractAlternativeFormat(RoBundle.MIME_TYPE);
+        }
+        return bundleUri;
+    }
+
+
+    /**
+     * Save the URI of the RO bundle representing this RO.
+     * 
+     * @param bundleUri
+     *            the URI of this RO's bundle
+     */
+    public void setBundleUri(URI bundleUri) {
+        this.bundleUri = bundleUri;
+        getManifest().saveAlternativeFormat(bundleUri, RoBundle.MIME_TYPE);
+    }
+
+
+    /**
+     * Return the serialization as RO Bundle if available.
+     * 
+     * @return the serialized RO bundle or null if not available
+     */
+    public InputStream getBundle() {
+        URI bundleUri2 = getBundleUri();
+        if (bundleUri2 == null) {
+            return null;
+        }
+        // The bundle may be stored inside the parent RO. The path may then start with ../[parentRO]/.
+        Path bundlePath = Paths.get(uri.getPath()).relativize(Paths.get(bundleUri2.getPath()));
+        return builder.getDigitalLibrary().getFileContents(uri, bundlePath.toString());
+    }
+
+
+    /**
+     * Return the URI of the RO bundle if exists.
+     * 
+     * @return the URI of this RO's bundle or null if doesn't exist
+     */
+    public Collection<URI> getAggregatingROUris() {
+        if (aggregatingROUris == null) {
+            aggregatingROUris = getManifest().extractAggregatingROUris();
+        }
+        return aggregatingROUris;
+    }
+
 }

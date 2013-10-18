@@ -66,7 +66,9 @@ public class Resource extends AggregatedResource {
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
-        Resource resource = builder.buildResource(resourceUri, researchObject, builder.getUser(), DateTime.now());
+        ResourceFactory resourceFactory = new ResourceFactory(builder);
+        Resource resource = resourceFactory.buildResource(resourceUri, researchObject, builder.getUser(),
+            DateTime.now());
         resource.postEvent(new ROComponentBeforeCreateEvent(resource));
         resource.setProxy(researchObject.addProxy(resource));
         resource.save();
@@ -99,7 +101,9 @@ public class Resource extends AggregatedResource {
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
-        Resource resource = builder.buildResource(resourceUri, researchObject, builder.getUser(), DateTime.now());
+        ResourceFactory resourceFactory = new ResourceFactory(builder);
+        Resource resource = resourceFactory.buildResource(resourceUri, researchObject, builder.getUser(),
+            DateTime.now(), contentType);
         resource.postEvent(new ROComponentBeforeCreateEvent(resource));
         resource.setProxy(researchObject.addProxy(resource));
         resource.save(content, contentType);
@@ -142,7 +146,8 @@ public class Resource extends AggregatedResource {
         if (researchObject.isUriUsed(resourceUri)) {
             throw new ConflictException("Resource already exists: " + resourceUri);
         }
-        Resource resource2 = builder.buildResource(resourceUri, researchObject, getCreator(), getCreated());
+        ResourceFactory resourceFactory = new ResourceFactory(builder);
+        Resource resource2 = resourceFactory.buildResource(resourceUri, researchObject, getCreator(), getCreated());
         resource2.setCopyDateTime(DateTime.now());
         resource2.setCopyAuthor(builder.getUser());
         resource2.setCopyOf(this);

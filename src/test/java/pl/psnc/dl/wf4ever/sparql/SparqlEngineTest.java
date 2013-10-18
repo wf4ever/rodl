@@ -11,7 +11,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openrdf.rio.RDFFormat;
 
-import pl.psnc.dl.wf4ever.model.BaseTest;
+import pl.psnc.dl.wf4ever.AbstractUnitTest;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 
 import com.hp.hpl.jena.ontology.Individual;
@@ -26,7 +26,7 @@ import com.hp.hpl.jena.vocabulary.DCTerms;
  * @author piotrekhol
  * 
  */
-public class SparqlEngineTest extends BaseTest {
+public class SparqlEngineTest extends AbstractUnitTest {
 
     /** The instance under test. */
     private SparqlEngine engine;
