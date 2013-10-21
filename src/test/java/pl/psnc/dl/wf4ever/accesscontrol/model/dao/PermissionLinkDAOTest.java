@@ -55,6 +55,7 @@ public class PermissionLinkDAOTest extends AbstractUnitTest {
     @Test
     public void testCRUD() {
         dao.save(permission);
+        permission = dao.findById(permission.getId());
         Assert.assertNotNull(permission.getUuid());
         permission = dao.findById(permission.getId());
         Assert.assertNotNull(permission);

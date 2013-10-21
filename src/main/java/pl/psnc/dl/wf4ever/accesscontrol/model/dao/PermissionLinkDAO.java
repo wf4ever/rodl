@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.accesscontrol.model.dao;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
@@ -32,6 +33,15 @@ public final class PermissionLinkDAO extends AbstractDAO<PermissionLink> {
      */
     public PermissionLink findById(Integer integer) {
         return findByPrimaryKey(PermissionLink.class, integer);
+    }
+
+
+    @Override
+    public void save(PermissionLink instance) {
+        if (instance.getUuid() == null) {
+            instance.setUuid(UUID.randomUUID().toString());
+        }
+        super.save(instance);
     }
 
 
