@@ -34,6 +34,42 @@
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
 
+	<filter>
+		<filter-name>Jersey AccessControl Access Control Filter</filter-name>
+		<filter-class>com.sun.jersey.spi.container.servlet.ServletContainer</filter-class>
+		<init-param>
+			<param-name>com.sun.jersey.config.property.packages</param-name>
+			<param-value>pl.psnc.dl.wf4ever</param-value>
+		</init-param>
+		<init-param>
+			<param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
+			<param-value>pl.psnc.dl.wf4ever.auth.SecurityFilter; pl.psnc.dl.wf4ever.accesscontrol.filters.AccessControlResourceFilter</param-value>
+		</init-param>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>Jersey AccessControl Access Control Filter</filter-name>
+		<url-pattern>/accesscontrol/*</url-pattern>
+	</filter-mapping>
+	
+	<filter>
+		<filter-name>Jersey ROs Access Control Filter</filter-name>
+		<filter-class>com.sun.jersey.spi.container.servlet.ServletContainer</filter-class>
+		<init-param>
+			<param-name>com.sun.jersey.config.property.packages</param-name>
+			<param-value>pl.psnc.dl.wf4ever</param-value>
+		</init-param>
+		<init-param>
+			<param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
+			<param-value>pl.psnc.dl.wf4ever.auth.SecurityFilter; pl.psnc.dl.wf4ever.accesscontrol.filters.ROsResourceFilter</param-value>
+		</init-param>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>Jersey ROs Access Control Filter</filter-name>
+		<url-pattern>/ROs/*</url-pattern>
+	</filter-mapping>
+
 
 	<filter>
 		<filter-name>Jersey Web Application</filter-name>
@@ -59,42 +95,6 @@
 	<filter-mapping>
 		<filter-name>Jersey Web Application</filter-name>
 		<url-pattern>/*</url-pattern>
-	</filter-mapping>
-
-	<filter>
-		<filter-name>Jersey AccessControl Access Control Filter</filter-name>
-		<filter-class>com.sun.jersey.spi.container.servlet.ServletContainer</filter-class>
-		<init-param>
-			<param-name>com.sun.jersey.config.property.packages</param-name>
-			<param-value>pl.psnc.dl.wf4ever</param-value>
-		</init-param>
-		<init-param>
-			<param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
-			<param-value>pl.psnc.dl.wf4ever.accesscontrol.filters.AccessControlResourceFilter</param-value>
-		</init-param>
-	</filter>
-
-	<filter-mapping>
-		<filter-name>Jersey AccessControl Access Control Filter</filter-name>
-		<url-pattern>/accesscontrol/*</url-pattern>
-	</filter-mapping>
-	
-	<filter>
-		<filter-name>Jersey ROs Access Control Filter</filter-name>
-		<filter-class>com.sun.jersey.spi.container.servlet.ServletContainer</filter-class>
-		<init-param>
-			<param-name>com.sun.jersey.config.property.packages</param-name>
-			<param-value>pl.psnc.dl.wf4ever</param-value>
-		</init-param>
-		<init-param>
-			<param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
-			<param-value>pl.psnc.dl.wf4ever.accesscontrol.filters.ROsResourceFilter</param-value>
-		</init-param>
-	</filter>
-
-	<filter-mapping>
-		<filter-name>Jersey ROs Access Control Filter</filter-name>
-		<url-pattern>/ROs/*</url-pattern>
 	</filter-mapping>
 
 </web-app>
