@@ -41,7 +41,7 @@ import com.sun.jersey.api.NotFoundException;
 /**
  * A list of research objects REST APIs.
  * 
- * @author piotrhol
+ * @author pejot
  * 
  */
 @Path("zip/")
