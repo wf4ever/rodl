@@ -68,6 +68,8 @@ public final class PermissionLinkDAO extends AbstractDAO<PermissionLink> {
      *            user profile
      * @param ro
      *            research object uri
+     * @param role
+     *            role
      * @return list of granted permissions.
      */
     @SuppressWarnings("unchecked")

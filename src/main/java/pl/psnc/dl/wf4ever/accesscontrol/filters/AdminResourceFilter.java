@@ -15,7 +15,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 
 /**
- * Authentication and authorization filter.
+ * Admin Resource Access Control filter.
  * 
  * @author pejot
  * 

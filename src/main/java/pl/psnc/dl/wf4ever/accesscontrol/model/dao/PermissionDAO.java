@@ -42,6 +42,7 @@ public final class PermissionDAO extends AbstractDAO<Permission> {
      *            Research Object.
      * @return Access Control mode, null in case mode doesn't exists
      */
+    @SuppressWarnings("unchecked")
     public List<Permission> findByResearchObject(String ro) {
         Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(Permission.class);
         criteria.add(Restrictions.eq("ro", ro));
@@ -57,8 +58,11 @@ public final class PermissionDAO extends AbstractDAO<Permission> {
      *            user profile
      * @param ro
      *            research object uri
+     * @param role
+     *            role
      * @return list of granted permissions.
      */
+    @SuppressWarnings("unchecked")
     public List<Permission> findByUserROAndPermission(UserProfile user, String ro, Role role) {
         Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(Permission.class);
         criteria.add(Restrictions.eq("ro", ro));

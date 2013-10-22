@@ -10,7 +10,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 
 /**
- * Authentication and authorization filter.
+ * Access Control Resource Access Control Filter.
  * 
  * @author pejot
  * 
@@ -31,7 +31,61 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
 
     @Override
     public ContainerRequest filter(ContainerRequest request) {
+        //there are several action handled by accesscontrol service
+        //first discover which component is processed (mode | permission | permissionlink)
+        //permissions
+        //only RO author and create/delete permission
+        //only author and someone involved can query about permission/
+        if (request.getPath().contains("/permissions/")) {
+            handlePermissionsRequest(request);
+        }
+        //romode
+        //only RO author can change the mode
+        //only RO author can query about mode
+        else if (request.getPath().contains("/modes/")) {
+            handleROModesRequest(request);
+        }
+        //permissionlinks
+        //only RO author and create/delete permission links
+        //only author and someone involved can query about permission links
+        else if (request.getPath().contains("/permissionlinks/")) {
+            handlePermissionLinksRequest(request);
+        }
+
         return request;
+    }
+
+
+    /**
+     * Handle RO modes request.
+     * 
+     * @param request
+     *            request
+     */
+    private void handleROModesRequest(ContainerRequest request) {
+
+    }
+
+
+    /**
+     * Handle Permissions request.
+     * 
+     * @param request
+     *            request
+     */
+    private void handlePermissionsRequest(ContainerRequest request) {
+
+    }
+
+
+    /**
+     * Handle Permission Links request.
+     * 
+     * @param request
+     *            request
+     */
+    private void handlePermissionLinksRequest(ContainerRequest request) {
+
     }
 
 }

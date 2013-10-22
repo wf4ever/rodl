@@ -10,7 +10,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 
 /**
- * Authentication and authorization filter.
+ * RO Resource AccessControl Filter.
  * 
  * @author pejot
  * 
@@ -31,6 +31,14 @@ public class ROsResourceFilter implements ContainerRequestFilter {
 
     @Override
     public ContainerRequest filter(ContainerRequest request) {
+        //there are several rules which tells which user read or edit RO
+        //first if user is an author they can do everything
+        //if RO is public ...
+        //... then everybody can read
+        //... and users with special permissions can edit
+        //if RO is private
+        //... nobody apart from author can read
+        //if RO is accessed via permission link then RO can be read by everybody with link and can be edited is someone has a special permission.
         return request;
     }
 

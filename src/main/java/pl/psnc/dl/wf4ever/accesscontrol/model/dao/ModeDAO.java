@@ -43,6 +43,7 @@ public final class ModeDAO extends AbstractDAO<AccessMode> {
     public AccessMode findByResearchObject(String ro) {
         Criteria criteria = HibernateUtil.getSessionFactory().getCurrentSession().createCriteria(AccessMode.class);
         criteria.add(Restrictions.eq("ro", ro));
+        @SuppressWarnings("unchecked")
         List<AccessMode> result = criteria.list();
         if (result.size() == 1) {
             return result.get(0);
