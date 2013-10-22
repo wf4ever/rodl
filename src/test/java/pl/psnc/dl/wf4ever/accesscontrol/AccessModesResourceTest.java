@@ -61,24 +61,4 @@ public class AccessModesResourceTest extends AccessControlTest {
         Assert.assertEquals(response.getStatus(), 204);
     }
 
-
-    public void testAuthorCanChangeROMode() {
-        URI createdRO = createRO(accessToken);
-    }
-
-
-    public void testPublicROshouldBevisibleForEveryone() {
-        URI createdRO = createRO(accessToken);
-    }
-
-
-    public void testPrivateROshouldBeVisibleForReaderdWritersAndAuthors() {
-        URI createdRO = createRO(accessToken);
-    }
-
-
-    public void testPrivateROshouldBeinvisibleForPeopleWithNoPermission() {
-        URI createdRO = createRO(accessToken);
-    }
-
 }
