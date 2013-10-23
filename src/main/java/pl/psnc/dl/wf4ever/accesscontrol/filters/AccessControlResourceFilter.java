@@ -43,7 +43,9 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
     /** Injected user. */
     private UserMetadata user;
     /** Located userProfile. */
-    UserProfile userProfile;
+    private UserProfile userProfile;
+    /** Permissions dao. */
+    private PermissionDAO dao = new PermissionDAO();
 
 
     @Override
@@ -94,7 +96,6 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
         if (request.getMethod().equals("POST")) {
             return;
         }
-        PermissionDAO dao = new PermissionDAO();
         //if there is a GET request to get particular mode, chech if the user is an owner
         if (request.getMethod().equals("GET")) {
             //if there is an ro paramter
@@ -109,7 +110,8 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
                     LOGGER.error("Data problem - more than one owner for " + roUri);
                     throw new WebApplicationException(500);
                 }
-            } else {
+            } else if (request.getPath().split("modes/").length == 2
+                    && isInteger(request.getPath().split("modes/")[1].replace("/", "").replace(" ", ""))) {
                 String modeIdString = request.getPath().split("modes/")[1].replace("/", "").replace(" ", "");
                 Permission permission = dao.findById(Integer.valueOf(modeIdString));
                 if (permission.getRole() != Role.OWNER || permission.getUser() != userProfile) {
@@ -128,7 +130,61 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
      *            request
      */
     private void handlePermissionsRequest(ContainerRequest request) {
+        //if this is a POST everybody can do it it's a matter of logic to store object or not
+        if (request.getMethod().equals("POST")) {
+            return;
+        } else if (request.getMethod().equals("GET")) {
+            if (request.getQueryParameters().getFirst("ro") != null) {
+                String roUri = request.getQueryParameters().getFirst("ro");
+                List<Permission> permissions = dao.findByResearchObject(roUri);
+                for (Permission permission : permissions) {
+                    //if user is an owner or has this permission granted
+                    if (permission.getUser().equals(userProfile)) {
+                        return;
+                    }
+                }
+                throw new ForbiddenException("User has no permission to read from this research object");
+            } else if (request.getPath().split("modes/").length == 2 && isInteger(request.getPath().split("modes/")[1])) {
+                String permissionIdString = request.getPath().split("modes/")[1].replace("/", "").replace(" ", "");
+                Permission permission = dao.findById(Integer.valueOf(permissionIdString));
+                if (permission == null) {
+                    //it will give 404
+                    return;
+                }
+                List<Permission> ownerPermissionList = dao.findByUserROAndPermission(userProfile, permission.getRo(),
+                    Role.OWNER);
+                Permission ownerPermission = null;
+                if (ownerPermissionList.size() == 0) {
+                    //it's enough to check user
+                    ownerPermission = permission;
+                } else if (ownerPermissionList.size() == 1) {
+                    ownerPermission = ownerPermissionList.get(1);
+                } else if (ownerPermissionList.size() > 1) {
+                    LOGGER.error("Data problem - more than one owner for " + permission.getRo());
+                    throw new WebApplicationException(500);
+                }
+                //check resource permissions
+                if (!permission.getUser().equals(userProfile) && !ownerPermission.getUser().equals(userProfile)) {
+                    throw new ForbiddenException("User has no permission to read from this research object");
+                }
+            }
+        } else if (request.getMethod().equals("DELETE") && isInteger(request.getPath().split("modes/")[1])) {
+            //user must be an owner of ro to delete permissions
+            String permissionIdString = request.getPath().split("modes/")[1].replace("/", "").replace(" ", "");
+            Permission permission = dao.findById(Integer.valueOf(permissionIdString));
+            if (permission == null) {
+                //it iwll give 404
+                return;
+            }
+            List<Permission> permissions = dao.findByUserROAndPermission(userProfile, permission.getRo(), Role.OWNER);
+            if (permissions.size() == 0) {
+                throw new ForbiddenException("This resource doesn't belong to user");
+            } else if (permissions.size() > 1) {
+                LOGGER.error("Data problem - more than one owner for " + permission.getRo());
+                throw new WebApplicationException(500);
+            }
 
+        }
     }
 
 
@@ -140,6 +196,23 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
      */
     private void handlePermissionLinksRequest(ContainerRequest request) {
 
+    }
+
+
+    /**
+     * If is an integer.
+     * 
+     * @param s
+     *            given string
+     * @return true if it is.
+     */
+    public boolean isInteger(String s) {
+        try {
+            Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return true;
     }
 
 }

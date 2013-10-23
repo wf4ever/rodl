@@ -64,7 +64,7 @@ public class AccessModeResource {
             List<Permission> permissions = permissionDAO.findByUserROAndPermission(
                 userDAO.findByLogin(builder.getUser().getLogin()), mode.getRo(), Role.OWNER);
             if (permissions.size() == 0) {
-                throw new BadRequestException("User doesn't hawe OWNER role in context of given RO");
+                throw new BadRequestException("The given ro doesn't exists or doesn't belong to user");
             } else if (permissions.size() > 1) {
                 LOGGER.error("Multiply RO authors detected for" + mode.getRo());
                 throw new WebApplicationException(500);
