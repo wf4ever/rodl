@@ -1,10 +1,22 @@
 package pl.psnc.dl.wf4ever.accesscontrol.filters;
 
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
+
+import pl.psnc.dl.wf4ever.accesscontrol.dicts.Role;
+import pl.psnc.dl.wf4ever.accesscontrol.model.Permission;
+import pl.psnc.dl.wf4ever.accesscontrol.model.dao.PermissionDAO;
+import pl.psnc.dl.wf4ever.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
+import pl.psnc.dl.wf4ever.dl.UserMetadata;
+import pl.psnc.dl.wf4ever.exceptions.ForbiddenException;
+import pl.psnc.dl.wf4ever.model.Builder;
 
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
@@ -28,9 +40,24 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
     @Context
     private HttpServletRequest httpRequest;
 
+    /** Injected user. */
+    private UserMetadata user;
+    /** Located userProfile. */
+    UserProfile userProfile;
+
 
     @Override
     public ContainerRequest filter(ContainerRequest request) {
+        Builder builder = (Builder) httpRequest.getAttribute("Builder");
+        UserMetadata user = builder.getUser();
+        if (user.equals(UserProfile.ADMIN)) {
+            return request;
+        }
+        UserProfileDAO profileDao = new UserProfileDAO();
+        userProfile = profileDao.findByLogin(user.getLogin());
+        if (userProfile == null) {
+            throw new ForbiddenException("The user isn't registered.");
+        }
         //there are several action handled by accesscontrol service
         //first discover which component is processed (mode | permission | permissionlink)
         //permissions
@@ -40,7 +67,7 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
             handlePermissionsRequest(request);
         }
         //romode
-        //only RO author can change the mode
+        //only RO author can change the mode - it's about content so it checked in ro mode resource
         //only RO author can query about mode
         else if (request.getPath().contains("/modes/")) {
             handleROModesRequest(request);
@@ -63,6 +90,33 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
      *            request
      */
     private void handleROModesRequest(ContainerRequest request) {
+        //if this is a POST everybody can do it it's a matter of logic to store object or not
+        if (request.getMethod().equals("POST")) {
+            return;
+        }
+        PermissionDAO dao = new PermissionDAO();
+        //if there is a GET request to get particular mode, chech if the user is an owner
+        if (request.getMethod().equals("GET")) {
+            //if there is an ro paramter
+            if (request.getQueryParameters().getFirst("ro") != null) {
+                String roUri = request.getQueryParameters().getFirst("ro");
+                List<Permission> permissions = dao.findByUserROAndPermission(userProfile, roUri, Role.OWNER);
+                if (permissions.size() == 1) {
+                    return;
+                } else if (permissions.size() == 0) {
+                    throw new ForbiddenException("This resource doesn't belong to user");
+                } else {
+                    LOGGER.error("Data problem - more than one owner for " + roUri);
+                    throw new WebApplicationException(500);
+                }
+            } else {
+                String modeIdString = request.getPath().split("modes/")[1].replace("/", "").replace(" ", "");
+                Permission permission = dao.findById(Integer.valueOf(modeIdString));
+                if (permission.getRole() != Role.OWNER || permission.getUser() != userProfile) {
+                    throw new ForbiddenException("This resource doesn't belong to user");
+                }
+            }
+        }
 
     }
 
