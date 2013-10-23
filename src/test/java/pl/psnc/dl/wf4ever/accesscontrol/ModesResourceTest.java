@@ -15,7 +15,7 @@ import pl.psnc.dl.wf4ever.integration.IntegrationTest;
 import com.sun.jersey.api.client.ClientResponse;
 
 @Category(IntegrationTest.class)
-public class AccessModesResourceTest extends AccessControlTest {
+public class ModesResourceTest extends AccessControlTest {
 
     @Override
     @Before
@@ -44,6 +44,7 @@ public class AccessModesResourceTest extends AccessControlTest {
         mode.setMode(Mode.PRIVATE);
 
         ClientResponse res = changeMode(mode.getUri(), mode.getMode());
+        Assert.assertEquals(201, res.getStatus());
 
         mode = res.getEntity(AccessMode.class);
         Assert.assertEquals(Mode.PRIVATE, mode.getMode());
