@@ -82,7 +82,7 @@ public class PermissionResource {
             }
         }
         dao.save(permission);
-        permission.setUri(uriInfo.getRequestUri().resolve(""));
+        permission.setUri(uriInfo.getRequestUri().resolve("").resolve(permission.getId().toString()));
         return Response.created(uriInfo.getRequestUri().resolve("")).type(MediaType.APPLICATION_JSON)
                 .entity(permission).build();
     }
@@ -92,7 +92,7 @@ public class PermissionResource {
     @Produces(MediaType.APPLICATION_JSON)
     @GET
     public Permission getPermission(@PathParam("permission_id") String permission_id) {
-        Permission result = dao.findById(Integer.getInteger(permission_id));
+        Permission result = dao.findById(Integer.valueOf(permission_id));
         if (result != null) {
             result.setUri(uriInfo.getRequestUri().resolve(result.getId().toString()));
         }
@@ -103,10 +103,14 @@ public class PermissionResource {
     @Path("{permission_id}/")
     @Produces(MediaType.APPLICATION_JSON)
     @DELETE
-    public Response deletePermission(@PathParam("permission_id") String permission_id) {
-        Permission permission = dao.findById(Integer.getInteger(permission_id));
+    public Response deletePermission(@PathParam("permission_id") String permission_id)
+            throws BadRequestException {
+        Permission permission = dao.findById(Integer.valueOf(permission_id));
         if (permission == null) {
             throw new NotFoundException("The permission " + permission_id + " doesn't exists");
+        }
+        if (permission.getRole().equals(Role.OWNER)) {
+            throw new BadRequestException("Can't remove owner Role");
         }
         dao.delete(permission);
         return Response.noContent().build();
