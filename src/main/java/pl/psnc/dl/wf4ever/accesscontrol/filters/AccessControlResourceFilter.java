@@ -144,8 +144,10 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
                     }
                 }
                 throw new ForbiddenException("User has no permission to read from this research object");
-            } else if (request.getPath().split("modes/").length == 2 && isInteger(request.getPath().split("modes/")[1])) {
-                String permissionIdString = request.getPath().split("modes/")[1].replace("/", "").replace(" ", "");
+            } else if (request.getPath().split("permissions/").length == 2
+                    && isInteger(request.getPath().split("permissions/")[1])) {
+                String permissionIdString = request.getPath().split("permissions/")[1].replace("/", "")
+                        .replace(" ", "");
                 Permission permission = dao.findById(Integer.valueOf(permissionIdString));
                 if (permission == null) {
                     //it will give 404
@@ -158,7 +160,7 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
                     //it's enough to check user
                     ownerPermission = permission;
                 } else if (ownerPermissionList.size() == 1) {
-                    ownerPermission = ownerPermissionList.get(1);
+                    ownerPermission = ownerPermissionList.get(0);
                 } else if (ownerPermissionList.size() > 1) {
                     LOGGER.error("Data problem - more than one owner for " + permission.getRo());
                     throw new WebApplicationException(500);
@@ -168,9 +170,10 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
                     throw new ForbiddenException("User has no permission to read from this research object");
                 }
             }
-        } else if (request.getMethod().equals("DELETE") && isInteger(request.getPath().split("modes/")[1])) {
+        } else if (request.getMethod().equals("DELETE") && request.getPath().split("permissions/").length == 2
+                && isInteger(request.getPath().split("permissions/")[1])) {
             //user must be an owner of ro to delete permissions
-            String permissionIdString = request.getPath().split("modes/")[1].replace("/", "").replace(" ", "");
+            String permissionIdString = request.getPath().split("permissions/")[1].replace("/", "").replace(" ", "");
             Permission permission = dao.findById(Integer.valueOf(permissionIdString));
             if (permission == null) {
                 //it iwll give 404
