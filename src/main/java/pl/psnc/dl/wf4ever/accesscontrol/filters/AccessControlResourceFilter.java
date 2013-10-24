@@ -11,7 +11,9 @@ import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.accesscontrol.dicts.Role;
 import pl.psnc.dl.wf4ever.accesscontrol.model.Permission;
+import pl.psnc.dl.wf4ever.accesscontrol.model.PermissionLink;
 import pl.psnc.dl.wf4ever.accesscontrol.model.dao.PermissionDAO;
+import pl.psnc.dl.wf4ever.accesscontrol.model.dao.PermissionLinkDAO;
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -46,6 +48,7 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
     private UserProfile userProfile;
     /** Permissions dao. */
     private PermissionDAO dao = new PermissionDAO();
+    private PermissionLinkDAO linksDao = new PermissionLinkDAO();
 
 
     @Override
@@ -198,7 +201,61 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
      *            request
      */
     private void handlePermissionLinksRequest(ContainerRequest request) {
+        //everybody can use post
+        if (request.getMethod().equals("POST")) {
+            return;
+        } else if (request.getMethod().equals("GET")) {
+            if (request.getQueryParameters().getFirst("ro") != null) {
+                String roUri = request.getQueryParameters().getFirst("ro");
+                //only author can do this query
+                List<Permission> permissions = dao.findByUserROAndPermission(userProfile, roUri, Role.OWNER);
+                if (permissions.size() == 1) {
+                    return;
+                } else if (permissions.size() == 0) {
+                    throw new ForbiddenException("This resource doesn't belong to user");
+                } else {
+                    LOGGER.error("Data problem - more than one owner for " + roUri);
+                    throw new WebApplicationException(500);
+                }
+            } else if (request.getPath().split("permissionlinks/").length == 2
+                    && isInteger(request.getPath().split("permissionlinks/")[1])) {
+                //if query goes to particular permissionlinks resource
 
+                String permissionLinkId = request.getPath().split("permissionlinks/")[1];
+                //permissionlink is granted to user
+                PermissionLink permissionLink = linksDao.findById(Integer.valueOf(permissionLinkId));
+                if (permissionLink.getUser().equals(userProfile)) {
+                    return;
+                }
+                //the last option - user is an RO author 
+                List<Permission> permissions = dao.findByUserROAndPermission(userProfile, permissionLink.getRo(),
+                    Role.OWNER);
+                if (permissions.size() == 0) {
+                    throw new ForbiddenException("User can't see this resource");
+                } else if (permissions.size() == 1) {
+                    return;
+                } else {
+                    LOGGER.error("Data problem - more than one owner for " + permissionLink.getRo());
+                    throw new WebApplicationException(500);
+                }
+
+            }
+        } else if (request.getMethod().equals("DELETE") && request.getPath().split("permissionlinks/").length == 2
+                && isInteger(request.getPath().split("permissionlinks/")[1])) {
+            String permissionLinkId = request.getPath().split("permissionlinks/")[1];
+            PermissionLink permissionLink = linksDao.findById(Integer.valueOf(permissionLinkId));
+            List<Permission> permissions = dao.findByUserROAndPermission(userProfile, permissionLink.getRo(),
+                Role.OWNER);
+            if (permissions.size() == 0) {
+                throw new ForbiddenException("User can't delete this resource");
+            } else if (permissions.size() == 1) {
+                return;
+            } else {
+                LOGGER.error("Data problem - more than one owner for " + permissionLink.getRo());
+                throw new WebApplicationException(500);
+            }
+
+        }
     }
 
 

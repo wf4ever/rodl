@@ -31,6 +31,8 @@ public class ROsResourceFilter implements ContainerRequestFilter {
 
     @Override
     public ContainerRequest filter(ContainerRequest request) {
+        //we can take care only 
+
         //there are several rules which tells which user read or edit RO
         //first if user is an author they can do everything
         //if RO is public ...
