@@ -10,6 +10,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -17,10 +18,16 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.accesscontrol.dicts.Role;
+import pl.psnc.dl.wf4ever.accesscontrol.model.Permission;
 import pl.psnc.dl.wf4ever.accesscontrol.model.PermissionLink;
+import pl.psnc.dl.wf4ever.accesscontrol.model.dao.PermissionDAO;
 import pl.psnc.dl.wf4ever.accesscontrol.model.dao.PermissionLinkDAO;
 import pl.psnc.dl.wf4ever.auth.RequestAttribute;
+import pl.psnc.dl.wf4ever.db.UserProfile;
+import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.dl.ConflictException;
+import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 
 import com.hp.hpl.jena.shared.NotFoundException;
@@ -45,16 +52,38 @@ public class PermissionLinkResource {
     @RequestAttribute("Builder")
     private Builder builder;
 
-    /** Permissions dao. */
-    PermissionLinkDAO dao = new PermissionLinkDAO();
+    /** Permissions link dao. */
+    private PermissionLinkDAO dao = new PermissionLinkDAO();
+
+    /** Permission dao. */
+    private PermissionDAO permissionDao = new PermissionDAO();
+
+    /** User Profile dao. */
+    private UserProfileDAO userProfileDAO = new UserProfileDAO();
 
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addPermissions(PermissionLink permission) {
+    public Response addPermissions(PermissionLink permission)
+            throws BadRequestException {
         if (dao.findByUserROAndPermission(permission.getUser(), permission.getRo(), permission.getRole()).size() > 0) {
             throw new ConflictException("The permission was already given");
+        }
+        //first check permissions
+        if (!builder.getUser().getRole().equals(pl.psnc.dl.wf4ever.dl.UserMetadata.Role.ADMIN)) {
+            UserProfile userProfile = userProfileDAO.findByLogin(builder.getUser().getLogin());
+            if (userProfile == null) {
+                throw new BadRequestException("There is no user like this");
+            }
+            List<Permission> permissions = permissionDao.findByUserROAndPermission(userProfile, permission.getRo(),
+                Role.OWNER);
+            if (permissions.size() == 0) {
+                throw new BadRequestException("The given ro doesn't exists or doesn't belong to user");
+            } else if (permissions.size() > 1) {
+                LOGGER.error("Multiply RO ownership detected for" + permission.getRo());
+                throw new WebApplicationException(500);
+            }
         }
         dao.save(permission);
         permission.setUri(uriInfo.getRequestUri().resolve(""));
@@ -67,7 +96,7 @@ public class PermissionLinkResource {
     @Produces(MediaType.APPLICATION_JSON)
     @GET
     public PermissionLink getPermission(@PathParam("permission_id") String permission_id) {
-        PermissionLink result = dao.findById(Integer.getInteger(permission_id));
+        PermissionLink result = dao.findById(Integer.valueOf(permission_id));
         if (result != null) {
             result.setUri(uriInfo.getRequestUri().resolve(result.getId().toString()));
         }
@@ -79,7 +108,7 @@ public class PermissionLinkResource {
     @Produces(MediaType.APPLICATION_JSON)
     @DELETE
     public Response deletePermission(@PathParam("permission_id") String permission_id) {
-        PermissionLink permission = dao.findById(Integer.getInteger(permission_id));
+        PermissionLink permission = dao.findById(Integer.valueOf(permission_id));
         if (permission == null) {
             throw new NotFoundException("The permission " + permission_id + " doesn't exists");
         }
