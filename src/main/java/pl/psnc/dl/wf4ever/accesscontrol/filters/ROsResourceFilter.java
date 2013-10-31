@@ -8,6 +8,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import pl.psnc.dl.wf4ever.accesscontrol.dicts.Mode;
@@ -150,11 +151,9 @@ public class ROsResourceFilter implements ContainerRequestFilter {
 		}
 		String resourcePath = requestPathArray[1];
 		if (resourcePath.replace("/", "").equals("")
-				&& resourcePath.split("/").length == 2) {
+				&& StringUtils.countMatches(resourcePath, "/") == 1) {
 			return ROType.RO_COLLECTION;
 		}
-		requestPathArray = path.split("ROs/");
-		resourcePath = requestPathArray[1];
 		return ROType.RESOURCE;
 	}
 
@@ -163,9 +162,10 @@ public class ROsResourceFilter implements ContainerRequestFilter {
 	}
 
 	private URI getRootROUri(String path) {
-		String base = path.split("ROs/")[0] + "ROs/";
-		String resource = path.split(uriInfo.getBaseUriBuilder().path("ROs/")
-				.toString())[1];
+		String base = uriInfo.getBaseUriBuilder().path("ROs/").build()
+				.toString();
+		String resource = path.split("ROs/")[1];
+
 		if (resource.split("/").length == 1) {
 			return URI.create(base + resource);
 		} else {
