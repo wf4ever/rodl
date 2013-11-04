@@ -33,77 +33,92 @@ import com.sun.syndication.io.FeedException;
  * 
  */
 @Category(IntegrationTest.class)
-public class StabilityFeedAggreegationIntegrationTest extends AbstractIntegrationTest {
+public class StabilityFeedAggreegationIntegrationTest extends
+		AbstractIntegrationTest {
 
-    /** A sample file name. */
-    private String filePath = "foo.txt";
-    /** A test HTTP mock server. */
-    @Rule
-    public final WireMockRule WIREMOCK_RULE = new WireMockRule(8089); // No-args constructor defaults to port 8080
-    AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
-    URI checklistNotificationsUri;
-    private URI ro;
-    protected static final String HOST_STRING = "http://127.0.0.1:8089";
+	/** A sample file name. */
+	private String filePath = "foo.txt";
+	/** A test HTTP mock server. */
+	@Rule
+	public final WireMockRule WIREMOCK_RULE = new WireMockRule(8089); // No-args
+																		// constructor
+																		// defaults
+																		// to
+																		// port
+																		// 8080
+	AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
+	URI checklistNotificationsUri;
+	private URI ro;
+	protected static final String HOST_STRING = "http://127.0.0.1:8089";
 
+	@Before
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		ro = createRO();
+		addLoremIpsumFile(ro, filePath);
+		setUpMockito();
+	}
 
-    @Before
-    @Override
-    public void setUp()
-            throws Exception {
-        super.setUp();
-        ro = createRO();
-        addLoremIpsumFile(ro, filePath);
-        setUpMockito();
-    }
+	public void setUpMockito() throws IOException {
+		Properties properties = new Properties();
+		try {
+			properties.load(getClass().getClassLoader().getResourceAsStream(
+					"connection.properties"));
+		} catch (IOException e) {
+			throw new IOException("Configuration couldn't be loaded", e);
+		}
+		checklistNotificationsUri = URI.create(properties
+				.getProperty("checklist_service_url"));
+		// http mock
+		InputStream checklistRefactorInput = StabilityFeedAggregationJobTest.class
+				.getClassLoader().getResourceAsStream(
+						"monitoring/stability_service_notification.xml");
+		InputStream checklistRefactorNoEntryInput = StabilityFeedAggregationJobTest.class
+				.getClassLoader()
+				.getResourceAsStream(
+						"monitoring/stability_service_notification_case_empty.xml");
 
+		stubFor(get(
+				urlMatching((checklistNotificationsUri.toString() + ".*")
+						.replace(HOST_STRING, ""))).willReturn(
+				aResponse().withStatus(200).withBody(
+						IOUtils.toString(checklistRefactorInput))));
+		stubFor(get(
+				urlMatching((checklistNotificationsUri.toString() + ".*empty.*")
+						.replace(HOST_STRING, ""))).willReturn(
+				aResponse().withStatus(200).withBody(
+						IOUtils.toString(checklistRefactorNoEntryInput))));
+	}
 
-    public void setUpMockito()
-            throws IOException {
-        Properties properties = new Properties();
-        try {
-            properties.load(getClass().getClassLoader().getResourceAsStream("connection.properties"));
-        } catch (IOException e) {
-            throw new IOException("Configuration couldn't be loaded", e);
-        }
-        checklistNotificationsUri = URI.create(properties.getProperty("checklist_service_url"));
-        //http mock
-        InputStream checklistRefactorInput = StabilityFeedAggregationJobTest.class.getClassLoader()
-                .getResourceAsStream("monitoring/stability_service_notification.xml");
-        InputStream checklistRefactorNoEntryInput = StabilityFeedAggregationJobTest.class.getClassLoader()
-                .getResourceAsStream("monitoring/stability_service_notification_case_empty.xml");
-
-        stubFor(get(urlMatching((checklistNotificationsUri.toString() + ".*").replace(HOST_STRING, ""))).willReturn(
-            aResponse().withStatus(200).withBody(IOUtils.toString(checklistRefactorInput))));
-        stubFor(get(urlMatching((checklistNotificationsUri.toString() + ".*empty.*").replace(HOST_STRING, "")))
-                .willReturn(aResponse().withStatus(200).withBody(IOUtils.toString(checklistRefactorNoEntryInput))));
-    }
-
-
-    /**
-     * Modify a checksum in the database, force monitoring and check that a notification is generated.
-     * 
-     * @throws FeedException
-     *             can't load the feed
-     * @throws IOException
-     *             can't load the feed
-     * @throws InterruptedException
-     *             interrupted when waiting for the notifications
-     */
-    @Test
-    public final void test()
-            throws FeedException, IOException, InterruptedException {
-        URI testUri = URI.create("http://127.0.0.1:8089/rodl/ROs/SimpleRO/");
-        List<?> entriesBefore = getNotifications(testUri, null).getEntries();
-        //force scheduler
-        webResource.path("admin/monitor/all").header("Authorization", "Bearer " + accessToken).post();
-        int times = 0;
-        while (++times < 20) {
-            Thread.sleep(500);
-            List<?> entriesAfter = getNotifications(testUri, null).getEntries();
-            if (entriesBefore.size() < entriesAfter.size()) {
-                return;
-            }
-        }
-        Assert.fail("The Stability Notification for object " + ro + " wasn't created");
-    }
+	/**
+	 * Modify a checksum in the database, force monitoring and check that a
+	 * notification is generated.
+	 * 
+	 * @throws FeedException
+	 *             can't load the feed
+	 * @throws IOException
+	 *             can't load the feed
+	 * @throws InterruptedException
+	 *             interrupted when waiting for the notifications
+	 */
+	@Test
+	public final void test() throws FeedException, IOException,
+			InterruptedException {
+		URI testUri = URI.create("http://127.0.0.1:8089/rodl/ROs/SimpleRO/");
+		List<?> entriesBefore = getNotifications(testUri, null).getEntries();
+		// force scheduler
+		webResource.path("admin/monitor/all")
+				.header("Authorization", "Bearer " + adminCreds).post();
+		int times = 0;
+		while (++times < 20) {
+			Thread.sleep(500);
+			List<?> entriesAfter = getNotifications(testUri, null).getEntries();
+			if (entriesBefore.size() < entriesAfter.size()) {
+				return;
+			}
+		}
+		Assert.fail("The Stability Notification for object " + ro
+				+ " wasn't created");
+	}
 }

@@ -42,180 +42,193 @@ import com.sun.jersey.api.client.ClientResponse;
 @Category(IntegrationTest.class)
 public class RoBundleTest extends RosrsTest {
 
-    /** An annotation body path. */
-    private final String testDatabundlePath = "singleFiles/databundle.zip";
+	/** An annotation body path. */
+	private final String testDatabundlePath = "singleFiles/databundle.zip";
 
+	/**
+	 * Test you can add the annotation body.
+	 * 
+	 * @throws IOException
+	 *             when there is a communication problem
+	 */
+	@Test
+	public void shouldCreateANestedRO() throws IOException {
+		try (InputStream is = getClass().getClassLoader().getResourceAsStream(
+				testDatabundlePath)) {
+			ClientResponse response = addFile(ro, "bundle.zip", is,
+					RoBundle.MIME_TYPE);
+			Assert.assertEquals(response.getEntity(String.class),
+					HttpStatus.SC_CREATED, response.getStatus());
+		}
 
-    /**
-     * Test you can add the annotation body.
-     * 
-     * @throws IOException
-     *             when there is a communication problem
-     */
-    @Test
-    public void shouldCreateANestedRO()
-            throws IOException {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(testDatabundlePath)) {
-            ClientResponse response = addFile(ro, "bundle.zip", is, RoBundle.MIME_TYPE);
-            Assert.assertEquals(response.getEntity(String.class), HttpStatus.SC_CREATED, response.getStatus());
-        }
+		URI nestedRO = findNestedROUri();
+		Model nestedModel = ModelFactory.createDefaultModel();
+		try (InputStream in = getManifest(nestedRO, RDFFormat.RDFXML)) {
+			nestedModel.read(in, null);
+		}
+		System.out.println("NESTED");
+		nestedModel.write(System.out, "TURTLE");
+	}
 
-        URI nestedRO = findNestedROUri();
-        Model nestedModel = ModelFactory.createDefaultModel();
-        try (InputStream in = getManifest(nestedRO, RDFFormat.RDFXML)) {
-            nestedModel.read(in, null);
-        }
-        System.out.println("NESTED");
-        nestedModel.write(System.out, "TURTLE");
-    }
+	/**
+	 * Find the URI of the nested RO.
+	 * 
+	 * @return the URI
+	 * @throws IOException
+	 *             when the manifest couldn't be downloaded
+	 */
+	private URI findNestedROUri() throws IOException {
+		Model parentModel = ModelFactory.createDefaultModel();
+		try (InputStream in = getManifest(ro, RDFFormat.RDFXML)) {
+			parentModel.read(in, null);
+		}
+		System.out.println("PARENT");
+		parentModel.write(System.out, "TURTLE");
+		String queryString = String
+				.format("SELECT ?nestedRO  WHERE { <%s> <http://www.openarchives.org/ore/terms/aggregates> ?nestedRO . ?nestedRO a <http://purl.org/wf4ever/ro#ResearchObject> . }",
+						ro);
+		Query query = QueryFactory.create(queryString);
+		QueryExecution qe = QueryExecutionFactory.create(query, parentModel);
+		try {
+			ResultSet results = qe.execSelect();
+			if (!results.hasNext()) {
+				return null;
+			}
+			QuerySolution solution = results.next();
+			RDFNode nestedROR = solution.get("?nestedRO");
+			return URI.create(nestedROR.asResource().getURI());
+		} finally {
+			qe.close();
+		}
+	}
 
+	/**
+	 * A nested RO should be available as an RO bundle.
+	 * 
+	 * @throws IOException
+	 *             when there is a communication problem
+	 */
+	@Test
+	public void shouldReturnRoBundleFormat() throws IOException {
+		try (InputStream is = getClass().getClassLoader().getResourceAsStream(
+				testDatabundlePath)) {
+			ClientResponse response = addFile(ro, "bundle.zip", is,
+					RoBundle.MIME_TYPE);
+			Assert.assertEquals(response.getEntity(String.class),
+					HttpStatus.SC_CREATED, response.getStatus());
+		}
+		URI nestedRO = findNestedROUri();
+		try (InputStream in = webResource.uri(nestedRO)
+				.accept("application/vnd.wf4ever.robundle+zip")
+				.get(InputStream.class)) {
+			File file = File.createTempFile("downloaded-bundle", ".zip");
+			FileOutputStream outputStream = new FileOutputStream(file);
+			IOUtils.copy(in, outputStream);
+			try (ZipFile zipFile = new ZipFile(file)) {
+				assertThat(zipFile.size(), greaterThan(0));
+			}
+		}
+	}
 
-    /**
-     * Find the URI of the nested RO.
-     * 
-     * @return the URI
-     * @throws IOException
-     *             when the manifest couldn't be downloaded
-     */
-    private URI findNestedROUri()
-            throws IOException {
-        Model parentModel = ModelFactory.createDefaultModel();
-        try (InputStream in = getManifest(ro, RDFFormat.RDFXML)) {
-            parentModel.read(in, null);
-        }
-        System.out.println("PARENT");
-        parentModel.write(System.out, "TURTLE");
-        String queryString = String
-                .format(
-                    "SELECT ?nestedRO  WHERE { <%s> <http://www.openarchives.org/ore/terms/aggregates> ?nestedRO . ?nestedRO a <http://purl.org/wf4ever/ro#ResearchObject> . }",
-                    ro);
-        Query query = QueryFactory.create(queryString);
-        QueryExecution qe = QueryExecutionFactory.create(query, parentModel);
-        try {
-            ResultSet results = qe.execSelect();
-            if (!results.hasNext()) {
-                return null;
-            }
-            QuerySolution solution = results.next();
-            RDFNode nestedROR = solution.get("?nestedRO");
-            return URI.create(nestedROR.asResource().getURI());
-        } finally {
-            qe.close();
-        }
-    }
+	/**
+	 * The parent RO should not be available as an RO bundle.
+	 * 
+	 * @throws IOException
+	 *             when there is a communication problem
+	 */
+	@Test
+	public void shouldReturn415UnsupportedMediaType() throws IOException {
+		try (InputStream is = getClass().getClassLoader().getResourceAsStream(
+				testDatabundlePath)) {
+			ClientResponse response = addFile(ro, "bundle.zip", is,
+					RoBundle.MIME_TYPE);
+			Assert.assertEquals(response.getEntity(String.class),
+					HttpStatus.SC_CREATED, response.getStatus());
+		}
+		ClientResponse response = webResource.uri(ro)
+				.accept("application/vnd.wf4ever.robundle+zip")
+				.get(ClientResponse.class);
+		Assert.assertEquals(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE,
+				response.getStatus());
+	}
 
+	/**
+	 * Test that absolute URIs in annotations are resolved against the data
+	 * bundle.
+	 * 
+	 * @throws IOException
+	 *             when there is a communication problem
+	 */
+	@Test
+	public void shouldResolveAbsoluteURIs() throws IOException {
+		try (InputStream is = getClass().getClassLoader().getResourceAsStream(
+				testDatabundlePath)) {
+			ClientResponse response = addFile(ro, "bundle.zip", is,
+					RoBundle.MIME_TYPE);
+			Assert.assertEquals(response.getEntity(String.class),
+					HttpStatus.SC_CREATED, response.getStatus());
+		}
 
-    /**
-     * A nested RO should be available as an RO bundle.
-     * 
-     * @throws IOException
-     *             when there is a communication problem
-     */
-    @Test
-    public void shouldReturnRoBundleFormat()
-            throws IOException {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(testDatabundlePath)) {
-            ClientResponse response = addFile(ro, "bundle.zip", is, RoBundle.MIME_TYPE);
-            Assert.assertEquals(response.getEntity(String.class), HttpStatus.SC_CREATED, response.getStatus());
-        }
-        URI nestedRO = findNestedROUri();
-        try (InputStream in = webResource.uri(nestedRO).accept("application/vnd.wf4ever.robundle+zip")
-                .get(InputStream.class)) {
-            File file = File.createTempFile("downloaded-bundle", ".zip");
-            FileOutputStream outputStream = new FileOutputStream(file);
-            IOUtils.copy(in, outputStream);
-            try (ZipFile zipFile = new ZipFile(file)) {
-                assertThat(zipFile.size(), greaterThan(0));
-            }
-        }
-    }
+		URI nestedRO = findNestedROUri();
+		Model nestedModel = ModelFactory.createDefaultModel();
+		try (InputStream in = webResource
+				.uri(nestedRO.resolve(".ro/annotations/workflow.link.ttl"))
+				.accept("application/rdf+xml").get(InputStream.class)) {
+			nestedModel.read(in, null);
+		}
+		nestedModel.write(System.out, "TURTLE");
+		Resource s = nestedModel
+				.createResource("http://ns.taverna.org.uk/2010/workflowBundle/e2b20c03-a538-4797-8768-45dbba022644/workflow/MusicClassificationExperiment/");
+		Property p = nestedModel
+				.createProperty("http://purl.org/wf4ever/wfdesc#hasWorkflowDefinition");
+		RDFNode o = nestedModel.createResource(nestedRO.resolve(
+				"workflow.wfbundle").toString());
+		Assert.assertTrue(nestedModel.contains(s, p, o));
+	}
 
+	/**
+	 * Test that the bundle is deaggregated from the parent RO after deleting.
+	 * 
+	 * @throws IOException
+	 *             when there is a communication problem
+	 */
+	@Test
+	public void shouldDeleteBundleFromParent() throws IOException {
+		try (InputStream is = getClass().getClassLoader().getResourceAsStream(
+				testDatabundlePath)) {
+			ClientResponse response = addFile(ro, "bundle.zip", is,
+					RoBundle.MIME_TYPE);
+			Assert.assertEquals(response.getEntity(String.class),
+					HttpStatus.SC_CREATED, response.getStatus());
+		}
 
-    /**
-     * The parent RO should not be available as an RO bundle.
-     * 
-     * @throws IOException
-     *             when there is a communication problem
-     */
-    @Test
-    public void shouldReturn415UnsupportedMediaType()
-            throws IOException {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(testDatabundlePath)) {
-            ClientResponse response = addFile(ro, "bundle.zip", is, RoBundle.MIME_TYPE);
-            Assert.assertEquals(response.getEntity(String.class), HttpStatus.SC_CREATED, response.getStatus());
-        }
-        ClientResponse response = webResource.uri(ro).accept("application/vnd.wf4ever.robundle+zip")
-                .get(ClientResponse.class);
-        Assert.assertEquals(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE, response.getStatus());
-    }
+		URI nestedRO = findNestedROUri();
+		webResource.uri(nestedRO)
+				.header("Authorization", "Bearer " + accessToken).delete();
+		Assert.assertNull(findNestedROUri());
+	}
 
+	/**
+	 * Test that the bundle is deleted when the parent RO is deleted.
+	 * 
+	 * @throws IOException
+	 *             when there is a communication problem
+	 */
+	@Test
+	public void shouldDeleteBundleWhenParentIsDeleted() throws IOException {
+		try (InputStream is = getClass().getClassLoader().getResourceAsStream(
+				testDatabundlePath)) {
+			ClientResponse response = addFile(ro, "bundle.zip", is,
+					RoBundle.MIME_TYPE);
+			Assert.assertEquals(response.getEntity(String.class),
+					HttpStatus.SC_CREATED, response.getStatus());
+		}
 
-    /**
-     * Test that absolute URIs in annotations are resolved against the data bundle.
-     * 
-     * @throws IOException
-     *             when there is a communication problem
-     */
-    @Test
-    public void shouldResolveAbsoluteURIs()
-            throws IOException {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(testDatabundlePath)) {
-            ClientResponse response = addFile(ro, "bundle.zip", is, RoBundle.MIME_TYPE);
-            Assert.assertEquals(response.getEntity(String.class), HttpStatus.SC_CREATED, response.getStatus());
-        }
-
-        URI nestedRO = findNestedROUri();
-        Model nestedModel = ModelFactory.createDefaultModel();
-        try (InputStream in = webResource.uri(nestedRO.resolve(".ro/annotations/workflow.link.ttl"))
-                .accept("application/rdf+xml").get(InputStream.class)) {
-            nestedModel.read(in, null);
-        }
-        nestedModel.write(System.out, "TURTLE");
-        Resource s = nestedModel
-                .createResource("http://ns.taverna.org.uk/2010/workflowBundle/e2b20c03-a538-4797-8768-45dbba022644/workflow/MusicClassificationExperiment/");
-        Property p = nestedModel.createProperty("http://purl.org/wf4ever/wfdesc#hasWorkflowDefinition");
-        RDFNode o = nestedModel.createResource(nestedRO.resolve("workflow.wfbundle").toString());
-        Assert.assertTrue(nestedModel.contains(s, p, o));
-    }
-
-
-    /**
-     * Test that the bundle is deaggregated from the parent RO after deleting.
-     * 
-     * @throws IOException
-     *             when there is a communication problem
-     */
-    @Test
-    public void shouldDeleteBundleFromParent()
-            throws IOException {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(testDatabundlePath)) {
-            ClientResponse response = addFile(ro, "bundle.zip", is, RoBundle.MIME_TYPE);
-            Assert.assertEquals(response.getEntity(String.class), HttpStatus.SC_CREATED, response.getStatus());
-        }
-
-        URI nestedRO = findNestedROUri();
-        webResource.uri(nestedRO).delete();
-        Assert.assertNull(findNestedROUri());
-    }
-
-
-    /**
-     * Test that the bundle is deleted when the parent RO is deleted.
-     * 
-     * @throws IOException
-     *             when there is a communication problem
-     */
-    @Test
-    public void shouldDeleteBundleWhenParentIsDeleted()
-            throws IOException {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(testDatabundlePath)) {
-            ClientResponse response = addFile(ro, "bundle.zip", is, RoBundle.MIME_TYPE);
-            Assert.assertEquals(response.getEntity(String.class), HttpStatus.SC_CREATED, response.getStatus());
-        }
-
-        URI nestedRO = findNestedROUri();
-        webResource.uri(ro).delete();
-        ClientResponse response = webResource.uri(nestedRO).get(ClientResponse.class);
-        Assert.assertEquals(HttpStatus.SC_GONE, response.getStatus());
-    }
+		URI nestedRO = findNestedROUri();
+		webResource.uri(ro).header("Authorization", "Bearer " + accessToken)
+				.delete();
+		ClientResponse response = webResource.uri(nestedRO).get(
+				ClientResponse.class);
+		Assert.assertEquals(HttpStatus.SC_GONE, response.getStatus());
+	}
 }
