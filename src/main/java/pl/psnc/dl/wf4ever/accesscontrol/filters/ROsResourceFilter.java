@@ -146,7 +146,7 @@ public class ROsResourceFilter implements ContainerRequestFilter {
 
 	private ROType discoverResource(String path) {
 		String[] requestPathArray = path.split("ROs");
-		if (requestPathArray.length == 1) {
+		if (requestPathArray.length == 0) {
 			return ROType.RO_COLLECTION;
 		}
 		String resourcePath = requestPathArray[1];
