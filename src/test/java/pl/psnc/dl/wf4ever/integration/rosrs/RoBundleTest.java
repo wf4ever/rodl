@@ -221,4 +221,5 @@ public class RoBundleTest extends RosrsTest {
         ClientResponse response = webResource.uri(nestedRO).get(ClientResponse.class);
         Assert.assertEquals(HttpStatus.SC_GONE, response.getStatus());
     }
+
 }

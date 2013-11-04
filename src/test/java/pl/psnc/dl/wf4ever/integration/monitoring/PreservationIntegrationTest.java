@@ -27,59 +27,61 @@ import com.sun.syndication.io.FeedException;
 @Category(IntegrationTest.class)
 public class PreservationIntegrationTest extends AbstractIntegrationTest {
 
-    /** A sample file name. */
-    private String filePath = "foo.txt";
-    private URI ro;
-    /** Logger. */
-    private static final Logger LOGGER = Logger.getLogger(PreservationIntegrationTest.class);
+	/** A sample file name. */
+	private String filePath = "foo.txt";
+	private URI ro;
+	/** Logger. */
+	private static final Logger LOGGER = Logger
+			.getLogger(PreservationIntegrationTest.class);
 
+	@Before
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		ro = createRO();
+		addLoremIpsumFile(ro, filePath);
+	}
 
-    @Before
-    @Override
-    public void setUp()
-            throws Exception {
-        super.setUp();
-        ro = createRO();
-        addLoremIpsumFile(ro, filePath);
-    }
+	/**
+	 * Modify a checksum in the database, force monitoring and check that a
+	 * notification is generated.
+	 * 
+	 * @throws FeedException
+	 *             can't load the feed
+	 * @throws IOException
+	 *             can't load the feed
+	 * @throws InterruptedException
+	 *             interrupted when waiting for the notifications
+	 * @throws DArceoException
+	 *             when it can't connect to dArceo
+	 */
+	@Test
+	public final void test() throws FeedException, IOException,
+			InterruptedException, DArceoException {
 
+		// force scheduler
+		webResource.path("admin/monitor/all")
+				.header("Authorization", "Bearer " + adminCreds).post();
 
-    /**
-     * Modify a checksum in the database, force monitoring and check that a notification is generated.
-     * 
-     * @throws FeedException
-     *             can't load the feed
-     * @throws IOException
-     *             can't load the feed
-     * @throws InterruptedException
-     *             interrupted when waiting for the notifications
-     * @throws DArceoException
-     *             when it can't connect to dArceo
-     */
-    @Test
-    public final void test()
-            throws FeedException, IOException, InterruptedException, DArceoException {
+		Properties properties = new Properties();
+		properties.load(SynchronizationTest.class.getClassLoader()
+				.getResourceAsStream("connection.properties"));
+		if (properties.getProperty("repository_url") == null
+				|| properties.getProperty("repository_url").isEmpty()) {
+			LOGGER.debug("repository url not specified SynchronizationTest skipped");
+			return;
+		}
 
-        //force scheduler
-        webResource.path("admin/monitor/all").header("Authorization", "Bearer " + accessToken).post();
+		int times = 0;
+		while (++times < 10) {
+			Thread.sleep(10000);
+			if (DArceoClient.getInstance().getBlocking(ro) != null) {
+				DArceoClient.getInstance().delete(ro);
+				return;
+			}
 
-        Properties properties = new Properties();
-        properties.load(SynchronizationTest.class.getClassLoader().getResourceAsStream("connection.properties"));
-        if (properties.getProperty("repository_url") == null || properties.getProperty("repository_url").isEmpty()) {
-            LOGGER.debug("repository url not specified SynchronizationTest skipped");
-            return;
-        }
-
-        int times = 0;
-        while (++times < 10) {
-            Thread.sleep(10000);
-            if (DArceoClient.getInstance().getBlocking(ro) != null) {
-                DArceoClient.getInstance().delete(ro);
-                return;
-            }
-
-        }
-        Assert.fail("Object " + ro + " didn't appear in dArceo");
-    }
+		}
+		Assert.fail("Object " + ro + " didn't appear in dArceo");
+	}
 
 }

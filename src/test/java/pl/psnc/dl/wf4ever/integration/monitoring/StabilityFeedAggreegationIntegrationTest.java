@@ -85,6 +85,7 @@ public class StabilityFeedAggreegationIntegrationTest extends AbstractIntegratio
 		stubFor(get(
 				urlMatching((checklistNotificationsUri.toString() + ".*empty.*").replace(
 						HOST_STRING, ""))).willReturn(
+
 				aResponse().withStatus(200).withBody(
 						IOUtils.toString(checklistRefactorNoEntryInput))));
 	}

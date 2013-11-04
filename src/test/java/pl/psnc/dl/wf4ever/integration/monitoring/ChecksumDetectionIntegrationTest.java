@@ -69,8 +69,8 @@ public class ChecksumDetectionIntegrationTest extends AbstractIntegrationTest {
 		addLoremIpsumFile(ro, filePath);
 
 		InputStream checklistRefactorNoEntryInput = StabilityFeedAggregationJobTest.class
-				.getClassLoader().getResourceAsStream(
-						"monitoring/stability_service_notification_case_empty.xml");
+				.getClassLoader()
+				.getResourceAsStream("monitoring/stability_service_notification_case_empty.xml");
 		stubFor(get(urlMatching((".*roevaluate.*"))).willReturn(
 				aResponse().withStatus(200).withBody(
 						IOUtils.toString(checklistRefactorNoEntryInput))));
@@ -90,6 +90,7 @@ public class ChecksumDetectionIntegrationTest extends AbstractIntegrationTest {
 	@Test
 	@SuppressWarnings("unchecked")
 	public final void test() throws FeedException, IOException, InterruptedException {
+
 		// check what is the most recent notification
 		SyndFeed feed = getNotifications(ro, null);
 		List<SyndEntry> entries = feed.getEntries();
