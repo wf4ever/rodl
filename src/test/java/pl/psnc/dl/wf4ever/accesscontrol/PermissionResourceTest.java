@@ -19,68 +19,74 @@ import com.sun.jersey.api.client.ClientResponse;
 @Category(IntegrationTest.class)
 public class PermissionResourceTest extends AccessControlTest {
 
-    @Override
-    @Before
-    public void setUp()
-            throws Exception {
-        super.setUp();
-    }
+	@Override
+	@Before
+	public void setUp() throws Exception {
+		super.setUp();
+	}
 
+	@Override
+	@After
+	public void tearDown() throws Exception {
+		super.tearDown();
+	}
 
-    @Override
-    @After
-    public void tearDown()
-            throws Exception {
-        super.tearDown();
-    }
+	@Test
+	public void testIfPermissionIsSetOnceTheROisCreatedAndDeletedWithRO()
+			throws InterruptedException {
+		URI createdRO = createRO();
+		Permission[] permissions = webResource
+				.path("accesscontrol/permissions/")
+				.queryParam("ro", createdRO.toString())
+				.header("Authorization", "Bearer " + adminCreds)
+				.accept(MediaType.APPLICATION_JSON).get(Permission[].class);
 
+		Assert.assertEquals(permissions.length, 1);
 
-    @Test
-    public void testIfPermissionIsSetOnceTheROisCreatedAndDeletedWithRO()
-            throws InterruptedException {
-        URI createdRO = createRO();
-        Permission[] permissions = webResource.path("accesscontrol/permissions/")
-                .queryParam("ro", createdRO.toString()).header("Authorization", "Bearer " + adminCreds)
-                .accept(MediaType.APPLICATION_JSON).get(Permission[].class);
+		ClientResponse response = grantPermission(createdRO, Role.REDAER,
+				userProfile2);
+		Permission serverPermission = response.getEntity(Permission.class);
+		Assert.assertEquals(response.getLocation(), serverPermission.getUri());
+		Assert.assertEquals(201, response.getStatus());
 
-        Assert.assertEquals(permissions.length, 1);
+		permissions = webResource.path("accesscontrol/permissions/")
+				.queryParam("ro", createdRO.toString())
+				.header("Authorization", "Bearer " + adminCreds)
+				.accept(MediaType.APPLICATION_JSON).get(Permission[].class);
+		Assert.assertEquals(2, permissions.length);
 
-        ClientResponse response = grantPermission(createdRO, Role.REDAER, userProfile);
-        Permission serverPermission = response.getEntity(Permission.class);
-        Assert.assertEquals(response.getLocation(), serverPermission.getUri());
-        Assert.assertEquals(201, response.getStatus());
+		// conflict
+		response = grantPermission(createdRO, Role.REDAER, userProfile);
+		response = grantPermission(createdRO, Role.REDAER, userProfile);
 
-        permissions = webResource.path("accesscontrol/permissions/").queryParam("ro", createdRO.toString())
-                .header("Authorization", "Bearer " + adminCreds).accept(MediaType.APPLICATION_JSON)
-                .get(Permission[].class);
-        Assert.assertEquals(2, permissions.length);
+		Assert.assertEquals(409, response.getStatus());
+		delete(createdRO, adminCreds);
 
-        //conflict
-        response = grantPermission(createdRO, Role.REDAER, userProfile);
-        Assert.assertEquals(409, response.getStatus());
-        delete(createdRO, adminCreds);
+		permissions = webResource.path("accesscontrol/permissions/")
+				.queryParam("ro", createdRO.toString())
+				.header("Authorization", "Bearer " + adminCreds)
+				.accept(MediaType.APPLICATION_JSON).get(Permission[].class);
+		Assert.assertEquals(permissions.length, 0);
+	}
 
-        permissions = webResource.path("accesscontrol/permissions/").queryParam("ro", createdRO.toString())
-                .header("Authorization", "Bearer " + adminCreds).accept(MediaType.APPLICATION_JSON)
-                .get(Permission[].class);
-        Assert.assertEquals(permissions.length, 0);
-    }
-
-
-    @Test
-    public void testReaderWriterAndAuthorShoulBeAbleToReadRO() {
-        URI createdRO = createRO(accessToken);
-        ClientResponse response = webResource.uri(createdRO).header("Authorization", "Bearer " + accessToken)
-                .get(ClientResponse.class);
-        Assert.assertEquals(200, response.getStatus());
-        grantPermission(createdRO, Role.REDAER, userProfile2);
-        response = webResource.uri(createdRO).accept("application/json")
-                .header("Authorization", "Bearer " + accessToken2).get(ClientResponse.class);
-        grantPermission(createdRO, Role.REDAER, userProfile2);
-        response = webResource.uri(createdRO).accept("application/json")
-                .header("Authorization", "Bearer " + accessToken2).get(ClientResponse.class);
-        response = webResource.uri(createdRO).accept("application/json")
-                .header("Authorization", "Bearer " + accessToken2).get(ClientResponse.class);
-    }
+	@Test
+	public void testReaderWriterAndAuthorShoulBeAbleToReadRO() {
+		URI createdRO = createRO(accessToken);
+		ClientResponse response = webResource.uri(createdRO)
+				.header("Authorization", "Bearer " + accessToken)
+				.get(ClientResponse.class);
+		Assert.assertEquals(200, response.getStatus());
+		grantPermission(createdRO, Role.REDAER, userProfile2);
+		response = webResource.uri(createdRO).accept("application/json")
+				.header("Authorization", "Bearer " + accessToken2)
+				.get(ClientResponse.class);
+		grantPermission(createdRO, Role.REDAER, userProfile2);
+		response = webResource.uri(createdRO).accept("application/json")
+				.header("Authorization", "Bearer " + accessToken2)
+				.get(ClientResponse.class);
+		response = webResource.uri(createdRO).accept("application/json")
+				.header("Authorization", "Bearer " + accessToken2)
+				.get(ClientResponse.class);
+	}
 
 }
