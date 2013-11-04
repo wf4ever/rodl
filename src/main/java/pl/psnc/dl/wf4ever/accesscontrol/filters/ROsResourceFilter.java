@@ -96,6 +96,12 @@ public class ROsResourceFilter implements ContainerRequestFilter {
 			}
 		}
 		// if user is an author
+		if (request.getMethod().equals("GET")
+				&& resourceType == ROType.RO_COLLECTION) {
+			// not sure what to do...
+			// leave to for the app logic
+			return request;
+		}
 		List<Permission> owners = permissionDAO.findByUserROAndPermission(
 				userProfile, roUri.toString(), Role.OWNER);
 		if (owners != null) {
