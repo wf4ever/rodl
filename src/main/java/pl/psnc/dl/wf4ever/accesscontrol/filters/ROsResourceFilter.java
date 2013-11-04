@@ -127,6 +127,12 @@ public class ROsResourceFilter implements ContainerRequestFilter {
 		}
 		// if there is edit request (POST,PUT,DELETE) chec if user has a writer
 		// permission
+
+		// exception only author can delete
+		if (request.getMethod().equals("DELETE") && isRO(request.getPath())) {
+			throw new ForbiddenException("Only an owner can delet whole RO");
+		}
+
 		if (request.getMethod().equals("POST")
 				|| request.getMethod().equals("DELETE")
 				|| request.getMethod().equals("PUT")) {
@@ -148,6 +154,18 @@ public class ROsResourceFilter implements ContainerRequestFilter {
 
 		}
 		return request;
+	}
+
+	private boolean isRO(String path) {
+		String[] requestPathArray = path.split("ROs/");
+		if (requestPathArray.length == 0) {
+			return false;
+		}
+		String[] resourcePath = requestPathArray[1].split("/");
+		if (resourcePath.length == 1) {
+			return true;
+		}
+		return false;
 	}
 
 	private ROType discoverResource(String path) {
