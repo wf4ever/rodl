@@ -17,10 +17,13 @@ import javax.ws.rs.core.UriInfo;
 
 import org.openrdf.rio.RDFFormat;
 
+import pl.psnc.dl.wf4ever.accesscontrol.AccessModeResource;
+import pl.psnc.dl.wf4ever.accesscontrol.PermissionResource;
 import pl.psnc.dl.wf4ever.evo.CopyResource;
 import pl.psnc.dl.wf4ever.evo.EvoInfoResource;
 import pl.psnc.dl.wf4ever.evo.FinalizeResource;
 import pl.psnc.dl.wf4ever.notifications.NotificationResource;
+import pl.psnc.dl.wf4ever.vocabulary.AccessControlService;
 import pl.psnc.dl.wf4ever.vocabulary.NotificationService;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dl.wf4ever.vocabulary.ROEVOService;
@@ -42,62 +45,73 @@ import com.sun.jersey.api.view.Viewable;
 @Path("/")
 public class RootResource {
 
-    /**
-     * Return the main HTML page.
-     * 
-     * @param uriInfo
-     *            URI info
-     * @return an HTML page
-     */
-    @GET
-    @Produces("text/html")
-    public Response index(@Context UriInfo uriInfo) {
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("version", ApplicationProperties.getVersion());
-        map.put("rosrsuri", uriInfo.getAbsolutePathBuilder().path("ROs/").build());
-        map.put("roevouri", uriInfo.getAbsolutePathBuilder().path("evo/").build());
-        return Response.ok(new Viewable("/index", map)).build();
-    }
+	/**
+	 * Return the main HTML page.
+	 * 
+	 * @param uriInfo
+	 *            URI info
+	 * @return an HTML page
+	 */
+	@GET
+	@Produces("text/html")
+	public Response index(@Context UriInfo uriInfo) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("version", ApplicationProperties.getVersion());
+		map.put("rosrsuri", uriInfo.getAbsolutePathBuilder().path("ROs/").build());
+		map.put("roevouri", uriInfo.getAbsolutePathBuilder().path("evo/").build());
+		return Response.ok(new Viewable("/index", map)).build();
+	}
 
+	/**
+	 * Get a service description as an RDF graph.
+	 * 
+	 * @param uriInfo
+	 *            injected context information
+	 * @param accept
+	 *            accept header
+	 * @return RDF service description, format subject to content-negotiation
+	 */
+	@GET
+	@Produces({ "application/rdf+xml", "text/turtle", "*/*" })
+	public Response getServiceDescription(@Context UriInfo uriInfo,
+			@HeaderParam("Accept") String accept) {
+		RDFFormat format = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
 
-    /**
-     * Get a service description as an RDF graph.
-     * 
-     * @param uriInfo
-     *            injected context information
-     * @param accept
-     *            accept header
-     * @return RDF service description, format subject to content-negotiation
-     */
-    @GET
-    @Produces({ "application/rdf+xml", "text/turtle", "*/*" })
-    public Response getServiceDescription(@Context UriInfo uriInfo, @HeaderParam("Accept") String accept) {
-        RDFFormat format = RDFFormat.forMIMEType(accept, RDFFormat.RDFXML);
+		OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+		Resource service = model.createResource(uriInfo.getAbsolutePath().toString());
+		URI baseNotificationUri = uriInfo.getAbsolutePathBuilder().path(NotificationResource.class)
+				.build();
+		Literal notificationsTpl = model.createLiteral(baseNotificationUri.toString()
+				+ "{?ro,from,to,source,limit}");
+		service.addProperty(NotificationService.notifications, notificationsTpl);
 
-        OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-        Resource service = model.createResource(uriInfo.getAbsolutePath().toString());
-        URI baseNotificationUri = uriInfo.getAbsolutePathBuilder().path(NotificationResource.class).build();
-        Literal notificationsTpl = model.createLiteral(baseNotificationUri.toString() + "{?ro,from,to,source,limit}");
-        service.addProperty(NotificationService.notifications, notificationsTpl);
+		URI basePermissionsUri = uriInfo.getAbsolutePathBuilder().path(PermissionResource.class)
+				.build();
+		Literal permissionsTpl = model.createLiteral(basePermissionsUri.toString() + "{?ro}");
+		service.addProperty(AccessControlService.permissions, permissionsTpl);
 
-        URI copyUri = uriInfo.getAbsolutePathBuilder().path(CopyResource.class).build();
-        Literal copyTpl = model.createLiteral(copyUri.toString());
-        URI finalizeUri = uriInfo.getAbsolutePathBuilder().path(FinalizeResource.class).build();
-        Literal finalizeTpl = model.createLiteral(finalizeUri.toString());
-        URI infoUri = uriInfo.getAbsolutePathBuilder().path(EvoInfoResource.class).build();
-        Literal infoTpl = model.createLiteral(infoUri.toString() + "{?ro}");
-        service.addProperty(ROEVOService.copy, copyTpl);
-        service.addProperty(ROEVOService.finalize, finalizeTpl);
-        service.addProperty(ROEVOService.info, infoTpl);
+		URI baseModesUri = uriInfo.getAbsolutePathBuilder().path(AccessModeResource.class).build();
+		Literal modesTpl = model.createLiteral(baseModesUri.toString() + "{?ro}");
+		service.addProperty(AccessControlService.modes, modesTpl);
 
-        URI zipUri = uriInfo.getAbsolutePathBuilder().path(ROFromZipResource.class).build();
-        service.addProperty(RO.createFromZip, zipUri.resolve("create").toString());
-        service.addProperty(RO.uploadAZip, zipUri.resolve("upload").toString());
+		URI copyUri = uriInfo.getAbsolutePathBuilder().path(CopyResource.class).build();
+		Literal copyTpl = model.createLiteral(copyUri.toString());
+		URI finalizeUri = uriInfo.getAbsolutePathBuilder().path(FinalizeResource.class).build();
+		Literal finalizeTpl = model.createLiteral(finalizeUri.toString());
+		URI infoUri = uriInfo.getAbsolutePathBuilder().path(EvoInfoResource.class).build();
+		Literal infoTpl = model.createLiteral(infoUri.toString() + "{?ro}");
+		service.addProperty(ROEVOService.copy, copyTpl);
+		service.addProperty(ROEVOService.finalize, finalizeTpl);
+		service.addProperty(ROEVOService.info, infoTpl);
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        model.write(out, format.getName().toUpperCase(), null);
-        InputStream description = new ByteArrayInputStream(out.toByteArray());
+		URI zipUri = uriInfo.getAbsolutePathBuilder().path(ROFromZipResource.class).build();
+		service.addProperty(RO.createFromZip, zipUri.resolve("create").toString());
+		service.addProperty(RO.uploadAZip, zipUri.resolve("upload").toString());
 
-        return Response.ok(description, format.getDefaultMIMEType()).build();
-    }
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		model.write(out, format.getName().toUpperCase(), null);
+		InputStream description = new ByteArrayInputStream(out.toByteArray());
+
+		return Response.ok(description, format.getDefaultMIMEType()).build();
+	}
 }
