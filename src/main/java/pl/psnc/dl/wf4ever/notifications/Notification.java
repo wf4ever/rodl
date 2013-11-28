@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
+import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Mismatch;
@@ -463,6 +464,42 @@ public class Notification implements Serializable {
 		}
 
 		/**
+		 * An annotation has been created.
+		 * 
+		 * @param component
+		 *            the annotation that has been added
+		 * @return a title in plain text
+		 */
+		public static String created(Annotation component) {
+			return String.format("An annotation has been added to the Research Object %s",
+					component.getResearchObject().getName());
+		}
+
+		/**
+		 * An annotation has been deleted.
+		 * 
+		 * @param component
+		 *            the annotation that has been deleted
+		 * @return a title in plain text
+		 */
+		public static String deleted(Annotation component) {
+			return String.format("An annotation has been deleted from the Research Object %s",
+					component.getResearchObject().getName());
+		}
+
+		/**
+		 * An annotation has been updated.
+		 * 
+		 * @param component
+		 *            the annotation that has been updated
+		 * @return a title in plain text
+		 */
+		public static String updated(Annotation component) {
+			return String.format("A annotation has been updated in the Research Object %s",
+					component.getResearchObject().getName());
+		}
+
+		/**
 		 * Checksum mismatches have been detected.
 		 * 
 		 * @param researchObject
@@ -535,6 +572,20 @@ public class Notification implements Serializable {
 		}
 
 		/**
+		 * An annotation has been created.
+		 * 
+		 * @param component
+		 *            the resource that has been updated
+		 * @return a message in HTML
+		 */
+		public static String created(Annotation component) {
+			return wrap(String
+					.format("<p>An annotation has been added to the Research Object.</p><ul><li>The Research Object: <a href=\"%s\">%<s</a>.</li><li>The annotation: <a href=\"%s\">%<s</a>.</li><li>The annotation body: <a href=\"%s\">%<s</a>.</li></ul>",
+							component.getResearchObject().getUri().toString(), component.getUri()
+									.toString(), component.getBody().getUri().toString()));
+		}
+
+		/**
 		 * A resource has been deleted.
 		 * 
 		 * @param component
@@ -549,6 +600,20 @@ public class Notification implements Serializable {
 		}
 
 		/**
+		 * An annotation has been deleted.
+		 * 
+		 * @param component
+		 *            the resource that has been deleted
+		 * @return a message in HTML
+		 */
+		public static String deleted(Annotation component) {
+			return wrap(String
+					.format("<p>An annotation has been deleted from the Research Object.</p><ul><li>The Research Object: <a href=\"%s\">%<s</a>.</li><li>The annotation: <em>%s</em>.</li><li>The annotation body: <em>%s</em>.</li></ul>",
+							component.getResearchObject().getUri().toString(), component.getUri()
+									.toString(), component.getBody().getUri().toString()));
+		}
+
+		/**
 		 * A resource has been updated.
 		 * 
 		 * @param component
@@ -560,6 +625,20 @@ public class Notification implements Serializable {
 					.format("<p>A resource has been updated in the Research Object.</p><ul><li>The Research Object: <a href=\"%s\">%<s</a>.</li><li>The resource: <a href=\"%s\">%<s</a>.</li></ul>",
 							component.getResearchObject().getUri().toString(), component.getUri()
 									.toString()));
+		}
+
+		/**
+		 * An annotation has been updated.
+		 * 
+		 * @param component
+		 *            the resource that has been updated
+		 * @return a message in HTML
+		 */
+		public static String updated(Annotation component) {
+			return wrap(String
+					.format("<p>An annotation has been updated in the Research Object.</p><ul><li>The Research Object: <a href=\"%s\">%<s</a>.</li><li>The annotation: <a href=\"%s\">%<s</a>.</li><li>The annotation body: <a href=\"%s\">%<s</a>.</li></ul>",
+							component.getResearchObject().getUri().toString(), component.getUri()
+									.toString(), component.getBody().getUri().toString()));
 		}
 
 		/**
