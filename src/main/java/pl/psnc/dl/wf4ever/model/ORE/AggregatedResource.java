@@ -34,8 +34,10 @@ import pl.psnc.dl.wf4ever.model.RO.FolderEntry;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectComponentSerializable;
 
+import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
@@ -374,9 +376,28 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
             // FIXME such resources should have the MIME type set anyway
             format = RDFFormat.forFileName(getPath());
         }
-        if (format == null) {
+        if (format == null) { //TRY FIRST IF IT IS TURTLE
+        	InputStream is = builder.getDigitalLibrary().getFileContents(researchObject.getUri(), filePath);
+        	OntModel model = ModelFactory.createOntologyModel();
+        	try {
+        		if(is != null) {
+		        	model.read(is, "", RDFFormat.TURTLE.getName().toUpperCase());
+					format = RDFFormat.TURTLE;
+					ResourceMetadata updatedStats = getStats();
+					updatedStats.setMimeType("text/turtle");
+					setStats(updatedStats);
+        		}
+        	} catch (Exception e) {
+        		;//it isn't TURTLE
+        	}
+        }
+        if (format == null) { //OTHERWISE DEFAULT TO RDF/XML
             LOGGER.warn("Unrecognized RDF format for file: " + filePath + ", assuming RDF/XML");
             format = RDFFormat.RDFXML;
+            
+			ResourceMetadata updatedStats = getStats();
+			updatedStats.setMimeType("application/rdf+xml");
+			setStats(updatedStats);
         }
         try (InputStream data = builder.getDigitalLibrary().getFileContents(researchObject.getUri(), filePath)) {
             if (data == null) {
