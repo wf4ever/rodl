@@ -16,12 +16,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.openrdf.rio.RDFFormat;
-
 import pl.psnc.dl.wf4ever.db.ResourceInfo;
 import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
@@ -36,7 +34,6 @@ import pl.psnc.dl.wf4ever.sparql.RO_TurtleWriter;
 import pl.psnc.dl.wf4ever.sparql.ResearchObjectRelativeWriter;
 import pl.psnc.dl.wf4ever.util.MimeTypeUtil;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
-
 import com.github.jsonldjava.core.JSONLD;
 import com.github.jsonldjava.core.JSONLDProcessingError;
 import com.github.jsonldjava.core.JSONLDTripleCallback;
@@ -350,6 +347,7 @@ public class RoBundle extends Resource {
             try (ZipFile zipFile = new ZipFile(temp)) {
                 URI base = URI.create("app://" + UUID.randomUUID() + "/");
                 com.hp.hpl.jena.rdf.model.Resource manifestR = loadManifest(zipFile, base);
+                //				System.out.println("Manifest in Turtle");
                 //                manifestR.getModel().write(System.out, "TURTLE");
                 ResIterator it = manifestR.getModel().listSubjectsWithProperty(ORE.isDescribedBy, manifestR);
                 com.hp.hpl.jena.rdf.model.Resource bundleR;
@@ -373,6 +371,9 @@ public class RoBundle extends Resource {
                 // The ZIP archive is passed to extract folders
                 Collection<? extends Folder> folders = extractFoldersFromBundle(bundleR, bundleResearchObject, zipFile);
                 LOGGER.info("Identified " + folders.size() + " valid folders in " + getName());
+                //for (Folder element : folders) 
+                //	for (Entry<URI, FolderEntry> entry : element.getFolderEntries().entrySet())	
+                //	    System.out.println("entry folder URI: "+entry.getKey() + " entry folder value: " + entry.getValue()+" entry folder value name: "+entry.getValue().getName()+" entry folder value entryname: "+entry.getValue().getEntryName()+" proxyin: "+entry.getValue().getProxyIn().getUri()+" and proxyfor: "+entry.getValue().getProxyFor().getUri());
 
                 // Create the nested RO
                 URI nestedROUri = calculateNestedROUri();
@@ -452,9 +453,11 @@ public class RoBundle extends Resource {
     private Set<? extends Resource> extractResourcesFromBundle(com.hp.hpl.jena.rdf.model.Resource bundleR,
             ResearchObject bundleResearchObject, ZipFile zipFile) {
         Set<Resource> resources = new HashSet<>();
+        //Using mediatype to filter empty folders
         String queryString = String
                 .format(
-                    "PREFIX ore: <%s> SELECT ?resource ?proxy ?created WHERE { <%s> ore:aggregates ?resource . ?resource <http://purl.org/pav/createdOn> ?created ; <http://purl.org/wf4ever/bundle#hasProxy> ?proxy . FILTER NOT EXISTS { ?other_resource ore:proxyIn ?resource . } }",
+                    //"PREFIX ore: <%s> SELECT ?resource ?proxy ?created WHERE { <%s> ore:aggregates ?resource . ?resource <http://purl.org/pav/createdOn> ?created ; <http://purl.org/wf4ever/bundle#hasProxy> ?proxy . FILTER NOT EXISTS { ?other_resource ore:proxyIn ?resource . } }",
+                	"PREFIX ore: <%s> SELECT ?resource ?proxy ?created ?mediatype WHERE { <%s> ore:aggregates ?resource . ?resource <http://purl.org/pav/createdOn> ?created ; <http://purl.org/wf4ever/bundle#hasProxy> ?proxy ; <http://purl.org/dc/elements/1.1/format> ?mediatype . FILTER NOT EXISTS { ?other_resource ore:proxyIn ?resource . } }",
                     ORE.NAMESPACE, bundleR.getURI());
         Query query = QueryFactory.create(queryString);
         QueryExecution qe = QueryExecutionFactory.create(query, bundleR.getModel());
@@ -583,9 +586,11 @@ public class RoBundle extends Resource {
     private Set<? extends Folder> extractFoldersFromBundle(com.hp.hpl.jena.rdf.model.Resource bundleR,
             ResearchObject bundleResearchObject, ZipFile zipFile) {
         Map<URI, BundleFolder> folders = new HashMap<>();
+        //Using mediatype to filter empty folders
         String queryString = String
                 .format(
-                    "PREFIX ore: <%s> SELECT ?resource ?proxy ?created ?content WHERE { <%s> ore:aggregates ?resource . ?resource <http://purl.org/pav/createdOn> ?created ; <http://purl.org/wf4ever/bundle#hasProxy> ?proxy . ?content ore:proxyIn ?resource . }",
+                    //"PREFIX ore: <%s> SELECT ?resource ?proxy ?created ?content WHERE { <%s> ore:aggregates ?resource . ?resource <http://purl.org/pav/createdOn> ?created ; <http://purl.org/wf4ever/bundle#hasProxy> ?proxy . ?content ore:proxyIn ?resource . }",
+                	"PREFIX ore: <%s> SELECT ?resource ?folder ?created ?proxy ?mediatype WHERE { <%s> ore:aggregates ?resource . ?resource <http://purl.org/wf4ever/bundle#inFolder> ?folder ; <http://purl.org/pav/createdOn> ?created ; <http://purl.org/wf4ever/bundle#hasProxy> ?proxy ; <http://purl.org/dc/elements/1.1/format> ?mediatype . }",
                     ORE.NAMESPACE, bundleR.getURI());
         Query query = QueryFactory.create(queryString);
         QueryExecution qe = QueryExecutionFactory.create(query, bundleR.getModel());
@@ -593,6 +598,66 @@ public class RoBundle extends Resource {
             ResultSet results = qe.execSelect();
             while (results.hasNext()) {
                 QuerySolution solution = results.next();
+                RDFNode resourceR = solution.get("?resource");
+                RDFNode folderR = solution.get("?folder");
+                RDFNode createdR = solution.get("?created");
+                RDFNode proxyR = solution.get("?proxy");
+                LOGGER.debug(String.format("Found folder %s with resource %s created on %s with proxy %s", folderR,
+                		resourceR, createdR, proxyR));
+                // resource must be a URI resource
+                if (!folderR.isURIResource()) {
+                    LOGGER.warn("Folder " + folderR + " is not a URI resource, it will be ignored");
+                    continue;
+                }
+                URI rUri = URI.create(folderR.asResource().getURI());
+                // content must be a URI resource
+                if (!resourceR.isURIResource()) {
+                    LOGGER.warn("Folder content " + resourceR + " is not a URI resource, it will be ignored");
+                    continue;
+                }
+                URI cUri = URI.create(resourceR.asResource().getURI());
+                if (!createdR.isLiteral()) {
+                    LOGGER.warn("Created " + createdR + " is not a literal, resource " + resourceR + " will be ignored");
+                    continue;
+                }
+                DateTime created2 = DateTime.parse(createdR.asLiteral().getString());
+                if (!proxyR.isURIResource()) {
+                    LOGGER.warn("Proxy " + proxy + " is not a URI resource, resource " + resourceR + " will be ignored");
+                    continue;
+                }
+                if (!rUri.equals(bundleResearchObject.getUri())){
+                	if (!folders.containsKey(rUri)) {
+                        BundleFolder folder = new BundleFolder(builder, bundleResearchObject, rUri, null, created2);
+                        folders.put(rUri, folder);
+                        Proxy proxy2 = builder.buildProxy(URI.create(proxyR.asResource().getURI()), folder,
+                            bundleResearchObject);
+                        folder.setProxy(proxy2);
+                        
+                        //Take one level up of folders (so we get intermediates)
+                        //TODO: make this more generic to n levels up (and refactor?)
+                        URI parent = rUri.getPath().endsWith("/") ? rUri.resolve("..") : rUri.resolve(".");
+                       	if (!parent.equals(bundleResearchObject.getUri())){
+                       		if (!folders.containsKey(parent)) {
+                       			BundleFolder folderParent = new BundleFolder(builder, bundleResearchObject, parent, null, created2);
+                       			folders.put(parent, folderParent);
+                       			Proxy proxyParent = builder.buildProxy(URI.create(proxyR.asResource().getURI()), folderParent,
+                       					bundleResearchObject);
+                       			folderParent.setProxy(proxyParent);
+                       		}
+                       		// the target may be some BundleResource so let's make the URI relative if possible
+                       		URI relativeResourceUri = bundleResearchObject.getUri().relativize(rUri);
+                       		Resource resource = new BundleResource(builder, relativeResourceUri, bundleResearchObject, null, null,
+                                   zipFile);
+                       		folders.get(parent).addFolderEntry(resource);
+                       	}
+                    }
+                    // the target may be some BundleResource so let's make the URI relative if possible
+                    URI relativeResourceUri = bundleResearchObject.getUri().relativize(cUri);
+                    Resource resource = new BundleResource(builder, relativeResourceUri, bundleResearchObject, null, null,
+                            zipFile);
+                    folders.get(rUri).addFolderEntry(resource);
+                }
+                /*
                 RDFNode resourceR = solution.get("?resource");
                 RDFNode proxyR = solution.get("?proxy");
                 RDFNode createdR = solution.get("?created");
@@ -634,7 +699,9 @@ public class RoBundle extends Resource {
                 Resource resource = new BundleResource(builder, relativeResourceUri, bundleResearchObject, null, null,
                         zipFile);
                 folders.get(rUri).addFolderEntry(resource);
+                */
             }
+            folders.remove(bundleResearchObject.getUri()); //shouldnt be necessary anymore...
         } finally {
             qe.close();
         }

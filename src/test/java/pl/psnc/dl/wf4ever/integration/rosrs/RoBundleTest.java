@@ -43,7 +43,8 @@ import com.sun.jersey.api.client.ClientResponse;
 public class RoBundleTest extends RosrsTest {
 
     /** An annotation body path. */
-    private final String testDatabundlePath = "singleFiles/databundle.zip";
+    //private final String testDatabundlePath = "singleFiles/databundle.zip";
+    private final String testDatabundlePath = "singleFiles/musicWorkflowRun5.bundle.zip";
 
 
     /**
@@ -166,13 +167,15 @@ public class RoBundleTest extends RosrsTest {
 
         URI nestedRO = findNestedROUri();
         Model nestedModel = ModelFactory.createDefaultModel();
-        try (InputStream in = webResource.uri(nestedRO.resolve(".ro/annotations/workflow.link.ttl"))
+        //try (InputStream in = webResource.uri(nestedRO.resolve(".ro/annotations/workflow.link.ttl"))
+        try (InputStream in = webResource.uri(nestedRO.resolve(".ro/annotations/5ba47862-b2de-494c-b19f-fa9f82b4ef4f.ttl"))
                 .accept("application/rdf+xml").get(InputStream.class)) {
             nestedModel.read(in, null);
         }
         nestedModel.write(System.out, "TURTLE");
         Resource s = nestedModel
-                .createResource("http://ns.taverna.org.uk/2010/workflowBundle/e2b20c03-a538-4797-8768-45dbba022644/workflow/MusicClassificationExperiment/");
+        		.createResource("http://ns.taverna.org.uk/2010/workflowBundle/e3a117b3-ee21-47c3-b25e-d3d85fe817a8/workflow/MusicClassificationExperiment/");
+                //.createResource("http://ns.taverna.org.uk/2010/workflowBundle/e2b20c03-a538-4797-8768-45dbba022644/workflow/MusicClassificationExperiment/");
         Property p = nestedModel.createProperty("http://purl.org/wf4ever/wfdesc#hasWorkflowDefinition");
         RDFNode o = nestedModel.createResource(nestedRO.resolve("workflow.wfbundle").toString());
         Assert.assertTrue(nestedModel.contains(s, p, o));

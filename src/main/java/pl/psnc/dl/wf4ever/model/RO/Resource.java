@@ -106,6 +106,7 @@ public class Resource extends AggregatedResource {
             DateTime.now(), contentType);
         resource.postEvent(new ROComponentBeforeCreateEvent(resource));
         resource.setProxy(researchObject.addProxy(resource));
+        //System.out.println("size: "+content.toString().length()+" contentType: "+contentType.toString());
         resource.save(content, contentType);
         if (researchObject.getAnnotationsByBodyUri().containsKey(resource.getUri())) {
             resource.saveGraphAndSerialize();

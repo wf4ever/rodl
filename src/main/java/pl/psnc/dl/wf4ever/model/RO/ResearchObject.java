@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
+import java.util.Map.Entry;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -209,6 +210,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         ResearchObject researchObject = create(builder, uri);
         for (Resource resource : resources2) {
             if (resource.isInternal()) {
+            	//System.out.println("about to aggregate:"+resource.getPath());
                 Resource resource2 = researchObject.aggregate(resource.getPath(), resource.getSerialization(), resource
                         .getStats().getMimeType());
                 LOGGER.debug("Aggregated an internal resource " + resource2);
@@ -246,10 +248,33 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
             }
         }
         for (Folder folder : folders2) {
+            researchObject.aggregateFolder(researchObject.getUri().resolve(folder.getPath()));
+        }
+        for (Entry<URI, Folder> entryFolder : researchObject.getFolders().entrySet()){
+        	for (Folder folder : folders2) {
+        		if (folder.getPath().equals(entryFolder.getValue().getPath())){
+        			for (FolderEntry entry : folder.getFolderEntries().values()) {
+                        URI resourceUri = researchObject.getUri().resolve(entry.getProxyFor().getUri());
+                        AggregatedResource resource = researchObject.getResources().get(resourceUri); 
+                        if (resource == null) {
+                        	resource = researchObject.getFolders().get(resourceUri);
+                        	if (resource == null) {
+                        		LOGGER.warn("Resource for entry not found: " + resourceUri);
+                        		continue;
+                        	}
+                        }
+                        entryFolder.getValue().createFolderEntry(resource);
+                        LOGGER.debug("Created an entry for " + resource.getUri() + " in " + entryFolder.getValue().getUri());
+                    }
+        		}
+        	}
+        }
+        /*
+        for (Folder folder : folders2) {
             Folder folder2 = researchObject.aggregateFolder(researchObject.getUri().resolve(folder.getPath()));
             for (FolderEntry entry : folder.getFolderEntries().values()) {
                 URI resourceUri = researchObject.getUri().resolve(entry.getProxyFor().getUri());
-                AggregatedResource resource = researchObject.getResources().get(resourceUri);
+                AggregatedResource resource = researchObject.getResources().get(resourceUri); // here is problem
                 if (resource == null) {
                     LOGGER.warn("Resource for entry not found: " + resourceUri);
                     continue;
@@ -258,6 +283,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
                 LOGGER.debug("Created an entry for " + resource.getUri() + " in " + folder2.getUri());
             }
         }
+        */
         return researchObject;
     }
 
