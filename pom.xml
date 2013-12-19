@@ -277,16 +277,16 @@
 					</dependency>
 				</dependencies>
 				<configuration>
-					<!--					
+										
 					<includes>
 						<include>**/*.class</include>
 					</includes>
-					-->
+					
 					<excludedGroups>pl.psnc.dl.wf4ever.integration.IntegrationTest</excludedGroups>
 					
 					<!-- skips surefire tests without skipping failsafe tests.
-                 			Property value seems to magically default to false -->
-        			  	<skipTests>${skip.surefire.tests}</skipTests>  
+                 			Property value seems to magically default to false 
+        			  	<skipTests>${skip.surefire.tests}</skipTests>  -->
 				</configuration>
 			</plugin>
 			<plugin>
