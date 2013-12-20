@@ -746,12 +746,15 @@ public class Notification implements Serializable {
 		}
 		
 		public static String getCommentContent(Comment component) {
-			InputStream modelIs = component.getAnnotation().getGraphAsInputStream(RDFFormat.RDFXML);
+			InputStream modelIs = component.getAnnotation().getBody().getGraphAsInputStream(RDFFormat.RDFXML);
 			OntModel model = ModelFactory.createOntologyModel();
+			if (modelIs == null) { 
+				return "";
+			}
 			model.read(modelIs,"RDF/XML");
 			Statement comment = model.getProperty(model.getResource(component.getAnnotation().getResearchObject().getUri().toString()), RDFS.comment);
 			return wrap(String
-					.format("<p>%s</p>",comment.getObject().toString()));
+					.format("<p>%s</p>",comment.getLiteral().getString()));
 		}
 	}
 }

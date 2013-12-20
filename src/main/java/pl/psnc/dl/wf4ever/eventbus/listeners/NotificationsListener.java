@@ -100,7 +100,7 @@ public class NotificationsListener {
 			if (isComment(dao, res)) {
 				Comment comment = new Comment(res);
 				Notification entry = new Notification.Builder(res.getResearchObject().getUri())
-				.title(Title.updated(comment)).summary(Summary.updated(comment)).source(source)
+				.title(Title.created(comment)).summary(Summary.created(comment)).source(source)
 				.sourceName("RODL").build();
 				dao.save(entry);
 				return;
@@ -139,7 +139,7 @@ public class NotificationsListener {
 			if (isComment(dao, res)) {
 				Comment comment = new Comment(res);
 				Notification entry = new Notification.Builder(res.getResearchObject().getUri())
-				.title(Title.updated(comment)).summary(Summary.updated(comment)).source(source)
+				.title(Title.deleted(comment)).summary(Summary.deleted(comment)).source(source)
 				.sourceName("RODL").build();
 				dao.save(entry);
 				return;
