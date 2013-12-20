@@ -1,6 +1,7 @@
 package pl.psnc.dl.wf4ever.eventbus.listeners;
 
 import pl.psnc.dl.wf4ever.ApplicationProperties;
+import pl.psnc.dl.wf4ever.darceo.model.ResearchObjectComponent;
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
 import pl.psnc.dl.wf4ever.eventbus.events.ROAfterCreateEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROAfterDeleteEvent;
@@ -9,6 +10,7 @@ import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterDeleteEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterUpdateEvent;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
 import pl.psnc.dl.wf4ever.notifications.Notification;
 import pl.psnc.dl.wf4ever.notifications.Notification.Summary;
@@ -162,5 +164,10 @@ public class NotificationsListener {
 					.sourceName("RODL").build();
 			dao.save(entry);
 		}
+	}
+
+	private boolean isBody(ResearchObjectComponent component) {
+		ResearchObject ro = (ResearchObject) component.getResearchObject();
+		return ro.getAnnotationsByBodyUri().containsKey(component.getUri());
 	}
 }
