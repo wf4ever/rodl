@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.notifications;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
@@ -18,15 +19,21 @@ import javax.persistence.Table;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Mismatch;
+import pl.psnc.dl.wf4ever.notifications.notifiedmodels.Comment;
 import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectComponentSerializable;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
 
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.vocabulary.DCTerms;
+import com.hp.hpl.jena.vocabulary.RDFS;
 import com.sun.syndication.feed.atom.Content;
 import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Link;
@@ -471,10 +478,22 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String created(Annotation component) {
-			return String.format("An annotation has been added to the Research Object %s",
+			return String.format("An annotation for Research Object %s has been created by " + component.getUser().getName(),
 					component.getResearchObject().getName());
 		}
 
+		/**
+		 * An comment has been created.
+		 * 
+		 * @param component
+		 *            the annotation that has been added
+		 * @return a title in plain text
+		 */
+		public static String created(Comment component) {
+			return String.format("Research Object %s has been commented by " + component.getAnnotation().getUser().getName(),
+					component.getAnnotation().getResearchObject().getName());
+		}
+		
 		/**
 		 * An annotation has been deleted.
 		 * 
@@ -483,10 +502,22 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String deleted(Annotation component) {
-			return String.format("An annotation has been deleted from the Research Object %s",
+			return String.format("An annotation for Research Object %s has been deleted by " + component.getUser().getName(),
 					component.getResearchObject().getName());
 		}
 
+		/**
+		 * An comment has been deleted.
+		 * 
+		 * @param component
+		 *            the annotation that has been deleted
+		 * @return a title in plain text
+		 */
+		public static String deleted(Comment component) {
+			return String.format("A comment for Research Object %s has been deleted by " + component.getAnnotation().getUser().getName(),
+					component.getAnnotation().getResearchObject().getName());
+		}
+		
 		/**
 		 * An annotation has been updated.
 		 * 
@@ -495,8 +526,20 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String updated(Annotation component) {
-			return String.format("A annotation has been updated in the Research Object %s",
+			return String.format("An annotation for Research Object %s has been updated by " + component.getUser().getName(), 
 					component.getResearchObject().getName());
+		}
+	
+		/**
+		 * An comment has been updated.
+		 * 
+		 * @param component
+		 *            the annotation that has been updated
+		 * @return a title in plain text
+		 */
+		public static String updated(Comment component) {
+			return String.format("A comment for Research Object %s has been updated by " + component.getAnnotation().getUser().getName(), 
+					component.getAnnotation().getResearchObject().getName());
 		}
 
 		/**
@@ -585,6 +628,19 @@ public class Notification implements Serializable {
 									.toString(), component.getBody().getUri().toString()));
 		}
 
+
+		/**
+		 * An comment has been created.
+		 * 
+		 * @param component
+		 *            the resource that has been updated
+		 * @return a message in HTML
+		 */
+		public static String created(Comment component) {
+			return getCommentContent(component);
+		}
+
+		
 		/**
 		 * A resource has been deleted.
 		 * 
@@ -614,6 +670,19 @@ public class Notification implements Serializable {
 		}
 
 		/**
+		 * An comment has been deleted.
+		 * 
+		 * @param component
+		 *            the resource that has been deleted
+		 * @return a message in HTML
+		 */
+		public static String deleted(Comment component) {
+			return getCommentContent(component);
+
+		}
+
+		
+		/**
 		 * A resource has been updated.
 		 * 
 		 * @param component
@@ -642,6 +711,18 @@ public class Notification implements Serializable {
 		}
 
 		/**
+		 * An comment has been updated.
+		 * 
+		 * @param component
+		 *            the resource that has been updated
+		 * @return a message in HTML
+		 */
+		public static String updated(Comment component) {
+			return getCommentContent(component);
+		}
+
+
+		/**
 		 * Checksum mismatches have been detected.
 		 * 
 		 * @param researchObject
@@ -662,6 +743,18 @@ public class Notification implements Serializable {
 			}
 			sb.append("</ol>");
 			return wrap(sb.toString());
+		}
+		
+		public static String getCommentContent(Comment component) {
+			InputStream modelIs = component.getAnnotation().getBody().getGraphAsInputStream(RDFFormat.RDFXML);
+			OntModel model = ModelFactory.createOntologyModel();
+			if (modelIs == null) { 
+				return "";
+			}
+			model.read(modelIs,"RDF/XML");
+			Statement comment = model.getProperty(model.getResource(component.getAnnotation().getResearchObject().getUri().toString()), RDFS.comment);
+			return wrap(String
+					.format("<p>%s</p>",comment.getLiteral().getString()));
 		}
 	}
 }
