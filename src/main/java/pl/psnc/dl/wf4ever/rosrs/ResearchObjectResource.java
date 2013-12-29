@@ -278,10 +278,10 @@ public class ResearchObjectResource {
         }
         URI resourceUri = uriInfo.getAbsolutePathBuilder().path(path).build();
         if (researchObject.getAggregatedResources().containsKey(resourceUri)) {
-            throw new ConflictException("This resource has already been aggregated. Use PUT to update it.");
+            throw new ConflictException("This resource has already been aggregated. Use PUT to update it: "+resourceUri.toString());
         }
         if (researchObject.isUriUsed(resourceUri)) {
-            throw new ConflictException("This URI is already used.");
+            throw new ConflictException("This URI is already used: "+resourceUri.toString());
         }
         if (!annotationTargets.isEmpty()) {
             pl.psnc.dl.wf4ever.model.RO.Resource roResource = researchObject.aggregate(path, content, contentType);

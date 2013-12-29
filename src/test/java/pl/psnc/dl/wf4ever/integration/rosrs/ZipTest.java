@@ -130,10 +130,10 @@ public class ZipTest extends AbstractIntegrationTest {
 				response.getStatus());
 		response.close();
 		JobStatus status = getStatus(response.getLocation());
-		response = webResource.uri(URI.create(status.getTarget().toString().replace("ROs", "zippedROs"))).accept("application/zip").get(ClientResponse.class);
-		File file = new File("/Users/Rap/path.zip");
-		FileOutputStream out = new FileOutputStream(file);
-		IOUtils.copy(response.getEntityInputStream(), out);
+		//response = webResource.uri(URI.create(status.getTarget().toString().replace("ROs", "zippedROs"))).accept("application/zip").get(ClientResponse.class);
+		//File file = new File("/Users/Rap/path.zip");
+		//FileOutputStream out = new FileOutputStream(file);
+		//IOUtils.copy(response.getEntityInputStream(), out);
 		Assert.assertEquals(State.DONE, status.getState());
 	}
 
