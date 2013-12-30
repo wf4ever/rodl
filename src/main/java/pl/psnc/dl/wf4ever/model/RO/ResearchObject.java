@@ -18,10 +18,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
-import java.util.Map.Entry;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -59,6 +59,7 @@ import pl.psnc.dl.wf4ever.searchserver.SearchServer;
 import pl.psnc.dl.wf4ever.searchserver.solr.SolrSearchServer;
 import pl.psnc.dl.wf4ever.util.MemoryZipFile;
 import pl.psnc.dl.wf4ever.util.MimeTypeUtil;
+import pl.psnc.dl.wf4ever.vocabulary.ORE;
 import pl.psnc.dl.wf4ever.vocabulary.RO;
 import pl.psnc.dl.wf4ever.zip.ROFromZipJobStatus;
 
@@ -210,7 +211,6 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         ResearchObject researchObject = create(builder, uri);
         for (Resource resource : resources2) {
             if (resource.isInternal()) {
-            	//System.out.println("about to aggregate:"+resource.getPath());
                 Resource resource2 = researchObject.aggregate(resource.getPath(), resource.getSerialization(), resource
                         .getStats().getMimeType());
                 LOGGER.debug("Aggregated an internal resource " + resource2);
@@ -249,6 +249,7 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         }
         for (Folder folder : folders2) {
             researchObject.aggregateFolder(researchObject.getUri().resolve(folder.getPath()));
+            LOGGER.debug("Aggregated folder " + researchObject.getUri().resolve(folder.getPath()));
         }
         for (Entry<URI, Folder> entryFolder : researchObject.getFolders().entrySet()){
         	for (Folder folder : folders2) {
@@ -269,21 +270,6 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         		}
         	}
         }
-        /*
-        for (Folder folder : folders2) {
-            Folder folder2 = researchObject.aggregateFolder(researchObject.getUri().resolve(folder.getPath()));
-            for (FolderEntry entry : folder.getFolderEntries().values()) {
-                URI resourceUri = researchObject.getUri().resolve(entry.getProxyFor().getUri());
-                AggregatedResource resource = researchObject.getResources().get(resourceUri); // here is problem
-                if (resource == null) {
-                    LOGGER.warn("Resource for entry not found: " + resourceUri);
-                    continue;
-                }
-                folder2.createFolderEntry(resource);
-                LOGGER.debug("Created an entry for " + resource.getUri() + " in " + folder2.getUri());
-            }
-        }
-        */
         return researchObject;
     }
 
@@ -372,7 +358,6 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
     protected void save(EvoType evoType) {
         super.save();
         getManifest().save();
-
         //TODO check if to create an RO or only serialize the manifest
         builder.getDigitalLibrary().createResearchObject(uri,
             getManifest().getGraphAsInputStreamWithRelativeURIs(uri, RDFFormat.RDFXML), ResearchObject.MANIFEST_PATH,
@@ -727,17 +712,19 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         status.setProcessedResources(0);
         Dataset dataset = DatasetFactory.createMem();
         Builder inMemoryBuilder = new Builder(builder.getUser(), dataset, false);
+        Model model = ModelFactory.createDefaultModel();
         try (InputStream manifest = zip.getManifestAsInputStream()) {
             if (manifest == null) {
                 throw new BadRequestException("Manifest not found");
             }
-            Model model = ModelFactory.createDefaultModel();
             model.read(manifest, researchObjectUri.resolve(ResearchObject.MANIFEST_PATH).toString(), "RDF/XML");
             dataset.addNamedModel(researchObjectUri.resolve(ResearchObject.MANIFEST_PATH).toString(), model);
+            //System.out.println("Manifest in Turtle");
+            //model.write(System.out, "TURTLE");
         }
         ResearchObject inMemoryResearchObject = inMemoryBuilder.buildResearchObject(researchObjectUri);
         ResearchObject researchObject = create(builder, researchObjectUri);
-
+        
         int submittedresources = 0;
         for (Resource resource : inMemoryResearchObject.getResources().values()) {
             if (resource.isSpecialResource()) {
@@ -762,15 +749,24 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         }
         status.setSubmittedResources(submittedresources);
         for (Resource resource : inMemoryResearchObject.getResources().values()) {
+        	
             if (resource.isSpecialResource()) {
                 continue;
             }
             try {
                 if (zip.containsEntry(resource.getPath())) {
-                    unpackAndAggregate(researchObject, zip, resource.getPath(),
-                        MimeTypeUtil.getContentType(resource.getPath()));
+                	if (resource.getPath().contains("bundle.zip")){
+                		unpackAndAggregate(researchObject, zip, resource.getPath(),
+                				RoBundle.MIME_TYPE);
+                	}
+                	else{
+                		unpackAndAggregate(researchObject, zip, resource.getPath(),
+                				MimeTypeUtil.getContentType(resource.getPath()));
+                	}
+                    LOGGER.debug("Aggregated an internal resource " + resource.getUri());
                 } else {
                     researchObject.aggregate(resource.getUri());
+                    LOGGER.debug("Aggregated an external resource " + resource.getUri());
                 }
                 if (status.getProcessedResources() < status.getSubmittedResources()) {
                     status.setProcessedResources(status.getProcessedResources() + 1);
@@ -787,10 +783,16 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
                     if (body.isSpecialResource()) {
                         continue;
                     }
-                    unpackAndAggregate(researchObject, zip, body.getPath(),
-                        RDFFormat.forFileName(body.getPath(), RDFFormat.RDFXML).getDefaultMIMEType());
+                    
+                    if (!researchObject.getAggregatedResources().containsKey(researchObject.getUri().resolve(body.getPath()))){
+                    	unpackAndAggregate(researchObject, zip, body.getPath(),
+                    			RDFFormat.forFileName(body.getPath(), RDFFormat.RDFXML).getDefaultMIMEType());
+                    	LOGGER.debug("Aggregated an internal annotation body " + body.getUri());
+                    }
                 }
-                researchObject.annotate(annotation.getBody().getUri(), annotation.getAnnotated());
+                
+                Annotation annotation2 = researchObject.annotate(annotation.getBody().getUri(), annotation.getAnnotated());
+                LOGGER.debug("Aggregated an annotation with body " + annotation2.getBody().getUri());
                 if (status.getProcessedResources() < status.getSubmittedResources()) {
                     status.setProcessedResources(status.getProcessedResources() + 1);
                 }
@@ -798,6 +800,85 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
                 LOGGER.error("Error when aggregating annotations", e);
             }
         }
+        
+        for (Folder folder : inMemoryResearchObject.getFolders().values()) {
+        	researchObject.aggregateFolder(folder.getUri());
+        	//researchObject.aggregateFolder(researchObject.getUri().resolve(folder.getPath().replace(" ", "%20"))); //APPARENTLY NOT NECESSARY - FOLDER.GETURI IS ALREADY RESOLVED
+        	LOGGER.debug("Aggregated folder " + folder.getUri());
+        }
+        
+        for (Entry<URI, Folder> entryFolder : researchObject.getFolders().entrySet()){
+        	String queryString = String
+        	                .format(
+        	                	"PREFIX ore: <%s> PREFIX ro: <%s> SELECT ?resource WHERE { <%s> ore:aggregates ?resource . ?resource a ro:Resource . }",
+        	                    ORE.NAMESPACE, RO.NAMESPACE, entryFolder.getKey().toString());	
+        	Query query = QueryFactory.create(queryString);
+        	QueryExecution qe = QueryExecutionFactory.create(query, model);
+        	
+        	try {
+        		ResultSet results = qe.execSelect();
+        	    while (results.hasNext()) {
+        	    	QuerySolution solution = results.next();
+        			RDFNode f = solution.get("resource");
+        			URI resourceUri = researchObject.getUri().resolve(f.asResource().getURI());
+        			AggregatedResource resource = researchObject.getResources().get(resourceUri); 
+                    if (resource == null) {
+                    	resource = researchObject.getFolders().get(resourceUri);
+                    	if (resource == null) {
+                    		LOGGER.warn("Resource for entry not found: " + resourceUri);
+                            continue;
+                        }
+                    }
+                    entryFolder.getValue().createFolderEntry(resource);
+                    LOGGER.debug("Created an entry for " + resource.getUri() + " in " + entryFolder.getValue().getUri());
+                }
+        	} finally {
+        		qe.close();
+        	}
+        }
+        
+        /* THIS SHOULD BE THE CORRECT WAY OF ADDING FOLDER ENTRIES (INSTEAD OF LAST FOR LOOP), 
+         * BUT RESOURCEMAPS IN MYEXPERIMENT
+         * ARE NOT HAVING CORRECT ORE:AGGREGATES, I.E., ALL FOLDERS (EXCEPT FROM LEAF LEVEL) 
+         * ONLY INCLUDE ORE:AGGREGATE OF SUBFOLDERS NOT RESOURCES 
+         * 
+        for (Entry<URI, Folder> entryFolder : researchObject.getFolders().entrySet()){
+        	Folder folder = inMemoryResearchObject.getFolders().get(entryFolder.getKey());
+        	InputStream is = zip.getFolderResourceMap(folder.getResourceMap().getPath());
+        	Model model2 = ModelFactory.createDefaultModel();
+        	model2.read(is, researchObjectUri.resolve(folder.getResourceMap().getPath()).toString(), "RDF/XML");
+        	//System.out.println("resource map in Turtle");
+            //model2.write(System.out, "TURTLE");
+        	
+        	String queryString = String
+	                .format(
+	                	"PREFIX ore: <%s> PREFIX ro: <%s> SELECT ?resource WHERE { <%s> ore:aggregates ?resource . }",
+	                    ORE.NAMESPACE, RO.NAMESPACE, entryFolder.getKey().toString());	
+        	Query query = QueryFactory.create(queryString);
+        	QueryExecution qe = QueryExecutionFactory.create(query, model2);
+        	try {
+        		ResultSet results = qe.execSelect();
+        	    while (results.hasNext()) {
+        	    	QuerySolution solution = results.next();
+        			RDFNode f = solution.get("resource");
+        			URI resourceUri = researchObject.getUri().resolve(f.asResource().getURI());
+        			AggregatedResource resource = researchObject.getResources().get(resourceUri); 
+                    if (resource == null) {
+                    	resource = researchObject.getFolders().get(resourceUri);
+                    	if (resource == null) {
+                    		LOGGER.warn("Resource for entry not found: " + resourceUri);
+                            continue;
+                        }
+                    }
+                    entryFolder.getValue().createFolderEntry(resource);
+                    LOGGER.debug("Created an entry for " + resource.getUri() + " in " + entryFolder.getValue().getUri());
+        	    }
+        	}finally {
+        		qe.close();
+        	}
+        	
+        }
+        */
         dataset.close();
         return researchObject;
     }
