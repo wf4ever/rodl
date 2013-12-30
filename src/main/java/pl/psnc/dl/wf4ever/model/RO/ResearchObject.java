@@ -18,10 +18,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
-import java.util.Map.Entry;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -270,21 +270,6 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
         		}
         	}
         }
-        /*
-        for (Folder folder : folders2) {
-            Folder folder2 = researchObject.aggregateFolder(researchObject.getUri().resolve(folder.getPath()));
-            for (FolderEntry entry : folder.getFolderEntries().values()) {
-                URI resourceUri = researchObject.getUri().resolve(entry.getProxyFor().getUri());
-                AggregatedResource resource = researchObject.getResources().get(resourceUri); // here is problem
-                if (resource == null) {
-                    LOGGER.warn("Resource for entry not found: " + resourceUri);
-                    continue;
-                }
-                folder2.createFolderEntry(resource);
-                LOGGER.debug("Created an entry for " + resource.getUri() + " in " + folder2.getUri());
-            }
-        }
-        */
         return researchObject;
     }
 
@@ -373,7 +358,6 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
     protected void save(EvoType evoType) {
         super.save();
         getManifest().save();
-
         //TODO check if to create an RO or only serialize the manifest
         builder.getDigitalLibrary().createResearchObject(uri,
             getManifest().getGraphAsInputStreamWithRelativeURIs(uri, RDFFormat.RDFXML), ResearchObject.MANIFEST_PATH,
@@ -771,8 +755,14 @@ public class ResearchObject extends Thing implements Aggregation, ResearchObject
             }
             try {
                 if (zip.containsEntry(resource.getPath())) {
-                    unpackAndAggregate(researchObject, zip, resource.getPath(),
-                        MimeTypeUtil.getContentType(resource.getPath()));
+                	if (resource.getPath().contains("bundle.zip")){
+                		unpackAndAggregate(researchObject, zip, resource.getPath(),
+                				RoBundle.MIME_TYPE);
+                	}
+                	else{
+                		unpackAndAggregate(researchObject, zip, resource.getPath(),
+                				MimeTypeUtil.getContentType(resource.getPath()));
+                	}
                     LOGGER.debug("Aggregated an internal resource " + resource.getUri());
                 } else {
                     researchObject.aggregate(resource.getUri());

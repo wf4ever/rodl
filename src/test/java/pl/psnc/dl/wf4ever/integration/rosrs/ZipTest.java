@@ -35,7 +35,7 @@ import com.sun.jersey.api.client.WebResource.Builder;
 public class ZipTest extends AbstractIntegrationTest {
 
 	protected String createdFromZipResourceObject = UUID.randomUUID().toString();
-	protected Integer maxSeonds = 300;
+	protected Integer maxSeonds = 1000;
 	private URI ro;
 
 	@Override
