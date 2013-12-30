@@ -95,4 +95,8 @@ public class MemoryZipFile {
     public InputStream getManifestAsInputStream() {
         return getEntryAsStream(ResearchObject.MANIFEST_PATH);
     }
+    
+    public InputStream getFolderResourceMap(String path){
+    	return getEntryAsStream(path);
+    }
 }

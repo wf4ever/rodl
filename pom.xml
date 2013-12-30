@@ -277,7 +277,7 @@
 					</dependency>
 				</dependencies>
 				<configuration>
-										
+					  					
 					<includes>
 						<include>**/*.class</include>
 					</includes>
