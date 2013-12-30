@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -117,6 +118,8 @@ public class ZipTest extends AbstractIntegrationTest {
 		Assert.assertEquals(State.SERVICE_ERROR, status.getState());
 	}
 
+	//just for the demo
+	@Ignore
 	@Test
 	public void storeDemoScenarioExportedFromMyExp() throws IOException, ClassNotFoundException,
 			NamingException, InterruptedException {
