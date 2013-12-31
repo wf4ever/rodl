@@ -197,7 +197,7 @@ public class RoBundleTest extends RosrsTest {
         }
 
         URI nestedRO = findNestedROUri();
-        webResource.uri(nestedRO).delete();
+        webResource.uri(nestedRO).header("Authorization", "Bearer " + adminCreds).delete();
         Assert.assertNull(findNestedROUri());
     }
 
@@ -217,7 +217,7 @@ public class RoBundleTest extends RosrsTest {
         }
 
         URI nestedRO = findNestedROUri();
-        webResource.uri(ro).delete();
+        webResource.uri(ro).header("Authorization", "Bearer " + adminCreds).delete();
         ClientResponse response = webResource.uri(nestedRO).get(ClientResponse.class);
         Assert.assertEquals(HttpStatus.SC_GONE, response.getStatus());
     }
