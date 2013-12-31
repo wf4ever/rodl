@@ -152,7 +152,7 @@ public abstract class AbstractIntegrationTest extends JerseyTest {
 
 	protected ClientResponse addFile(URI roURI, String filePath,
 			InputStream is, String mimeType) {
-		return addFile(roURI, filePath, is, mimeType, adminCreds);
+		return addFile(roURI, filePath, is, mimeType, accessToken);
 	}
 
 	protected ClientResponse addLoremIpsumFile(URI roURI, String filePath) {
