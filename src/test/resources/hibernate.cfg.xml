@@ -47,8 +47,4 @@
 		<mapping class="pl.psnc.dl.wf4ever.accesscontrol.model.PermissionLink" />
 		
 	</session-factory>
-<<<<<<< HEAD
-</hibernate-configuration> -->
-=======
 </hibernate-configuration>
->>>>>>> made access mode permission test passed (with other tests)
