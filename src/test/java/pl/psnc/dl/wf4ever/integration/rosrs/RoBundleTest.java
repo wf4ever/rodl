@@ -42,7 +42,7 @@ import com.sun.jersey.api.client.ClientResponse;
 @Category(IntegrationTest.class)
 public class RoBundleTest extends RosrsTest {
 
-    /** An annotation body path. */
+	/** An annotation body path. */
     //private final String testDatabundlePath = "singleFiles/databundle.zip";
     private final String testDatabundlePath = "singleFiles/musicWorkflowRun5.bundle.zip";
 
