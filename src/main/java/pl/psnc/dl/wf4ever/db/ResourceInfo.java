@@ -113,7 +113,7 @@ public final class ResourceInfo extends ResourceMetadata implements Serializable
 
 
     @Id
-    @Column(length = 512)
+    @Column
     public String getPath() {
         return super.getPath();
     }
