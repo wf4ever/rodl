@@ -7,6 +7,7 @@ import org.openrdf.rio.RDFFormat;
 
 import pl.psnc.dl.wf4ever.ApplicationProperties;
 import pl.psnc.dl.wf4ever.db.dao.AtomFeedEntryDAO;
+import pl.psnc.dl.wf4ever.db.hibernate.HibernateUtil;
 import pl.psnc.dl.wf4ever.eventbus.events.ROAfterCreateEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROAfterDeleteEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterCreateEvent;
@@ -205,6 +206,10 @@ public class NotificationsListener {
 	//anyway it isn't good but it works...
 	//super dirty stuff
 	private void deleteBodyOfCreatedAnnotation(AtomFeedEntryDAO dao, Annotation ann) {
+		//I don't know why but first it needs to be commit. Otherwise annotations aren't accessible.
+		HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
+		HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
+
 		List<Notification> notifications = dao.find(ann.getResearchObject().getUri(), null, null, null, 3);
 		for (Notification n : notifications) {
 			if(n.getSummary().contains("resource has been")) {
@@ -214,6 +219,7 @@ public class NotificationsListener {
 			}
 		}
 	}
+	
 	private boolean isComment(AtomFeedEntryDAO dao, Annotation ann) {
 		OntModel model = ModelFactory.createOntologyModel();
 		if(ann.getBody().getGraphAsInputStream(RDFFormat.RDFXML)==null) {
