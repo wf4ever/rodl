@@ -209,7 +209,7 @@ public class NotificationsListener {
 		//I don't know why but first it needs to be commit. Otherwise annotations aren't accessible.
 		HibernateUtil.getSessionFactory().getCurrentSession().flush();
 
-		List<Notification> notifications = dao.find(ann.getResearchObject().getUri(), null, null, null, 3);
+		List<Notification> notifications = dao.find(ann.getResearchObject().getUri(), null, null, null, null);
 		for (Notification n : notifications) {
 			if(n.getSummary().contains("resource has been")) {
 				if(n.getSummary().contains(ann.getBody().getUri().toString())) {
