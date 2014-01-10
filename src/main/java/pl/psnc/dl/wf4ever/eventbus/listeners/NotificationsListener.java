@@ -207,8 +207,7 @@ public class NotificationsListener {
 	//super dirty stuff
 	private void deleteBodyOfCreatedAnnotation(AtomFeedEntryDAO dao, Annotation ann) {
 		//I don't know why but first it needs to be commit. Otherwise annotations aren't accessible.
-		HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
-		HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
+		HibernateUtil.getSessionFactory().getCurrentSession().flush();
 
 		List<Notification> notifications = dao.find(ann.getResearchObject().getUri(), null, null, null, 3);
 		for (Notification n : notifications) {
@@ -218,6 +217,7 @@ public class NotificationsListener {
 				}
 			}
 		}
+
 	}
 	
 	private boolean isComment(AtomFeedEntryDAO dao, Annotation ann) {
