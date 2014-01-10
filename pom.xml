@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pl.psnc.dl.wf4ever</groupId>
 	<artifactId>rodl</artifactId>
-	<version>8.2.7-SNAPSHOT</version>
+	<version>8.2.7</version>
 	<packaging>war</packaging>
 	<name>rodl</name>
 	<url>http://maven.apache.org</url>
@@ -383,7 +383,7 @@
 	</reporting>
 	<scm>
 		<developerConnection>scm:git:git@github.com:wf4ever/rodl.git</developerConnection>
-		<tag>rodl-8.1.13</tag>
+		<tag>rodl-8.2.7</tag>
 	</scm>
 	<repositories>
 		<repository>
