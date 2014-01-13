@@ -14,6 +14,7 @@ import pl.psnc.dl.wf4ever.eventbus.events.ROAfterDeleteEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterCreateEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterDeleteEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterUpdateEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROComponentBeforeDeleteEvent;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
@@ -126,14 +127,8 @@ public class NotificationsListener {
 		}
 	}
 
-	/**
-	 * Subscription method.
-	 * 
-	 * @param event
-	 *            processed event
-	 */
 	@Subscribe
-	public void onAfterResourceDelete(ROComponentAfterDeleteEvent event) {
+	public void onBeforeResourceDelete(ROComponentBeforeDeleteEvent event)  {
 		String source = ApplicationProperties.getContextPath() != null ? ApplicationProperties
 				.getContextPath() : "/";
 		if (event.getResearchObjectComponent() instanceof Annotation) {
@@ -154,6 +149,18 @@ public class NotificationsListener {
 			dao.save(entry);
 			return;
 		}
+	}
+	
+	/**
+	 * Subscription method.
+	 * 
+	 * @param event
+	 *            processed event
+	 */
+	@Subscribe
+	public void onAfterResourceDelete(ROComponentAfterDeleteEvent event) {
+		String source = ApplicationProperties.getContextPath() != null ? ApplicationProperties
+				.getContextPath() : "/";
 		if (event.getResearchObjectComponent() instanceof Resource
 				|| event.getResearchObjectComponent() instanceof AggregatedResource) {
 			AtomFeedEntryDAO dao = new AtomFeedEntryDAO();

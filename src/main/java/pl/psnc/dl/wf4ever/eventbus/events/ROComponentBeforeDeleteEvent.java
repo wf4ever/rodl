@@ -25,7 +25,7 @@ public class ROComponentBeforeDeleteEvent {
     }
 
 
-    public ResearchObjectComponentSerializable getResearchObject() {
+    public ResearchObjectComponentSerializable getResearchObjectComponent() {
         return researchObjectComponent;
     }
 }

@@ -15,6 +15,7 @@ import pl.psnc.dl.wf4ever.dl.ConflictException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterCreateEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentBeforeCreateEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROComponentBeforeDeleteEvent;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
@@ -240,6 +241,7 @@ public class Annotation extends AggregatedResource {
 
 	@Override
 	public void delete() {
+        this.postEvent(new ROComponentBeforeDeleteEvent(this));
 		getResearchObject().getAnnotations().remove(uri);
 		getResearchObject().getAnnotationsByBodyUri().get(getBody().getUri()).remove(this);
 		for (Thing thing : getAnnotated()) {

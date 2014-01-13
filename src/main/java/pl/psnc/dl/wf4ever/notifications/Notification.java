@@ -511,7 +511,7 @@ public class Notification implements Serializable {
 				}
 			}
 			return String.format("The %s %s has been commented by " + component.getAnnotation().getUser().getName(), annotationFor,
-					component.getAnnotation().getResearchObject().getName());
+					annotated.getName());
 		}
 		
 		/**
@@ -523,8 +523,9 @@ public class Notification implements Serializable {
 		 */
 		public static String deleted(Annotation component) {
 			String annotationFor = "resource";
+			Thing annotated = component.getResearchObject();
 			if(component.getAnnotated().size() > 0) {
-				Thing annotated = (Thing) component.getAnnotated().toArray()[0];
+				annotated = (Thing) component.getAnnotated().toArray()[0];
 				if(annotated.getUri().toString().equals(component.getResearchObject().getUri().toString())) {
 					annotationFor = "Research Object";
 				}
