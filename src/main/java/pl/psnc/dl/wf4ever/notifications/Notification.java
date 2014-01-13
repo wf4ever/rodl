@@ -456,9 +456,9 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String deleted(ResearchObjectComponentSerializable component) {
-			Resource r = (Resource) component;
+			Thing thing = (Thing) component;
 			return String.format("A resource %s has been deleted from the Research Object %s by %s", component.getName(),
-					component.getResearchObject().getName(), r.getUser().getName());
+					component.getResearchObject().getName(), thing.getUser().getName());
 		}
 
 		/**

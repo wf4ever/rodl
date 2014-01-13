@@ -159,6 +159,14 @@ public class NotificationsListener {
 	 */
 	@Subscribe
 	public void onAfterResourceDelete(ROComponentAfterDeleteEvent event) {
+		if (event.getResearchObjectComponent() instanceof Annotation) {
+			return;
+		}
+		//if is body...
+		ResearchObject ro = (ResearchObject) event.getResearchObjectComponent().getResearchObject();
+		if(ro.getAnnotationsByBodyUri().get(event.getResearchObjectComponent().getUri()) != null) {
+			return;
+		}
 		String source = ApplicationProperties.getContextPath() != null ? ApplicationProperties
 				.getContextPath() : "/";
 		if (event.getResearchObjectComponent() instanceof Resource
