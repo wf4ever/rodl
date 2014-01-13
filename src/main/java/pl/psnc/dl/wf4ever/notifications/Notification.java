@@ -569,7 +569,7 @@ public class Notification implements Serializable {
 					annotationFor = "Research Object";
 				}
 			}
-			return String.format("An annotation for %s %s has been updated by " + component.getUser().getName(),annotationFor, 
+			return String.format("An annotation for %s %s has been updated by " + component.getUser().getName(), annotationFor, 
 					annotated.getName());
 		}
 	
@@ -582,14 +582,15 @@ public class Notification implements Serializable {
 		 */
 		public static String updated(Comment component) {
 			String annotationFor = "resource";
+			Thing annotated = component.getAnnotation().getResearchObject();
 			if(component.getAnnotation().getAnnotated().size() > 0) {
-				Thing annotated = (Thing) component.getAnnotation().getAnnotated().toArray()[0];
+				annotated = (Thing) component.getAnnotation().getAnnotated().toArray()[0];
 				if(annotated.getUri().toString().equals(component.getAnnotation().getResearchObject().getUri().toString())) {
 					annotationFor = "Research Object";
 				}
 			}
-			return String.format("A comment %s %s has been updated by " + component.getAnnotation().getUser().getName(), annotationFor,
-					component.getAnnotation().getResearchObject().getName());
+			return String.format("A comment for %s %s has been updated by " + component.getAnnotation().getUser().getName(), annotationFor,
+					annotated.getName());
 		}
 
 		/**
@@ -730,8 +731,8 @@ public class Notification implements Serializable {
 				} 
 			}
 			return wrap(String
-					.format("<p>An annotation for %s %s has been deleted.</p><ul><li>The %s: <a href=\"%s\">%<s</a>.</li><li>The annotation: <em>%s</em>.</li><li>The annotation body: <em>%s</em>.</li></ul>",
-							annotationFor, component.getUri().toString(), annotationFor, target.getUri().toString(), component.getUri().toString(), component.getBody().getUri().toString()));
+					.format("<p>An annotation for %s %s has been deleted.</p><ul><li>The %s: <a href=\"%s\">%<s</a>.</li><li>The annotation: <a href=\"%s\">%<s</a>.</li><li>The annotation body: <a href=\"%s\">%<s</a>.</li></ul>",
+							annotationFor, target.getName(), annotationFor, target.getUri().toString(), component.getUri().toString(), component.getBody().getUri().toString()));
 		}
 
 		/**
@@ -778,8 +779,8 @@ public class Notification implements Serializable {
 				} 
 			}
 			return wrap(String
-					.format("<p>An annotation for %s %s has been updated.</p><ul><li>The %s: <a href=\"%s\">%<s</a>.</li><li>The annotation: <em>%s</em>.</li><li>The annotation body: <em>%s</em>.</li></ul>",
-							annotationFor, component.getUri().toString(), annotationFor, target.getUri().toString(), component.getUri().toString(), component.getBody().getUri().toString()));
+					.format("<p>An annotation for %s %s has been updated.</p><ul><li>The %s: <a href=\"%s\">%<s</a>.</li><li>The annotation: <a href=\"%s\">%<s</a>.</li><li>The annotation body: <a href=\"%s\">%<s</a>.</li></ul>",
+							annotationFor, target.getName(), annotationFor, target.getUri().toString(), component.getUri().toString(), component.getBody().getUri().toString()));
 		}
 
 		/**

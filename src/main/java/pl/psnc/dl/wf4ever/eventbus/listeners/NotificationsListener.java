@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.eventbus.listeners;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -16,6 +17,7 @@ import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterUpdateEvent;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
 import pl.psnc.dl.wf4ever.notifications.Notification;
 import pl.psnc.dl.wf4ever.notifications.Notification.Summary;
@@ -199,6 +201,29 @@ public class NotificationsListener {
 					.sourceName("RODL").build();
 			dao.save(entry);
 		}
+		//check also if the body if the body is updated
+		else {
+			AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
+			ResearchObject ro = (ResearchObject) event.getResearchObjectComponent().getResearchObject();
+			if(ro.getAnnotationsByBodyUri().get(event.getResearchObjectComponent().getUri()) != null) {
+				Collection<Annotation> annotations = ro.getAnnotationsByBodyUri().get(event.getResearchObjectComponent().getUri());
+				for (Annotation ann : annotations ) {
+					if (isComment(dao, ann)) {
+						Comment comment = new Comment(ann);
+						Notification entry = new Notification.Builder(ann.getResearchObject().getUri())
+						.title(Title.updated(comment)).summary(Summary.updated(comment)).source(source)
+						.sourceName("RODL").build();
+						dao.save(entry);
+					} else {
+						Notification entry = new Notification.Builder(ann.getResearchObject().getUri())
+						.title(Title.updated(ann)).summary(Summary.updated(ann)).source(source)
+						.sourceName("RODL").build();
+						dao.save(entry);
+					}
+				}
+				return;
+			}
+		}
 	}
 	
 	
@@ -209,7 +234,6 @@ public class NotificationsListener {
 	private void deleteBodyOfCreatedAnnotation(AtomFeedEntryDAO dao, Annotation ann) {
 		//I don't know why but first it needs to be commit. Otherwise annotations aren't accessible.
 		HibernateUtil.getSessionFactory().getCurrentSession().flush();
-
 		List<Notification> notifications = dao.find(ann.getResearchObject().getUri(), null, null, null, null);
 		for (Notification n : notifications) {
 			if(n.getSummary().contains("resource has been")) {
