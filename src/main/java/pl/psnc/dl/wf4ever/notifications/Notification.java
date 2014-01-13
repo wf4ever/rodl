@@ -24,6 +24,7 @@ import org.openrdf.rio.RDFFormat;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
+import pl.psnc.dl.wf4ever.model.RO.Resource;
 import pl.psnc.dl.wf4ever.monitoring.ChecksumVerificationJob.Mismatch;
 import pl.psnc.dl.wf4ever.notifications.notifiedmodels.Comment;
 import pl.psnc.dl.wf4ever.preservation.model.ResearchObjectComponentSerializable;
@@ -420,7 +421,7 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String created(ResearchObject researchObject) {
-			return String.format("Research Object %s has been created", researchObject.getName());
+			return String.format("Research Object %s has been created by %s", researchObject.getName(), researchObject.getUser().getName());
 		}
 
 		/**
@@ -431,7 +432,7 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String deleted(ResearchObject researchObject) {
-			return String.format("Research Object %s has been deleted", researchObject.getName());
+			return String.format("Research Object %s has been deleted by %s", researchObject.getName(), researchObject.getUser().getName());
 		}
 
 		/**
@@ -442,8 +443,9 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String created(ResearchObjectComponentSerializable component) {
-			return String.format("A resource has been added to the Research Object %s", component
-					.getResearchObject().getName());
+			Resource r = (Resource) component;
+			return String.format("A resource %s has been added to the Research Object %s by %s", component.getName(), component
+					.getResearchObject().getName(), r.getCreator().getName());
 		}
 
 		/**
@@ -454,8 +456,9 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String deleted(ResearchObjectComponentSerializable component) {
-			return String.format("A resource has been deleted from the Research Object %s",
-					component.getResearchObject().getName());
+			Resource r = (Resource) component;
+			return String.format("A resource %s has been deleted from the Research Object %s by %s", component.getName(),
+					component.getResearchObject().getName(), r.getUser().getName());
 		}
 
 		/**
@@ -466,8 +469,9 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String updated(ResearchObjectComponentSerializable component) {
-			return String.format("A resource has been updated in the Research Object %s", component
-					.getResearchObject().getName());
+			Resource r = (Resource) component;
+			return String.format("A resource %s has been updated in the Research Object %s by ", component.getName(), component
+					.getResearchObject().getName(), r.getUser().getName());
 		}
 
 		/**
@@ -478,8 +482,16 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String created(Annotation component) {
-			return String.format("An annotation for Research Object %s has been created by " + component.getUser().getName(),
-					component.getResearchObject().getName());
+			String annotationFor = "resource";
+			Thing annotated  = component.getResearchObject();
+			if(component.getAnnotated().size() > 0) {
+				annotated = (Thing) component.getAnnotated().toArray()[0];
+				if(annotated.getUri().toString().equals(component.getResearchObject().getUri().toString())) {
+					annotationFor = "Research Object";
+				}
+			}
+			return String.format("An annotation for %s %s has been created by " + component.getUser().getName(), annotationFor,
+					annotated.getName());
 		}
 
 		/**
@@ -490,7 +502,15 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String created(Comment component) {
-			return String.format("Research Object %s has been commented by " + component.getAnnotation().getUser().getName(),
+			String annotationFor = "resource";
+			Thing annotated = component.getAnnotation().getResearchObject();
+			if(component.getAnnotation().getAnnotated().size() > 0) {
+				annotated = (Thing) component.getAnnotation().getAnnotated().toArray()[0];
+				if(annotated.getUri().toString().equals(component.getAnnotation().getResearchObject().getUri().toString())) {
+					annotationFor = "Research Object";
+				}
+			}
+			return String.format("The %s %s has been commented by " + component.getAnnotation().getUser().getName(), annotationFor,
 					component.getAnnotation().getResearchObject().getName());
 		}
 		
@@ -502,7 +522,14 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String deleted(Annotation component) {
-			return String.format("An annotation for Research Object %s has been deleted by " + component.getUser().getName(),
+			String annotationFor = "resource";
+			if(component.getAnnotated().size() > 0) {
+				Thing annotated = (Thing) component.getAnnotated().toArray()[0];
+				if(annotated.getUri().toString().equals(component.getResearchObject().getUri().toString())) {
+					annotationFor = "Research Object";
+				}
+			}
+			return String.format("An annotation for %s %s has been deleted by " + component.getUser().getName(), annotationFor,
 					component.getResearchObject().getName());
 		}
 
@@ -514,8 +541,16 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String deleted(Comment component) {
-			return String.format("A comment for Research Object %s has been deleted by " + component.getAnnotation().getUser().getName(),
-					component.getAnnotation().getResearchObject().getName());
+			String annotationFor = "resource";
+			Thing annotated = component.getAnnotation().getResearchObject();
+			if(component.getAnnotation().getAnnotated().size() > 0) {
+				annotated = (Thing) component.getAnnotation().getAnnotated().toArray()[0];
+				if(annotated.getUri().toString().equals(component.getAnnotation().getResearchObject().getUri().toString())) {
+					annotationFor = "Research Object";
+				}
+			}
+			return String.format("A comment for %s %s has been deleted by " + component.getAnnotation().getUser().getName(), annotationFor,
+					annotated.getName());
 		}
 		
 		/**
@@ -526,8 +561,16 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String updated(Annotation component) {
-			return String.format("An annotation for Research Object %s has been updated by " + component.getUser().getName(), 
-					component.getResearchObject().getName());
+			String annotationFor = "resource";
+			Thing annotated = component.getResearchObject();
+			if(component.getAnnotated().size() > 0) {
+				annotated = (Thing) component.getAnnotated().toArray()[0];
+				if(annotated.getUri().toString().equals(component.getResearchObject().getUri().toString())) {
+					annotationFor = "Research Object";
+				}
+			}
+			return String.format("An annotation for %s %s has been updated by " + component.getUser().getName(),annotationFor, 
+					annotated.getName());
 		}
 	
 		/**
@@ -538,7 +581,14 @@ public class Notification implements Serializable {
 		 * @return a title in plain text
 		 */
 		public static String updated(Comment component) {
-			return String.format("A comment for Research Object %s has been updated by " + component.getAnnotation().getUser().getName(), 
+			String annotationFor = "resource";
+			if(component.getAnnotation().getAnnotated().size() > 0) {
+				Thing annotated = (Thing) component.getAnnotation().getAnnotated().toArray()[0];
+				if(annotated.getUri().toString().equals(component.getAnnotation().getResearchObject().getUri().toString())) {
+					annotationFor = "Research Object";
+				}
+			}
+			return String.format("A comment %s %s has been updated by " + component.getAnnotation().getUser().getName(), annotationFor,
 					component.getAnnotation().getResearchObject().getName());
 		}
 
@@ -622,10 +672,18 @@ public class Notification implements Serializable {
 		 * @return a message in HTML
 		 */
 		public static String created(Annotation component) {
+			String annotationFor = "resource";
+			Thing target = component.getResearchObject();
+			if(component.getAnnotated().size() > 0) {
+				target = (Thing) component.getAnnotated().toArray()[0];
+				if(target.getUri().toString().equals(component.getResearchObject().getUri().toString())) {
+					annotationFor = "Research Object";
+				} 
+				
+			}
 			return wrap(String
-					.format("<p>An annotation has been added to the Research Object.</p><ul><li>The Research Object: <a href=\"%s\">%<s</a>.</li><li>The annotation: <a href=\"%s\">%<s</a>.</li><li>The annotation body: <a href=\"%s\">%<s</a>.</li></ul>",
-							component.getResearchObject().getUri().toString(), component.getUri()
-									.toString(), component.getBody().getUri().toString()));
+					.format("<p>An annotation for %s %s has been added.</p><ul><li>The %s: <a href=\"%s\">%<s</a>.</li><li>The annotation: <a href=\"%s\">%<s</a>.</li><li>The annotation body: <a href=\"%s\">%<s</a>.</li></ul>",
+							annotationFor, target.getName(), annotationFor, target.getUri().toString(), component.getUri().toString(), component.getBody().getUri().toString()));
 		}
 
 
@@ -663,10 +721,17 @@ public class Notification implements Serializable {
 		 * @return a message in HTML
 		 */
 		public static String deleted(Annotation component) {
+			String annotationFor = "resource";
+			Thing target = component.getResearchObject();
+			if(component.getAnnotated().size() > 0) {
+				target = (Thing) component.getAnnotated().toArray()[0];
+				if(target.getUri().toString().equals(component.getResearchObject().getUri().toString())) {
+					annotationFor = "Research Object";
+				} 
+			}
 			return wrap(String
-					.format("<p>An annotation has been deleted from the Research Object.</p><ul><li>The Research Object: <a href=\"%s\">%<s</a>.</li><li>The annotation: <em>%s</em>.</li><li>The annotation body: <em>%s</em>.</li></ul>",
-							component.getResearchObject().getUri().toString(), component.getUri()
-									.toString(), component.getBody().getUri().toString()));
+					.format("<p>An annotation for %s %s has been deleted.</p><ul><li>The %s: <a href=\"%s\">%<s</a>.</li><li>The annotation: <em>%s</em>.</li><li>The annotation body: <em>%s</em>.</li></ul>",
+							annotationFor, component.getUri().toString(), annotationFor, target.getUri().toString(), component.getUri().toString(), component.getBody().getUri().toString()));
 		}
 
 		/**
@@ -704,10 +769,17 @@ public class Notification implements Serializable {
 		 * @return a message in HTML
 		 */
 		public static String updated(Annotation component) {
+			String annotationFor = "resource";
+			Thing target = component.getResearchObject();
+			if(component.getAnnotated().size() > 0) {
+				target = (Thing) component.getAnnotated().toArray()[0];
+				if(target.getUri().toString().equals(component.getResearchObject().getUri().toString())) {
+					annotationFor = "Research Object";
+				} 
+			}
 			return wrap(String
-					.format("<p>An annotation has been updated in the Research Object.</p><ul><li>The Research Object: <a href=\"%s\">%<s</a>.</li><li>The annotation: <a href=\"%s\">%<s</a>.</li><li>The annotation body: <a href=\"%s\">%<s</a>.</li></ul>",
-							component.getResearchObject().getUri().toString(), component.getUri()
-									.toString(), component.getBody().getUri().toString()));
+					.format("<p>An annotation for %s %s has been updated.</p><ul><li>The %s: <a href=\"%s\">%<s</a>.</li><li>The annotation: <em>%s</em>.</li><li>The annotation body: <em>%s</em>.</li></ul>",
+							annotationFor, component.getUri().toString(), annotationFor, target.getUri().toString(), component.getUri().toString(), component.getBody().getUri().toString()));
 		}
 
 		/**
@@ -752,7 +824,11 @@ public class Notification implements Serializable {
 				return "";
 			}
 			model.read(modelIs,"RDF/XML");
-			Statement comment = model.getProperty(model.getResource(component.getAnnotation().getResearchObject().getUri().toString()), RDFS.comment);
+			if (component.getAnnotation().getAnnotated().size() == 0) {
+				return "";
+			}
+			Thing target = (Thing) component.getAnnotation().getAnnotated().toArray()[0];
+			Statement comment = model.getProperty(model.getResource(target.getUri().toString()), RDFS.comment);
 			return wrap(String
 					.format("<p>%s</p>",comment.getLiteral().getString()));
 		}

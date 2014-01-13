@@ -15,6 +15,7 @@ import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterDeleteEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterUpdateEvent;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
 import pl.psnc.dl.wf4ever.notifications.Notification;
 import pl.psnc.dl.wf4ever.notifications.Notification.Summary;
@@ -106,7 +107,7 @@ public class NotificationsListener {
 				dao.save(entry);
 				return;
 			}
-
+			
 			Notification entry = new Notification.Builder(res.getResearchObject().getUri())
 					.title(Title.created(res)).summary(Summary.created(res)).source(source)
 					.sourceName("RODL").build();
@@ -222,11 +223,15 @@ public class NotificationsListener {
 	
 	private boolean isComment(AtomFeedEntryDAO dao, Annotation ann) {
 		OntModel model = ModelFactory.createOntologyModel();
+		if (ann.getAnnotated().size() == 0) {
+			return false;
+		}
 		if(ann.getBody().getGraphAsInputStream(RDFFormat.RDFXML)==null) {
 			return false;
 		}
+		Thing target = (Thing) ann.getAnnotated().toArray()[0];
 		model.read(ann.getBody().getGraphAsInputStream(RDFFormat.RDFXML), "");
-		com.hp.hpl.jena.rdf.model.Resource resource = model.getResource(ann.getResearchObject().getUri().toString());
+		com.hp.hpl.jena.rdf.model.Resource resource = model.getResource(target.getUri().toString());
 		if( resource != null ) {
 			if ( resource.getProperty(RDFS.comment) != null ){
 				return true;
