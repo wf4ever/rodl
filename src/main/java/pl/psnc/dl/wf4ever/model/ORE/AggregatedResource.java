@@ -25,7 +25,6 @@ import pl.psnc.dl.wf4ever.dl.ResourceMetadata;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterDeleteEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterUpdateEvent;
-import pl.psnc.dl.wf4ever.eventbus.events.ROComponentBeforeDeleteEvent;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
 import pl.psnc.dl.wf4ever.model.EvoBuilder;
@@ -215,7 +214,6 @@ public class AggregatedResource extends Thing implements ResearchObjectComponent
      */
     @Override
     public void delete() {
-        this.postEvent(new ROComponentBeforeDeleteEvent(this));
         getResearchObject().getManifest().deleteResource(this);
         getResearchObject().getManifest().serialize();
         getResearchObject().getAggregatedResources().remove(uri);

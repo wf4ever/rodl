@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.eventbus.listeners;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -13,8 +14,11 @@ import pl.psnc.dl.wf4ever.eventbus.events.ROAfterDeleteEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterCreateEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterDeleteEvent;
 import pl.psnc.dl.wf4ever.eventbus.events.ROComponentAfterUpdateEvent;
+import pl.psnc.dl.wf4ever.eventbus.events.ROComponentBeforeDeleteEvent;
 import pl.psnc.dl.wf4ever.model.AO.Annotation;
 import pl.psnc.dl.wf4ever.model.ORE.AggregatedResource;
+import pl.psnc.dl.wf4ever.model.RDF.Thing;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 import pl.psnc.dl.wf4ever.model.RO.Resource;
 import pl.psnc.dl.wf4ever.notifications.Notification;
 import pl.psnc.dl.wf4ever.notifications.Notification.Summary;
@@ -106,7 +110,7 @@ public class NotificationsListener {
 				dao.save(entry);
 				return;
 			}
-
+			
 			Notification entry = new Notification.Builder(res.getResearchObject().getUri())
 					.title(Title.created(res)).summary(Summary.created(res)).source(source)
 					.sourceName("RODL").build();
@@ -123,14 +127,8 @@ public class NotificationsListener {
 		}
 	}
 
-	/**
-	 * Subscription method.
-	 * 
-	 * @param event
-	 *            processed event
-	 */
 	@Subscribe
-	public void onAfterResourceDelete(ROComponentAfterDeleteEvent event) {
+	public void onBeforeResourceDelete(ROComponentBeforeDeleteEvent event)  {
 		String source = ApplicationProperties.getContextPath() != null ? ApplicationProperties
 				.getContextPath() : "/";
 		if (event.getResearchObjectComponent() instanceof Annotation) {
@@ -151,6 +149,26 @@ public class NotificationsListener {
 			dao.save(entry);
 			return;
 		}
+	}
+	
+	/**
+	 * Subscription method.
+	 * 
+	 * @param event
+	 *            processed event
+	 */
+	@Subscribe
+	public void onAfterResourceDelete(ROComponentAfterDeleteEvent event) {
+		if (event.getResearchObjectComponent() instanceof Annotation) {
+			return;
+		}
+		//if is body...
+		ResearchObject ro = (ResearchObject) event.getResearchObjectComponent().getResearchObject();
+		if(ro.getAnnotationsByBodyUri().get(event.getResearchObjectComponent().getUri()) != null) {
+			return;
+		}
+		String source = ApplicationProperties.getContextPath() != null ? ApplicationProperties
+				.getContextPath() : "/";
 		if (event.getResearchObjectComponent() instanceof Resource
 				|| event.getResearchObjectComponent() instanceof AggregatedResource) {
 			AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
@@ -198,6 +216,29 @@ public class NotificationsListener {
 					.sourceName("RODL").build();
 			dao.save(entry);
 		}
+		//check also if the body if the body is updated
+		else {
+			AtomFeedEntryDAO dao = new AtomFeedEntryDAO();
+			ResearchObject ro = (ResearchObject) event.getResearchObjectComponent().getResearchObject();
+			if(ro.getAnnotationsByBodyUri().get(event.getResearchObjectComponent().getUri()) != null) {
+				Collection<Annotation> annotations = ro.getAnnotationsByBodyUri().get(event.getResearchObjectComponent().getUri());
+				for (Annotation ann : annotations ) {
+					if (isComment(dao, ann)) {
+						Comment comment = new Comment(ann);
+						Notification entry = new Notification.Builder(ann.getResearchObject().getUri())
+						.title(Title.updated(comment)).summary(Summary.updated(comment)).source(source)
+						.sourceName("RODL").build();
+						dao.save(entry);
+					} else {
+						Notification entry = new Notification.Builder(ann.getResearchObject().getUri())
+						.title(Title.updated(ann)).summary(Summary.updated(ann)).source(source)
+						.sourceName("RODL").build();
+						dao.save(entry);
+					}
+				}
+				return;
+			}
+		}
 	}
 	
 	
@@ -207,10 +248,8 @@ public class NotificationsListener {
 	//super dirty stuff
 	private void deleteBodyOfCreatedAnnotation(AtomFeedEntryDAO dao, Annotation ann) {
 		//I don't know why but first it needs to be commit. Otherwise annotations aren't accessible.
-		HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().commit();
-		HibernateUtil.getSessionFactory().getCurrentSession().getTransaction().begin();
-
-		List<Notification> notifications = dao.find(ann.getResearchObject().getUri(), null, null, null, 3);
+		HibernateUtil.getSessionFactory().getCurrentSession().flush();
+		List<Notification> notifications = dao.find(ann.getResearchObject().getUri(), null, null, null, null);
 		for (Notification n : notifications) {
 			if(n.getSummary().contains("resource has been")) {
 				if(n.getSummary().contains(ann.getBody().getUri().toString())) {
@@ -218,15 +257,20 @@ public class NotificationsListener {
 				}
 			}
 		}
+
 	}
 	
 	private boolean isComment(AtomFeedEntryDAO dao, Annotation ann) {
 		OntModel model = ModelFactory.createOntologyModel();
+		if (ann.getAnnotated().size() == 0) {
+			return false;
+		}
 		if(ann.getBody().getGraphAsInputStream(RDFFormat.RDFXML)==null) {
 			return false;
 		}
+		Thing target = (Thing) ann.getAnnotated().toArray()[0];
 		model.read(ann.getBody().getGraphAsInputStream(RDFFormat.RDFXML), "");
-		com.hp.hpl.jena.rdf.model.Resource resource = model.getResource(ann.getResearchObject().getUri().toString());
+		com.hp.hpl.jena.rdf.model.Resource resource = model.getResource(target.getUri().toString());
 		if( resource != null ) {
 			if ( resource.getProperty(RDFS.comment) != null ){
 				return true;
