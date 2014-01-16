@@ -8,7 +8,7 @@ public enum Role {
     /** Can read and edit. */
     EDITOR,
     /** Can read. */
-    REDAER;
+    READER;
 
     @Override
     public String toString() {

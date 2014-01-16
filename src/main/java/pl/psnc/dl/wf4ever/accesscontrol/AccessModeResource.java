@@ -1,5 +1,6 @@
 package pl.psnc.dl.wf4ever.accesscontrol;
 
+import java.net.URI;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -17,6 +18,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.accesscontrol.dicts.Mode;
 import pl.psnc.dl.wf4ever.accesscontrol.dicts.Role;
 import pl.psnc.dl.wf4ever.accesscontrol.model.AccessMode;
 import pl.psnc.dl.wf4ever.accesscontrol.model.Permission;
@@ -26,6 +28,7 @@ import pl.psnc.dl.wf4ever.auth.RequestAttribute;
 import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
 import pl.psnc.dl.wf4ever.exceptions.BadRequestException;
 import pl.psnc.dl.wf4ever.model.Builder;
+import pl.psnc.dl.wf4ever.model.RO.ResearchObject;
 
 /**
  * API for setting Research Object access mode.
@@ -76,8 +79,20 @@ public class AccessModeResource {
             storedMode = new AccessMode();
             storedMode.setRo(mode.getRo());
         }
+        
+        //detect change
+        if(storedMode.getMode() == Mode.PRIVATE && mode.getMode() == Mode.PUBLIC) {
+	        ResearchObject researchObject = ResearchObject.get(builder, URI.create(mode.getRo()));
+	        researchObject.updateIndexAttributes();
+	    }
+		if(storedMode.getMode() == Mode.PUBLIC && mode.getMode() == Mode.PRIVATE) {
+		    ResearchObject researchObject = ResearchObject.get(builder, URI.create(mode.getRo()));
+	        researchObject.deleteIndexAttributes();
+	    }
+		
         storedMode.setMode(mode.getMode());
         dao.save(storedMode);
+        //if storedmode == 0
         storedMode.setUri(uriInfo.getRequestUri().resolve(storedMode.getId().toString()));
         return Response.created(uriInfo.getRequestUri().resolve(storedMode.getId().toString())).entity(storedMode)
                 .build();

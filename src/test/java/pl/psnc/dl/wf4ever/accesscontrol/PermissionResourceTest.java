@@ -43,7 +43,7 @@ public class PermissionResourceTest extends AccessControlTest {
 
 		Assert.assertEquals(permissions.length, 1);
 
-		ClientResponse response = grantPermission(createdRO, Role.REDAER,
+		ClientResponse response = grantPermission(createdRO, Role.READER,
 				userProfile2);
 		Permission serverPermission = response.getEntity(Permission.class);
 		Assert.assertEquals(response.getLocation(), serverPermission.getUri());
@@ -56,8 +56,8 @@ public class PermissionResourceTest extends AccessControlTest {
 		Assert.assertEquals(2, permissions.length);
 
 		// conflict
-		response = grantPermission(createdRO, Role.REDAER, userProfile);
-		response = grantPermission(createdRO, Role.REDAER, userProfile);
+		response = grantPermission(createdRO, Role.READER, userProfile);
+		response = grantPermission(createdRO, Role.READER, userProfile);
 
 		Assert.assertEquals(409, response.getStatus());
 		delete(createdRO, adminCreds);
@@ -76,11 +76,11 @@ public class PermissionResourceTest extends AccessControlTest {
 				.header("Authorization", "Bearer " + accessToken)
 				.get(ClientResponse.class);
 		Assert.assertEquals(200, response.getStatus());
-		grantPermission(createdRO, Role.REDAER, userProfile2);
+		grantPermission(createdRO, Role.READER, userProfile2);
 		response = webResource.uri(createdRO).accept("application/json")
 				.header("Authorization", "Bearer " + accessToken2)
 				.get(ClientResponse.class);
-		grantPermission(createdRO, Role.REDAER, userProfile2);
+		grantPermission(createdRO, Role.READER, userProfile2);
 		response = webResource.uri(createdRO).accept("application/json")
 				.header("Authorization", "Bearer " + accessToken2)
 				.get(ClientResponse.class);

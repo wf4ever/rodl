@@ -38,10 +38,10 @@ public class PermissionLinkResourceTest extends AccessControlTest {
         ClientResponse response = webResource.uri(createdRO).header("Authorization", "Bearer " + accessToken)
                 .get(ClientResponse.class);
         Assert.assertEquals(200, response.getStatus());
-        grantPermission(createdRO, Role.REDAER, userProfile2);
+        grantPermission(createdRO, Role.READER, userProfile2);
         response = webResource.uri(createdRO).accept("application/json")
                 .header("Authorization", "Bearer " + accessToken2).get(ClientResponse.class);
-        grantPermission(createdRO, Role.REDAER, userProfile2);
+        grantPermission(createdRO, Role.READER, userProfile2);
         response = webResource.uri(createdRO).accept("application/json")
                 .header("Authorization", "Bearer " + accessToken2).get(ClientResponse.class);
         response = webResource.uri(createdRO).accept("application/json")

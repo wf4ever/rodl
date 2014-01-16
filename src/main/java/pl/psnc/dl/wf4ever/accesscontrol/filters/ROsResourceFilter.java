@@ -19,6 +19,7 @@ import pl.psnc.dl.wf4ever.accesscontrol.model.dao.ModeDAO;
 import pl.psnc.dl.wf4ever.accesscontrol.model.dao.PermissionDAO;
 import pl.psnc.dl.wf4ever.db.UserProfile;
 import pl.psnc.dl.wf4ever.db.dao.UserProfileDAO;
+import pl.psnc.dl.wf4ever.dl.NotFoundException;
 import pl.psnc.dl.wf4ever.dl.UserMetadata;
 import pl.psnc.dl.wf4ever.exceptions.ForbiddenException;
 import pl.psnc.dl.wf4ever.model.Builder;
@@ -119,10 +120,23 @@ public class ROsResourceFilter implements ContainerRequestFilter {
 			if (mode.getMode().equals(Mode.PUBLIC)) {
 				return request;
 			}
-			// first iterations doesn't include permission links
-			// just cut out all requests to private resource
-			if (mode.getMode().equals(Mode.PUBLIC)) {
-				return request;
+			//check owner/reader/writer permission
+			if (mode.getMode().equals(Mode.PRIVATE)) {
+				List<Permission> editors = permissionDAO.findByUserROAndPermission(
+						userProfile, roUri.toString(), Role.EDITOR);
+				if (editors.size() > 0) {
+					return request;
+				}
+				List<Permission> readers = permissionDAO.findByUserROAndPermission(
+						userProfile, roUri.toString(), Role.READER);
+				if (readers.size() > 0) {
+					return request;
+				}
+
+				if (owners.size() > 0) {
+					return request;
+				}
+				throw new NotFoundException("No resource found");
 			}
 		}
 		// if there is edit request (POST,PUT,DELETE) chec if user has a writer
