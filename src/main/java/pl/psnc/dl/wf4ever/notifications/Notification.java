@@ -531,7 +531,7 @@ public class Notification implements Serializable {
 				}
 			}
 			return String.format("An annotation for %s %s has been deleted by " + component.getUser().getName(), annotationFor,
-					component.getResearchObject().getName());
+					annotated.getName());
 		}
 
 		/**
