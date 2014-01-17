@@ -89,7 +89,7 @@ public class PermissionResource {
 		}
 		if (permission.getUser() == null) {
 			throw new BadRequestException(
-					"The given user login doesn't exists"); 
+					"Given user login doesn't exist"); 
 		}
 		dao.save(permission);
 		permission.setUri(uriInfo.getRequestUri().resolve("")
