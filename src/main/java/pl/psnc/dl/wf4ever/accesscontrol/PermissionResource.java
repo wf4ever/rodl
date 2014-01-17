@@ -87,6 +87,10 @@ public class PermissionResource {
 				throw new WebApplicationException(500);
 			}
 		}
+		if (permission.getUser() == null) {
+			throw new BadRequestException(
+					"The given user login doesn't exists"); 
+		}
 		dao.save(permission);
 		permission.setUri(uriInfo.getRequestUri().resolve("")
 				.resolve(permission.getId().toString()));
