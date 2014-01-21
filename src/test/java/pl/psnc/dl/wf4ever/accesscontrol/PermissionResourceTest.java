@@ -73,7 +73,7 @@ public class PermissionResourceTest extends AccessControlTest {
 	public void testReaderWriterAndAuthorShoulBeAbleToReadRO() {
 		URI createdRO = createRO(accessToken);
 		ClientResponse response = webResource.uri(createdRO)
-				.header("Authorization", "Bearer " + accessToken)
+				.header("Authorization", "Bearer " + accessToken).accept("application/zip")
 				.get(ClientResponse.class);
 		Assert.assertEquals(200, response.getStatus());
 		grantPermission(createdRO, Role.READER, userProfile2);

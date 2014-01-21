@@ -35,7 +35,7 @@ public class AccessControlROsResourceTest extends AccessControlTest {
 		URI createdRO = createRO(accessToken);
 		// get
 		ClientResponse response = webResource.uri(createdRO)
-				.header("Authorization", "Bearer " + accessToken2)
+				.header("Authorization", "Bearer " + accessToken2).accept("application/zip")
 				.get(ClientResponse.class);
 		Assert.assertEquals(200, response.getStatus());
 		response = webResource.uri(createdRO).path(".ro/manifest.rdf")
