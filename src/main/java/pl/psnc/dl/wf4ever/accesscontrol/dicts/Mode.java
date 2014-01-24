@@ -11,7 +11,9 @@ public enum Mode {
     /** Visible for everyone. */
     PUBLIC,
     /** Visible for user with special permissions. */
-    PRIVATE;
+    PRIVATE,
+    /** Open for everybody for read and write. */
+    OPEN;
 
     @Override
     public String toString() {

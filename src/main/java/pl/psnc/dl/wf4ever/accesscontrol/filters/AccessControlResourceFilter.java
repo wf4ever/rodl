@@ -9,6 +9,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 
+import pl.psnc.dl.wf4ever.accesscontrol.dicts.Mode;
 import pl.psnc.dl.wf4ever.accesscontrol.dicts.Role;
 import pl.psnc.dl.wf4ever.accesscontrol.model.AccessMode;
 import pl.psnc.dl.wf4ever.accesscontrol.model.Permission;
@@ -77,13 +78,6 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
         else if (request.getPath().contains("/modes/")) {
             handleROModesRequest(request);
         }
-        //permissionlinks
-        //only RO author and create/delete permission links
-        //only author and someone involved can query about permission links
-        else if (request.getPath().contains("/permissionlinks/")) {
-            handlePermissionLinksRequest(request);
-        }
-
         return request;
     }
 
@@ -101,9 +95,14 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
         }
         //if there is a GET request to get particular mode, chech if the user is an owner
         if (request.getMethod().equals("GET")) {
-            //if there is an ro paramter
+            //if there is an ro paramter        	
             if (request.getQueryParameters().getFirst("ro") != null) {
-                String roUri = request.getQueryParameters().getFirst("ro");
+            	String roUri = request.getQueryParameters().getFirst("ro");
+               	AccessMode mode = modeDao.findByResearchObject((roUri));
+             	//check if it's open then everybody can read
+               	if(mode.getMode().equals(Mode.OPEN)) {
+            		return;
+            	}
                 List<Permission> permissions = dao.findByUserROAndPermission(userProfile, roUri, Role.OWNER);
                 if (permissions.size() == 1) {
                     return;
@@ -117,6 +116,10 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
                     && isInteger(request.getPath().split("modes/")[1].replace("/", "").replace(" ", ""))) {
                 String modeIdString = request.getPath().split("modes/")[1].replace("/", "").replace(" ", "");
                 AccessMode mode = modeDao.findById(Integer.valueOf(modeIdString));
+              	//check if it's open then everybody can read
+               	if(mode.getMode().equals(Mode.OPEN)) {
+            		return;
+            	}
                 List<Permission> permissions = dao.findByUserROAndPermission(userProfile, mode.getRo().toString(), Role.OWNER);
                 if (permissions.size() == 1) {
                     return;
@@ -199,33 +202,6 @@ public class AccessControlResourceFilter implements ContainerRequestFilter {
         }
     }
 
-
-    /**
-     * Handle Permission Links request.
-     * 
-     * @param request
-     *            request
-     */
-    private void handlePermissionLinksRequest(ContainerRequest request) {
-        //everybody can use post
-        if (request.getMethod().equals("POST")) {
-            return;
-        } else if (request.getMethod().equals("GET")) {
-            if (request.getQueryParameters().getFirst("ro") != null) {
-                String roUri = request.getQueryParameters().getFirst("ro");
-                //only author can do this query
-                List<Permission> permissions = dao.findByUserROAndPermission(userProfile, roUri, Role.OWNER);
-                if (permissions.size() == 1) {
-                    return;
-                } else if (permissions.size() == 0) {
-                    throw new ForbiddenException("This resource doesn't belong to user");
-                } else {
-                    LOGGER.error("Data problem - more than one owner for " + roUri);
-                    throw new WebApplicationException(500);
-                }
-            }
-        }
-    }
 
 
     /**

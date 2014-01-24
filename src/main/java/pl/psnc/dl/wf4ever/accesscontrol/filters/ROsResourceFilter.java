@@ -73,6 +73,7 @@ public class ROsResourceFilter implements ContainerRequestFilter {
 		ROType resourceType = discoverResource(request.getPath());
 		AccessMode mode = null;
 		URI roUri = null;
+		
 		if (resourceType != ROType.RO_COLLECTION) {
 			roUri = getRootROUri(request.getPath());
 			List<Permission> permissions = permissionDAO
@@ -81,6 +82,8 @@ public class ROsResourceFilter implements ContainerRequestFilter {
 			if (permissions == null || permissions.size() == 0 || mode == null) {
 				LOGGER.warn("Permissions for ro: " + roUri.toString()
 						+ " couldn't be calculated.");
+				return request;
+			} else if (mode.getMode().equals(Mode.OPEN)) {
 				return request;
 			}
 		}

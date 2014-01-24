@@ -81,11 +81,11 @@ public class AccessModeResource {
         }
         
         //detect change
-        if(storedMode.getMode() == Mode.PRIVATE && mode.getMode() == Mode.PUBLIC) {
+        if(storedMode.getMode() == Mode.PRIVATE && (storedMode.getMode() == Mode.PUBLIC || storedMode.getMode() == Mode.OPEN)) {
 	        ResearchObject researchObject = ResearchObject.get(builder, URI.create(mode.getRo()));
 	        researchObject.updateIndexAttributes();
 	    }
-		if(storedMode.getMode() == Mode.PUBLIC && mode.getMode() == Mode.PRIVATE) {
+		if((storedMode.getMode() == Mode.PUBLIC || storedMode.getMode() == Mode.OPEN) && mode.getMode() == Mode.PRIVATE) {
 		    ResearchObject researchObject = ResearchObject.get(builder, URI.create(mode.getRo()));
 	        researchObject.deleteIndexAttributes();
 	    }
