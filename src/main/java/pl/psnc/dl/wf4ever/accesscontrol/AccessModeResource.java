@@ -80,15 +80,16 @@ public class AccessModeResource {
             storedMode.setRo(mode.getRo());
         }
         
-        //detect change
         if(mode.getMode() == Mode.PRIVATE && (storedMode.getMode() == Mode.PUBLIC || storedMode.getMode() == Mode.OPEN)) {
 	        ResearchObject researchObject = ResearchObject.get(builder, URI.create(mode.getRo()));
-	        researchObject.updateIndexAttributes();
-	    }
+	        researchObject.deleteIndexAttributes();
+
+        }
 		if((mode.getMode() == Mode.PUBLIC || mode.getMode() == Mode.OPEN) && storedMode.getMode() == Mode.PRIVATE) {
 		    ResearchObject researchObject = ResearchObject.get(builder, URI.create(mode.getRo()));
-	        researchObject.deleteIndexAttributes();
-	    }
+	        researchObject.updateIndexAttributes();
+
+		}
 		
         storedMode.setMode(mode.getMode());
         dao.save(storedMode);
