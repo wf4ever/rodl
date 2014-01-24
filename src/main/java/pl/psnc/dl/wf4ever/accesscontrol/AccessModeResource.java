@@ -85,7 +85,7 @@ public class AccessModeResource {
 	        ResearchObject researchObject = ResearchObject.get(builder, URI.create(mode.getRo()));
 	        researchObject.updateIndexAttributes();
 	    }
-		if((storedMode.getMode() == Mode.PUBLIC || storedMode.getMode() == Mode.OPEN) && mode.getMode() == Mode.PRIVATE) {
+		if((mode.getMode() == Mode.PUBLIC || mode.getMode() == Mode.OPEN) && storedMode.getMode() == Mode.PRIVATE) {
 		    ResearchObject researchObject = ResearchObject.get(builder, URI.create(mode.getRo()));
 	        researchObject.deleteIndexAttributes();
 	    }
