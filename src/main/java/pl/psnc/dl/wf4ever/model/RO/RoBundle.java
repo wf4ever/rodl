@@ -34,12 +34,19 @@ import pl.psnc.dl.wf4ever.sparql.RO_TurtleWriter;
 import pl.psnc.dl.wf4ever.sparql.ResearchObjectRelativeWriter;
 import pl.psnc.dl.wf4ever.util.MimeTypeUtil;
 import pl.psnc.dl.wf4ever.vocabulary.ORE;
-import com.github.jsonldjava.core.JSONLD;
-import com.github.jsonldjava.core.JSONLDProcessingError;
-import com.github.jsonldjava.core.JSONLDTripleCallback;
-import com.github.jsonldjava.core.Options;
-import com.github.jsonldjava.impl.JenaTripleCallback;
-import com.github.jsonldjava.utils.JSONUtils;
+
+import com.github.jsonldjava.core.JsonLdError;
+import com.github.jsonldjava.core.JsonLdOptions;
+// import com.github.jsonldjava.core.JSONLD;
+//import com.github.jsonldjava.core.JSONLDProcessingError;
+//import com.github.jsonldjava.core.JSONLDTripleCallback;
+//import com.github.jsonldjava.core.JsonLdOptions;
+import com.github.jsonldjava.core.JsonLdProcessor;
+import com.github.jsonldjava.core.JsonLdTripleCallback;
+//import com.github.jsonldjava.core.Options;
+//import com.github.jsonldjava.impl.JenaTripleCallback;
+//import com.github.jsonldjava.utils.JSONUtils;
+import com.github.jsonldjava.utils.JsonUtils;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
@@ -402,6 +409,34 @@ public class RoBundle extends Resource {
      * @throws BadRequestException
      *             when the ZIP archive is not a valid RO bundle
      */
+	com.hp.hpl.jena.rdf.model.Resource loadManifest(ZipFile zipFile, URI base)
+            throws IOException, BadRequestException {
+        // let's assume that the manifest is .ro/manifest.json. In the future we may take this path from the container (META-INF/container.xml)
+        // see the RO Bundle spec at http://wf4ever.github.io/ro/bundle/
+        String manifestPath = DEFAULT_MANIFEST_PATH;
+        ZipEntry manifestEntry = zipFile.getEntry(manifestPath);
+        if (manifestEntry == null) {
+            throw new BadRequestException("Can't find the manifest " + manifestPath + " in the RO bundle.");
+        }
+        try (InputStream manifestInputStream = zipFile.getInputStream(manifestEntry)) {
+            Object input = JsonUtils.fromInputStream(manifestInputStream);
+            JsonLdTripleCallback callback = new com.github.jsonldjava.jena.JenaTripleCallback();
+            
+            JsonLdOptions options = new JsonLdOptions();
+            options.setBase(base.toString());
+            
+            Object obj = JsonLdProcessor.toRDF(input, callback, options);
+           // System.out.println(obj.getClass().toString());
+            Model model = (Model) obj;
+            
+           return model.getResource(base.resolve(manifestPath).toString());
+           
+        } catch (JsonLdError e) {
+            throw new BadRequestException("Can't parse the manifest " + manifestPath, e);
+        }
+        
+    }
+/*    
     com.hp.hpl.jena.rdf.model.Resource loadManifest(ZipFile zipFile, URI base)
             throws IOException, BadRequestException {
         // let's assume that the manifest is .ro/manifest.json. In the future we may take this path from the container (META-INF/container.xml)
@@ -420,7 +455,7 @@ public class RoBundle extends Resource {
             throw new BadRequestException("Can't parse the manifest " + manifestPath, e);
         }
     }
-
+*/
 
     /**
      * Calculate the URI of the nested RO. The identifier will be based on the name of the bundle without the extension.
